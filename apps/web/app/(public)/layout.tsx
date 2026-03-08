@@ -10,10 +10,12 @@ export default function PublicLayout({
   return (
     <>
       <Navbar />
-      <BreakingTicker />
-      <main className="pt-16 pb-16 lg:pb-0">
-        {children}
-      </main>
+      <div className="pt-14 sm:pt-16 min-h-screen flex flex-col">
+        <BreakingTicker />
+        <main className="flex-1 pb-16 lg:pb-0">
+          {children}
+        </main>
+      </div>
       <Footer />
     </>
   );
