@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: aistartupimpact-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: aistartupimpact
+      POSTGRES_PASSWORD: aistartupimpact_dev
+      POSTGRES_DB: aistartupimpact
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aistartupimpact"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: aistartupimpact-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.7
+    container_name: aistartupimpact-search
+    ports:
+      - "7700:7700"
+    environment:
+      MEILI_MASTER_KEY: aistartupimpact_dev_key
+      MEILI_ENV: development
+    volumes:
+      - meilisearch_data:/meili_data
+
+volumes:
+  postgres_data:
+  redis_data:
+  meilisearch_data:

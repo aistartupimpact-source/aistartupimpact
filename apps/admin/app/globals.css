@@ -1,0 +1,160 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════
+   BASE — Mobile-first defaults, dark mode ready
+   ═══════════════════════════════════════════════════ */
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply text-[15px] leading-relaxed sm:text-base;
+    overflow-x: hidden;
+  }
+
+  /* Headings — mobile-first sizes */
+  h1 {
+    @apply text-2xl sm:text-3xl md:text-4xl font-sora font-extrabold;
+  }
+
+  h2 {
+    @apply text-xl sm:text-2xl font-sora font-bold;
+  }
+
+  h3 {
+    @apply text-lg sm:text-xl font-sora font-bold;
+  }
+
+  /* Selection color */
+  ::selection {
+    @apply bg-brand/20 text-brand-900 dark:text-brand-100;
+  }
+
+  /* Scrollbar — slim & themed */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-gray-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400 dark:bg-gray-600;
+  }
+
+  /* Hide scrollbar utility */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   COMPONENT CLASSES — Dark mode + mobile-first
+   ═══════════════════════════════════════════════════ */
+
+@layer components {
+
+  /* ─── Buttons ──────────────────────────────── */
+
+  .btn-brand {
+    @apply inline-flex items-center justify-center bg-brand hover:bg-brand-600 active:bg-brand-700 text-white font-bold font-jakarta px-5 py-3 sm:px-6 sm:py-2.5 text-sm rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-brand/25 active:scale-[0.97] min-h-[44px] sm:min-h-0;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-700 font-medium font-jakarta px-5 py-3 sm:px-5 sm:py-2.5 text-sm rounded-xl transition-all duration-200 active:scale-[0.97] min-h-[44px] sm:min-h-0;
+  }
+
+  /* ─── Cards ────────────────────────────────── */
+
+  .card {
+    @apply bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:border-brand/20 dark:hover:border-brand/30;
+  }
+
+  .card-featured {
+    @apply bg-white dark:bg-gray-900 border-2 border-brand/15 dark:border-brand/25 rounded-2xl transition-all duration-300 hover:border-brand/30 dark:hover:border-brand/40;
+  }
+
+  /* ─── Badges ───────────────────────────────── */
+
+  .badge-brand {
+    @apply inline-flex items-center gap-1 bg-brand text-white text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-sm;
+  }
+
+  .badge-category {
+    @apply inline-flex items-center text-[10px] font-bold uppercase tracking-wider text-brand bg-brand/5 dark:bg-brand/10 px-2.5 py-1 rounded-full border border-brand/10 dark:border-brand/20;
+  }
+
+  /* ─── Inputs ───────────────────────────────── */
+
+  .input-field {
+    @apply w-full px-4 py-3 sm:py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-charcoal dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand font-jakarta text-sm transition-all min-h-[44px] sm:min-h-0;
+  }
+
+  /* ─── Pills (tags) ─────────────────────────── */
+
+  .pill {
+    @apply inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-800 text-charcoal dark:text-gray-200 text-sm font-jakarta font-medium rounded-full hover:bg-brand/10 dark:hover:bg-brand/15 hover:text-brand transition-all duration-200 cursor-pointer active:scale-95;
+  }
+
+  /* ─── Section title ────────────────────────── */
+
+  .section-title {
+    @apply font-sora font-extrabold text-xl sm:text-2xl text-navy dark:text-white flex items-center gap-2;
+  }
+
+  /* ─── Article content ──────────────────────── */
+
+  .article-content {
+    @apply prose prose-lg dark:prose-invert max-w-none font-jakarta prose-headings:font-sora prose-headings:font-bold prose-headings:text-navy dark:prose-headings:text-white prose-p:text-charcoal/80 dark:prose-p:text-gray-300 prose-a:text-brand prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-pre:bg-gray-50 dark:prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-200 dark:prose-pre:border-gray-700 prose-code:font-mono prose-code:text-sm prose-blockquote:border-brand prose-blockquote:bg-brand/5 dark:prose-blockquote:bg-brand/10 prose-blockquote:py-1 prose-blockquote:rounded-r-lg;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   DARK MODE UTILITY COLORS
+   ═══════════════════════════════════════════════════ */
+
+@layer utilities {
+  .text-navy {
+    @apply text-[#0D1B2A] dark:text-white;
+  }
+
+  .bg-navy {
+    @apply bg-[#0D1B2A] dark:bg-gray-950;
+  }
+
+  .text-charcoal\/60 {
+    color: rgba(44, 44, 44, 0.6);
+  }
+
+  .dark .text-charcoal\/60 {
+    color: rgba(209, 213, 219, 0.7);
+  }
+
+  .text-charcoal\/70 {
+    color: rgba(44, 44, 44, 0.7);
+  }
+
+  .dark .text-charcoal\/70 {
+    color: rgba(209, 213, 219, 0.8);
+  }
+}

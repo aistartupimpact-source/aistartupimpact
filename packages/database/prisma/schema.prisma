@@ -1,0 +1,703 @@
+// Complete Prisma Schema for AIStartupImpact
+// PostgreSQL 16 — All PKs are UUIDs, soft deletes via deletedAt, money in paise
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ════════════════════════════════════════════
+// ENUMS
+// ════════════════════════════════════════════
+
+enum UserRole {
+  SUPER_ADMIN
+  EDITOR_IN_CHIEF
+  SENIOR_WRITER
+  WRITER
+  AD_MANAGER
+  CONTRIBUTOR
+}
+
+enum ArticleType {
+  NEWS
+  STORY
+  OPINION
+  TOOL_REVIEW
+  GUIDE
+  COMPARISON
+  REPORT
+  SPONSORED
+}
+
+enum ArticleStatus {
+  DRAFT
+  IN_REVIEW
+  REVISION
+  APPROVED
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CommentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PricingModel {
+  FREE
+  FREEMIUM
+  PAID
+  ENTERPRISE
+  OPEN_SOURCE
+}
+
+enum ToolApprovalStatus {
+  PENDING
+  APPROVED
+  FEATURED
+  ARCHIVED
+}
+
+enum StartupStage {
+  IDEA
+  PRE_SEED
+  SEED
+  SERIES_A
+  SERIES_B
+  SERIES_C
+  GROWTH
+  PUBLIC
+}
+
+enum JobType {
+  REMOTE
+  HYBRID
+  ONSITE
+}
+
+enum CampaignStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum AdZoneType {
+  H1_HERO_FEATURE
+  H2_TRENDING_STRIP
+  H3_SECTION_SPONSOR
+  H4_NEWSLETTER_CTA
+  A1_IN_ARTICLE
+  A2_SIDEBAR_STICKY
+  A3_END_OF_ARTICLE
+  D1_TOOL_FEATURED
+  D2_STARTUP_BOOST
+  N1_NEWSLETTER_PRIMARY
+  N2_NEWSLETTER_FOOTER
+  J1_JOB_BOARD_BOOST
+}
+
+enum NewsletterCampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+  FAILED
+}
+
+enum InvestorType {
+  VC
+  ANGEL
+  CORPORATE
+  GOVERNMENT
+}
+
+// ════════════════════════════════════════════
+// USER & AUTH
+// ════════════════════════════════════════════
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String?
+  name          String
+  slug          String    @unique
+  role          UserRole  @default(CONTRIBUTOR)
+  bio           String?   @db.Text
+  avatar        String?
+  twitter       String?
+  linkedin      String?
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  // Relations
+  articles      Article[]
+  coAuthoredArticles ArticleCoAuthor[]
+  sessions      UserSession[]
+  auditLogs     AuditLog[]
+  toolReviews   ToolReview[]
+  comments      Comment[]
+
+  @@index([email])
+  @@index([slug])
+  @@index([role])
+}
+
+model UserSession {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  refreshToken String   @unique
+  expiresAt    DateTime
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([refreshToken])
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  action       String
+  resourceType String
+  resourceId   String?
+  before       Json?
+  after        Json?
+  ipAddress    String?
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([resourceType, createdAt])
+}
+
+// ════════════════════════════════════════════
+// CONTENT
+// ════════════════════════════════════════════
+
+model Category {
+  id          String     @id @default(uuid())
+  name        String
+  slug        String     @unique
+  description String?    @db.Text
+  icon        String?
+  color       String?    // hex
+  parentId    String?
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  sortOrder   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  articles    Article[]
+
+  @@index([slug])
+  @@index([parentId])
+}
+
+model Tag {
+  id        String       @id @default(uuid())
+  name      String       @unique
+  slug      String       @unique
+  createdAt DateTime     @default(now())
+
+  articles  ArticleTag[]
+
+  @@index([slug])
+}
+
+model Article {
+  id              String         @id @default(uuid())
+  title           String
+  slug            String         @unique
+  excerpt         String?        @db.Text
+  content         Json           // TipTap JSON
+  contentText     String?        @db.Text // Plain text for search
+  type            ArticleType    @default(NEWS)
+  status          ArticleStatus  @default(DRAFT)
+  authorId        String
+  author          User           @relation(fields: [authorId], references: [id])
+  categoryId      String?
+  category        Category?      @relation(fields: [categoryId], references: [id])
+  coverImage      String?
+  readTimeMinutes Int            @default(1)
+  wordCount       Int            @default(0)
+  viewCount       Int            @default(0)
+  shareCount      Int            @default(0)
+  isFeatured      Boolean        @default(false)
+  isPinned        Boolean        @default(false)
+  isSponsored     Boolean        @default(false)
+  sponsorId       String?
+
+  // SEO fields
+  seoTitle        String?
+  seoDescription  String?        @db.Text
+  focusKeyword    String?
+  ogImage         String?
+  canonicalUrl    String?
+  noIndex         Boolean        @default(false)
+  schemaType      String?
+
+  // Scheduling
+  scheduledAt     DateTime?
+  publishedAt     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  deletedAt       DateTime?
+
+  // Relations
+  tags            ArticleTag[]
+  coAuthors       ArticleCoAuthor[]
+  versions        ArticleVersion[]
+  relatedFrom     RelatedArticle[] @relation("RelatedFrom")
+  relatedTo       RelatedArticle[] @relation("RelatedTo")
+  comments        Comment[]
+
+  @@index([slug])
+  @@index([status, publishedAt])
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([type, status])
+  @@index([isFeatured, status])
+}
+
+model ArticleTag {
+  articleId String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tagId     String
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, tagId])
+}
+
+model ArticleCoAuthor {
+  articleId String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+
+  @@id([articleId, userId])
+}
+
+model ArticleVersion {
+  id        String   @id @default(uuid())
+  articleId String
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  content   Json
+  title     String
+  createdAt DateTime @default(now())
+
+  @@index([articleId, createdAt])
+}
+
+model RelatedArticle {
+  fromId String
+  from   Article @relation("RelatedFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  toId   String
+  to     Article @relation("RelatedTo", fields: [toId], references: [id], onDelete: Cascade)
+
+  @@id([fromId, toId])
+}
+
+model Comment {
+  id        String        @id @default(uuid())
+  articleId String
+  article   Article       @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?         @relation(fields: [userId], references: [id])
+  parentId  String?
+  parent    Comment?      @relation("CommentThread", fields: [parentId], references: [id])
+  replies   Comment[]     @relation("CommentThread")
+  name      String?
+  email     String?
+  body      String        @db.Text
+  status    CommentStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([articleId, status])
+  @@index([parentId])
+}
+
+// ════════════════════════════════════════════
+// AI TOOLS DIRECTORY
+// ════════════════════════════════════════════
+
+model ToolCategory {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  icon        String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  tools       AiTool[]
+
+  @@index([slug])
+}
+
+model AiTool {
+  id                  String             @id @default(uuid())
+  name                String
+  slug                String             @unique
+  tagline             String
+  description         String             @db.Text
+  websiteUrl          String
+  affiliateUrl        String?
+  logoUrl             String?
+  screenshotUrls      String[]
+  categoryId          String
+  category            ToolCategory       @relation(fields: [categoryId], references: [id])
+  pricingModel        PricingModel       @default(FREEMIUM)
+  freeTrialDays       Int?
+  startingPrice       Int?               // Paise
+  hasApi              Boolean            @default(false)
+  hasMobileApp        Boolean            @default(false)
+  launchYear          Int?
+  headquartersCountry String?
+  founderNames        String[]
+  avgRating           Float              @default(0)
+  reviewCount         Int                @default(0)
+  status              ToolApprovalStatus @default(PENDING)
+  isFeatured          Boolean            @default(false)
+  featuredUntil       DateTime?
+  submittedBy         String?
+  approvedBy          String?
+  approvedAt          DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  deletedAt           DateTime?
+
+  reviews             ToolReview[]
+  pros                ToolPro[]
+  cons                ToolCon[]
+  useCases            ToolUseCase[]
+  tags                ToolTag[]
+  affiliateClicks     AffiliateClick[]
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([status])
+  @@index([pricingModel])
+  @@index([isFeatured, status])
+  @@index([avgRating])
+}
+
+model ToolReview {
+  id           String   @id @default(uuid())
+  toolId       String
+  tool         AiTool   @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id])
+  rating       Int      // 1-5
+  title        String
+  body         String   @db.Text
+  verdict      String?
+  isEditorPick Boolean  @default(false)
+  publishedAt  DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  @@index([toolId, publishedAt])
+}
+
+model ToolPro {
+  id     String @id @default(uuid())
+  toolId String
+  tool   AiTool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  text   String
+}
+
+model ToolCon {
+  id     String @id @default(uuid())
+  toolId String
+  tool   AiTool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  text   String
+}
+
+model ToolUseCase {
+  id     String @id @default(uuid())
+  toolId String
+  tool   AiTool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  text   String
+}
+
+model ToolTag {
+  id     String @id @default(uuid())
+  toolId String
+  tool   AiTool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  name   String
+
+  @@index([name])
+}
+
+model AffiliateClick {
+  id          String   @id @default(uuid())
+  toolId      String
+  tool        AiTool   @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  sessionHash String
+  ipAddress   String?
+  referrer    String?
+  createdAt   DateTime @default(now())
+
+  @@index([toolId, createdAt])
+}
+
+// ════════════════════════════════════════════
+// STARTUPS, FUNDING & INVESTORS
+// ════════════════════════════════════════════
+
+model Startup {
+  id               String        @id @default(uuid())
+  name             String
+  slug             String        @unique
+  tagline          String
+  description      String        @db.Text
+  logoUrl          String?
+  websiteUrl       String?
+  linkedinUrl      String?
+  twitterUrl       String?
+  foundedYear      Int?
+  headquartersCity String?
+  stage            StartupStage  @default(SEED)
+  totalFundingInr  BigInt        @default(0) // Paise
+  employeeCount    Int?
+  isIndian         Boolean       @default(true)
+  isFeatured       Boolean       @default(false)
+  featuredUntil    DateTime?
+  impactScore      Int           @default(0) // 0-100
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  deletedAt        DateTime?
+
+  fundingRounds    FundingRound[]
+  jobs             Job[]
+
+  @@index([slug])
+  @@index([stage])
+  @@index([isIndian])
+  @@index([impactScore])
+  @@index([isFeatured])
+}
+
+model FundingRound {
+  id            String   @id @default(uuid())
+  startupId     String
+  startup       Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  roundType     String   // Flexible: "Seed", "Series A", etc.
+  amountInr     BigInt   // Paise
+  amountUsd     BigInt?  // Cents
+  announcedAt   DateTime
+  leadInvestors String[]
+  allInvestors  String[]
+  valuation     BigInt?  // Post-money paise
+  sourceUrl     String?
+  createdAt     DateTime @default(now())
+
+  @@index([startupId, announcedAt])
+  @@index([roundType])
+  @@index([announcedAt])
+}
+
+model Investor {
+  id                 String       @id @default(uuid())
+  name               String
+  slug               String       @unique
+  type               InvestorType @default(VC)
+  websiteUrl         String?
+  logoUrl            String?
+  description        String?      @db.Text
+  focusAreas         String[]
+  notableInvestments String[]
+  totalDealsIndia    Int          @default(0)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  @@index([slug])
+  @@index([type])
+}
+
+model Job {
+  id                String   @id @default(uuid())
+  startupId         String
+  startup           Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  title             String
+  description       String   @db.Text
+  location          String?
+  type              JobType  @default(REMOTE)
+  salaryRangeMin    Int?     // Paise
+  salaryRangeMax    Int?     // Paise
+  postedBy          String?
+  expiresAt         DateTime?
+  applicationsCount Int      @default(0)
+  isActive          Boolean  @default(true)
+  isFeatured        Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  deletedAt         DateTime?
+
+  @@index([startupId])
+  @@index([isActive, type])
+  @@index([isFeatured])
+}
+
+// ════════════════════════════════════════════
+// ADVERTISING
+// ════════════════════════════════════════════
+
+model AdCampaign {
+  id              String         @id @default(uuid())
+  clientName      String
+  clientEmail     String
+  companyName     String
+  companyLogo     String?
+  status          CampaignStatus @default(DRAFT)
+  startDate       DateTime
+  endDate         DateTime
+  totalBudgetPaise BigInt        @default(0)
+  notes           String?        @db.Text
+  createdBy       String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  creatives       AdCreative[]
+
+  @@index([status])
+  @@index([startDate, endDate])
+}
+
+model AdCreative {
+  id              String       @id @default(uuid())
+  campaignId      String
+  campaign        AdCampaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  zone            AdZoneType
+  headline        String
+  bodyText        String       @db.Text
+  ctaText         String
+  ctaUrl          String
+  imageUrl        String?
+  isActive        Boolean      @default(true)
+  impressionCount Int          @default(0)
+  clickCount      Int          @default(0)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  impressions     AdImpression[]
+  clicks          AdClick[]
+
+  @@index([zone, isActive])
+  @@index([campaignId])
+}
+
+model AdImpression {
+  id          String     @id @default(uuid())
+  creativeId  String
+  creative    AdCreative @relation(fields: [creativeId], references: [id], onDelete: Cascade)
+  articleId   String?
+  sessionHash String
+  countryCode String?
+  createdAt   DateTime   @default(now())
+
+  @@index([creativeId, createdAt])
+}
+
+model AdClick {
+  id          String     @id @default(uuid())
+  creativeId  String
+  creative    AdCreative @relation(fields: [creativeId], references: [id], onDelete: Cascade)
+  articleId   String?
+  sessionHash String
+  countryCode String?
+  createdAt   DateTime   @default(now())
+
+  @@index([creativeId, createdAt])
+}
+
+// ════════════════════════════════════════════
+// NEWSLETTER
+// ════════════════════════════════════════════
+
+model NewsletterSubscriber {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  name           String?
+  subscribedAt   DateTime  @default(now())
+  source         String?   // "homepage", "article", "social"
+  isActive       Boolean   @default(true)
+  tags           String[]
+  lastOpenedAt   DateTime?
+  lastClickedAt  DateTime?
+  unsubscribedAt DateTime?
+
+  @@index([email])
+  @@index([isActive])
+}
+
+model NewsletterCampaign {
+  id           String                   @id @default(uuid())
+  subject      String
+  previewText  String?
+  contentJson  Json
+  status       NewsletterCampaignStatus @default(DRAFT)
+  scheduledAt  DateTime?
+  sentAt       DateTime?
+  totalSent    Int                      @default(0)
+  opens        Int                      @default(0)
+  clicks       Int                      @default(0)
+  unsubscribes Int                      @default(0)
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+
+  @@index([status])
+}
+
+// ════════════════════════════════════════════
+// GLOSSARY
+// ════════════════════════════════════════════
+
+model GlossaryTerm {
+  id          String   @id @default(uuid())
+  term        String
+  slug        String   @unique
+  definition  String   @db.Text
+  relatedTerms String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
+}
+
+// ════════════════════════════════════════════
+// SITE SETTINGS
+// ════════════════════════════════════════════
+
+model SiteSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model Redirect {
+  id        String   @id @default(uuid())
+  fromPath  String   @unique
+  toPath    String
+  permanent Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([fromPath])
+}
