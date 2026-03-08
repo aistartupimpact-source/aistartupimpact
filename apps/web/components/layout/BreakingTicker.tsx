@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react';
 import { Zap } from 'lucide-react';
 
 const breakingItems = [
-  'Sarvam AI raises ₹415Cr Series A led by Lightspeed to build India-first foundation models',
-  'GPT-5 launches with 60% reduced pricing for Indian startups — game changer for builders',
-  'India government announces ₹10,372Cr IndiaAI Mission budget for 2025-26',
-  'Bangalore overtakes Singapore as Asia\'s #2 AI startup hub — CB Insights report',
-  'BharatGPT open-source LLM trained on 22 Indian languages released by IIT consortium',
+  'Sarvam AI open-sources OpenHathi, its first Hindi LLM, redefining vernacular data availability',
+  'QX Lab AI launches Ask QX, a multilingual generative AI platform supporting 12 Indian languages natively',
+  'Cabinet approves massive ₹10,372Cr budget for the IndiaAI Mission shaping public sector innovation',
+  'Krutrim AI achieves unicorn status following $50M raise from Matrix Partners India',
+  'Meta partners with IndiaAI to amplify open-source innovation and train 1M developers',
 ];
 
 export default function BreakingTicker() {

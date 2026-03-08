@@ -21,57 +21,57 @@ import {
    ═══════════════════════════════════════════════════════ */
 
 const defaultHeroArticle = {
-  slug: 'india-ai-revolution-2025',
-  title: "India's AI Revolution: How 50 Startups Are Reshaping the Nation's Tech Landscape in 2025",
+  slug: 'india-ai-revolution-2026',
+  title: "The Rise of Indic LLMs: How Indian Startups Are Building AI for a Billion Voices in 2026",
   excerpt:
-    "From healthcare diagnostics to agricultural intelligence, Indian AI startups raised over $2.3 billion in 2024. Here's what's driving the momentum — and what's next for the ecosystem.",
-  category: { name: 'Cover Story' },
-  author: { name: 'Priya Sharma' },
-  publishedAt: '2025-03-07T10:00:00Z',
-  readTimeMinutes: 12,
+    "With Sarvam AI's OpenHathi and Ola Krutrim dominating the landscape, the focus has shifted entirely to vernacular AI. Here's a deep dive into how Indian AI companies raised over $3.5 billion to solve the multilingual challenge.",
+  category: { name: 'Deep Dive' },
+  author: { name: 'Venkatesh Lahori' },
+  publishedAt: '2026-03-08T10:00:00Z',
+  readTimeMinutes: 14,
 };
 
 const defaultTrendingItems = [
-  "GPT-5 launches with advanced reasoning — what Indian developers need to know",
-  "Krutrim AI raises $200M Series B to build India's foundation model",
-  'Government announces ₹500Cr AI research fund for 2025-26',
+  "Ola Krutrim reaches $1B valuation, becoming India's first AI unicorn",
+  "Sarvam AI open-sources its foundational Hindi LLM series",
+  'NVIDIA partners with Reliance to build massive AI infrastructure in India',
 ];
 
 const defaultLatestStories = [
-  { slug: 's1', title: "OpenAI's GPT-5 Launch: What Indian Developers Need to Know About the New Era", category: { name: 'AI News' }, author: { name: 'Rahul Kumar' }, publishedAt: '2025-03-06T10:00:00Z', readTimeMinutes: 5 },
-  { slug: 's2', title: "Ola Krutrim Raises $200M Series B to Build India's Own Foundation Model", category: { name: 'Funding' }, author: { name: 'Anjali Nair' }, publishedAt: '2025-03-05T10:00:00Z', readTimeMinutes: 4 },
-  { slug: 's3', title: 'Cursor vs GitHub Copilot vs Cody: The Definitive 2025 Developer Survey Results', category: { name: 'Tools' }, author: { name: 'Vikram Patel' }, publishedAt: '2025-03-05T08:00:00Z', readTimeMinutes: 8 },
+  { slug: 's1', title: "Krutrim Base and Pro Models: A Technical Breakdown for Indic Developers", category: { name: 'Tech Review' }, author: { name: 'Adviteeya R.' }, publishedAt: '2026-03-07T10:00:00Z', readTimeMinutes: 7 },
+  { slug: 's2', title: "Qure.ai Secures $65M Series D to Expand AI Healthcare Diagnostics Globally", category: { name: 'Funding' }, author: { name: 'Sneha Jain' }, publishedAt: '2026-03-06T10:00:00Z', readTimeMinutes: 5 },
+  { slug: 's3', title: 'Why Global Tech Leaders Are Setting Up AI Hubs in Bengaluru and Hyderabad', category: { name: 'Ecosystem' }, author: { name: 'Kunal Patel' }, publishedAt: '2026-03-05T08:00:00Z', readTimeMinutes: 9 },
 ];
 
-const sponsor = { brand: 'CloudAI Pro', tagline: 'Powering 500+ Indian AI startups with GPU compute', ctaUrl: '#' };
+const sponsor = { brand: 'Yotta Data Services', tagline: 'Powering Indian AI with NVIDIA H100 GPU Cloud clusters', ctaUrl: 'https://yotta.com' };
 
 const defaultFounderSpotlight = {
-  slug: 'medai-rural-india',
-  title: 'From IIT Lab to 10,000 Villages: How MedAI is Bringing Diagnostics to Rural India',
-  excerpt: 'Ravi Kumar left a ₹1.5Cr Google offer to build AI that detects tuberculosis from chest X-rays. Three years later, his tool has screened 2 million patients across rural clinics.',
-  author: { name: 'Anjali Nair' },
-  readTimeMinutes: 15,
+  slug: 'pratyush-kumar-sarvam',
+  title: 'Building Sarvam AI: Pratyush Kumar on the Mission to Democratize Vernacular Intelligence for India',
+  excerpt: 'From co-founding AI4Bharat to raising a massive $41M Series A for Sarvam AI, Pratyush Kumar and Vivek Raghavan are leading the charge in building foundational AI models tailored specifically for India\'s linguistic diversity.',
+  author: { name: 'Venkatesh Lahori' },
+  readTimeMinutes: 12,
 };
 
 const defaultToolPicks = [
-  { slug: 'cursor-ai', name: 'Cursor', tagline: 'AI-first code editor that writes, edits, and debugs for you', category: { name: 'Dev Tools' }, avgRating: 4.8 },
-  { slug: 'perplexity', name: 'Perplexity', tagline: 'AI search engine with cited sources and zero hallucinations', category: { name: 'Research' }, avgRating: 4.8 },
-  { slug: 'midjourney', name: 'Midjourney', tagline: 'The gold standard for AI image generation and visual design', category: { name: 'Design' }, avgRating: 4.7 },
+  { slug: 'krutrim', name: 'Krutrim AI', tagline: 'India\'s own foundational AI assistant fluent in 22 official languages', category: { name: 'Assistant' }, avgRating: 4.8 },
+  { slug: 'karya', name: 'Karya', tagline: 'Ethical data platform paying rural Indians to train regional AI models', category: { name: 'Data Ops' }, avgRating: 4.9 },
+  { slug: 'dubu', name: 'Dubverse', tagline: 'AI-powered video dubbing tool supporting purely Indian languages natively', category: { name: 'Video Gen' }, avgRating: 4.6 },
 ];
 
 const defaultFundingNews = [
-  { slug: 'f1', startup: { name: 'Sarvam AI' }, amountInr: 415000000000, roundType: 'Series A', headline: 'Sarvam AI Raises ₹415Cr Series A to Build India-First LLMs', announcedAt: '2025-03-03T10:00:00Z', leadInvestors: ['Lightspeed', 'Peak XV'] },
-  { slug: 'f2', startup: { name: 'MedAI Health' }, amountInr: 83000000000, roundType: 'Seed', headline: 'MedAI Health Secures ₹83Cr Seed for AI-Powered Rural Diagnostics', announcedAt: '2025-03-01T10:00:00Z', leadInvestors: ['Sequoia Scout', 'AngelList India'] },
-  { slug: 'f3', startup: { name: 'AgriBot Tech' }, amountInr: 50000000000, roundType: 'Series A', headline: 'AgriBot Tech Closes ₹50Cr Series A for AI Agriculture Solutions', announcedAt: '2025-02-28T10:00:00Z', leadInvestors: ['Omnivore', 'Accel'] },
+  { slug: 'f1', startup: { name: 'Krutrim Si Designs' }, amountInr: 415000000000, roundType: 'Funding', headline: 'Krutrim Raises $50M from Matrix Partners India at $1B Valuation', announcedAt: '2026-01-26T10:00:00Z', leadInvestors: ['Matrix Partners'] },
+  { slug: 'f2', startup: { name: 'Sarvam AI' }, amountInr: 340000000000, roundType: 'Series A', headline: 'Sarvam AI Secures Massive $41M Series A to Build LLMs', announcedAt: '2026-02-15T10:00:00Z', leadInvestors: ['Lightspeed', 'Peak XV'] },
+  { slug: 'f3', startup: { name: 'Karya' }, amountInr: 50000000000, roundType: 'Seed', headline: 'Ethical Data Startup Karya Closes Seed Funding from Microsoft', announcedAt: '2026-02-28T10:00:00Z', leadInvestors: ['Microsoft M12'] },
 ];
 
-const defaultPremiumStartup = { name: 'NeuralScale', tagline: 'GPU Cloud Infrastructure for Indian AI Startups', description: 'Get H100 instances at 40% lower cost with Mumbai data residency. Serving 200+ Indian AI companies.', ctaUrl: '#' };
+const defaultPremiumStartup = { name: 'Yotta Shakti', tagline: 'India\'s Largest AI Supercomputer', description: 'Access scalable GPU infrastructure natively in India. Delivering 16,384 NVIDIA H100 GPUs exclusively for homegrown AI innovators.', ctaUrl: 'https://yotta.com' };
 
 const defaultIndiaAI = [
-  { slug: 'i1', title: "India's New AI Policy Framework: What Every Startup Founder Must Know", category: { name: 'Policy' }, publishedAt: '2025-03-06T10:00:00Z' },
-  { slug: 'i2', title: "Bangalore Overtakes Singapore as Asia's #2 AI Startup Hub", category: { name: 'Ecosystem' }, publishedAt: '2025-03-05T10:00:00Z' },
-  { slug: 'i3', title: 'BharatGPT: The Open-Source LLM Trained on 22 Indian Languages', category: { name: 'Product' }, publishedAt: '2025-03-04T10:00:00Z' },
-  { slug: 'i4', title: 'IIT System Launches Joint AI Research Initiative with ₹200Cr Budget', category: { name: 'Research' }, publishedAt: '2025-03-03T10:00:00Z' },
+  { slug: 'i1', title: "Cabinet Approves ₹10,372 Crore 'IndiaAI Mission' to Bolster Domestic Innovation", category: { name: 'Policy' }, publishedAt: '2026-03-05T10:00:00Z' },
+  { slug: 'i2', title: "Bhashini: The Digital Public Good Revolutionizing Cross-Language Communication", category: { name: 'Public Tech' }, publishedAt: '2026-03-04T10:00:00Z' },
+  { slug: 'i3', title: 'Why Reliance Jio is Banking Heavily on AI for the Next Billion Users', category: { name: 'Telecom' }, publishedAt: '2026-03-02T10:00:00Z' },
+  { slug: 'i4', title: 'Startups Using AI to Solve Agriculture Supply Chain Issues in Rural India', category: { name: 'AgriTech' }, publishedAt: '2026-03-01T10:00:00Z' },
 ];
 
 // Helper to format dates
