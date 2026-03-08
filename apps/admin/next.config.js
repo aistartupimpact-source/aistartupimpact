@@ -12,15 +12,23 @@ const nextConfig = {
         hostname: 'images.unsplash.com',
       },
     ],
-  },
-  async rewrites() {
-    return [
-      {
-        source: '/api/v1/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/v1/:path*`,
-      },
-    ];
-  },
-};
+    async redirects() {
+      return [
+        {
+          source: '/',
+          destination: '/dashboard',
+          permanent: true,
+        },
+      ];
+    },
+    async rewrites() {
+      return [
+        {
+          source: '/api/v1/:path*',
+          destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/v1/:path*`,
+        },
+      ];
+    },
+  };
 
-module.exports = nextConfig;
+  module.exports = nextConfig;
