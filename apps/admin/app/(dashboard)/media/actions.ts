@@ -1,7 +1,7 @@
 "use server";
 
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import {
   S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
