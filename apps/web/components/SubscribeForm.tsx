@@ -15,8 +15,8 @@ interface SubscribeFormProps {
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ALLOWED_SOURCES: AllowedSource[] = ['footer', 'sidebar', 'newsletter', 'website'];
 
-// Fix: NEXT_PUBLIC_API_URL already includes /v1 — don't append it again
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1').replace(/\/+$/, '');
+// Internal Next.js API route — no external backend needed
+const SUBSCRIBE_URL = '/api/newsletter/subscribe';
 
 export default function SubscribeForm({ buttonText = 'Subscribe', source = 'website', className = '' }: SubscribeFormProps) {
   const [email, setEmail] = useState('');
@@ -40,7 +40,7 @@ export default function SubscribeForm({ buttonText = 'Subscribe', source = 'webs
     setLoading(true);
     setStatus('idle');
     try {
-      const res = await fetch(`${API_BASE}/newsletter/subscribe`, {
+      const res = await fetch(SUBSCRIBE_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim().toLowerCase(), source: safeSource }),
