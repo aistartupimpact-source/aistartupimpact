@@ -1,7 +1,21 @@
 // Direct DB queries for server components — bypasses the need for the API server
-import { neon } from '@neondatabase/serverless';
+import { neon, NeonQueryFunction } from '@neondatabase/serverless';
 
-const sql = neon(process.env.DATABASE_URL!);
+// Lazy sql client — not instantiated at module load time (avoids build-time DATABASE_URL errors)
+let _sql: NeonQueryFunction<false, false> | undefined;
+function getSql(): NeonQueryFunction<false, false> {
+  if (!_sql) _sql = neon(process.env.DATABASE_URL!);
+  return _sql;
+}
+// sql is used as a tagged template literal throughout this file
+const sql: NeonQueryFunction<false, false> = new Proxy(
+  ((...args: Parameters<NeonQueryFunction<false, false>>) => getSql()(...args)) as NeonQueryFunction<false, false>,
+  {
+    get(_target, prop) {
+      return (getSql() as any)[prop];
+    },
+  }
+);
 
 export async function getArticleBySlugDirect(slug: string) {
   try {
