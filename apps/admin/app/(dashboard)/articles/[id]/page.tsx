@@ -9,6 +9,8 @@ import {
   Plus, ImagePlus,
 } from 'lucide-react';
 
+import { uploadMediaAction, saveArticleAction, getArticleByIdAction } from '../actions';
+
 export default function EditArticlePage({ params }: { params: { id: string } }) {
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
@@ -45,7 +47,12 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
   const [pinned, setPinned] = useState(false);
   const [sponsored, setSponsored] = useState(false);
   const [slug, setSlug] = useState('');
-  const [coverUploaded, setCoverUploaded] = useState(false);
+  const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [thumbnailImage, setThumbnailImage] = useState<string | null>(null);
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
   // Save
   const [lastSaved, setLastSaved] = useState('just now');
@@ -62,20 +69,79 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     setWordCount(text.trim() ? text.trim().split(/\s+/).length : 0);
   }, []);
 
-  // Mock load article data
-  useEffect(() => {
-    if (params.id) {
-      setTimeout(() => {
-        setTitle('India\'s AI Revolution: How 50 Startups Are Reshaping the Nation');
-        setSubtitle('From healthcare diagnostics to agricultural intelligence, Indian AI startups raised over $2.3 billion in 2024.');
-        setStatus('PUBLISHED');
-        setCategory('Deep Dive');
-        if (editorRef.current) {
-          editorRef.current.innerHTML = '<p>From healthcare diagnostics to agricultural intelligence, Indian AI startups raised over $2.3 billion in 2024. Here is what is driving the momentum.</p><h2>The Core Catalyst</h2><p>Bangalore overtakes Singapore as Asia\'s premier AI Hub.</p>';
-          updateStats();
-        }
-      }, 300);
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    setUploadingCover(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const json = await uploadMediaAction(formData);
+      if (json.success && json.data?.url) {
+        setCoverImage(json.data.url);
+      } else {
+        throw new Error(json.error || 'Upload failed');
+      }
+    } catch (err) {
+      console.error('Cover upload error:', err);
+      alert('Failed to upload cover image.');
+    } finally {
+      setUploadingCover(false);
+      e.target.value = '';
     }
+  };
+
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    setUploadingThumbnail(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const json = await uploadMediaAction(formData);
+      if (json.success && json.data?.url) {
+        setThumbnailImage(json.data.url);
+      } else {
+        throw new Error(json.error || 'Upload failed');
+      }
+    } catch (err) {
+      console.error('Thumbnail upload error:', err);
+      alert('Failed to upload thumbnail image.');
+    } finally {
+      setUploadingThumbnail(false);
+      e.target.value = '';
+    }
+  };
+
+  // Load real article data
+  useEffect(() => {
+    if (!params.id || params.id === 'new') return;
+    getArticleByIdAction(params.id).then((res) => {
+      if (!res.success || !res.data) return;
+      const a = res.data;
+      setTitle(a.title || '');
+      setSubtitle(a.excerpt || '');
+      setStatus(a.status || 'DRAFT');
+      setArticleType(a.type || 'NEWS');
+      setCategory(a.categoryName || '');
+      setSeoTitle(a.seoTitle || '');
+      setMetaDesc(a.seoDescription || '');
+      setFocusKeyword(a.focusKeyword || '');
+      setFeatured(a.isFeatured || false);
+      setPinned(a.isPinned || false);
+      setSponsored(a.isSponsored || false);
+      setCoverImage(a.coverImage || null);
+      setThumbnailImage(a.thumbnailImage || null);
+      if (editorRef.current && a.content) {
+        const html = typeof a.content === 'object' && a.content.html
+          ? a.content.html
+          : typeof a.content === 'string'
+          ? a.content
+          : '';
+        editorRef.current.innerHTML = html;
+        updateStats();
+      }
+    });
   }, [params.id, updateStats]);
 
   // Track cursor for plus button
@@ -148,16 +214,46 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     setLinkUrl('');
   };
 
-  const doSave = (newStatus?: string) => {
+  const doSave = async (newStatus?: string) => {
+    const targetStatus = newStatus || status;
     if (newStatus) setStatus(newStatus);
+
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      const payload = {
+        title: title || 'Untitled Draft',
+        subtitle: subtitle,
+        content: editorRef.current?.innerHTML || '',
+        category: category,
+        tags: tags,
+        type: articleType,
+        status: targetStatus,
+        slug: slug,
+        seoTitle,
+        seoDescription: metaDesc,
+        focusKeyword,
+        coverImage: coverImage,
+        thumbnailImage: thumbnailImage
+      };
+
+      const json = await saveArticleAction(payload, params.id);
+
+      if (!json.success) {
+        throw new Error(json.error || 'Failed to save');
+      }
+
       const t = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
       setLastSaved(t);
-      setSaveMsg(newStatus === 'PUBLISHED' ? 'Published!' : newStatus === 'IN_REVIEW' ? 'Submitted for review' : 'Saved');
+      setSaveMsg(targetStatus === 'PUBLISHED' ? 'Published!' : targetStatus === 'IN_REVIEW' ? 'Submitted for review' : 'Saved');
       setTimeout(() => setSaveMsg(''), 2500);
-    }, 400);
+
+      if (targetStatus === 'PUBLISHED') setShowPreview(false);
+    } catch (e: any) {
+      console.error("Save Action Failed:", e);
+      setSaveMsg(e.message || 'Error saving');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const Toggle = ({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) => (
@@ -242,17 +338,23 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         <div className={`${sidebarOpen ? 'w-[65%]' : 'flex-1'} overflow-y-auto bg-white dark:bg-gray-950 transition-all`}>
           <div className="max-w-[720px] mx-auto py-12 px-6">
             {/* Cover */}
-            {coverUploaded ? (
-              <div className="mb-8 relative group">
-                <div className="w-full h-80 bg-gradient-to-br from-brand/20 to-brand/5 dark:from-brand/10 dark:to-brand/5 rounded-xl flex items-center justify-center">
-                  <span className="text-sm text-brand font-jakarta">cover-image.webp</span>
-                </div>
-                <button onClick={() => setCoverUploaded(false)} className="absolute top-3 right-3 p-1.5 bg-black/50 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-4 h-4" /></button>
+            <input type="file" ref={fileInputRef} onChange={handleCoverUpload} accept="image/*" className="hidden" />
+
+            {coverImage ? (
+              <div className="mb-8 relative group rounded-xl overflow-hidden aspect-video bg-gray-100 dark:bg-gray-800">
+                <img src={coverImage} alt="Cover" className="w-full h-full object-cover" />
+                <button onClick={() => setCoverImage(null)} className="absolute top-3 right-3 p-1.5 bg-black/50 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-4 h-4" /></button>
               </div>
             ) : (
-              <button onClick={() => setCoverUploaded(true)} className="w-full mb-8 py-6 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-xl text-center hover:border-brand/40 transition-colors group">
-                <Upload className="w-5 h-5 text-gray-300 dark:text-gray-600 mx-auto group-hover:text-brand/50 transition-colors" />
-                <p className="text-xs text-gray-300 dark:text-gray-600 font-jakarta mt-1.5 group-hover:text-brand/50">Add a cover image</p>
+              <button onClick={() => fileInputRef.current?.click()} disabled={uploadingCover} className={`w-full mb-8 py-8 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-xl text-center transition-colors group ${uploadingCover ? 'opacity-50 cursor-not-allowed' : 'hover:border-brand/40 cursor-pointer'}`}>
+                {uploadingCover ? (
+                  <span className="text-sm text-gray-400">Uploading...</span>
+                ) : (
+                  <>
+                    <Upload className="w-5 h-5 text-gray-300 dark:text-gray-600 mx-auto group-hover:text-brand/50 transition-colors" />
+                    <p className="text-xs text-gray-300 dark:text-gray-600 font-jakarta mt-1.5 group-hover:text-brand/50">Add a cover image</p>
+                  </>
+                )}
               </button>
             )}
 
@@ -379,8 +481,42 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                         <div><label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Type</label><select className="input-field text-sm" value={articleType} onChange={(e) => setArticleType(e.target.value)}>{['NEWS', 'STORY', 'OPINION', 'GUIDE', 'COMPARISON', 'REPORT', 'SPONSORED'].map(t => <option key={t} value={t}>{t.charAt(0) + t.slice(1).toLowerCase()}</option>)}</select></div>
                       </>)}
                       {panel.id === 'cover' && (
-                        <div onClick={() => setCoverUploaded(true)} className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${coverUploaded ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/10' : 'border-gray-300 dark:border-gray-600 hover:border-brand'}`}>
-                          {coverUploaded ? (<><CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" /><p className="text-sm text-green-600 dark:text-green-400 font-jakarta font-semibold">Uploaded</p><button onClick={(e) => { e.stopPropagation(); setCoverUploaded(false); }} className="text-xs text-red-500 hover:underline mt-2">Remove</button></>) : (<><Upload className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" /><p className="text-sm text-gray-400 font-jakarta">Click to upload</p><p className="text-xs text-gray-300 dark:text-gray-600 font-jakarta mt-1">16:9 · PNG, JPG, WebP</p></>)}
+                        <div className="space-y-4">
+                          <input type="file" ref={thumbnailInputRef} onChange={handleThumbnailUpload} accept="image/*" className="hidden" />
+                          <div>
+                            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 font-jakarta">Cover Image <span className="normal-case font-normal text-gray-400">(hero, 16:9)</span></p>
+                            <div onClick={() => fileInputRef.current?.click()} className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer ${coverImage ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/10' : 'border-gray-300 dark:border-gray-600 hover:border-brand'}`}>
+                              {coverImage ? (
+                                <>
+                                  <img src={coverImage} alt="Cover" className="w-full h-24 object-cover rounded-lg mb-2" />
+                                  <button onClick={(e) => { e.stopPropagation(); setCoverImage(null); }} className="text-xs text-red-500 hover:underline">Remove</button>
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="w-6 h-6 text-gray-300 dark:text-gray-600 mx-auto mb-1" />
+                                  <p className="text-sm text-gray-400 font-jakarta">{uploadingCover ? 'Uploading...' : 'Click to upload'}</p>
+                                  <p className="text-xs text-gray-300 dark:text-gray-600 font-jakarta mt-0.5">16:9 · PNG, JPG, WebP</p>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 font-jakarta">Thumbnail <span className="normal-case font-normal text-gray-400">(card preview, 4:3)</span></p>
+                            <div onClick={() => thumbnailInputRef.current?.click()} className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer ${thumbnailImage ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/10' : 'border-gray-300 dark:border-gray-600 hover:border-brand'}`}>
+                              {thumbnailImage ? (
+                                <>
+                                  <img src={thumbnailImage} alt="Thumbnail" className="w-full h-20 object-cover rounded-lg mb-2" />
+                                  <button onClick={(e) => { e.stopPropagation(); setThumbnailImage(null); }} className="text-xs text-red-500 hover:underline">Remove</button>
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="w-6 h-6 text-gray-300 dark:text-gray-600 mx-auto mb-1" />
+                                  <p className="text-sm text-gray-400 font-jakarta">{uploadingThumbnail ? 'Uploading...' : 'Click to upload'}</p>
+                                  <p className="text-xs text-gray-300 dark:text-gray-600 font-jakarta mt-0.5">4:3 · PNG, JPG, WebP</p>
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       )}
                       {panel.id === 'seo' && (<>
@@ -417,9 +553,9 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
             </div>
           </div>
           <div className="max-w-[720px] mx-auto py-12 px-6">
-            {coverUploaded && (
-              <div className="w-full h-80 bg-gradient-to-br from-brand/20 to-brand/5 rounded-xl flex items-center justify-center mb-8">
-                <span className="text-sm text-brand font-jakarta">cover-image.webp</span>
+            {coverImage && (
+              <div className="w-full overflow-hidden rounded-xl mb-8 aspect-video bg-gray-100 dark:bg-gray-800">
+                <img src={coverImage} alt="Cover" className="w-full h-full object-cover" />
               </div>
             )}
             <h1 className="font-sora font-extrabold text-[42px] text-navy dark:text-white leading-[1.15] tracking-tight">{title || 'Untitled'}</h1>

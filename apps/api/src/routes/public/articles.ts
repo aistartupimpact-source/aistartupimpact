@@ -1,49 +1,60 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '@aistartupimpact/database';
+import { cacheRoute } from '../../lib/redis';
 
 const router = Router();
 
 // GET /v1/articles — List published articles
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', cacheRoute(120), async (req: Request, res: Response) => {
   try {
     const {
       type, category, tag, author, isFeatured,
-      page = '1', limit = '10', sort = 'newest',
+      page = '1', limit = '10',
     } = req.query;
 
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+    const take = parseInt(limit as string);
 
-    const where: any = { status: 'PUBLISHED' };
-    if (type) where.type = type;
-    if (category) where.category = { slug: category };
-    // if (tag) where.tags = { some: { tag: { slug: tag } } };
-    if (author) where.author = { slug: author };
-    if (isFeatured !== undefined) where.isFeatured = isFeatured === 'true';
+    // Build WHERE conditions for raw SQL
+    const conditions: string[] = [`a.status = 'PUBLISHED'`, `a."deletedAt" IS NULL`];
+    if (type) conditions.push(`a.type = '${(type as string).replace(/'/g, "''")}'`);
+    if (category) conditions.push(`c.slug = '${(category as string).replace(/'/g, "''")}'`);
+    if (author) conditions.push(`u.slug = '${(author as string).replace(/'/g, "''")}'`);
+    if (isFeatured !== undefined) conditions.push(`a."isFeatured" = ${isFeatured === 'true'}`);
 
-    const [articles, total] = await Promise.all([
-      prisma.article.findMany({
-        where,
-        include: {
-          author: { select: { name: true, slug: true, avatar: true } },
-          category: { select: { name: true, slug: true, color: true } }
-        },
-        orderBy: { publishedAt: 'desc' },
-        skip,
-        take: parseInt(limit as string),
-      }),
-      prisma.article.count({ where }),
+    const whereClause = conditions.join(' AND ');
+
+    const [articles, countResult]: [any[], any[]] = await Promise.all([
+      prisma.$queryRawUnsafe(`
+        SELECT
+          a.id, a.title, a.slug, a.type, a.excerpt, a."coverImage",
+          a."readTimeMinutes", a."viewCount", a."isFeatured",
+          a."publishedAt"::text AS "publishedAt",
+          u.name AS "authorName", u.slug AS "authorSlug", u.avatar AS "authorAvatar",
+          c.name AS "categoryName", c.slug AS "categorySlug", c.color AS "categoryColor"
+        FROM "Article" a
+        LEFT JOIN "User" u ON u.id = a."authorId"
+        LEFT JOIN "Category" c ON c.id = a."categoryId"
+        WHERE ${whereClause}
+        ORDER BY a."publishedAt" DESC NULLS LAST
+        LIMIT ${take} OFFSET ${skip}
+      `),
+      prisma.$queryRawUnsafe(`SELECT COUNT(*)::int AS count FROM "Article" a LEFT JOIN "Category" c ON c.id = a."categoryId" LEFT JOIN "User" u ON u.id = a."authorId" WHERE ${whereClause}`),
     ]);
 
+    const total = countResult[0]?.count || 0;
+    const data = articles.map((a: any) => ({
+      id: a.id, title: a.title, slug: a.slug, type: a.type,
+      excerpt: a.excerpt, coverImage: a.coverImage,
+      readTimeMinutes: a.readTimeMinutes, viewCount: a.viewCount,
+      isFeatured: a.isFeatured, publishedAt: a.publishedAt,
+      author: { name: a.authorName, slug: a.authorSlug, avatar: a.authorAvatar },
+      category: { name: a.categoryName, slug: a.categorySlug, color: a.categoryColor },
+    }));
+
     res.json({
-      success: true,
-      data: articles,
-      meta: {
-        page: parseInt(page as string),
-        limit: parseInt(limit as string),
-        total,
-        pages: Math.ceil(total / parseInt(limit as string)),
-        hasNext: skip + articles.length < total,
-      },
+      success: true, data,
+      meta: { page: parseInt(page as string), limit: take, total, pages: Math.ceil(total / take), hasNext: skip + data.length < total },
     });
   } catch (error) {
     console.error(error);
@@ -54,12 +65,13 @@ router.get('/', async (req: Request, res: Response) => {
 // GET /v1/articles/trending — Top 10 trending
 router.get('/trending', async (_req: Request, res: Response) => {
   try {
-    const trending = await prisma.article.findMany({
-      where: { status: 'PUBLISHED' },
-      orderBy: { viewCount: 'desc' },
-      take: 10,
-      select: { id: true, title: true, slug: true, viewCount: true }
-    });
+    const trending: any[] = await prisma.$queryRaw`
+      SELECT id, title, slug, "viewCount"
+      FROM "Article"
+      WHERE status = 'PUBLISHED' AND "deletedAt" IS NULL
+      ORDER BY "viewCount" DESC
+      LIMIT 10
+    `;
     res.json({ success: true, data: trending });
   } catch (error) {
     console.error(error);
@@ -72,18 +84,33 @@ router.get('/:slug', async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
 
-    const article = await prisma.article.findUnique({
-      where: { slug, status: 'PUBLISHED' },
-      include: {
-        author: { select: { name: true, slug: true, avatar: true } },
-        category: { select: { name: true, slug: true } },
-        tags: { include: { tag: true } }
-      }
-    });
+    const rows: any[] = await prisma.$queryRaw`
+      SELECT
+        a.id, a.title, a.slug, a.type, a.excerpt, a.content,
+        a."coverImage", a."readTimeMinutes", a."viewCount", a."isFeatured",
+        a."publishedAt"::text AS "publishedAt",
+        u.name AS "authorName", u.slug AS "authorSlug", u.avatar AS "authorAvatar",
+        c.name AS "categoryName", c.slug AS "categorySlug"
+      FROM "Article" a
+      LEFT JOIN "User" u ON u.id = a."authorId"
+      LEFT JOIN "Category" c ON c.id = a."categoryId"
+      WHERE a.slug = ${slug} AND a.status = 'PUBLISHED' AND a."deletedAt" IS NULL
+      LIMIT 1
+    `;
 
-    if (!article) {
+    if (!rows.length) {
       return res.status(404).json({ success: false, data: null, error: 'Article not found' });
     }
+
+    const a = rows[0];
+    const article = {
+      id: a.id, title: a.title, slug: a.slug, type: a.type,
+      excerpt: a.excerpt, content: a.content, coverImage: a.coverImage,
+      readTimeMinutes: a.readTimeMinutes, viewCount: a.viewCount,
+      isFeatured: a.isFeatured, publishedAt: a.publishedAt,
+      author: { name: a.authorName, slug: a.authorSlug, avatar: a.authorAvatar },
+      category: { name: a.categoryName, slug: a.categorySlug },
+    };
 
     res.json({ success: true, data: article });
   } catch (error) {

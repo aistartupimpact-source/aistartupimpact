@@ -1,76 +1,48 @@
 import { MetadataRoute } from 'next';
+import { neon } from '@neondatabase/serverless';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
+export const revalidate = 3600; // regenerate every hour
 
-// Direct fetch utility since sitemap runs at build/ISR time
-async function fetchAll(endpoint: string) {
-  try {
-    const res = await fetch(`${API_BASE}${endpoint}?limit=1000`, {
-      next: { revalidate: 3600 }, // Cache for 1 hour
-    });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json.success ? json.data : [];
-  } catch (error) {
-    console.error(`Sitemap fetch error mapping ${endpoint}:`, error);
-    return [];
-  }
-}
+const SITE_URL = 'https://aistartupimpact.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://aistartupimpact.com';
+  // Static routes
+  const staticRoutes: MetadataRoute.Sitemap = [
+    { url: SITE_URL, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },
+    { url: `${SITE_URL}/news`, lastModified: new Date(), changeFrequency: 'hourly', priority: 0.9 },
+    { url: `${SITE_URL}/stories`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
+    { url: `${SITE_URL}/tools`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${SITE_URL}/funding`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${SITE_URL}/about`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${SITE_URL}/newsletter`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${SITE_URL}/advertise`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${SITE_URL}/contact`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${SITE_URL}/privacy`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${SITE_URL}/terms`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
+  ];
 
-  // 1. Static Routes
-  const staticRoutes = [
-    '',
-    '/news',
-    '/stories',
-    '/tools',
-    '/funding',
-    '/india-ai',
-    '/about',
-    '/advertise',
-    '/contact',
-    '/newsletter',
-    '/privacy',
-    '/terms',
-  ].map((route) => ({
-    url: `${baseUrl}${route}`,
-    lastModified: new Date(),
-    changeFrequency: 'daily' as const,
-    priority: route === '' ? 1.0 : 0.8,
-  }));
+  try {
+    const sql = neon(process.env.DATABASE_URL!);
 
-  // 2. Fetch all dynamic content
-  const [articles, tools, startups] = await Promise.all([
-    fetchAll('/articles'),
-    fetchAll('/tools'),
-    fetchAll('/startups'),
-  ]);
+    // Fetch published articles directly from DB
+    const articles: any[] = await sql`
+      SELECT slug, type, "updatedAt", "publishedAt"
+      FROM "Article"
+      WHERE status = 'PUBLISHED' AND "deletedAt" IS NULL
+      ORDER BY "publishedAt" DESC
+      LIMIT 1000
+    `;
 
-  // 3. Map Articles (News & Stories)
-  const articleRoutes = articles.map((article: any) => ({
-    url: `${baseUrl}/${article.type?.toLowerCase() === 'story' ? 'stories' : 'news'}/${article.slug}`,
-    lastModified: new Date(article.updatedAt || article.createdAt || new Date()),
-    changeFrequency: 'weekly' as const,
-    priority: 0.7,
-  }));
+    const articleRoutes: MetadataRoute.Sitemap = articles.map((a) => ({
+      url: `${SITE_URL}/${a.type?.toLowerCase() === 'story' ? 'stories' : 'news'}/${a.slug}`,
+      lastModified: new Date(a.updatedAt || a.publishedAt || new Date()),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    }));
 
-  // 4. Map Tools
-  const toolRoutes = tools.map((tool: any) => ({
-    url: `${baseUrl}/tools/${tool.slug}`,
-    lastModified: new Date(tool.updatedAt || tool.createdAt || new Date()),
-    changeFrequency: 'monthly' as const,
-    priority: 0.6,
-  }));
-
-  // 5. Map Startups
-  const startupRoutes = startups.map((startup: any) => ({
-    url: `${baseUrl}/startups/${startup.slug}`,
-    lastModified: new Date(startup.updatedAt || startup.createdAt || new Date()),
-    changeFrequency: 'monthly' as const,
-    priority: 0.6,
-  }));
-
-  return [...staticRoutes, ...articleRoutes, ...toolRoutes, ...startupRoutes];
+    return [...staticRoutes, ...articleRoutes];
+  } catch (e) {
+    console.error('Sitemap DB error:', e);
+    return staticRoutes;
+  }
 }

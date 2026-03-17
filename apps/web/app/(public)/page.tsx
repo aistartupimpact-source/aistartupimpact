@@ -1,89 +1,52 @@
 import Link from 'next/link';
+import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import {
   ArrowRight, TrendingUp, Star, Users, ChevronRight,
-  Sparkles, IndianRupee, ExternalLink, Zap, Clock,
-  ArrowUpRight, Play, Flag, Bookmark,
+  Sparkles, IndianRupee, Zap, Clock,
+  ArrowUpRight, Bookmark,
 } from 'lucide-react';
 
+// ISR: revalidate every 60s — much better than force-dynamic for production
+// Hero slots change infrequently; this gives CDN caching + fresh data
+export const revalidate = 60;
+
 import {
-  getHeroArticle,
+  getHeroArticleDirect as getHeroArticle,
+  getLatestStoriesDirect as getLatestStories,
+  getFounderSpotlightDirect as getFounderSpotlights,
+  getIndiaAIEcosystemDirect as getIndiaAIEcosystem,
+  getActiveCreativeForZone,
+  getActiveLiveTickers,
+  getFeaturedStartupDirect as getFeaturedStartup,
+  getFundingDigestsDirect,
+  getActiveSponsorDirect,
+  getActiveHeroSlotsDirect,
+} from '@/lib/db';
+import {
   getTrendingNews,
-  getLatestStories,
-  getFounderSpotlight,
   getToolPicks,
-  getFundingNews,
-  getFeaturedStartup,
-  getIndiaAIEcosystem
 } from '@/lib/api';
 
-/* ═══════════════════════════════════════════════════════
-   PREMIUM FALLBACK DATA (In case backend is offline)
-   ═══════════════════════════════════════════════════════ */
+// Fallbacks in a separate file — keeps this bundle lean
+import {
+  defaultHeroArticle,
+  defaultTrendingItems,
+  defaultLatestStories,
+  defaultFounderSpotlights,
+  defaultToolPicks,
+  defaultFundingDigests,
+  defaultPremiumStartup,
+  defaultSponsor,
+  defaultIndiaAI,
+} from '@/lib/fallbacks';
 
-const defaultHeroArticle = {
-  slug: 'india-ai-revolution-2026',
-  title: "The Rise of Indic LLMs: How Indian Startups Are Building AI for a Billion Voices in 2026",
-  excerpt:
-    "With Sarvam AI's OpenHathi and Ola Krutrim dominating the landscape, the focus has shifted entirely to vernacular AI. Here's a deep dive into how Indian AI companies raised over $3.5 billion to solve the multilingual challenge.",
-  category: { name: 'Deep Dive' },
-  author: { name: 'Venkatesh Lahori' },
-  publishedAt: '2026-03-08T10:00:00Z',
-  readTimeMinutes: 14,
-};
+// Dynamic imports for heavy client components — reduces initial JS bundle
+const FeaturedPartnerRotator = dynamic(() => import('@/components/FeaturedPartnerRotator'), { ssr: false });
+const HeroCarousel = dynamic(() => import('@/components/HeroCarousel'), { ssr: false });
 
-const defaultTrendingItems = [
-  "Ola Krutrim reaches $1B valuation, becoming India's first AI unicorn",
-  "Sarvam AI open-sources its foundational Hindi LLM series",
-  'NVIDIA partners with Reliance to build massive AI infrastructure in India',
-];
-
-const defaultLatestStories = [
-  { slug: 's1', title: "Krutrim Base and Pro Models: A Technical Breakdown for Indic Developers", category: { name: 'Tech Review' }, author: { name: 'Adviteeya R.' }, publishedAt: '2026-03-07T10:00:00Z', readTimeMinutes: 7 },
-  { slug: 's2', title: "Qure.ai Secures $65M Series D to Expand AI Healthcare Diagnostics Globally", category: { name: 'Funding' }, author: { name: 'Sneha Jain' }, publishedAt: '2026-03-06T10:00:00Z', readTimeMinutes: 5 },
-  { slug: 's3', title: 'Why Global Tech Leaders Are Setting Up AI Hubs in Bengaluru and Hyderabad', category: { name: 'Ecosystem' }, author: { name: 'Kunal Patel' }, publishedAt: '2026-03-05T08:00:00Z', readTimeMinutes: 9 },
-];
-
-const sponsor = { brand: 'Yotta Data Services', tagline: 'Powering Indian AI with NVIDIA H100 GPU Cloud clusters', ctaUrl: 'https://yotta.com' };
-
-const defaultFounderSpotlight = {
-  slug: 'pratyush-kumar-sarvam',
-  title: 'Building Sarvam AI: Pratyush Kumar on the Mission to Democratize Vernacular Intelligence for India',
-  excerpt: 'From co-founding AI4Bharat to raising a massive $41M Series A for Sarvam AI, Pratyush Kumar and Vivek Raghavan are leading the charge in building foundational AI models tailored specifically for India\'s linguistic diversity.',
-  author: { name: 'Venkatesh Lahori' },
-  readTimeMinutes: 12,
-};
-
-const defaultToolPicks = [
-  { slug: 'krutrim', name: 'Krutrim AI', tagline: 'India\'s own foundational AI assistant fluent in 22 official languages', category: { name: 'Assistant' }, avgRating: 4.8 },
-  { slug: 'karya', name: 'Karya', tagline: 'Ethical data platform paying rural Indians to train regional AI models', category: { name: 'Data Ops' }, avgRating: 4.9 },
-  { slug: 'dubu', name: 'Dubverse', tagline: 'AI-powered video dubbing tool supporting purely Indian languages natively', category: { name: 'Video Gen' }, avgRating: 4.6 },
-];
-
-const defaultFundingNews = [
-  { slug: 'f1', startup: { name: 'Krutrim Si Designs' }, amountInr: 415000000000, roundType: 'Funding', headline: 'Krutrim Raises $50M from Matrix Partners India at $1B Valuation', announcedAt: '2026-01-26T10:00:00Z', leadInvestors: ['Matrix Partners'] },
-  { slug: 'f2', startup: { name: 'Sarvam AI' }, amountInr: 340000000000, roundType: 'Series A', headline: 'Sarvam AI Secures Massive $41M Series A to Build LLMs', announcedAt: '2026-02-15T10:00:00Z', leadInvestors: ['Lightspeed', 'Peak XV'] },
-  { slug: 'f3', startup: { name: 'Karya' }, amountInr: 50000000000, roundType: 'Seed', headline: 'Ethical Data Startup Karya Closes Seed Funding from Microsoft', announcedAt: '2026-02-28T10:00:00Z', leadInvestors: ['Microsoft M12'] },
-];
-
-const defaultPremiumStartup = { name: 'Yotta Shakti', tagline: 'India\'s Largest AI Supercomputer', description: 'Access scalable GPU infrastructure natively in India. Delivering 16,384 NVIDIA H100 GPUs exclusively for homegrown AI innovators.', ctaUrl: 'https://yotta.com' };
-
-const defaultIndiaAI = [
-  { slug: 'i1', title: "Cabinet Approves ₹10,372 Crore 'IndiaAI Mission' to Bolster Domestic Innovation", category: { name: 'Policy' }, publishedAt: '2026-03-05T10:00:00Z' },
-  { slug: 'i2', title: "Bhashini: The Digital Public Good Revolutionizing Cross-Language Communication", category: { name: 'Public Tech' }, publishedAt: '2026-03-04T10:00:00Z' },
-  { slug: 'i3', title: 'Why Reliance Jio is Banking Heavily on AI for the Next Billion Users', category: { name: 'Telecom' }, publishedAt: '2026-03-02T10:00:00Z' },
-  { slug: 'i4', title: 'Startups Using AI to Solve Agriculture Supply Chain Issues in Rural India', category: { name: 'AgriTech' }, publishedAt: '2026-03-01T10:00:00Z' },
-];
-
-// Helper to format dates
-const formatDate = (isoString: string) => {
-  return new Date(isoString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-};
-
-// Helper to format rupees clearly (from paise to Cr format)
-const formatRupees = (paise: number) => {
-  const cr = paise / 1000000000;
-  return `₹${cr}Cr`;
-};
+const formatDate = (isoString: string) =>
+  new Date(isoString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 /* ═══════════════════════════════════════════════════════
    HOMEPAGE — Mobile-first + Dark/Light mode
@@ -95,79 +58,128 @@ export default async function HomePage() {
     fetchedHeroArticle,
     fetchedTrending,
     fetchedLatest,
-    fetchedSpotlight,
+    fetchedSpotlights,
     fetchedTools,
-    fetchedFunding,
+    fetchedFundingDigests,
     fetchedFeaturedStartup,
     fetchedIndiaAI,
+    heroAd,
+    tickerAd,
+    sectionAd,
+    fetchedLiveTickers,
+    fetchedSponsor,
+    fetchedHeroSlots,
   ] = await Promise.all([
     getHeroArticle(),
     getTrendingNews(),
-    getLatestStories(3),
-    getFounderSpotlight(),
-    getToolPicks(3),
-    getFundingNews(3),
+    getLatestStories(4),
+    getFounderSpotlights(5),
+    getToolPicks(6),
+    getFundingDigestsDirect(3),
     getFeaturedStartup(),
     getIndiaAIEcosystem(4),
+    getActiveCreativeForZone('H1_HERO_FEATURE'),
+    getActiveCreativeForZone('H2_TRENDING_STRIP'),
+    getActiveCreativeForZone('H3_SECTION_SPONSOR'),
+    getActiveLiveTickers(),
+    getActiveSponsorDirect(),
+    getActiveHeroSlotsDirect(),
   ]);
 
   // Use fetched data, but provide elegant fallbacks if DB is empty or backend is unreachable
   const heroArticle = fetchedHeroArticle || defaultHeroArticle;
-  const trendingItems = fetchedTrending?.length > 0 ? fetchedTrending : defaultTrendingItems;
+  const trendingItems = fetchedLiveTickers?.length > 0 ? fetchedLiveTickers : (fetchedTrending?.length > 0 ? fetchedTrending : defaultTrendingItems);
   const latestStories = fetchedLatest?.length > 0 ? fetchedLatest : defaultLatestStories;
-  const founderSpotlight = fetchedSpotlight || defaultFounderSpotlight;
+  const founderSpotlights = (fetchedSpotlights && fetchedSpotlights.length > 0) ? fetchedSpotlights : defaultFounderSpotlights;
   const toolPicks = fetchedTools?.length > 0 ? fetchedTools : defaultToolPicks;
-  const fundingNews = fetchedFunding?.length > 0 ? fetchedFunding : defaultFundingNews;
-  const premiumStartup = fetchedFeaturedStartup || defaultPremiumStartup;
+  const fundingDigests = fetchedFundingDigests?.length > 0 ? fetchedFundingDigests : defaultFundingDigests;
+  const premiumStartups = (fetchedFeaturedStartup && fetchedFeaturedStartup.length > 0) ? fetchedFeaturedStartup : defaultPremiumStartup;
   const indiaAI = fetchedIndiaAI?.length > 0 ? fetchedIndiaAI : defaultIndiaAI;
+  const activeSponsor = fetchedSponsor || defaultSponsor;
+  // Hero: scheduled slots take priority over heroAd, then fallback to featured article
+  const heroSlides = (fetchedHeroSlots && fetchedHeroSlots.length > 0) ? fetchedHeroSlots : null;
 
   return (
     <>
       {/* ╔════════════════════════════════════════════╗
-          ║  1. HERO — Editorial Cover Story            ║
+          ║  1. HERO — Scheduled Carousel / Ad / Article║
           ╚════════════════════════════════════════════╝ */}
       <section>
-        <Link href={`/news/${heroArticle.slug}`} className="group block">
-          <div className="relative overflow-hidden bg-[#0D1B2A] min-h-[340px] sm:min-h-[420px] md:min-h-[480px] flex items-end">
-            {/* Decorative glows */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#0D1B2A] via-[#0F2239] to-black" />
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-10 right-10 sm:top-20 sm:right-20 w-60 sm:w-96 h-60 sm:h-96 bg-brand rounded-full blur-[100px] sm:blur-[120px]" />
-              <div className="absolute bottom-5 left-5 sm:bottom-10 sm:left-10 w-40 sm:w-64 h-40 sm:h-64 bg-brand-300 rounded-full blur-[80px] sm:blur-[100px]" />
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-
-            <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 md:pb-16 pt-16 sm:pt-20">
-              <div className="max-w-3xl">
-                <span className="inline-flex items-center gap-1.5 bg-brand px-2.5 py-1 rounded-sm text-white text-[11px] font-bold uppercase tracking-wider mb-4 sm:mb-5">
-                  <Bookmark className="w-3 h-3" />
-                  {heroArticle.category?.name || 'Story'}
-                </span>
-                <h1 className="font-sora font-extrabold text-[22px] leading-[1.2] sm:text-3xl md:text-[42px] md:leading-[1.15] text-white group-hover:text-brand-200 transition-colors duration-300">
-                  {heroArticle.title}
-                </h1>
-                <p className="text-gray-300 text-sm sm:text-base md:text-lg font-jakarta leading-relaxed max-w-2xl mt-3 sm:mt-5 line-clamp-3 sm:line-clamp-none">
-                  {heroArticle.excerpt}
-                </p>
-                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-400 font-jakarta mt-4 sm:mt-6">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-brand/30 flex items-center justify-center text-[10px] text-brand font-bold">
-                      {heroArticle.author?.name?.charAt(0) || 'A'}
-                    </div>
-                    <span className="text-gray-300 font-medium">{heroArticle.author?.name || 'Author'}</span>
-                  </div>
-                  <span className="text-gray-600">·</span>
-                  <span>{formatDate(heroArticle.publishedAt || new Date().toISOString())}</span>
-                  <span className="text-gray-600">·</span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
-                    {heroArticle.readTimeMinutes} min read
+        {heroSlides ? (
+          /* Scheduled hero slots from admin — up to 5, rotates every 7s */
+          <HeroCarousel slides={heroSlides} />
+        ) : heroAd ? (
+          <a href={heroAd.ctaUrl} target="_blank" rel="noopener noreferrer" className="group block">
+            <div className="relative overflow-hidden bg-[#0D1B2A] min-h-[340px] sm:min-h-[420px] md:min-h-[500px] flex items-end">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#0D1B2A] via-[#0F2239] to-black" />
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-10 right-10 sm:top-20 sm:right-20 w-60 sm:w-96 h-60 sm:h-96 bg-brand rounded-full blur-[100px] sm:blur-[120px]" />
+              </div>
+              {heroAd.imageUrl && (
+                <Image src={heroAd.imageUrl} alt={heroAd.headline} fill className="object-cover opacity-30" />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 md:pb-16 pt-12 sm:pt-16">
+                <div className="max-w-3xl">
+                  <span className="inline-flex items-center gap-1.5 bg-yellow-500 px-2.5 py-1 rounded-sm text-black text-[11px] font-bold uppercase tracking-wider mb-4">
+                    ★ Sponsored · {heroAd.companyName}
                   </span>
+                  <h1 className="font-sora font-extrabold text-[22px] leading-[1.2] sm:text-3xl md:text-[42px] md:leading-[1.15] text-white group-hover:text-brand-200 transition-colors duration-300">
+                    {heroAd.headline}
+                  </h1>
+                  <p className="text-gray-300 text-sm sm:text-base md:text-lg font-jakarta leading-relaxed max-w-2xl mt-3 sm:mt-5 line-clamp-3 sm:line-clamp-none">
+                    {heroAd.bodyText}
+                  </p>
+                  <div className="mt-6">
+                    <span className="inline-flex items-center gap-2 bg-brand text-white font-bold px-5 py-2.5 rounded-xl text-sm font-jakarta">
+                      {heroAd.ctaText || 'Learn More'} →
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </Link>
+          </a>
+        ) : (
+          <Link href={`/news/${heroArticle.slug}`} className="group block">
+            <div className="relative overflow-hidden bg-[#0D1B2A] min-h-[340px] sm:min-h-[420px] md:min-h-[500px] flex items-end">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#0D1B2A] via-[#0F2239] to-black" />
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-10 right-10 sm:top-20 sm:right-20 w-60 sm:w-96 h-60 sm:h-96 bg-brand rounded-full blur-[100px] sm:blur-[120px]" />
+                <div className="absolute bottom-5 left-5 sm:bottom-10 sm:left-10 w-40 sm:w-64 h-40 sm:h-64 bg-brand-300 rounded-full blur-[80px] sm:blur-[100px]" />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+              <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 md:pb-16 pt-16 sm:pt-20">
+                <div className="max-w-3xl">
+                  <span className="inline-flex items-center gap-1.5 bg-brand px-2.5 py-1 rounded-sm text-white text-[11px] font-bold uppercase tracking-wider mb-4 sm:mb-5">
+                    <Bookmark className="w-3 h-3" />
+                    {heroArticle.category?.name || 'Story'}
+                  </span>
+                  <h1 className="font-sora font-extrabold text-[22px] leading-[1.2] sm:text-3xl md:text-[42px] md:leading-[1.15] text-white group-hover:text-brand-200 transition-colors duration-300">
+                    {heroArticle.title}
+                  </h1>
+                  <p className="text-gray-300 text-sm sm:text-base md:text-lg font-jakarta leading-relaxed max-w-2xl mt-3 sm:mt-5 line-clamp-3 sm:line-clamp-none">
+                    {heroArticle.excerpt}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-400 font-jakarta mt-4 sm:mt-6">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-brand/30 flex items-center justify-center text-[10px] text-brand font-bold">
+                        {heroArticle.author?.name?.charAt(0) || 'A'}
+                      </div>
+                      <span className="text-gray-300 font-medium">{heroArticle.author?.name || 'Author'}</span>
+                    </div>
+                    <span className="text-gray-600">·</span>
+                    <span>{formatDate(heroArticle.publishedAt || new Date().toISOString())}</span>
+                    <span className="text-gray-600">·</span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+                      {heroArticle.readTimeMinutes} min read
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Link>
+        )}
       </section>
 
       {/* ╔════════════════════════════════════════════╗
@@ -177,14 +189,21 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 sm:gap-4 h-10 sm:h-11 overflow-hidden">
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5">
+              <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-brand" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-brand" />
               </span>
-              <span className="text-brand text-[10px] sm:text-xs font-bold uppercase tracking-wider font-sora">Live</span>
+              <span className="text-brand text-[9px] sm:text-[10px] font-bold uppercase tracking-wider font-sora">Live</span>
             </div>
             <div className="overflow-hidden flex-1">
               <div className="animate-ticker whitespace-nowrap flex gap-8 sm:gap-12">
+                {tickerAd && (
+                  <a href={tickerAd.ctaUrl} target="_blank" rel="noopener noreferrer"
+                    className="text-brand text-xs sm:text-sm font-jakarta font-semibold inline-flex items-center gap-2 sm:gap-3 hover:underline">
+                    <span className="text-yellow-400 font-bold">★ Sponsored</span>
+                    {tickerAd.headline}
+                  </a>
+                )}
                 {trendingItems.map((item: any, i: number) => (
                   <span key={i} className="text-gray-300 text-xs sm:text-sm font-jakarta inline-flex items-center gap-2 sm:gap-3">
                     <span className="text-brand font-bold">•</span>
@@ -198,38 +217,52 @@ export default async function HomePage() {
       </section>
 
       {/* ╔════════════════════════════════════════════╗
-          ║  3. LATEST STORIES — 3 Column Grid          ║
+          ║  3. LATEST STORIES — Exact Grid Design     ║
           ╚════════════════════════════════════════════╝ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 cv-auto">
         <div className="flex items-center justify-between mb-6 sm:mb-8">
-          <h2 className="section-title">Latest Stories</h2>
-          <Link href="/news" className="text-brand font-semibold text-sm hover:underline flex items-center gap-1 font-jakarta">
-            View All <ChevronRight className="w-4 h-4" />
+          <div>
+            <h2 className="font-sora font-bold text-xl sm:text-2xl text-gray-900 dark:text-white">Latest Stories</h2>
+          </div>
+          <Link href="/news" className="text-red-500 hover:text-red-600 font-medium text-xs sm:text-sm flex items-center gap-1 font-jakarta">
+            View All →
           </Link>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-          {latestStories.map((story: any) => (
-            <Link key={story.slug} href={`/news/${story.slug}`} className="group">
-              <div className="card overflow-hidden h-full">
-                {/* Image placeholder */}
-                <div className="aspect-[16/10] bg-gradient-to-br from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-900 relative">
-                  <span className="absolute top-3 left-3 badge-brand text-[10px]">{story.category?.name || 'News'}</span>
-                </div>
-                <div className="p-4 sm:p-5">
-                  <h3 className="font-sora font-bold text-[15px] sm:text-base text-navy dark:text-white leading-snug group-hover:text-brand transition-colors line-clamp-2">
+        
+        {/* Seamless 2x2 Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+          {latestStories.slice(0, 4).map((story: any, idx: number) => {
+            const borderClass = [
+              'border-b sm:border-r border-gray-200 dark:border-gray-700',
+              'border-b border-gray-200 dark:border-gray-700',
+              'border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-700',
+              '',
+            ][idx] || '';
+            return (
+              <Link key={story.slug} href={`/news/${story.slug}`} className="group">
+                <div className={`bg-gray-50 dark:bg-gray-900 p-5 sm:p-6 relative hover:bg-white dark:hover:bg-gray-800 transition-all duration-300 ${borderClass} hover:border-l-4 hover:border-l-red-500`}>
+                  <div className="mb-3">
+                    <span className="inline-block text-xs font-bold uppercase tracking-wider text-red-500">
+                      {story.category?.name || 'News'}
+                    </span>
+                  </div>
+                  <h3 className="font-sora font-bold text-base sm:text-lg text-gray-900 dark:text-white leading-tight mb-3 group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors">
                     {story.title}
                   </h3>
-                  <div className="flex items-center gap-2 mt-2.5 sm:mt-3 text-xs text-gray-400 dark:text-gray-500 font-jakarta">
-                    <span className="font-medium text-gray-500 dark:text-gray-400">{story.author?.name || 'Author'}</span>
-                    <span>·</span>
-                    <span>{story.publishedAt ? formatDate(story.publishedAt) : 'Recently'}</span>
-                    <span>·</span>
-                    <span>{story.readTimeMinutes} min read</span>
+                  {story.excerpt && (
+                    <p className="text-gray-600 dark:text-gray-400 font-jakarta text-sm leading-relaxed mb-4 line-clamp-3">
+                      {story.excerpt}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-2 text-xs text-gray-400 font-jakarta">
+                    {story.author?.name && <><span>{story.author.name}</span><span>·</span></>}
+                    <span>{formatDate(story.publishedAt)}</span>
+                    {story.readTimeMinutes && <><span>·</span><span>{story.readTimeMinutes} min read</span></>}
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       </section>
 
@@ -238,247 +271,357 @@ export default async function HomePage() {
           ╚════════════════════════════════════════════╝ */}
       <section className="border-y border-brand/10 dark:border-brand/5 bg-brand/[0.02] dark:bg-brand/[0.03]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <a href={sponsor.ctaUrl} className="flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-3.5 group">
-            <span className="text-[10px] sm:text-xs text-gray-400 font-jakarta uppercase tracking-wider">Powered by</span>
-            <span className="font-sora font-bold text-brand text-xs sm:text-sm group-hover:underline">{sponsor.brand}</span>
-            <span className="text-gray-400 dark:text-gray-500 text-xs sm:text-sm font-jakarta hidden sm:inline">— {sponsor.tagline}</span>
-            <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-brand opacity-0 group-hover:opacity-100 transition-opacity" />
-          </a>
+          {sectionAd ? (
+            <a href={sectionAd.ctaUrl} target="_blank" rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-3.5 group">
+              <span className="text-[10px] sm:text-xs text-gray-400 font-jakarta uppercase tracking-wider">Sponsored</span>
+              <span className="font-sora font-bold text-brand text-xs sm:text-sm group-hover:underline">{sectionAd.companyName}</span>
+              <span className="text-gray-400 dark:text-gray-500 text-xs sm:text-sm font-jakarta hidden sm:inline">— {sectionAd.headline}</span>
+              <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-brand opacity-0 group-hover:opacity-100 transition-opacity" />
+            </a>
+          ) : (
+            <a href={activeSponsor.ctaUrl} className="flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-3.5 group">
+              <span className="text-[10px] sm:text-xs text-gray-400 font-jakarta uppercase tracking-wider">Powered by</span>
+              <span className="font-sora font-bold text-brand text-xs sm:text-sm group-hover:underline">{activeSponsor.brand}</span>
+              <span className="text-gray-400 dark:text-gray-500 text-xs sm:text-sm font-jakarta hidden sm:inline">— {activeSponsor.tagline}</span>
+              <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-brand opacity-0 group-hover:opacity-100 transition-opacity" />
+            </a>
+          )}
         </div>
       </section>
 
       {/* ╔════════════════════════════════════════════╗
-          ║  5. FOUNDER SPOTLIGHT — Horizontal Card     ║
+          ║  5. FOUNDER SPOTLIGHT — Premium Grid        ║
           ╚════════════════════════════════════════════╝ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 cv-auto">
         <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3">
-            <h2 className="section-title">Founder Spotlight</h2>
-            <span className="badge-category hidden sm:inline-flex">Editorial</span>
+            <h2 className="font-sora font-bold text-xl sm:text-2xl text-gray-900 dark:text-white">Founder Spotlight</h2>
+            <span className="inline-flex items-center gap-1 bg-brand/10 text-brand text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full font-jakarta">
+              <span className="w-1 h-1 rounded-full bg-brand animate-pulse" />
+              Featured
+            </span>
           </div>
-          <Link href="/stories" className="text-brand font-semibold text-sm hover:underline flex items-center gap-1 font-jakarta">
+          <Link href="/stories" className="text-brand font-semibold text-xs sm:text-sm hover:underline flex items-center gap-1 font-jakarta">
             All Stories <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
-        <Link href={`/stories/${founderSpotlight.slug}`} className="group overflow-hidden">
-          <div className="card overflow-hidden flex flex-col md:flex-row">
-            {/* Image */}
-            <div className="md:w-2/5 aspect-[16/10] md:aspect-auto bg-gradient-to-br from-brand-50 to-gray-50 dark:from-brand-900/20 dark:to-gray-900 relative min-h-[200px]">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center">
-                  <Users className="w-8 h-8 sm:w-10 sm:h-10 text-brand/50" />
-                </div>
-              </div>
-              <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4">
-                <span className="badge-brand text-[10px]">Founder Spotlight</span>
-              </div>
-            </div>
-            {/* Content */}
-            <div className="md:w-3/5 p-5 sm:p-6 md:p-8 flex flex-col justify-center">
-              <h3 className="font-sora font-extrabold text-lg sm:text-xl md:text-2xl text-navy dark:text-white leading-tight group-hover:text-brand transition-colors">
-                {founderSpotlight.title}
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm sm:text-base leading-relaxed mt-2.5 sm:mt-3 line-clamp-3">
-                {founderSpotlight.excerpt}
-              </p>
-              <div className="flex items-center gap-2 sm:gap-3 mt-4 sm:mt-5 text-xs sm:text-sm text-gray-400 dark:text-gray-500 font-jakarta">
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-brand/10 flex items-center justify-center text-[9px] sm:text-[10px] text-brand font-bold">
-                    {founderSpotlight.author?.name?.charAt(0) || 'A'}
+
+        {/* Premium seamless 2-col grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
+          {founderSpotlights.slice(0, 4).map((story: any, idx: number) => {
+            const borderClass = [
+              'border-b sm:border-r border-gray-200 dark:border-gray-700',
+              'border-b border-gray-200 dark:border-gray-700',
+              'border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-700',
+              '',
+            ][idx] || '';
+            return (
+              <Link key={story.slug} href={`/stories/${story.slug}`} className="group h-full">
+                <div className={`relative bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-300 ${borderClass} flex flex-col h-full`}>
+                  {/* Left accent bar on hover */}
+                  <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-brand scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-top rounded-r" />
+
+                  {/* Thumbnail */}
+                  <div className="relative h-48 sm:h-64 lg:h-72 bg-gradient-to-br from-brand/10 to-gray-100 dark:from-brand/20 dark:to-gray-800 overflow-hidden shrink-0">
+                    {(story.thumbnailImage || story.coverImage) ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={story.thumbnailImage || story.coverImage}
+                        alt={story.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-2xl bg-brand/10 flex items-center justify-center">
+                          <Users className="w-6 h-6 text-brand/40" />
+                        </div>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                    <div className="absolute top-3 left-3">
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-white bg-brand px-2 py-0.5 rounded-sm">
+                        Founder Story
+                      </span>
+                    </div>
+                    {story.readTimeMinutes && (
+                      <div className="absolute bottom-3 right-3">
+                        <span className="flex items-center gap-1 text-[10px] text-white/80 font-jakarta bg-black/40 px-1.5 py-0.5 rounded">
+                          <Clock className="w-2.5 h-2.5" />
+                          {story.readTimeMinutes} min
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  <span className="font-medium text-gray-500 dark:text-gray-400">{founderSpotlight.author?.name || 'Anjali Nair'}</span>
+
+                  {/* Content */}
+                  <div className="p-5 sm:p-6 flex flex-col flex-1">
+                    {/* Title */}
+                    <h3 className="font-sora font-bold text-base sm:text-lg text-gray-900 dark:text-white leading-snug mb-2.5 group-hover:text-brand transition-colors line-clamp-2">
+                      {story.title}
+                    </h3>
+
+                    {/* Excerpt */}
+                    {story.excerpt && (
+                      <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm leading-relaxed line-clamp-2 mb-4 flex-1">
+                        {story.excerpt}
+                      </p>
+                    )}
+
+                    {/* Author row */}
+                    <div className="flex items-center gap-2 pt-3 border-t border-gray-100 dark:border-gray-800 mt-auto">
+                      <div className="w-6 h-6 rounded-full bg-brand/10 flex items-center justify-center text-[10px] text-brand font-bold shrink-0">
+                        {story.author?.name?.charAt(0) || 'A'}
+                      </div>
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 font-jakarta">
+                        {story.author?.name || 'Editorial'}
+                      </span>
+                      {story.publishedAt && (
+                        <>
+                          <span className="text-gray-300 dark:text-gray-600">·</span>
+                          <span className="text-xs text-gray-400 font-jakarta">{formatDate(story.publishedAt)}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <span>·</span>
-                <span>{founderSpotlight.readTimeMinutes} min read</span>
-              </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Tool Picks moved — see below India AI Ecosystem */}
+
+      {/* ╔════════════════════════════════════════════╗
+          ║  7. FUNDING DIGESTS — 3 Column Grid         ║
+          ╚════════════════════════════════════════════╝ */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 cv-auto">
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <IndianRupee className="w-5 h-5 sm:w-6 sm:h-6 text-brand" />
+            <h2 className="section-title">Funding Digests</h2>
+          </div>
+          <Link href="/funding" className="text-brand font-semibold text-sm hover:underline flex items-center gap-1 font-jakarta">
+            All Digests <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        {/* Seamless grid — same style as India AI Ecosystem */}
+        <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
+          {/* Dark header bar */}
+          <div className="bg-gray-900 dark:bg-gray-800 px-4 sm:px-6 py-4 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-brand shrink-0" />
+              <span className="text-white font-bold text-xs sm:text-sm uppercase tracking-wider">Weekly Funding Rounds</span>
+            </div>
+            <div className="bg-gray-800 dark:bg-gray-700 px-2 sm:px-3 py-1 rounded-full shrink-0">
+              <span className="text-gray-300 text-[10px] sm:text-xs font-medium uppercase tracking-wider">India AI</span>
             </div>
           </div>
-        </Link>
+
+          {/* 3-col seamless grid */}
+          <div className="p-0 bg-gray-50 dark:bg-gray-800">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {fundingDigests.slice(0, 3).map((digest: any, idx: number) => {
+                const borderClass = [
+                  'border-b sm:border-r border-gray-200 dark:border-gray-700',
+                  'border-b sm:border-b-0 sm:border-r lg:border-r border-gray-200 dark:border-gray-700',
+                  '',
+                ][idx] || '';
+                return (
+                  <Link key={digest.slug} href="/funding" className={`group ${borderClass}`}>
+                    <div className="bg-gray-50 dark:bg-gray-800 p-5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 h-full flex flex-col gap-3">
+                      {/* Date + badge */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 font-jakarta">
+                          {formatDate(digest.date)}
+                        </span>
+                        <span className="inline-flex items-center gap-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
+                          <TrendingUp className="w-2.5 h-2.5" />
+                          Weekly
+                        </span>
+                      </div>
+
+                      {/* Total raised — hero number */}
+                      <div>
+                        <div className="font-sora font-extrabold text-2xl text-brand leading-none">
+                          {digest.totalRaised}
+                        </div>
+                        <div className="text-xs text-gray-400 font-jakarta mt-0.5">
+                          raised across {digest.dealsCount} {digest.dealsCount === 1 ? 'deal' : 'deals'}
+                        </div>
+                      </div>
+
+                      {/* Title — cleaned up, no "Week X:" prefix */}
+                      <h3 className="font-sora font-semibold text-sm text-gray-900 dark:text-white leading-snug group-hover:text-brand transition-colors line-clamp-2 flex-1">
+                        {digest.title.replace(/^Week\s+\d+:\s*/i, '')}
+                      </h3>
+
+                      {/* Top deals preview */}
+                      {digest.deals?.slice(0, 2).map((deal: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between text-xs font-jakarta border-t border-gray-200 dark:border-gray-700 pt-2">
+                          <span className="text-gray-600 dark:text-gray-300 font-medium truncate">{deal.startup}</span>
+                          <span className="text-brand font-bold shrink-0 ml-2">{deal.amount}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* ╔════════════════════════════════════════════╗
-          ║  6. TOOL PICKS — 3 Column Grid              ║
+          ║  8. PREMIUM FEATURED STARTUP — Rotator      ║
           ╚════════════════════════════════════════════╝ */}
-      <section className="bg-gray-50/70 dark:bg-gray-900/50 py-8 sm:py-12">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12">
+        <FeaturedPartnerRotator partners={premiumStartups} />
+      </section>
+
+      {/* ╔════════════════════════════════════════════╗
+          ║  9. INDIA AI ECOSYSTEM — Redesigned        ║
+          ╚════════════════════════════════════════════╝ */}
+      <section className="py-8 sm:py-12 cv-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6 sm:mb-8">
+            <div>
+              <h2 className="font-sora font-bold text-xl sm:text-2xl text-gray-900 dark:text-white">India AI Ecosystem</h2>
+            </div>
+            <Link href="/startups" className="text-red-500 hover:text-red-600 font-medium text-xs sm:text-sm flex items-center gap-1 font-jakarta">
+              Explore →
+            </Link>
+          </div>
+
+          {/* Main Container with Dark Header */}
+          <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
+            {/* Dark Header */}
+            <div className="bg-gray-900 dark:bg-gray-800 px-4 sm:px-6 py-4 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <span className="text-xl sm:text-2xl shrink-0">🇮🇳</span>
+                <div className="min-w-0">
+                  <span className="text-red-500 font-bold text-xs sm:text-sm uppercase tracking-wider">MADE IN</span>
+                  <span className="text-white font-bold text-xs sm:text-sm uppercase tracking-wider ml-1">INDIA</span>
+                  <span className="text-gray-400 font-medium text-xs sm:text-sm ml-2 hidden sm:inline">— AI ECOSYSTEM</span>
+                </div>
+              </div>
+              <div className="bg-gray-800 dark:bg-gray-700 px-2 sm:px-3 py-1 rounded-full shrink-0">
+                <span className="text-gray-300 text-[10px] sm:text-xs font-medium uppercase tracking-wider">INDIA-FIRST</span>
+              </div>
+            </div>
+
+            {/* Content Grid - No Gaps */}
+            <div className="p-0 bg-gray-50 dark:bg-gray-800">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                {indiaAI.slice(0, 4).map((item: any, idx: number) => {
+                  const borderClass = [
+                    'border-b sm:border-r border-gray-200 dark:border-gray-700',
+                    'border-b sm:border-b-0 sm:border-r lg:border-r border-gray-200 dark:border-gray-700',
+                    'border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-700',
+                    '',
+                  ][idx] || '';
+                  return (
+                    <Link key={item.slug} href={`/news/${item.slug}`} className={`group cursor-pointer ${borderClass}`}>
+                      <div className="bg-gray-50 dark:bg-gray-800 p-4 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300">
+                        <div className="mb-3">
+                          <span className="inline-block text-xs font-bold uppercase tracking-wider text-red-500">
+                            {item.category?.name || 'Ecosystem'}
+                          </span>
+                        </div>
+                        <h3 className="font-sora font-bold text-sm text-gray-900 dark:text-white leading-tight mb-2 group-hover:text-red-500 transition-colors">
+                          {item.title}
+                        </h3>
+                        <span className="text-xs text-gray-400 font-jakarta">
+                          {formatDate(item.publishedAt)}
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ╔════════════════════════════════════════════╗
+          ║  10. AI TOOL PICKS — Seamless Grid          ║
+          ╚════════════════════════════════════════════╝ */}
+      <section className="py-8 sm:py-12 cv-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-6 sm:mb-8">
             <div className="flex items-center gap-2 sm:gap-3">
               <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-brand" />
-              <h2 className="section-title">AI Tool Picks</h2>
+              <h2 className="font-sora font-bold text-xl sm:text-2xl text-gray-900 dark:text-white">AI Tool Picks</h2>
             </div>
-            <Link href="/tools" className="text-brand font-semibold text-sm hover:underline flex items-center gap-1 font-jakarta">
+            <Link href="/tools" className="text-brand font-semibold text-xs sm:text-sm hover:underline flex items-center gap-1 font-jakarta">
               Browse All <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            {toolPicks.map((tool: any) => (
-              <Link key={tool.slug} href={`/tools/${tool.slug}`} className="group block h-full">
-                <div className="card p-5 sm:p-6 h-full flex flex-col">
-                  <div className="flex items-start justify-between mb-3 sm:mb-4">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-900/30 dark:to-brand-800/20 flex items-center justify-center">
-                      <Zap className="w-6 h-6 sm:w-7 sm:h-7 text-brand" />
-                    </div>
-                    <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/30 px-2 py-1 rounded-full">
-                      <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
-                      <span className="text-sm font-bold text-yellow-700 dark:text-yellow-400">{tool.avgRating}</span>
-                    </div>
-                  </div>
-                  <h3 className="font-sora font-bold text-base sm:text-lg text-navy dark:text-white group-hover:text-brand transition-colors">
-                    {tool.name}
-                  </h3>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm font-jakarta mt-1.5 sm:mt-2 flex-1 leading-relaxed">
-                    {tool.tagline}
-                  </p>
-                  <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                    <span className="badge-category text-[10px]">{tool.category?.name || 'Tool'}</span>
-                    <span className="text-brand text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                      View <ArrowRight className="w-3.5 h-3.5" />
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* ╔════════════════════════════════════════════╗
-          ║  7. NEWSLETTER SIGNUP — High Contrast       ║
-          ╚════════════════════════════════════════════╝ */}
-      <section className="bg-[#0D1B2A] dark:bg-gray-950 relative overflow-hidden">
-        <div className="absolute top-0 right-1/4 w-60 sm:w-80 h-60 sm:h-80 bg-brand/20 rounded-full blur-[80px] sm:blur-[100px]" />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-          <div className="max-w-2xl mx-auto text-center">
-            <span className="inline-flex items-center gap-1.5 text-brand text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-3 sm:mb-4">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand" />
-              Free Weekly Newsletter
-            </span>
-            <h2 className="font-sora font-extrabold text-2xl sm:text-3xl md:text-4xl text-white leading-tight">
-              Don&apos;t miss the <span className="text-brand">AI signal</span>
-            </h2>
-            <p className="text-gray-400 mt-2.5 sm:mt-3 font-jakarta text-sm sm:text-base md:text-lg max-w-lg mx-auto">
-              Join 5,000+ founders, investors & engineers getting our weekly ecosystem digest every Friday.
-            </p>
-            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="your@email.com"
-                className="flex-1 px-4 sm:px-5 py-3.5 bg-white/10 border border-white/15 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-brand focus:bg-white/15 font-jakarta text-sm sm:text-base transition-all min-h-[48px]"
-              />
-              <button className="bg-brand hover:bg-brand-600 text-white font-bold px-6 sm:px-8 py-3.5 rounded-xl font-jakarta transition-all duration-200 hover:shadow-lg hover:shadow-brand/25 shrink-0 min-h-[48px] active:scale-[0.97]">
-                Subscribe
-              </button>
-            </div>
-            <p className="text-gray-600 text-[11px] sm:text-xs font-jakarta mt-3 sm:mt-4">
-              No spam. Unsubscribe anytime. Read by teams at Google, Flipkart & Zerodha.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ╔════════════════════════════════════════════╗
-          ║  8. FUNDING NEWS — 3 Column Grid            ║
-          ╚════════════════════════════════════════════╝ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <div className="flex items-center justify-between mb-6 sm:mb-8">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <IndianRupee className="w-5 h-5 sm:w-6 sm:h-6 text-brand" />
-            <h2 className="section-title">Funding News</h2>
-          </div>
-          <Link href="/funding" className="text-brand font-semibold text-sm hover:underline flex items-center gap-1 font-jakarta">
-            All Rounds <ChevronRight className="w-4 h-4" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-          {fundingNews.map((round: any) => (
-            <Link key={round.slug} href={`/funding/${round.slug}`} className="group h-full">
-              <div className="card p-4 sm:p-6 h-full">
-                <div className="flex items-center justify-between mb-3 sm:mb-4">
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 sm:px-2.5 py-1 rounded-full uppercase tracking-wider">
-                    <IndianRupee className="w-3 h-3" />
-                    {round.roundType}
-                  </span>
-                  <span className="font-sora font-extrabold text-brand text-base sm:text-lg">
-                    {formatRupees(round.amountInr)}
-                  </span>
-                </div>
-                <h3 className="font-sora font-bold text-[15px] sm:text-base text-navy dark:text-white leading-snug group-hover:text-brand transition-colors line-clamp-2">
-                  {round.headline}
-                </h3>
-                <div className="mt-2.5 sm:mt-3 text-xs text-gray-400 dark:text-gray-500 font-jakarta">
-                  <span className="text-gray-500 dark:text-gray-400 font-medium">{round.leadInvestors?.join(', ')}</span>
-                  <span className="mx-1.5">·</span>
-                  <span>{formatDate(round.announcedAt)}</span>
-                </div>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
+            {/* Dark header */}
+            <div className="bg-gray-900 dark:bg-gray-800 px-4 sm:px-6 py-4 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-brand shrink-0" />
+                <span className="text-white font-bold text-xs sm:text-sm uppercase tracking-wider">Top Rated AI Tools</span>
               </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* ╔════════════════════════════════════════════╗
-          ║  9. PREMIUM FEATURED STARTUP                ║
-          ╚════════════════════════════════════════════╝ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12">
-        <div className="text-center mb-3 sm:mb-4">
-          <span className="text-[10px] font-bold text-brand uppercase tracking-[0.2em] font-jakarta">Featured Partner</span>
-        </div>
-        <div className="group block">
-          <div className="card-featured relative overflow-hidden bg-gradient-to-r from-brand-50/50 via-white to-brand-50/50 dark:from-brand-900/10 dark:via-gray-900 dark:to-brand-900/10">
-            <div className="absolute -right-20 -top-20 w-48 sm:w-64 h-48 sm:h-64 bg-brand/5 rounded-full blur-[60px]" />
-            <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 sm:gap-8 p-6 sm:p-8 md:p-10">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center shrink-0">
-                <Zap className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-brand" />
-              </div>
-              <div className="flex-1 text-center md:text-left">
-                <h3 className="font-sora font-extrabold text-lg sm:text-xl md:text-2xl text-navy dark:text-white group-hover:text-brand transition-colors">
-                  {premiumStartup.name} — {premiumStartup.tagline}
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm sm:text-base mt-1.5 sm:mt-2 max-w-xl mx-auto md:mx-0">
-                  {premiumStartup.description}
-                </p>
-              </div>
-              <div className="flex flex-col items-center shrink-0">
-                <div className="font-sora font-extrabold text-3xl sm:text-4xl text-brand">40%</div>
-                <div className="text-xs text-gray-400 font-jakarta mt-1">Lower GPU Cost</div>
-                <Link href={premiumStartup.ctaUrl || '#'} className="mt-6 sm:mt-8 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-6 py-3 rounded-xl text-sm font-jakarta transition-all hover:border-white/40 flex items-center justify-center sm:inline-flex w-full sm:w-auto backdrop-blur-sm shadow-xl shadow-black/20 group-hover:bg-brand group-hover:border-brand">
-                  Get Started →
-                </Link>
+              <div className="bg-gray-800 dark:bg-gray-700 px-2 sm:px-3 py-1 rounded-full shrink-0">
+                <span className="text-gray-300 text-[10px] sm:text-xs font-medium uppercase tracking-wider">Editor Picks</span>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* ╔════════════════════════════════════════════╗
-          ║  10. INDIA AI ECOSYSTEM                     ║
-          ╚════════════════════════════════════════════╝ */}
-      <section className="bg-gray-50/70 dark:bg-gray-900/50 py-8 sm:py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-6 sm:mb-8">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Flag className="w-4 h-4 sm:w-5 sm:h-5 text-brand" />
-              <h2 className="section-title">India AI Ecosystem</h2>
-              <span className="badge-brand text-[10px] hidden sm:inline-flex">UNIQUE</span>
+            {/* 3-col seamless grid, 2 rows */}
+            <div className="p-0 bg-gray-50 dark:bg-gray-800">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                {toolPicks.map((tool: any, idx: number) => {
+                  const col = idx % 3;
+                  const row = Math.floor(idx / 3);
+                  const totalRows = Math.ceil(toolPicks.length / 3);
+                  const isLastRow = row === totalRows - 1;
+                  const borderClass = [
+                    col < 2 ? 'border-r border-gray-200 dark:border-gray-700' : '',
+                    !isLastRow ? 'border-b border-gray-200 dark:border-gray-700' : '',
+                  ].filter(Boolean).join(' ');
+                  return (
+                    <Link key={tool.slug} href={`/tools/${tool.slug}`} className={`group ${borderClass}`}>
+                      <div className="bg-gray-50 dark:bg-gray-800 p-5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 h-full flex flex-col">
+                        {/* Top row: icon + rating */}
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="w-10 h-10 rounded-xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center shrink-0">
+                            <Zap className="w-5 h-5 text-brand" />
+                          </div>
+                          {tool.avgRating && (
+                            <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/30 px-2 py-0.5 rounded-full">
+                              <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                              <span className="text-xs font-bold text-yellow-700 dark:text-yellow-400">{tool.avgRating}</span>
+                            </div>
+                          )}
+                        </div>
+                        {/* Name */}
+                        <h3 className="font-sora font-bold text-sm text-gray-900 dark:text-white leading-tight mb-1.5 group-hover:text-brand transition-colors">
+                          {tool.name}
+                        </h3>
+                        {/* Tagline */}
+                        <p className="text-gray-500 dark:text-gray-400 text-xs font-jakarta leading-relaxed flex-1 line-clamp-2">
+                          {tool.tagline}
+                        </p>
+                        {/* Category */}
+                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-brand">{tool.category?.name || 'Tool'}</span>
+                          <span className="text-brand text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                            View <ArrowRight className="w-3 h-3" />
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-            <Link href="/startups" className="text-brand font-semibold text-sm hover:underline flex items-center gap-1 font-jakarta">
-              Explore <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-            {indiaAI.map((article: any) => (
-              <Link key={article.slug} href={`/news/${article.slug}`} className="group">
-                <div className="bg-white dark:bg-gray-900 rounded-xl p-4 sm:p-5 border border-gray-100 dark:border-gray-800 border-l-4 border-l-brand hover:shadow-lg hover:border-brand/20 dark:hover:border-brand/30 transition-all duration-300 h-full">
-                  <span className="badge-category inline-block mb-2.5 sm:mb-3">{article.category?.name || 'News'}</span>
-                  <h3 className="font-sora font-bold text-[14px] sm:text-sm text-navy dark:text-white group-hover:text-brand transition-colors leading-snug line-clamp-3">
-                    {article.title}
-                  </h3>
-                  <span className="text-xs text-gray-400 dark:text-gray-500 font-jakarta mt-2.5 sm:mt-3 block">
-                    {formatDate(article.publishedAt || new Date().toISOString())}
-                  </span>
-                </div>
-              </Link>
-            ))}
           </div>
         </div>
       </section>

@@ -1,5 +1,27 @@
 import Link from 'next/link';
-import { IndianRupee, TrendingUp, Calendar, ChevronRight, ArrowRight, Clock, Building2 } from 'lucide-react';
+import { Metadata } from 'next';
+import { IndianRupee, TrendingUp, Calendar, ArrowRight, Clock, Building2 } from 'lucide-react';
+import { generateItemListSchema, generateBreadcrumbSchema, generateFAQSchema } from '@/lib/seo';
+
+export const metadata: Metadata = {
+  title: 'Funding Digest — Indian AI Startup Funding Rounds',
+  description: 'Weekly roundup of Indian AI startup funding rounds. Track deals, investors, and capital flow in India\'s AI ecosystem.',
+  alternates: { canonical: 'https://aistartupimpact.com/funding' },
+  openGraph: {
+    title: 'Funding Digest — Indian AI Startup Funding Rounds',
+    description: 'Weekly roundup of Indian AI startup funding rounds. Track deals, investors, and capital flow in India\'s AI ecosystem.',
+    type: 'website',
+    url: 'https://aistartupimpact.com/funding',
+    siteName: 'AIStartupImpact',
+    images: [{ url: 'https://aistartupimpact.com/og-default.png', width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Funding Digest — Indian AI Startup Funding Rounds',
+    description: 'Weekly roundup of Indian AI startup funding rounds.',
+    creator: '@aikitstartup',
+  },
+};
 
 const latestDigest = {
   slug: 'funding-digest-mar-7-2025',
@@ -22,8 +44,47 @@ const pastDigests = [
 ];
 
 export default function FundingPage() {
+  const siteUrl = 'https://aistartupimpact.com';
+
+  const itemListSchema = generateItemListSchema({
+    name: 'Indian AI Startup Funding Digest',
+    description: 'Weekly roundup of Indian AI startup funding rounds, deals, and investor activity.',
+    url: `${siteUrl}/funding`,
+    items: [latestDigest, ...pastDigests].map((d, i) => ({
+      position: i + 1,
+      name: d.title,
+      url: `${siteUrl}/news/${d.slug}`,
+    })),
+  });
+
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: 'Home', url: siteUrl },
+    { name: 'Funding Digest', url: `${siteUrl}/funding` },
+  ]);
+
+  const faqSchema = generateFAQSchema([
+    {
+      question: 'How much funding have Indian AI startups raised?',
+      answer: 'Indian AI startups have raised over $3.5 billion in 2024–2025, with major rounds from Sarvam AI (₹415Cr Series A), Krutrim (Series B), and Qure.ai ($65M Series D). The ecosystem is growing rapidly with weekly new deals.',
+    },
+    {
+      question: 'Which Indian AI startups raised the most funding?',
+      answer: 'Top-funded Indian AI startups include Sarvam AI (₹415Cr), Krutrim by Ola, Qure.ai, and NeuralScale. The LLM, HealthTech, and EdTech sectors are attracting the most capital.',
+    },
+    {
+      question: 'When is the AIStartupImpact Funding Digest published?',
+      answer: 'The Funding Digest is published every Friday, covering all Indian AI startup funding rounds from the previous week.',
+    },
+    {
+      question: 'Which investors are most active in Indian AI startups?',
+      answer: 'The most active investors in Indian AI include Peak XV Partners (formerly Sequoia India), Lightspeed India, Accel India, Blume Ventures, and Omnivore. Global funds like a16z and Tiger Global are also increasing India exposure.',
+    },
+  ]);
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       {/* Header */}
       <div className="mb-6 sm:mb-10">
         <div className="flex items-center gap-3 mb-2">

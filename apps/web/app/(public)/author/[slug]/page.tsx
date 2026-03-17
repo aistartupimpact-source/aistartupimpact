@@ -1,5 +1,7 @@
 import Link from 'next/link';
+import { Metadata } from 'next';
 import { Clock, Calendar, User, Newspaper, BookOpen, Twitter, Linkedin, Globe } from 'lucide-react';
+import { generatePersonSchema } from '@/lib/seo';
 
 const author = {
   name: 'Priya Sharma',
@@ -22,9 +24,43 @@ const articles = [
   { slug: 'nasscom-ai-summit', title: 'NASSCOM AI Summit 2025: Key Takeaways for Indian Startups', category: 'Events', date: 'Feb 10, 2025', readTime: '7 min' },
 ];
 
-export default function AuthorPage() {
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  return {
+    title: `${author.name} — ${author.role}`,
+    description: author.bio,
+    alternates: { canonical: `https://aistartupimpact.com/author/${params.slug}` },
+    openGraph: {
+      title: `${author.name} — ${author.role}`,
+      description: author.bio,
+      type: 'profile',
+      url: `https://aistartupimpact.com/author/${params.slug}`,
+      siteName: 'AIStartupImpact',
+    },
+    twitter: {
+      card: 'summary',
+      title: `${author.name} — ${author.role}`,
+      description: author.bio,
+      creator: '@aikitstartup',
+    },
+  };
+}
+
+export default function AuthorPage({ params }: { params: { slug: string } }) {
+  const jsonLd = generatePersonSchema({
+    name: author.name,
+    slug: params.slug,
+    bio: author.bio,
+    role: author.role,
+    twitter: author.twitter,
+    linkedin: author.linkedin,
+    website: author.website,
+  });
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Author Header */}
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 mb-8 sm:mb-10 text-center sm:text-left">
         <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-brand/10 dark:bg-brand/20 flex items-center justify-center text-3xl text-brand font-bold font-sora shrink-0">

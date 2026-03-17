@@ -21,7 +21,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
 
   // Read persisted preference on mount
   useEffect(() => {
-    const stored = localStorage.getItem('aisi-theme') as Theme | null;
+    const stored = localStorage.getItem('asi-theme') as Theme | null;
     if (stored) {
       setTheme(stored);
     } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -35,7 +35,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
     if (!mounted) return;
     const root = document.documentElement;
     root.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem('aisi-theme', theme);
+    localStorage.setItem('asi-theme', theme);
   }, [theme, mounted]);
 
   const toggle = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'));

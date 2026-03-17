@@ -1,20 +1,16 @@
 // Utility to fetch data for the frontend from the Next.js API rewrite or external Express server
-// Ensure NEXT_PUBLIC_API_URL is available, otherwise default to local dev.
-
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
 
-async function fetchAPI(endpoint: string, options = {}) {
+async function fetchAPI(endpoint: string, options: any = {}) {
   try {
     const res = await fetch(`${API_BASE}${endpoint}`, {
-      next: { revalidate: 60 }, // ISR: Revalidate every 60 seconds
+      next: { revalidate: 60 },
       ...options,
     });
-
     if (!res.ok) {
       console.warn(`API ${endpoint} returned status ${res.status}`);
       return null;
     }
-
     const json = await res.json();
     return json.success ? json.data : null;
   } catch (error) {
@@ -23,11 +19,21 @@ async function fetchAPI(endpoint: string, options = {}) {
   }
 }
 
-// ─── HERO & LATEST STORIES ───────────────────────────────────────
+export async function getArticles(params: Record<string, string | number> = {}) {
+  const qs = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)])).toString();
+  return fetchAPI(`/articles${qs ? `?${qs}` : ''}`);
+}
+
+export async function getArticleBySlug(slug: string) {
+  return fetchAPI(`/articles/${slug}`);
+}
 
 export async function getHeroArticle() {
   const articles = await fetchAPI('/articles?isFeatured=true&limit=1');
-  return articles ? articles[0] : null;
+  if (articles?.length) return articles[0];
+  // fallback: latest article
+  const latest = await fetchAPI('/articles?limit=1');
+  return latest?.length ? latest[0] : null;
 }
 
 export async function getTrendingNews() {
@@ -44,13 +50,9 @@ export async function getFounderSpotlight() {
   return stories ? stories[0] : null;
 }
 
-// ─── AI TOOLS ───────────────────────────────────────────────────
-
 export async function getToolPicks(limit = 3) {
   return fetchAPI(`/tools?isFeatured=true&limit=${limit}`);
 }
-
-// ─── FUNDING & STARTUPS ──────────────────────────────────────────
 
 export async function getFundingNews(limit = 3) {
   return fetchAPI(`/funding?limit=${limit}`);
@@ -61,8 +63,6 @@ export async function getFeaturedStartup() {
   return startups ? startups[0] : null;
 }
 
-// ─── INDIA AI ECOSYSTEM ──────────────────────────────────────────
-
 export async function getIndiaAIEcosystem(limit = 4) {
-  return fetchAPI(`/articles?category=ecosystem&limit=${limit}`);
+  return fetchAPI(`/articles?limit=${limit}`);
 }

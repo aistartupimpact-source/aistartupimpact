@@ -2,12 +2,14 @@
 // PostgreSQL 16 — All PKs are UUIDs, soft deletes via deletedAt, money in paise
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ════════════════════════════════════════════
@@ -234,6 +236,7 @@ model Article {
   categoryId      String?
   category        Category?      @relation(fields: [categoryId], references: [id])
   coverImage      String?
+  thumbnailImage  String?
   readTimeMinutes Int            @default(1)
   wordCount       Int            @default(0)
   viewCount       Int            @default(0)
@@ -513,6 +516,21 @@ model FundingRound {
   @@index([announcedAt])
 }
 
+model FundingDigest {
+  id          String   @id @default(uuid())
+  title       String
+  date        DateTime @db.Date
+  status      String   @default("DRAFT") // DRAFT, PUBLISHED
+  dealsCount  Int      @default(0)
+  totalRaised String   // e.g. "$98M"
+  deals       Json     @default("[]") // Array of deal objects
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([date])
+  @@index([status])
+}
+
 model Investor {
   id                 String       @id @default(uuid())
   name               String
@@ -682,6 +700,32 @@ model GlossaryTerm {
 }
 
 // ════════════════════════════════════════════
+// TICKERS
+// ════════════════════════════════════════════
+
+model BreakingTicker {
+  id        String   @id @default(uuid())
+  text      String   @db.Text
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model LiveTicker {
+  id        String   @id @default(uuid())
+  text      String   @db.Text
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+// ════════════════════════════════════════════
 // SITE SETTINGS
 // ════════════════════════════════════════════
 
@@ -690,6 +734,20 @@ model SiteSetting {
   key       String   @unique
   value     Json
   updatedAt DateTime @updatedAt
+}
+
+model Sponsor {
+  id          String   @id @default(uuid())
+  brand       String
+  tagline     String   @db.Text
+  ctaUrl      String
+  logoUrl     String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
 }
 
 model Redirect {

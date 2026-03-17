@@ -1,51 +1,126 @@
 'use client';
 
-import { useState } from 'react';
-import { Mail, Users, Send, Plus, Eye, Clock, CheckCircle, TrendingUp, Edit3, X, Save, Trash2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import {
+  Mail, Users, Send, Plus, Eye, Clock, CheckCircle, TrendingUp,
+  Edit3, X, Save, Trash2, Loader2, AlertCircle, FlaskConical,
+} from 'lucide-react';
+import {
+  getNewsletterStatsAction, getCampaignsAction, saveCampaignAction,
+  deleteCampaignAction, sendCampaignAction, sendTestEmailAction,
+} from './actions';
 
-const stats = [
-  { label: 'Total Subscribers', value: '5,247', change: '+12%', icon: Users },
-  { label: 'Avg. Open Rate', value: '42%', change: '+3%', icon: Eye },
-  { label: 'Campaigns Sent', value: '18', icon: Send },
-  { label: 'Click-through Rate', value: '8.5%', change: '+1.2%', icon: TrendingUp },
-];
+interface Campaign {
+  id: string; subject: string; previewText: string; body: string;
+  sentAt: string | null; scheduledAt: string | null;
+  status: string; totalSent: number; opens: number; clicks: number;
+}
+interface Stats { total: number; active: number; sentCount: number; openRate: string; ctr: string; }
 
-interface Campaign { id: string; subject: string; previewText: string; sentAt: string | null; status: string; opens: number; clicks: number; }
-
-const initialCampaigns: Campaign[] = [
-  { id: '1', subject: 'Weekly AI Pulse #42 — GPT-5 is here', previewText: 'Everything changes this week with GPT-5...', sentAt: 'Mar 7, 2025', status: 'SENT', opens: 2180, clicks: 445 },
-  { id: '2', subject: 'Funding Digest: $98M raised this week', previewText: 'Sarvam AI and Krutrim lead the pack...', sentAt: 'Mar 7, 2025', status: 'SENT', opens: 1950, clicks: 380 },
-  { id: '3', subject: 'Weekly AI Pulse #43 — Edge AI boom', previewText: 'Edge computing meets AI in India...', sentAt: null, status: 'DRAFT', opens: 0, clicks: 0 },
-  { id: '4', subject: 'Special: India AI Report 2025', previewText: 'The definitive guide to India\'s AI ecosystem...', sentAt: 'Mar 14, 2025', status: 'SCHEDULED', opens: 0, clicks: 0 },
-];
-
-const emptyCampaign: Campaign = { id: '', subject: '', previewText: '', sentAt: null, status: 'DRAFT', opens: 0, clicks: 0 };
+const empty: Omit<Campaign, 'id'> = {
+  subject: '', previewText: '', body: '', sentAt: null,
+  scheduledAt: null, status: 'DRAFT', totalSent: 0, opens: 0, clicks: 0,
+};
+const statusStyle: Record<string, string> = {
+  SENT: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+  SENDING: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
+  SCHEDULED: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400',
+  FAILED: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
+  DRAFT: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
+};
 
 export default function NewsletterAdminPage() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>(initialCampaigns);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Campaign | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [sending, setSending] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [testEmail, setTestEmail] = useState('');
+  const [testModalId, setTestModalId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
 
-  const openCreate = () => { setEditing({ ...emptyCampaign, id: Date.now().toString() }); setModalOpen(true); };
+  const showToast = (msg: string, ok = true) => {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const [s, c] = await Promise.all([getNewsletterStatsAction(), getCampaignsAction()]);
+    if (s.success && s.data) setStats(s.data as Stats);
+    if (c.success) setCampaigns((c.data as any[]).map(r => ({
+      id: r.id, subject: r.subject, previewText: r.previewText || '',
+      body: (r.contentJson as any)?.html || '',
+      sentAt: r.sentAt, scheduledAt: r.scheduledAt,
+      status: r.status, totalSent: Number(r.totalSent || 0),
+      opens: Number(r.opens || 0), clicks: Number(r.clicks || 0),
+    })));
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const openCreate = () => { setEditing({ id: '', ...empty }); setModalOpen(true); };
   const openEdit = (c: Campaign) => { setEditing({ ...c }); setModalOpen(true); };
+  const closeModal = () => { setModalOpen(false); setEditing(null); };
 
-  const handleSave = () => {
-    if (!editing) return;
-    const exists = campaigns.find(c => c.id === editing.id);
-    if (exists) setCampaigns(campaigns.map(c => c.id === editing.id ? editing : c));
-    else setCampaigns([editing, ...campaigns]);
-    setModalOpen(false); setEditing(null);
+  const handleSave = async () => {
+    if (!editing || !editing.subject.trim()) return;
+    setSaving(true);
+    const res = await saveCampaignAction({
+      id: editing.id || undefined,
+      subject: editing.subject, previewText: editing.previewText,
+      body: editing.body, scheduledAt: editing.scheduledAt || undefined,
+    });
+    setSaving(false);
+    if (res.success) { showToast('Campaign saved'); closeModal(); load(); }
+    else showToast(res.error || 'Save failed', false);
   };
 
-  const handleDelete = (id: string) => { setCampaigns(campaigns.filter(c => c.id !== id)); setDeleteConfirm(null); };
-
-  const sendCampaign = (id: string) => {
-    setCampaigns(campaigns.map(c => c.id === id ? { ...c, status: 'SENT', sentAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) } : c));
+  const handleSend = async (id: string) => {
+    setSending(id);
+    const res = await sendCampaignAction(id);
+    setSending(null);
+    if (res.success) { showToast(`Sent to ${res.sent} subscribers`); load(); }
+    else showToast(res.error || 'Send failed', false);
   };
+
+  const handleDelete = async () => {
+    if (!deleteConfirm) return;
+    const res = await deleteCampaignAction(deleteConfirm);
+    setDeleteConfirm(null);
+    if (res.success) { setCampaigns(prev => prev.filter(c => c.id !== deleteConfirm)); showToast('Deleted'); }
+    else showToast(res.error || 'Delete failed', false);
+  };
+
+  const handleSendTest = async () => {
+    if (!testModalId || !testEmail) return;
+    const res = await sendTestEmailAction(testModalId, testEmail);
+    setTestModalId(null); setTestEmail('');
+    if (res.success) showToast('Test email sent');
+    else showToast(res.error || 'Failed', false);
+  };
+
+  const statCards = stats ? [
+    { label: 'Total Subscribers', value: stats.total.toLocaleString(), icon: Users },
+    { label: 'Active Subscribers', value: stats.active.toLocaleString(), icon: Mail },
+    { label: 'Campaigns Sent', value: stats.sentCount.toString(), icon: Send },
+    { label: 'Avg Open Rate', value: `${stats.openRate}%`, icon: Eye },
+    { label: 'Click-through Rate', value: `${stats.ctr}%`, icon: TrendingUp },
+  ] : [];
 
   return (
     <div className="space-y-6">
+      {toast && (
+        <div className={`fixed top-4 right-4 z-[100] px-4 py-3 rounded-xl shadow-lg text-sm font-jakarta font-medium flex items-center gap-2 ${toast.ok ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+          {toast.ok ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+          {toast.msg}
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-sora font-extrabold text-2xl text-navy dark:text-white">Newsletter</h1>
@@ -54,20 +129,21 @@ export default function NewsletterAdminPage() {
         <button onClick={openCreate} className="btn-brand text-sm flex items-center gap-2"><Plus className="w-4 h-4" /> New Campaign</button>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((s) => (
-          <div key={s.label} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-5">
-            <s.icon className="w-5 h-5 text-gray-400 dark:text-gray-500 mb-3" />
-            <p className="font-sora font-extrabold text-xl text-navy dark:text-white">{s.value}</p>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs text-gray-400 font-jakarta">{s.label}</span>
-              {'change' in s && s.change && <span className="text-xs text-green-600 dark:text-green-400 font-semibold">{s.change}</span>}
+      {loading ? (
+        <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-brand" /></div>
+      ) : (
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          {statCards.map((s) => (
+            <div key={s.label} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-5">
+              <s.icon className="w-5 h-5 text-gray-400 dark:text-gray-500 mb-3" />
+              <p className="font-sora font-extrabold text-xl text-navy dark:text-white">{s.value}</p>
+              <p className="text-xs text-gray-400 font-jakarta mt-1">{s.label}</p>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 overflow-visible">
         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
           <h2 className="font-sora font-bold text-base text-navy dark:text-white">Campaigns</h2>
         </div>
@@ -76,12 +152,16 @@ export default function NewsletterAdminPage() {
             <tr className="bg-gray-50 dark:bg-gray-800/50 text-left">
               <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Subject</th>
               <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden md:table-cell">Status</th>
-              <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden sm:table-cell">Opens</th>
+              <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden sm:table-cell">Sent To</th>
+              <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden lg:table-cell">Opens</th>
               <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden lg:table-cell">Clicks</th>
-              <th className="px-6 py-3 w-32"></th>
+              <th className="px-6 py-3 w-40"></th>
             </tr>
           </thead>
           <tbody>
+            {campaigns.length === 0 && !loading && (
+              <tr><td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-400 font-jakarta">No campaigns yet. Create your first one.</td></tr>
+            )}
             {campaigns.map((c) => (
               <tr key={c.id} className="border-t border-gray-50 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
                 <td className="px-6 py-4">
@@ -89,21 +169,31 @@ export default function NewsletterAdminPage() {
                     <Mail className="w-4 h-4 text-brand shrink-0" />
                     <div>
                       <span className="font-sora font-semibold text-sm text-navy dark:text-white line-clamp-1">{c.subject}</span>
-                      {c.sentAt && <p className="text-xs text-gray-400 font-jakarta mt-0.5">{c.sentAt}</p>}
+                      {c.sentAt && <p className="text-xs text-gray-400 font-jakarta mt-0.5">{new Date(c.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>}
                     </div>
                   </div>
                 </td>
                 <td className="px-6 py-4 hidden md:table-cell">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${c.status === 'SENT' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                      : c.status === 'SCHEDULED' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
-                    }`}>{c.status === 'SENT' ? <CheckCircle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}{c.status}</span>
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${statusStyle[c.status] || statusStyle.DRAFT}`}>
+                    {c.status === 'SENT' ? <CheckCircle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}{c.status}
+                  </span>
                 </td>
-                <td className="px-6 py-4 hidden sm:table-cell"><span className="text-sm text-gray-600 dark:text-gray-400 font-jakarta">{c.opens > 0 ? c.opens.toLocaleString() : '—'}</span></td>
+                <td className="px-6 py-4 hidden sm:table-cell"><span className="text-sm text-gray-600 dark:text-gray-400 font-jakarta">{c.totalSent > 0 ? c.totalSent.toLocaleString() : '—'}</span></td>
+                <td className="px-6 py-4 hidden lg:table-cell"><span className="text-sm text-gray-600 dark:text-gray-400 font-jakarta">{c.opens > 0 ? c.opens.toLocaleString() : '—'}</span></td>
                 <td className="px-6 py-4 hidden lg:table-cell"><span className="text-sm text-gray-600 dark:text-gray-400 font-jakarta">{c.clicks > 0 ? c.clicks.toLocaleString() : '—'}</span></td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-1">
-                    {c.status === 'DRAFT' && <button onClick={() => sendCampaign(c.id)} className="px-2.5 py-1 text-[11px] font-semibold bg-brand/10 text-brand rounded-lg hover:bg-brand/20 transition-colors">Send</button>}
+                    {(c.status === 'DRAFT' || c.status === 'SCHEDULED') && (
+                      <button onClick={() => handleSend(c.id)} disabled={sending === c.id}
+                        className="px-2.5 py-1 text-[11px] font-semibold bg-brand/10 text-brand rounded-lg hover:bg-brand/20 transition-colors disabled:opacity-50 flex items-center gap-1">
+                        {sending === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />} Send
+                      </button>
+                    )}
+                    {c.status !== 'SENT' && (
+                      <button onClick={() => setTestModalId(c.id)} title="Send test" className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+                        <FlaskConical className="w-3.5 h-3.5 text-gray-400" />
+                      </button>
+                    )}
                     <button onClick={() => openEdit(c)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"><Edit3 className="w-3.5 h-3.5 text-gray-400" /></button>
                     <button onClick={() => setDeleteConfirm(c.id)} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"><Trash2 className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" /></button>
                   </div>
@@ -114,37 +204,58 @@ export default function NewsletterAdminPage() {
         </table>
       </div>
 
+      {/* Create/Edit Modal */}
       {modalOpen && editing && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-lg shadow-2xl border border-gray-200 dark:border-gray-800">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
-              <h2 className="font-sora font-bold text-lg text-navy dark:text-white">{campaigns.find(c => c.id === editing.id) ? 'Edit Campaign' : 'New Campaign'}</h2>
-              <button onClick={() => { setModalOpen(false); setEditing(null); }} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><X className="w-4 h-4 text-gray-400" /></button>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-2xl shadow-2xl border border-gray-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
+              <h2 className="font-sora font-bold text-lg text-navy dark:text-white">{editing.id ? 'Edit Campaign' : 'New Campaign'}</h2>
+              <button onClick={closeModal} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><X className="w-4 h-4 text-gray-400" /></button>
             </div>
-            <div className="px-6 py-5 space-y-4">
+            <div className="px-6 py-5 space-y-4 overflow-y-auto">
               <div>
                 <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Subject *</label>
                 <input type="text" className="input-field text-sm" value={editing.subject} onChange={(e) => setEditing({ ...editing, subject: e.target.value })} placeholder="Weekly AI Pulse #..." />
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Preview Text</label>
-                <textarea className="input-field text-sm" rows={2} value={editing.previewText} onChange={(e) => setEditing({ ...editing, previewText: e.target.value })} placeholder="Brief preview shown in inbox..." />
+                <input type="text" className="input-field text-sm" value={editing.previewText} onChange={(e) => setEditing({ ...editing, previewText: e.target.value })} placeholder="Brief preview shown in inbox..." />
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Status</label>
-                <select className="input-field text-sm" value={editing.status} onChange={(e) => setEditing({ ...editing, status: e.target.value })}>
-                  <option value="DRAFT">Draft</option><option value="SCHEDULED">Scheduled</option><option value="SENT">Sent</option>
-                </select>
+                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Email Body (HTML)</label>
+                <textarea className="input-field text-sm font-mono" rows={12} value={editing.body} onChange={(e) => setEditing({ ...editing, body: e.target.value })} placeholder="<p>Hello readers,</p><p>This week in Indian AI...</p>" />
+                <p className="text-xs text-gray-400 font-jakarta mt-1">Write HTML. It will be wrapped in the branded email template automatically.</p>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Schedule (optional)</label>
+                <input type="datetime-local" className="input-field text-sm" value={editing.scheduledAt || ''} onChange={(e) => setEditing({ ...editing, scheduledAt: e.target.value || null })} />
               </div>
             </div>
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 dark:border-gray-800">
-              <button onClick={() => { setModalOpen(false); setEditing(null); }} className="px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">Cancel</button>
-              <button onClick={handleSave} disabled={!editing.subject} className="btn-brand text-sm flex items-center gap-2 disabled:opacity-50"><Save className="w-4 h-4" /> Save</button>
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 dark:border-gray-800 shrink-0">
+              <button onClick={closeModal} className="px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">Cancel</button>
+              <button onClick={handleSave} disabled={!editing.subject || saving} className="btn-brand text-sm flex items-center gap-2 disabled:opacity-50">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save
+              </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Test Email Modal */}
+      {testModalId && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl border border-gray-200 dark:border-gray-800 p-6">
+            <h3 className="font-sora font-bold text-lg text-navy dark:text-white mb-4">Send Test Email</h3>
+            <input type="email" className="input-field text-sm w-full" value={testEmail} onChange={(e) => setTestEmail(e.target.value)} placeholder="test@example.com" />
+            <div className="flex gap-3 mt-4">
+              <button onClick={() => { setTestModalId(null); setTestEmail(''); }} className="flex-1 btn-secondary text-sm">Cancel</button>
+              <button onClick={handleSendTest} disabled={!testEmail} className="flex-1 btn-brand text-sm disabled:opacity-50">Send Test</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirm */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl border border-gray-200 dark:border-gray-800 p-6 text-center">
@@ -153,7 +264,7 @@ export default function NewsletterAdminPage() {
             <p className="text-sm text-gray-500 font-jakarta mt-1">This action cannot be undone.</p>
             <div className="flex gap-3 mt-5">
               <button onClick={() => setDeleteConfirm(null)} className="flex-1 px-4 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300">Cancel</button>
-              <button onClick={() => handleDelete(deleteConfirm)} className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-xl">Delete</button>
+              <button onClick={handleDelete} className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-xl">Delete</button>
             </div>
           </div>
         </div>

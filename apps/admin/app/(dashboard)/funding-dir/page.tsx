@@ -1,40 +1,109 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, IndianRupee, Calendar, CheckCircle, Clock, Edit3, Trash2, X, Save, TrendingUp } from 'lucide-react';
+import {
+  getFundingDigestsAction,
+  createFundingDigestAction,
+  updateFundingDigestAction,
+  deleteFundingDigestAction,
+  toggleFundingDigestStatusAction,
+} from './actions';
 
 interface Deal { startup: string; amount: string; stage: string; }
 interface Digest { id: string; title: string; date: string; status: string; dealsCount: number; totalRaised: string; deals: Deal[]; }
 
-const initialDigests: Digest[] = [
-  { id: '1', title: 'Week 10: Sarvam AI raises $41M, Krutrim closes Series B', date: '2025-03-07', status: 'PUBLISHED', dealsCount: 5, totalRaised: '$98M', deals: [{ startup: 'Sarvam AI', amount: '$41M', stage: 'Series A' }, { startup: 'Krutrim', amount: '$50M', stage: 'Series B' }] },
-  { id: '2', title: 'Week 9: Edge AI startups see $22M in fresh funding', date: '2025-02-28', status: 'PUBLISHED', dealsCount: 3, totalRaised: '$22M', deals: [{ startup: 'EdgeAI Co', amount: '$12M', stage: 'Seed' }] },
-  { id: '3', title: 'Week 8: HealthTech AI leads the pack', date: '2025-02-21', status: 'PUBLISHED', dealsCount: 4, totalRaised: '$35M', deals: [] },
-  { id: '4', title: 'Week 11: Draft — AgriAI boom continues', date: '2025-03-14', status: 'DRAFT', dealsCount: 2, totalRaised: '$12M', deals: [] },
-];
-
-const emptyDigest: Digest = { id: '', title: '', date: new Date().toISOString().split('T')[0], status: 'DRAFT', dealsCount: 0, totalRaised: '', deals: [] };
-
 export default function FundingDirPage() {
-  const [digests, setDigests] = useState<Digest[]>(initialDigests);
+  const [digests, setDigests] = useState<Digest[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Digest | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const openCreate = () => { setEditing({ ...emptyDigest, id: Date.now().toString() }); setModalOpen(true); };
-  const openEdit = (d: Digest) => { setEditing({ ...d }); setModalOpen(true); };
+  useEffect(() => {
+    console.log('useEffect: Loading funding digests...');
+    loadDigests();
+  }, []);
 
-  const handleSave = () => {
-    if (!editing) return;
-    const exists = digests.find(d => d.id === editing.id);
-    if (exists) setDigests(digests.map(d => d.id === editing.id ? editing : d));
-    else setDigests([editing, ...digests]);
-    setModalOpen(false); setEditing(null);
+  const loadDigests = async () => {
+    console.log('loadDigests: Starting to load digests...');
+    setLoading(true);
+    try {
+      console.log('loadDigests: Calling getFundingDigestsAction...');
+      const data = await getFundingDigestsAction();
+      console.log('loadDigests: Received data:', data.length, 'items');
+      setDigests(data.map((d: any) => ({
+        ...d,
+        date: d.date instanceof Date ? d.date.toISOString().split('T')[0] : (typeof d.date === 'string' ? d.date.split('T')[0] : d.date),
+        deals: typeof d.deals === 'string' ? JSON.parse(d.deals) : d.deals || [],
+      })));
+      console.log('loadDigests: Digests set successfully');
+    } catch (error) {
+      console.error('Error loading digests:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDelete = (id: string) => { setDigests(digests.filter(d => d.id !== id)); setDeleteConfirm(null); };
-  const toggleStatus = (id: string) => {
-    setDigests(digests.map(d => d.id === id ? { ...d, status: d.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED' } : d));
+  const openCreate = () => { 
+    setEditing({ 
+      id: '', 
+      title: '', 
+      date: new Date().toISOString().split('T')[0], 
+      status: 'DRAFT', 
+      dealsCount: 0, 
+      totalRaised: '', 
+      deals: [] 
+    }); 
+    setModalOpen(true); 
+  };
+
+  const openEdit = (d: Digest) => { setEditing({ ...d }); setModalOpen(true); };
+
+  const handleSave = async () => {
+    if (!editing) return;
+    
+    try {
+      const data = {
+        title: editing.title,
+        date: editing.date,
+        status: editing.status,
+        dealsCount: editing.deals.length,
+        totalRaised: editing.totalRaised,
+        deals: editing.deals,
+      };
+
+      if (editing.id && digests.find(d => d.id === editing.id)) {
+        await updateFundingDigestAction(editing.id, data);
+      } else {
+        await createFundingDigestAction(data);
+      }
+      
+      await loadDigests();
+      setModalOpen(false); 
+      setEditing(null);
+    } catch (error) {
+      console.error('Error saving digest:', error);
+    }
+  };
+
+  const handleDelete = async (id: string) => { 
+    try {
+      await deleteFundingDigestAction(id);
+      await loadDigests();
+      setDeleteConfirm(null); 
+    } catch (error) {
+      console.error('Error deleting digest:', error);
+    }
+  };
+
+  const toggleStatus = async (id: string) => {
+    try {
+      await toggleFundingDigestStatusAction(id);
+      await loadDigests();
+    } catch (error) {
+      console.error('Error toggling status:', error);
+    }
   };
 
   const addDeal = () => {
@@ -53,6 +122,14 @@ export default function FundingDirPage() {
     if (!editing) return;
     setEditing({ ...editing, deals: editing.deals.filter((_, i) => i !== idx), dealsCount: editing.deals.length - 1 });
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

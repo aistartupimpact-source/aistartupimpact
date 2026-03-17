@@ -1,4 +1,5 @@
 import { Check, Mail, Sparkles, BookOpen, Zap, IndianRupee, Users, Briefcase, Bell } from 'lucide-react';
+import SubscribeForm from '@/components/SubscribeForm';
 
 const benefits = [
   { icon: BookOpen, title: 'Weekly AI Digest', desc: 'Curated roundup of the most important AI stories from India — every Friday at 9 AM IST.' },
@@ -27,9 +28,8 @@ export default function NewsletterPage() {
         <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm sm:text-base mt-3 max-w-lg mx-auto">
           Join 5,000+ founders, investors, and engineers. Free forever. No spam.
         </p>
-        <div className="mt-6 flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-          <input type="email" placeholder="your@email.com" className="input-field flex-1" />
-          <button className="btn-brand whitespace-nowrap">Subscribe Free</button>
+        <div className="mt-6 max-w-md mx-auto">
+          <SubscribeForm buttonText="Subscribe Free" source="newsletter" />
         </div>
         <p className="text-[11px] text-gray-400 font-jakarta mt-3">Read by teams at Google, Flipkart, Zerodha, and 200+ AI startups.</p>
       </div>

@@ -19,6 +19,7 @@ import adminToolRoutes from './routes/admin/tools';
 import adminUserRoutes from './routes/admin/users';
 import adminCampaignRoutes from './routes/admin/campaigns';
 import adminNewsletterRoutes from './routes/admin/newsletter';
+import adminSubscriberRoutes from './routes/admin/subscribers';
 import adminStartupRoutes from './routes/admin/startups';
 import adminFundingRoutes from './routes/admin/funding';
 import adminGlossaryRoutes from './routes/admin/glossary';
@@ -29,7 +30,9 @@ const PORT = process.env.PORT || 4000;
 // ─── Middleware ──────────────────────────────
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.NODE_ENV === 'production'
+    ? [process.env.FRONTEND_URL || '', process.env.ADMIN_URL || '']
+    : ['http://localhost:3000', 'http://localhost:3001'],
   credentials: true,
 }));
 app.use(compression());
@@ -51,6 +54,9 @@ app.use('/v1/search', publicSearchRoutes);
 app.use('/v1/ads', publicAdRoutes);
 app.use('/v1/newsletter', publicNewsletterRoutes);
 app.use('/v1/funding', publicFundingRoutes);
+app.use('/v1/media', require('./routes/public/media').default);
+app.use('/v1/upload', require('./routes/upload').default);
+app.use('/v1/auth', require('./routes/public/auth').default);
 
 // ─── Admin API Routes ────────────────────────
 app.use('/v1/admin/articles', adminArticleRoutes);
@@ -59,9 +65,13 @@ app.use('/v1/admin/tools', adminToolRoutes);
 app.use('/v1/admin/users', adminUserRoutes);
 app.use('/v1/admin/campaigns', adminCampaignRoutes);
 app.use('/v1/admin/newsletter', adminNewsletterRoutes);
+app.use('/v1/admin/subscribers', adminSubscriberRoutes);
 app.use('/v1/admin/startups', adminStartupRoutes);
 app.use('/v1/admin/funding', adminFundingRoutes);
 app.use('/v1/admin/glossary', adminGlossaryRoutes);
+
+// ─── Webhooks ────────────────────────────────
+app.use('/v1/webhooks', require('./routes/webhooks').default);
 
 // ─── Error Handler ───────────────────────────
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Plus, Search, Filter, Edit3, Clock, CheckCircle, AlertCircle,
   Archive, Eye, Trash2, X, Send, MoreHorizontal, ArrowUp, ArrowDown,
 } from 'lucide-react';
+
+import { getArticlesAction, updateArticleStatusAction, deleteArticleAction } from './actions';
 
 interface Article {
   id: string; title: string; slug: string; status: string; type: string;
@@ -23,19 +25,10 @@ const statusConfig: Record<string, { color: string; icon: typeof CheckCircle }> 
 const categories = ['AI News', 'Deep Dive', 'Founder Stories', 'Tools & Reviews', 'Funding', 'Opinion', 'Technology'];
 const types = ['NEWS', 'STORY', 'GUIDE', 'COMPARISON', 'OPINION', 'REPORT', 'SPONSORED'];
 
-const initialArticles: Article[] = [
-  { id: '1', title: 'India\'s AI Revolution: How 50 Startups Are Reshaping the Nation', slug: 'india-ai-revolution-2025', status: 'PUBLISHED', type: 'NEWS', author: 'Priya Sharma', category: 'Deep Dive', publishedAt: 'Mar 7, 2025', views: 15420 },
-  { id: '2', title: 'AI Tools Comparison Guide: Cursor vs GitHub Copilot vs Cody', slug: 'ai-tools-comparison-2025', status: 'IN_REVIEW', type: 'COMPARISON', author: 'Rahul Kumar', category: 'Tools & Reviews', publishedAt: null, views: 0 },
-  { id: '3', title: 'The Rise of Edge AI: What Indian Startups Need to Know', slug: 'edge-ai-indian-startups', status: 'DRAFT', type: 'GUIDE', author: 'Anjali Nair', category: 'Technology', publishedAt: null, views: 0 },
-  { id: '4', title: 'OpenAI GPT-5: Everything We Know So Far', slug: 'openai-gpt5-release', status: 'SCHEDULED', type: 'NEWS', author: 'Priya Sharma', category: 'AI News', publishedAt: 'Mar 9, 2025', views: 0 },
-  { id: '5', title: 'Sarvam AI\'s $41M Series A: Building India-first LLMs', slug: 'sarvam-ai-series-a', status: 'PUBLISHED', type: 'NEWS', author: 'Priya Sharma', category: 'Funding', publishedAt: 'Mar 5, 2025', views: 9200 },
-  { id: '6', title: 'How Krutrim is Challenging Big Tech with Indic AI', slug: 'krutrim-indic-ai-challenge', status: 'PUBLISHED', type: 'STORY', author: 'Rahul Kumar', category: 'Founder Stories', publishedAt: 'Mar 3, 2025', views: 7800 },
-  { id: '7', title: 'Yellow.ai\'s Enterprise Conversational AI Stack Explained', slug: 'yellow-ai-conversational-stack', status: 'DRAFT', type: 'GUIDE', author: 'Anjali Nair', category: 'Deep Dive', publishedAt: null, views: 0 },
-  { id: '8', title: 'The State of AI Regulation in India — 2025 Update', slug: 'ai-regulation-india-2025', status: 'ARCHIVED', type: 'REPORT', author: 'Priya Sharma', category: 'Opinion', publishedAt: 'Feb 15, 2025', views: 3210 },
-];
-
 export default function ArticlesPage() {
-  const [articles, setArticles] = useState<Article[]>(initialArticles);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -43,12 +36,49 @@ export default function ArticlesPage() {
   const [sortField, setSortField] = useState<'views' | 'publishedAt' | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        const json = await getArticlesAction();
+        if (json.success && json.data) {
+          setArticles(json.data.map((a: any) => ({
+            id: a.id,
+            title: a.title,
+            slug: a.slug,
+            status: a.status,
+            type: a.type,
+            author: a.author?.name || 'Unknown',
+            category: a.category?.name || 'Uncategorized',
+            publishedAt: a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null,
+            views: a.viewCount || 0,
+          })));
+        } else {
+          console.error("Failed to load articles via action:", json.error);
+          setFetchError(json.error || 'Failed to load articles');
+        }
+      } catch (e: any) {
+        console.error('Failed to fetch articles', e);
+        setFetchError(e?.message || 'Unexpected error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchArticles();
+  }, []);
+
   // Filter articles
   let filtered = articles.filter(a => {
     if (activeTab !== 'all' && a.status !== activeTab) return false;
-    if (search && !a.title.toLowerCase().includes(search.toLowerCase()) && !a.author.toLowerCase().includes(search.toLowerCase())) return false;
+
+    const searchLower = search.toLowerCase();
+    const titleMatch = (a.title || '').toLowerCase().includes(searchLower);
+    const authorMatch = (a.author || '').toLowerCase().includes(searchLower);
+
+    if (search && !titleMatch && !authorMatch) return false;
     return true;
   });
+
+  console.log("[DEBUG] page.tsx - Total fetched:", articles.length, "Filtered down to:", filtered.length);
 
   // Sort
   if (sortField === 'views') filtered = [...filtered].sort((a, b) => sortDir === 'desc' ? b.views - a.views : a.views - b.views);
@@ -63,14 +93,32 @@ export default function ArticlesPage() {
   ];
 
   // Actions
-  const changeStatus = (id: string, newStatus: string) => {
-    setArticles(articles.map(a => a.id === id ? { ...a, status: newStatus, publishedAt: newStatus === 'PUBLISHED' ? new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : a.publishedAt } : a));
+  const changeStatus = async (id: string, newStatus: string) => {
+    try {
+      const res = await updateArticleStatusAction(id, newStatus);
+      if (!res.success) throw new Error(res.error || 'Action failed');
+
+      setArticles(articles.map(a => a.id === id ? { ...a, status: newStatus, publishedAt: newStatus === 'PUBLISHED' ? new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : a.publishedAt } : a));
+    } catch (e) {
+      console.error('Failed to update status', e);
+      alert('Failed to update status. Please try again.');
+    }
     setActionMenu(null);
   };
 
-  const handleDelete = (id: string) => { setArticles(articles.filter(a => a.id !== id)); setDeleteConfirm(null); };
-
-
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await deleteArticleAction(id);
+      if (res.success) {
+        setArticles(articles.filter(a => a.id !== id));
+      } else {
+        throw new Error(res.error || "Action failed");
+      }
+    } catch (e) {
+      console.error('Failed to delete', e);
+    }
+    setDeleteConfirm(null);
+  };
 
   const toggleSort = (field: 'views' | 'publishedAt') => {
     if (sortField === field) setSortDir(sortDir === 'desc' ? 'asc' : 'desc');
@@ -78,6 +126,7 @@ export default function ArticlesPage() {
   };
 
   const duplicate = (article: Article) => {
+    // Basic frontend mockup for duplicate
     const dup: Article = { ...article, id: Date.now().toString(), title: article.title + ' (Copy)', slug: article.slug + '-copy', status: 'DRAFT', views: 0, publishedAt: null };
     setArticles([dup, ...articles]);
     setActionMenu(null);
@@ -112,7 +161,12 @@ export default function ArticlesPage() {
       </div>
 
       {/* Article Table */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 overflow-visible">
+        {fetchError && (
+          <div className="px-6 py-4 bg-red-50 dark:bg-red-900/20 border-b border-red-100 dark:border-red-800 text-sm text-red-600 dark:text-red-400 font-jakarta">
+            Error: {fetchError}. Try signing out and back in.
+          </div>
+        )}
         <table className="w-full">
           <thead>
             <tr className="bg-gray-50 dark:bg-gray-800/50 text-left">
@@ -130,15 +184,18 @@ export default function ArticlesPage() {
             {filtered.length === 0 && (
               <tr><td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-400 font-jakarta">No articles found.</td></tr>
             )}
-            {filtered.map((article) => {
+            {filtered.map((article, idx) => {
               const config = statusConfig[article.status];
               const StatusIcon = config?.icon || Edit3;
+              const isNearBottom = idx >= filtered.length - 3;
               return (
                 <tr key={article.id} className="border-t border-gray-50 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
-                  <Link href={`/articles/${article.id}`} className="group cursor-pointer block">
-                    <h4 className="font-sora font-semibold text-sm text-navy dark:text-white group-hover:text-brand transition-colors line-clamp-1">{article.title}</h4>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 font-jakarta mt-0.5">by {article.author} · {article.type}</p>
-                  </Link>
+                  <td className="px-6 py-4">
+                    <Link href={`/articles/${article.id}`} className="group cursor-pointer block">
+                      <h4 className="font-sora font-semibold text-sm text-navy dark:text-white group-hover:text-brand transition-colors line-clamp-1">{article.title}</h4>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 font-jakarta mt-0.5">by {article.author} · {article.type}</p>
+                    </Link>
+                  </td>
                   <td className="px-6 py-4 hidden md:table-cell">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${config?.color}`}>
                       <StatusIcon className="w-3 h-3" />{article.status.replace('_', ' ')}
@@ -158,7 +215,7 @@ export default function ArticlesPage() {
                       <MoreHorizontal className="w-4 h-4 text-gray-400" />
                     </button>
                     {actionMenu === article.id && (
-                      <div className="absolute right-6 top-10 z-20 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl py-1">
+                      <div className={`absolute right-6 z-20 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl py-1 ${isNearBottom ? 'bottom-10' : 'top-10'}`}>
                         <Link href={`/articles/${article.id}`} className="w-full text-left px-4 py-2 text-sm font-jakarta text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2"><Edit3 className="w-3.5 h-3.5" /> Edit Article</Link>
                         {article.status === 'DRAFT' && <button onClick={() => changeStatus(article.id, 'IN_REVIEW')} className="w-full text-left px-4 py-2 text-sm font-jakarta text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2"><Send className="w-3.5 h-3.5" /> Submit for Review</button>}
                         {article.status === 'IN_REVIEW' && <button onClick={() => changeStatus(article.id, 'PUBLISHED')} className="w-full text-left px-4 py-2 text-sm font-jakarta text-green-600 dark:text-green-400 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5" /> Publish</button>}

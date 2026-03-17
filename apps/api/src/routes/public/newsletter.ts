@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { prisma } from '@aistartupimpact/database';
 
 const router = Router();
 
@@ -11,12 +12,25 @@ router.post('/subscribe', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, data: null, error: 'Valid email is required' });
     }
 
-    // TODO: Prisma create or update subscriber, send welcome email via SES
+    await prisma.newsletterSubscriber.upsert({
+      where: { email: email.toLowerCase() },
+      update: {
+        isActive: true,
+        source: source
+      },
+      create: {
+        email: email.toLowerCase(),
+        name,
+        source
+      }
+    });
+
     res.json({
       success: true,
       data: { message: 'Successfully subscribed! Check your inbox for confirmation.' },
     });
   } catch (error) {
+    console.error('Subscribe error:', error);
     res.status(500).json({ success: false, data: null, error: 'Subscription failed' });
   }
 });

@@ -1,5 +1,29 @@
 import Link from 'next/link';
-import { Star, Zap, ExternalLink, ArrowRight, Sparkles } from 'lucide-react';
+import { Metadata } from 'next';
+import { Star, Zap, ArrowRight, Sparkles } from 'lucide-react';
+import { generateItemListSchema, generateCollectionPageSchema, generateBreadcrumbSchema } from '@/lib/seo';
+
+export const metadata: Metadata = {
+  title: "Editor's Picks: Best AI Tools — Reviewed & Rated",
+  description:
+    "12 AI tools our editorial team actually uses and recommends. Honest verdicts, ratings, and pricing — no pay-to-play, no affiliate bias.",
+  alternates: { canonical: 'https://aistartupimpact.com/tools' },
+  openGraph: {
+    title: "Editor's Picks: Best AI Tools — Reviewed & Rated",
+    description:
+      "12 AI tools our editorial team actually uses and recommends. Honest verdicts, ratings, and pricing.",
+    type: 'website',
+    url: 'https://aistartupimpact.com/tools',
+    siteName: 'AIStartupImpact',
+    images: [{ url: 'https://aistartupimpact.com/og-default.png', width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Editor's Picks: Best AI Tools",
+    description: "12 AI tools our editorial team actually uses and recommends.",
+    creator: '@aikitstartup',
+  },
+};
 
 const picks = [
   { slug: 'cursor', name: 'Cursor', tagline: 'AI-first code editor that writes, edits, and debugs for you', category: 'Dev Tools', rating: 4.8, pricing: 'Freemium', verdict: 'Best AI code editor right now. The Composer feature for multi-file edits is unmatched.' },
@@ -17,8 +41,35 @@ const picks = [
 ];
 
 export default function ToolsPage() {
+  const siteUrl = 'https://aistartupimpact.com';
+
+  const itemListSchema = generateItemListSchema({
+    name: "Editor's Picks: Best AI Tools",
+    description: "AI tools reviewed and rated by the AIStartupImpact editorial team.",
+    url: `${siteUrl}/tools`,
+    items: picks.map((t, i) => ({
+      position: i + 1,
+      name: t.name,
+      url: `${siteUrl}/tools/${t.slug}`,
+      description: t.tagline,
+    })),
+  });
+
+  const collectionSchema = generateCollectionPageSchema({
+    name: "Editor's Picks: Best AI Tools",
+    description: "AI tools reviewed and rated by the AIStartupImpact editorial team. No pay-to-play, no affiliate bias.",
+    url: `${siteUrl}/tools`,
+  });
+
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: 'Home', url: siteUrl },
+    { name: 'AI Tools', url: `${siteUrl}/tools` },
+  ]);
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       {/* Header */}
       <div className="mb-8 sm:mb-10">
         <div className="flex items-center gap-2 sm:gap-3 mb-2">

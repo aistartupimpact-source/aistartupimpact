@@ -1,58 +1,53 @@
-'use client';
-
-import { useState } from 'react';
 import Link from 'next/link';
 import {
   Eye, FileText, Crown, Zap, TrendingUp, ArrowUpRight,
   IndianRupee, Calendar, Clock, CheckCircle, AlertCircle,
-  FileEdit, BarChart3, Megaphone,
+  FileEdit, BarChart3, Megaphone, Building2,
 } from 'lucide-react';
+import { getClientPortalDataAction } from './actions';
 
-/* ─── Mock Data ─── */
-const overview = {
-  plan: 'Premium',
-  planPrice: '₹75,000/mo',
-  articlesPublished: 4,
-  totalViews: '24,620',
-  totalImpressions: '1,48,500',
-  nextBilling: 'Apr 1, 2025',
+const ZONE_LABELS: Record<string, string> = {
+  H1_HERO_FEATURE: 'Hero Cover Story', H2_TRENDING_STRIP: 'Breaking Ticker',
+  H3_SECTION_SPONSOR: 'Section Sponsor', H4_NEWSLETTER_CTA: 'Newsletter CTA',
+  A1_IN_ARTICLE: 'In-Article Ad', A2_SIDEBAR_STICKY: 'Sidebar Sticky',
+  A3_END_OF_ARTICLE: 'End of Article', D1_TOOL_FEATURED: 'Tool Featured',
+  D2_STARTUP_BOOST: 'Startup Boost', N1_NEWSLETTER_PRIMARY: 'Newsletter Primary',
+  N2_NEWSLETTER_FOOTER: 'Newsletter Footer',
 };
-
-const submissions = [
-  { id: '1', title: 'Sarvam AI — Series A Deep Dive: Building India\'s Language AI', status: 'PUBLISHED', date: 'Mar 5, 2025', views: 15420 },
-  { id: '2', title: 'Sarvam AI\'s $41M Series A: What It Means for India\'s AI Stack', status: 'PUBLISHED', date: 'Mar 2, 2025', views: 9200 },
-  { id: '3', title: 'How We Built Sarvam\'s Indic Language Pipeline', status: 'UNDER_REVIEW', date: 'Mar 7, 2025', views: 0 },
-  { id: '4', title: 'Behind the Scenes: Sarvam AI\'s Data Strategy', status: 'DRAFT', date: 'Mar 8, 2025', views: 0 },
-];
-
-const activePlacements = [
-  { zone: 'Hero Cover Story', tier: 'Premium', icon: Crown, headline: 'Sarvam AI — Series A Deep Dive', endDate: 'Mar 31, 2025', impressions: 98200, clicks: 5410 },
-  { zone: 'Breaking Ticker', tier: 'Premium', icon: Zap, headline: 'Sarvam AI raises $41M for India-first LLMs', endDate: 'Mar 7, 2025', impressions: 50300, clicks: 1680 },
-];
 
 const statusColors: Record<string, string> = {
   PUBLISHED: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
-  UNDER_REVIEW: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+  ACTIVE: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+  IN_REVIEW: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+  PENDING_REVIEW: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
   DRAFT: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
-  APPROVED: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
-  REJECTED: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
+  PAUSED: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400',
+  COMPLETED: 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400',
+  CANCELLED: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
 };
 
-const statusIcons: Record<string, typeof CheckCircle> = {
-  PUBLISHED: CheckCircle,
-  UNDER_REVIEW: Clock,
-  DRAFT: FileEdit,
-  APPROVED: CheckCircle,
-  REJECTED: AlertCircle,
-};
+const fmt = (d: string) =>
+  d ? new Date(d).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+const fmtBudget = (p: number) => p ? `₹${(Number(p) / 100).toLocaleString('en-IN')}` : '₹0';
 
-export default function ClientPortalPage() {
+export default async function ClientPortalPage() {
+  const res = await getClientPortalDataAction();
+  const data = res.data;
+
+  const stats = data?.stats || { totalBudget: 0, totalImpressions: 0, totalClicks: 0, activeCampaigns: 0, totalCampaigns: 0, avgCTR: '0%' };
+  const campaigns = data?.campaigns || [];
+  const activeCampaigns = data?.activeCampaigns || [];
+  const creatives = data?.creatives || [];
+  const articles = data?.articles || [];
+
+  const companyName = activeCampaigns[0]?.companyName || campaigns[0]?.companyName || 'Client';
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-sora font-extrabold text-2xl text-navy dark:text-white">Welcome back, Sarvam AI</h1>
+          <h1 className="font-sora font-extrabold text-2xl text-navy dark:text-white">Welcome back, {companyName}</h1>
           <p className="text-gray-400 dark:text-gray-500 text-sm font-jakarta mt-1">Here&apos;s your content performance at a glance</p>
         </div>
         <Link href="/submit-content" className="btn-brand text-sm flex items-center gap-2">
@@ -63,17 +58,16 @@ export default function ClientPortalPage() {
       {/* Overview Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
-          { label: 'Current Plan', value: overview.plan, sub: overview.planPrice, icon: Crown, color: 'text-brand' },
-          { label: 'Articles Published', value: overview.articlesPublished.toString(), icon: FileText, color: 'text-blue-600 dark:text-blue-400' },
-          { label: 'Total Views', value: overview.totalViews, icon: Eye, color: 'text-green-600 dark:text-green-400' },
-          { label: 'Total Impressions', value: overview.totalImpressions, icon: TrendingUp, color: 'text-purple-600 dark:text-purple-400' },
-          { label: 'Next Billing', value: overview.nextBilling, icon: Calendar, color: 'text-orange-600 dark:text-orange-400' },
+          { label: 'Active Campaigns', value: stats.activeCampaigns.toString(), icon: Crown, color: 'text-brand' },
+          { label: 'Total Campaigns', value: stats.totalCampaigns.toString(), icon: FileText, color: 'text-blue-600 dark:text-blue-400' },
+          { label: 'Total Impressions', value: Number(stats.totalImpressions).toLocaleString(), icon: TrendingUp, color: 'text-purple-600 dark:text-purple-400' },
+          { label: 'Total Clicks', value: Number(stats.totalClicks).toLocaleString(), icon: Eye, color: 'text-green-600 dark:text-green-400' },
+          { label: 'Avg. CTR', value: stats.avgCTR, icon: BarChart3, color: 'text-orange-600 dark:text-orange-400' },
         ].map((card) => (
           <div key={card.label} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-4">
             <card.icon className={`w-5 h-5 mb-2 ${card.color}`} />
             <p className="font-sora font-extrabold text-lg text-navy dark:text-white">{card.value}</p>
             <p className="text-[11px] text-gray-400 font-jakarta mt-0.5">{card.label}</p>
-            {card.sub && <p className="text-[10px] text-gray-400 font-jakarta">{card.sub}</p>}
           </div>
         ))}
       </div>
@@ -99,31 +93,35 @@ export default function ClientPortalPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Submissions */}
+        {/* Recent Articles */}
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-sora font-bold text-base text-navy dark:text-white">Recent Submissions</h2>
-            <Link href="/submit-content" className="text-xs text-brand font-semibold hover:underline">View all</Link>
+            <h2 className="font-sora font-bold text-base text-navy dark:text-white">Recent Articles</h2>
           </div>
-          <div className="space-y-3">
-            {submissions.map((s) => {
-              const StatusIcon = statusIcons[s.status] || Clock;
-              return (
-                <div key={s.id} className="flex items-start justify-between gap-3 py-2">
+          {articles.length === 0 ? (
+            <p className="text-sm text-gray-400 font-jakarta text-center py-6">No articles yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {articles.map((a: any) => (
+                <div key={a.id} className="flex items-start justify-between gap-3 py-2">
                   <div className="flex-1 min-w-0">
-                    <p className="font-sora font-semibold text-sm text-navy dark:text-white truncate">{s.title}</p>
+                    <p className="font-sora font-semibold text-sm text-navy dark:text-white truncate">{a.title}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-gray-400 font-jakarta">{s.date}</span>
-                      {s.views > 0 && <span className="text-xs text-gray-400 font-jakarta flex items-center gap-1"><Eye className="w-3 h-3" /> {s.views.toLocaleString()}</span>}
+                      <span className="text-xs text-gray-400 font-jakarta">{fmt(a.publishedAt)}</span>
+                      {a.viewCount > 0 && (
+                        <span className="text-xs text-gray-400 font-jakarta flex items-center gap-1">
+                          <Eye className="w-3 h-3" /> {Number(a.viewCount).toLocaleString()}
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold shrink-0 ${statusColors[s.status]}`}>
-                    <StatusIcon className="w-3 h-3" />{s.status.replace(/_/g, ' ')}
+                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold shrink-0 ${statusColors[a.status] || statusColors.DRAFT}`}>
+                    {a.status.replace(/_/g, ' ')}
                   </span>
                 </div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Active Placements */}
@@ -132,40 +130,88 @@ export default function ClientPortalPage() {
             <h2 className="font-sora font-bold text-base text-navy dark:text-white">Active Placements</h2>
             <Link href="/my-placements" className="text-xs text-brand font-semibold hover:underline">View all</Link>
           </div>
-          <div className="space-y-4">
-            {activePlacements.map((p, i) => (
-              <div key={i} className="border border-gray-100 dark:border-gray-800 rounded-xl p-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
-                    <p.icon className="w-4 h-4 text-brand" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-sora font-bold text-sm text-navy dark:text-white">{p.zone}</h4>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-red-50 dark:bg-red-900/20 text-brand">{p.tier}</span>
+          {creatives.length === 0 ? (
+            <div className="text-center py-6">
+              <Building2 className="w-8 h-8 text-gray-300 dark:text-gray-700 mx-auto mb-2" />
+              <p className="text-sm text-gray-400 font-jakarta">No active placements.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {creatives.map((cr: any, i: number) => (
+                <div key={i} className="border border-gray-100 dark:border-gray-800 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center">
+                      <Zap className="w-4 h-4 text-brand" />
                     </div>
-                    <p className="text-xs text-gray-400 font-jakarta mt-0.5">{p.headline}</p>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-sora font-bold text-sm text-navy dark:text-white">{ZONE_LABELS[cr.zone] || cr.zone}</h4>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">LIVE</span>
+                      </div>
+                      <p className="text-xs text-gray-400 font-jakarta mt-0.5 line-clamp-1">{cr.headline}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2 text-center">
+                      <p className="font-sora font-bold text-sm text-navy dark:text-white">{Number(cr.impressionCount).toLocaleString()}</p>
+                      <p className="text-[9px] text-gray-400 font-jakarta">Impressions</p>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2 text-center">
+                      <p className="font-sora font-bold text-sm text-navy dark:text-white">{Number(cr.clickCount).toLocaleString()}</p>
+                      <p className="text-[9px] text-gray-400 font-jakarta">Clicks</p>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2 text-center">
+                      <p className="font-sora font-bold text-sm text-navy dark:text-white flex items-center justify-center gap-1">
+                        <Calendar className="w-3 h-3 text-gray-400" />{fmt(cr.endDate)}
+                      </p>
+                      <p className="text-[9px] text-gray-400 font-jakarta">Ends</p>
+                    </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2 text-center">
-                    <p className="font-sora font-bold text-sm text-navy dark:text-white">{p.impressions.toLocaleString()}</p>
-                    <p className="text-[9px] text-gray-400 font-jakarta">Impressions</p>
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2 text-center">
-                    <p className="font-sora font-bold text-sm text-navy dark:text-white">{p.clicks.toLocaleString()}</p>
-                    <p className="text-[9px] text-gray-400 font-jakarta">Clicks</p>
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2 text-center">
-                    <p className="font-sora font-bold text-sm text-navy dark:text-white flex items-center justify-center gap-1"><Calendar className="w-3 h-3 text-gray-400" />{p.endDate}</p>
-                    <p className="text-[9px] text-gray-400 font-jakarta">Ends</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* All Campaigns Table */}
+      {campaigns.length > 0 && (
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-sora font-bold text-base text-navy dark:text-white">All Campaigns</h2>
+            <Link href="/my-placements" className="text-xs text-brand font-semibold hover:underline">View details</Link>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm font-jakarta">
+              <thead>
+                <tr className="border-b border-gray-100 dark:border-gray-800">
+                  <th className="text-left text-xs font-semibold text-gray-400 uppercase pb-3 pr-4">Company</th>
+                  <th className="text-left text-xs font-semibold text-gray-400 uppercase pb-3 pr-4">Status</th>
+                  <th className="text-left text-xs font-semibold text-gray-400 uppercase pb-3 pr-4">Period</th>
+                  <th className="text-right text-xs font-semibold text-gray-400 uppercase pb-3">Budget</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
+                {campaigns.map((c: any) => (
+                  <tr key={c.id}>
+                    <td className="py-3 pr-4">
+                      <p className="font-semibold text-navy dark:text-white">{c.companyName}</p>
+                      <p className="text-xs text-gray-400">{c.clientName}</p>
+                    </td>
+                    <td className="py-3 pr-4">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusColors[c.status] || statusColors.DRAFT}`}>
+                        {c.status.replace(/_/g, ' ')}
+                      </span>
+                    </td>
+                    <td className="py-3 pr-4 text-xs text-gray-400">{fmt(c.startDate)} → {fmt(c.endDate)}</td>
+                    <td className="py-3 text-right font-semibold text-brand">{fmtBudget(c.totalBudgetPaise)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import Link from 'next/link';
+import { Metadata } from 'next';
 import { Star, Zap, ExternalLink, ChevronRight, Check, X as XIcon, ThumbsUp, ThumbsDown, Globe, IndianRupee, ArrowRight } from 'lucide-react';
+import { generateToolSchema } from '@/lib/seo';
 
 const tool = {
   name: 'Cursor',
@@ -32,9 +34,44 @@ const tool = {
   ],
 };
 
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  // In production this would fetch from DB by slug
+  return {
+    title: `${tool.name} — ${tool.tagline}`,
+    description: tool.description.slice(0, 160),
+    alternates: { canonical: `https://aistartupimpact.com/tools/${tool.slug}` },
+    openGraph: {
+      title: `${tool.name} — ${tool.tagline}`,
+      description: tool.description.slice(0, 160),
+      type: 'website',
+      url: `https://aistartupimpact.com/tools/${tool.slug}`,
+      siteName: 'AIStartupImpact',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${tool.name} — ${tool.tagline}`,
+      description: tool.description.slice(0, 160),
+      creator: '@aikitstartup',
+    },
+  };
+}
+
 export default function ToolDetailPage() {
+  const jsonLd = generateToolSchema({
+    name: tool.name,
+    description: tool.description,
+    url: tool.website,
+    rating: tool.rating,
+    reviewCount: tool.reviews,
+    category: tool.category,
+    pricing: tool.pricing,
+  });
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-xs sm:text-sm font-jakarta text-gray-400 dark:text-gray-500 mb-6">
         <Link href="/" className="hover:text-brand">Home</Link>

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Mail, Twitter, Linkedin, Instagram, Facebook } from 'lucide-react';
+import SubscribeForm from '@/components/SubscribeForm';
 
 const footerLinks = [
   {
@@ -47,27 +48,92 @@ const socials = [
 export default function Footer() {
   return (
     <footer className="bg-navy dark:bg-gray-950 border-t border-gray-800 dark:border-gray-800">
-      {/* Newsletter CTA Strip */}
+      {/* Newsletter CTA Section - Redesigned */}
       <div className="border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div className="text-center sm:text-left">
-              <h3 className="font-sora font-extrabold text-xl sm:text-2xl text-white">
-                Stay ahead of India&apos;s AI revolution
-              </h3>
-              <p className="text-gray-400 text-sm font-jakarta mt-1.5">
-                Weekly insights on AI tools, funding, and founder stories. Free forever.
-              </p>
-            </div>
-            <div className="flex w-full sm:w-auto gap-2">
-              <input
-                type="email"
-                placeholder="your@email.com"
-                className="flex-1 sm:w-56 px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-brand font-jakarta text-sm min-h-[44px]"
-              />
-              <button className="btn-brand whitespace-nowrap text-sm">
-                Subscribe
-              </button>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+          <div className="max-w-6xl mx-auto">
+            <div className="relative overflow-hidden bg-gradient-to-br from-[#0F2239] via-[#1A2B42] to-[#0D1B2A] rounded-2xl p-6 sm:p-8 md:p-10">
+              {/* Background decoration */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-brand/10 rounded-full blur-[100px] -translate-y-32 translate-x-32" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-brand/5 rounded-full blur-[80px] translate-y-24 -translate-x-24" />
+              
+              <div className="relative z-10">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+                  {/* Left Content */}
+                  <div>
+                    <div className="inline-flex items-center gap-2 bg-brand/10 px-3 py-1.5 rounded-full mb-4">
+                      <span className="w-2 h-2 bg-brand rounded-full animate-pulse" />
+                      <span className="text-brand text-xs font-bold uppercase tracking-wider font-jakarta">
+                        Free Weekly
+                      </span>
+                    </div>
+                    
+                    <h3 className="font-sora font-extrabold text-2xl sm:text-3xl text-white leading-tight mb-3">
+                      Don&apos;t miss the{' '}
+                      <span className="text-brand italic">AI signal</span>
+                      <span className="text-gray-400 font-normal"> in the noise</span>
+                    </h3>
+                    
+                    <p className="text-gray-400 text-sm sm:text-base font-jakarta leading-relaxed mb-6">
+                      Every Friday — the week&apos;s most important AI funding rounds, founder stories, 
+                      and tool releases from India&apos;s ecosystem. Curated, not aggregated.
+                    </p>
+
+                    {/* Features - 2x2 grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
+                      <div className="flex items-center gap-2 text-xs text-gray-300 font-jakarta">
+                        <div className="w-1.5 h-1.5 bg-brand rounded-full flex-shrink-0" />
+                        India-first AI funding digest
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-300 font-jakarta">
+                        <div className="w-1.5 h-1.5 bg-brand rounded-full flex-shrink-0" />
+                        Exclusive founder interviews
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-300 font-jakarta">
+                        <div className="w-1.5 h-1.5 bg-brand rounded-full flex-shrink-0" />
+                        Tool reviews & recommendations
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-300 font-jakarta">
+                        <div className="w-1.5 h-1.5 bg-brand rounded-full flex-shrink-0" />
+                        Policy analysis for builders
+                      </div>
+                    </div>
+
+                    <p className="text-gray-500 text-xs font-jakarta">
+                      Read by teams at{' '}
+                      <span className="text-white font-medium">Google India</span>,{' '}
+                      <span className="text-white font-medium">Flipkart</span> &{' '}
+                      <span className="text-white font-medium">Zerodha</span>
+                    </p>
+                  </div>
+
+                  {/* Right Form */}
+                  <div className="lg:pl-8">
+                    <div className="text-center lg:text-left mb-4">
+                      <p className="text-gray-500 text-sm font-jakarta mb-4">
+                        Join <span className="text-brand font-bold">5,000+</span> founders, investors & engineers
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <SubscribeForm
+                        buttonText="Get the Weekly Digest →"
+                        source="footer"
+                        className="flex-col gap-3"
+                      />
+                    </div>
+                    
+                    <div className="text-center lg:text-left mt-3 space-y-1">
+                      <p className="text-gray-500 text-xs font-jakarta">
+                        Every Friday. Free forever. No credit card.
+                      </p>
+                      <p className="text-gray-600 text-xs font-jakarta">
+                        No spam. Unsubscribe in one click.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

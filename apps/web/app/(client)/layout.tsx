@@ -32,7 +32,7 @@ export default function ClientLayout({
         <div className="h-16 flex items-center px-6 border-b border-white/10 dark:border-gray-800">
           <Link href="/client-portal" className="flex items-center gap-2">
             <span className="font-sora font-extrabold text-lg">
-              <span className="text-brand">AI</span>
+              <span className="text-brand">A</span>
               <span className="text-white">SI</span>
             </span>
             <span className="text-xs font-jakarta px-2 py-0.5 bg-brand/20 text-brand rounded-full font-semibold">Client</span>

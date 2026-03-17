@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Sora, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import ThemeProvider from '@/components/ThemeProvider';
+import { NextAuthProvider } from '@/components/NextAuthProvider';
 import './globals.css';
 
 const sora = Sora({
@@ -57,14 +58,16 @@ export default function RootLayout({
         {/* Prevent FOUC — set dark class before paint */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('aisi-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
+            __html: `(function(){try{var t=localStorage.getItem('asi-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
           }}
         />
       </head>
       <body className="font-jakarta antialiased bg-white dark:bg-gray-950 text-charcoal dark:text-gray-100 transition-colors duration-300">
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <NextAuthProvider>
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
+        </NextAuthProvider>
       </body>
     </html>
   );
