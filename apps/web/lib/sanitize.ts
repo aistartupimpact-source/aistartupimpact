@@ -1,12 +1,12 @@
-import DOMPurify from 'isomorphic-dompurify';
+import sanitizeHtmlLib from 'sanitize-html';
 
 /**
  * Sanitizes untrusted HTML from the database before rendering.
  * Strips XSS vectors while preserving safe article markup.
  */
 export function sanitizeHtml(dirty: string): string {
-  return DOMPurify.sanitize(dirty, {
-    ALLOWED_TAGS: [
+  return sanitizeHtmlLib(dirty, {
+    allowedTags: [
       'p', 'br', 'b', 'i', 'em', 'strong', 'u', 's', 'del',
       'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
       'ul', 'ol', 'li', 'blockquote', 'pre', 'code',
@@ -14,11 +14,11 @@ export function sanitizeHtml(dirty: string): string {
       'table', 'thead', 'tbody', 'tr', 'th', 'td',
       'hr', 'span', 'div', 'section',
     ],
-    ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target', 'rel', 'width', 'height'],
-    ALLOW_DATA_ATTR: false,
-    FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed', 'form', 'input'],
-    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'style'],
-    // Force safe link targets
-    ADD_ATTR: ['target'],
+    allowedAttributes: {
+      'a': ['href', 'title', 'target', 'rel'],
+      'img': ['src', 'alt', 'title', 'width', 'height'],
+      '*': ['class'],
+    },
+    allowedSchemes: ['http', 'https', 'mailto'],
   });
 }

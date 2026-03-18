@@ -82,7 +82,7 @@ function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
           className="w-full h-full flex items-end transition-opacity duration-300"
           style={{ opacity: animating ? 0 : 1 }}
         >
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 sm:pb-20 md:pb-24 pt-12 sm:pt-20">
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-20 md:pb-24 pt-32 sm:pt-20">
             <div className="flex items-end justify-between gap-8">
               <div className="max-w-3xl flex-1">
               {/* Premium eyebrow */}
@@ -100,7 +100,7 @@ function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
 
               {/* Excerpt */}
               {s.excerpt && (
-                <p className="text-gray-300 text-sm sm:text-base md:text-lg font-jakarta leading-relaxed max-w-2xl mt-3 sm:mt-5 line-clamp-3">
+                <p className="text-gray-300 text-sm sm:text-base md:text-lg font-jakarta leading-relaxed max-w-2xl mt-3 sm:mt-5 line-clamp-4 sm:line-clamp-3">
                   {s.excerpt}
                 </p>
               )}
