@@ -14,6 +14,7 @@
     "@aistartupimpact/utils": "*",
     "@neondatabase/serverless": "^1.0.2",
     "@types/sanitize-html": "^2.16.1",
+    "@vercel/analytics": "^2.0.1",
     "clsx": "^2.1.0",
     "lucide-react": "^0.460.0",
     "next": "^14.2.0",

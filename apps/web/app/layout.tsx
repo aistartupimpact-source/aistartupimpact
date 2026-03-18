@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Sora, Plus_Jakarta_Sans } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
 import ThemeProvider from '@/components/ThemeProvider';
 import { generateWebSiteSchema, generateOrganizationSchema } from '@/lib/seo';
 import './globals.css';
@@ -95,6 +96,7 @@ export default function RootLayout({
         <ThemeProvider>
           {children}
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
