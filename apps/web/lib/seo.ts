@@ -13,48 +13,34 @@ const TWITTER_HANDLE = '@aikitstartup';
 // ─── Site-level schemas (injected once in root layout) ───────────────────────
 
 /** WebSite schema — enables Google Sitelinks Search Box + AI engine site identity */
-export function generateWebSiteSchema() {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: SITE_NAME,
-    url: PROD_URL,
-    description:
-      "India's definitive source for AI startup news, tools, funding data, and ecosystem intelligence.",
-    inLanguage: 'en-IN',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: { '@type': 'EntryPoint', urlTemplate: `${PROD_URL}/search?q={search_term_string}` },
-      'query-input': 'required name=search_term_string',
-    },
-  };
-}
+export const generateWebSiteSchema = () => ({
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'AIStartupImpact',
+  url: 'https://aistartupimpact.com',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: 'https://aistartupimpact.com/search?q={search_term_string}',
+    'query-input': 'required name=search_term_string',
+  },
+});
 
 /** Organization schema — publisher identity for all content */
-export function generateOrganizationSchema() {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    '@id': `${PROD_URL}/#organization`,
-    name: SITE_NAME,
-    url: PROD_URL,
-    logo: {
-      '@type': 'ImageObject',
-      url: SITE_LOGO,
-      width: 1200,
-      height: 630,
-    },
-    sameAs: [
-      'https://twitter.com/aikitstartup',
-      'https://linkedin.com/company/aistartupimpact',
-    ],
-    contactPoint: {
-      '@type': 'ContactPoint',
-      contactType: 'editorial',
-      email: 'editorial@aistartupimpact.com',
-    },
-  };
-}
+export const generateOrganizationSchema = () => ({
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "AIStartupImpact",
+  url: "https://aistartupimpact.com",
+  logo: "https://aistartupimpact.com/logo.png",
+  sameAs: [
+    "https://www.linkedin.com/company/yourpage"
+  ],
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "customer support",
+    email: "support@aistartupimpact.com"
+  }
+});
 
 // ─── Page-level schemas ───────────────────────────────────────────────────────
 
@@ -165,14 +151,14 @@ export function generateToolSchema(data: {
     },
     ...(data.rating && data.reviewCount
       ? {
-          aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue: data.rating,
-            reviewCount: data.reviewCount,
-            bestRating: 5,
-            worstRating: 1,
-          },
-        }
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: data.rating,
+          reviewCount: data.reviewCount,
+          bestRating: 5,
+          worstRating: 1,
+        },
+      }
       : {}),
   };
 }

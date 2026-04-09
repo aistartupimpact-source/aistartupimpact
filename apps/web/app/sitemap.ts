@@ -24,12 +24,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const sql = neon(process.env.DATABASE_URL!);
 
-    // Fetch published articles directly from DB
+    // Fetch published articles
     const articles: any[] = await sql`
       SELECT slug, type, "updatedAt", "publishedAt"
       FROM "Article"
       WHERE status = 'PUBLISHED' AND "deletedAt" IS NULL
       ORDER BY "publishedAt" DESC
+      LIMIT 1000
+    `;
+
+    // Fetch tools
+    const tools: any[] = await sql`
+      SELECT slug, "updatedAt", "createdAt" 
+      FROM "AiTool" 
+      WHERE (status = 'APPROVED' OR status = 'FEATURED') AND "deletedAt" IS NULL
+      LIMIT 1000
+    `;
+
+    // Fetch startups
+    const startups: any[] = await sql`
+      SELECT slug, "updatedAt", "createdAt" 
+      FROM "Startup" 
+      WHERE "deletedAt" IS NULL
       LIMIT 1000
     `;
 
@@ -40,7 +56,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
 
-    return [...staticRoutes, ...articleRoutes];
+    const toolRoutes: MetadataRoute.Sitemap = tools.map((t) => ({
+      url: `${SITE_URL}/tools/${t.slug}`,
+      lastModified: new Date(t.updatedAt || t.createdAt || new Date()),
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    }));
+
+    const startupRoutes: MetadataRoute.Sitemap = startups.map((s) => ({
+      url: `${SITE_URL}/startups/${s.slug}`,
+      lastModified: new Date(s.updatedAt || s.createdAt || new Date()),
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    }));
+
+    return [...staticRoutes, ...articleRoutes, ...toolRoutes, ...startupRoutes];
   } catch (e) {
     console.error('Sitemap DB error:', e);
     return staticRoutes;

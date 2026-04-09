@@ -23,27 +23,29 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://aistartupimpact.com"),
   title: {
-    default: "AIStartupImpact — India's AI Startup Ecosystem",
+    default: "AIStartupImpact – AI Startup News, Tools & Funding in India",
     template: '%s | AIStartupImpact',
   },
   description:
-    "India's definitive source for AI startup news, tools, funding data, and ecosystem intelligence.",
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL?.startsWith('http')
-      ? process.env.NEXT_PUBLIC_SITE_URL
-      : 'https://aistartupimpact.com'
-  ),
+    "Discover India's top AI startups, latest news, funding updates, tools, and founder stories on AIStartupImpact.",
+  alternates: {
+    canonical: "/",
+  },
   keywords: [
     'India AI startups', 'AI ecosystem India', 'Indian AI news',
     'AI funding India', 'AI tools India', 'startup funding India',
     'artificial intelligence India', 'deep tech India',
   ],
   openGraph: {
-    type: 'website',
+    title: "AIStartupImpact – AI Startup News, Tools & Funding in India",
+    description: "Discover India's top AI startups, latest news, funding updates, tools, and founder stories on AIStartupImpact.",
+    url: "https://aistartupimpact.com",
+    siteName: "AIStartupImpact",
+    type: "website",
     locale: 'en_IN',
-    siteName: 'AIStartupImpact',
-    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: "AIStartupImpact — India's AI Startup Ecosystem" }],
+    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: "AIStartupImpact – AI Startup News, Tools & Funding in India" }],
   },
   twitter: {
     card: 'summary_large_image',

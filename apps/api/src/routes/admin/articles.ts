@@ -170,6 +170,19 @@ router.post('/:id/publish',
         where: { id: req.params.id, status: { in: ['APPROVED', 'DRAFT', 'SCHEDULED'] } },
         data: { status: 'PUBLISHED', publishedAt: new Date() }
       });
+
+      // Auto Indexing Triggers (Fire and forget)
+      setTimeout(async () => {
+        try {
+          await Promise.all([
+            fetch(`https://www.google.com/ping?sitemap=https://aistartupimpact.com/sitemap.xml`).catch(e => console.error('Ping Google Error:', e)),
+            fetch(`https://aistartupimpact.com`).catch(e => console.error('Homepage Fetch Error:', e)),
+          ]);
+        } catch (err) {
+          console.error('Trigger Error:', err);
+        }
+      }, 0);
+
       res.json({ success: true, data: article });
     } catch (error) {
       res.status(500).json({ success: false, data: null, error: 'Failed to publish or invalid status transition' });

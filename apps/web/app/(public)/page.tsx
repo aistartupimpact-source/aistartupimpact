@@ -228,7 +228,7 @@ export default async function HomePage() {
             View All →
           </Link>
         </div>
-        
+
         {/* Seamless 2x2 Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
           {latestStories.slice(0, 4).map((story: any, idx: number) => {
@@ -623,6 +623,23 @@ export default async function HomePage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+      {/* ╔════════════════════════════════════════════╗
+          ║  11. EXPLORE SITE (INTERNAL LINKS)         ║
+          ╚════════════════════════════════════════════╝ */}
+      <section className="mt-16 mb-16 text-center">
+        <h2 className="text-xl font-sora font-semibold mb-4 text-gray-900 dark:text-white">
+          Explore AIStartupImpact
+        </h2>
+
+        <div className="flex flex-col gap-3 font-jakarta">
+          <Link href="/news" className="text-brand hover:underline font-medium tracking-wide">
+            Read latest AI startup news →
+          </Link>
+          <Link href="/contact" className="text-gray-600 dark:text-gray-400 hover:text-brand hover:underline transition-colors font-medium">
+            Contact us for collaborations →
+          </Link>
         </div>
       </section>
     </>

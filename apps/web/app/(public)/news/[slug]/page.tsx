@@ -96,7 +96,10 @@ export default async function ArticlePage({ params }: { params: { slug: string }
               <div>
                 <span className="text-sm font-semibold text-navy dark:text-white font-jakarta">{article.author?.name || 'Author'}</span>
                 <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 font-jakarta">
-                  <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(article.publishedAt)}</span>
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    <time dateTime={article.publishedAt || new Date().toISOString()}>Published on: {formatDate(article.publishedAt)}</time>
+                  </span>
                   <span>·</span>
                   <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{article.readTimeMinutes} min read</span>
                 </div>
