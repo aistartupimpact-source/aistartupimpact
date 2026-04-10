@@ -1,10 +1,9 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import {
   ArrowRight, TrendingUp, Star, Users, ChevronRight,
   Sparkles, IndianRupee, Zap, Clock,
-  ArrowUpRight, Bookmark,
+  ArrowUpRight,
 } from 'lucide-react';
 
 // ISR: revalidate every 60s — much better than force-dynamic for production
@@ -96,8 +95,32 @@ export default async function HomePage() {
   const premiumStartups = (fetchedFeaturedStartup && fetchedFeaturedStartup.length > 0) ? fetchedFeaturedStartup : defaultPremiumStartup;
   const indiaAI = fetchedIndiaAI?.length > 0 ? fetchedIndiaAI : defaultIndiaAI;
   const activeSponsor = fetchedSponsor || defaultSponsor;
-  // Hero: scheduled slots take priority over heroAd, then fallback to featured article
-  const heroSlides = (fetchedHeroSlots && fetchedHeroSlots.length > 0) ? fetchedHeroSlots : null;
+  // Hero: scheduled slots take priority, fallback to heroAd or featured article as a single slide
+  const heroSlides = (fetchedHeroSlots && fetchedHeroSlots.length > 0)
+    ? fetchedHeroSlots
+    : heroAd
+    ? [{
+        id: 'hero-ad',
+        title: heroAd.headline,
+        excerpt: heroAd.bodyText,
+        coverImage: heroAd.imageUrl ?? null,
+        ctaUrl: heroAd.ctaUrl,
+        ctaLabel: heroAd.ctaText || 'Learn More',
+        badgeText: `★ Sponsored · ${heroAd.companyName}`,
+        authorName: heroAd.companyName,
+        readTimeMinutes: null,
+      }]
+    : [{
+        id: heroArticle.id || 'hero-article',
+        title: heroArticle.title,
+        excerpt: heroArticle.excerpt ?? null,
+        coverImage: heroArticle.coverImage ?? null,
+        ctaUrl: `/news/${heroArticle.slug}`,
+        ctaLabel: 'Read Story',
+        badgeText: heroArticle.category?.name || 'Story',
+        authorName: heroArticle.author?.name ?? null,
+        readTimeMinutes: heroArticle.readTimeMinutes ?? null,
+      }];
 
   return (
     <>
@@ -105,81 +128,7 @@ export default async function HomePage() {
           ║  1. HERO — Scheduled Carousel / Ad / Article║
           ╚════════════════════════════════════════════╝ */}
       <section>
-        {heroSlides ? (
-          /* Scheduled hero slots from admin — up to 5, rotates every 7s */
-          <HeroCarousel slides={heroSlides} />
-        ) : heroAd ? (
-          <a href={heroAd.ctaUrl} target="_blank" rel="noopener noreferrer" className="group block">
-            <div className="relative overflow-hidden bg-[#0D1B2A] min-h-[340px] sm:min-h-[420px] md:min-h-[500px] flex items-end">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#0D1B2A] via-[#0F2239] to-black" />
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-10 right-10 sm:top-20 sm:right-20 w-60 sm:w-96 h-60 sm:h-96 bg-brand rounded-full blur-[100px] sm:blur-[120px]" />
-              </div>
-              {heroAd.imageUrl && (
-                <Image src={heroAd.imageUrl} alt={heroAd.headline} fill className="object-cover opacity-30" />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-              <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 md:pb-16 pt-12 sm:pt-16">
-                <div className="max-w-3xl">
-                  <span className="inline-flex items-center gap-1.5 bg-yellow-500 px-2.5 py-1 rounded-sm text-black text-[11px] font-bold uppercase tracking-wider mb-4">
-                    ★ Sponsored · {heroAd.companyName}
-                  </span>
-                  <h1 className="font-sora font-extrabold text-[22px] leading-[1.2] sm:text-3xl md:text-[42px] md:leading-[1.15] text-white group-hover:text-brand-200 transition-colors duration-300">
-                    {heroAd.headline}
-                  </h1>
-                  <p className="text-gray-300 text-sm sm:text-base md:text-lg font-jakarta leading-relaxed max-w-2xl mt-3 sm:mt-5 line-clamp-3 sm:line-clamp-none">
-                    {heroAd.bodyText}
-                  </p>
-                  <div className="mt-6">
-                    <span className="inline-flex items-center gap-2 bg-brand text-white font-bold px-5 py-2.5 rounded-xl text-sm font-jakarta">
-                      {heroAd.ctaText || 'Learn More'} →
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </a>
-        ) : (
-          <Link href={`/news/${heroArticle.slug}`} className="group block">
-            <div className="relative overflow-hidden bg-[#0D1B2A] min-h-[340px] sm:min-h-[420px] md:min-h-[500px] flex items-end">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#0D1B2A] via-[#0F2239] to-black" />
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-10 right-10 sm:top-20 sm:right-20 w-60 sm:w-96 h-60 sm:h-96 bg-brand rounded-full blur-[100px] sm:blur-[120px]" />
-                <div className="absolute bottom-5 left-5 sm:bottom-10 sm:left-10 w-40 sm:w-64 h-40 sm:h-64 bg-brand-300 rounded-full blur-[80px] sm:blur-[100px]" />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-              <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 md:pb-16 pt-16 sm:pt-20">
-                <div className="max-w-3xl">
-                  <span className="inline-flex items-center gap-1.5 bg-brand px-2.5 py-1 rounded-sm text-white text-[11px] font-bold uppercase tracking-wider mb-4 sm:mb-5">
-                    <Bookmark className="w-3 h-3" />
-                    {heroArticle.category?.name || 'Story'}
-                  </span>
-                  <h1 className="font-sora font-extrabold text-[22px] leading-[1.2] sm:text-3xl md:text-[42px] md:leading-[1.15] text-white group-hover:text-brand-200 transition-colors duration-300">
-                    {heroArticle.title}
-                  </h1>
-                  <p className="text-gray-300 text-sm sm:text-base md:text-lg font-jakarta leading-relaxed max-w-2xl mt-3 sm:mt-5 line-clamp-3 sm:line-clamp-none">
-                    {heroArticle.excerpt}
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-400 font-jakarta mt-4 sm:mt-6">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-brand/30 flex items-center justify-center text-[10px] text-brand font-bold">
-                        {heroArticle.author?.name?.charAt(0) || 'A'}
-                      </div>
-                      <span className="text-gray-300 font-medium">{heroArticle.author?.name || 'Author'}</span>
-                    </div>
-                    <span className="text-gray-600">·</span>
-                    <span>{formatDate(heroArticle.publishedAt || new Date().toISOString())}</span>
-                    <span className="text-gray-600">·</span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
-                      {heroArticle.readTimeMinutes} min read
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Link>
-        )}
+        <HeroCarousel slides={heroSlides} />
       </section>
 
       {/* ╔════════════════════════════════════════════╗
