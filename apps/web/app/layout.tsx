@@ -86,6 +86,18 @@ export default function RootLayout({
             __html: `(function(){try{var t=localStorage.getItem('asi-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
           }}
         />
+        {/* Google Analytics */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-PVL3NC8DQ6"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-PVL3NC8DQ6');
+            `,
+          }}
+        />
       </head>
       <body className="font-jakarta antialiased bg-white dark:bg-gray-950 text-charcoal dark:text-gray-100">
         {/* Site-level structured data */}
