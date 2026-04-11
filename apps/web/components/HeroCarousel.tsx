@@ -81,9 +81,9 @@ function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
               </div>
 
               {/* Title */}
-              <h1 className="font-sora font-extrabold text-[22px] leading-[1.2] sm:text-3xl md:text-[42px] md:leading-[1.15] text-white group-hover:text-brand-200 transition-colors duration-300">
+              <div className="font-sora font-extrabold text-[22px] leading-[1.2] sm:text-3xl md:text-[42px] md:leading-[1.15] text-white group-hover:text-brand-200 transition-colors duration-300">
                 {s.title}
-              </h1>
+              </div>
 
               {/* Excerpt */}
               {s.excerpt && (
@@ -137,41 +137,41 @@ function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
         >
           {/* Parrot body */}
           {/* Tail */}
-          <ellipse cx="258" cy="182" rx="14" ry="5.5" fill="#1a6b3a" transform="rotate(30 258 182)" opacity="0.9"/>
-          <ellipse cx="264" cy="187" rx="13" ry="5" fill="#22c55e" transform="rotate(42 264 187)" opacity="0.8"/>
-          <ellipse cx="252" cy="185" rx="12" ry="4.5" fill="#16a34a" transform="rotate(18 252 185)" opacity="0.85"/>
+          <ellipse cx="258" cy="182" rx="14" ry="5.5" fill="#1a6b3a" transform="rotate(30 258 182)" opacity="0.9" />
+          <ellipse cx="264" cy="187" rx="13" ry="5" fill="#22c55e" transform="rotate(42 264 187)" opacity="0.8" />
+          <ellipse cx="252" cy="185" rx="12" ry="4.5" fill="#16a34a" transform="rotate(18 252 185)" opacity="0.85" />
           {/* Body */}
-          <ellipse cx="232" cy="158" rx="32" ry="38" fill="#16a34a"/>
-          <ellipse cx="222" cy="164" rx="18" ry="24" fill="#4ade80" opacity="0.45"/>
+          <ellipse cx="232" cy="158" rx="32" ry="38" fill="#16a34a" />
+          <ellipse cx="222" cy="164" rx="18" ry="24" fill="#4ade80" opacity="0.45" />
           {/* Wing */}
-          <ellipse cx="244" cy="152" rx="20" ry="13" fill="#15803d" transform="rotate(-15 244 152)"/>
-          <ellipse cx="244" cy="152" rx="14" ry="9" fill="#22c55e" transform="rotate(-15 244 152)" opacity="0.55"/>
+          <ellipse cx="244" cy="152" rx="20" ry="13" fill="#15803d" transform="rotate(-15 244 152)" />
+          <ellipse cx="244" cy="152" rx="14" ry="9" fill="#22c55e" transform="rotate(-15 244 152)" opacity="0.55" />
           {/* Neck */}
-          <ellipse cx="214" cy="128" rx="16" ry="19" fill="#16a34a"/>
+          <ellipse cx="214" cy="128" rx="16" ry="19" fill="#16a34a" />
           {/* Head */}
-          <circle cx="204" cy="108" r="26" fill="#22c55e"/>
+          <circle cx="204" cy="108" r="26" fill="#22c55e" />
           {/* Crest */}
-          <ellipse cx="198" cy="84" rx="6" ry="13" fill="#4ade80" transform="rotate(-20 198 84)"/>
-          <ellipse cx="208" cy="81" rx="5" ry="11" fill="#86efac" transform="rotate(-8 208 81)"/>
-          <ellipse cx="190" cy="88" rx="4.5" ry="10" fill="#16a34a" transform="rotate(-32 190 88)"/>
+          <ellipse cx="198" cy="84" rx="6" ry="13" fill="#4ade80" transform="rotate(-20 198 84)" />
+          <ellipse cx="208" cy="81" rx="5" ry="11" fill="#86efac" transform="rotate(-8 208 81)" />
+          <ellipse cx="190" cy="88" rx="4.5" ry="10" fill="#16a34a" transform="rotate(-32 190 88)" />
           {/* Eye */}
-          <circle cx="193" cy="104" r="8" fill="white"/>
-          <circle cx="191" cy="104" r="5.5" fill="#1e3a5f"/>
-          <circle cx="190" cy="103" r="3" fill="#0a0a0a"/>
-          <circle cx="192" cy="101.5" r="1.2" fill="white"/>
+          <circle cx="193" cy="104" r="8" fill="white" />
+          <circle cx="191" cy="104" r="5.5" fill="#1e3a5f" />
+          <circle cx="190" cy="103" r="3" fill="#0a0a0a" />
+          <circle cx="192" cy="101.5" r="1.2" fill="white" />
           {/* Cheek */}
-          <ellipse cx="184" cy="112" rx="7" ry="5" fill="#fbbf24" opacity="0.65"/>
+          <ellipse cx="184" cy="112" rx="7" ry="5" fill="#fbbf24" opacity="0.65" />
           {/* Beak upper */}
-          <path d="M182 108 Q142 114 144 120 Q152 124 178 118 Z" fill="#f59e0b"/>
+          <path d="M182 108 Q142 114 144 120 Q152 124 178 118 Z" fill="#f59e0b" />
           {/* Beak lower — SMIL open/close */}
           <path d="M182 116 Q144 120 146 126 Q154 128 178 120 Z" fill="#d97706">
-            <animateTransform attributeName="transform" type="rotate" values="0 163 118;12 163 118;0 163 118" keyTimes="0;0.5;1" dur="0.5s" repeatCount="indefinite"/>
+            <animateTransform attributeName="transform" type="rotate" values="0 163 118;12 163 118;0 163 118" keyTimes="0;0.5;1" dur="0.5s" repeatCount="indefinite" />
           </path>
           {/* Feet */}
-          <line x1="218" y1="192" x2="212" y2="208" stroke="#f59e0b" strokeWidth="3.5" strokeLinecap="round"/>
-          <line x1="232" y1="194" x2="226" y2="210" stroke="#f59e0b" strokeWidth="3.5" strokeLinecap="round"/>
-          <line x1="212" y1="208" x2="202" y2="211" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round"/>
-          <line x1="226" y1="210" x2="216" y2="213" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="218" y1="192" x2="212" y2="208" stroke="#f59e0b" strokeWidth="3.5" strokeLinecap="round" />
+          <line x1="232" y1="194" x2="226" y2="210" stroke="#f59e0b" strokeWidth="3.5" strokeLinecap="round" />
+          <line x1="212" y1="208" x2="202" y2="211" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="226" y1="210" x2="216" y2="213" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" />
 
           {/* Flying "Breaking!" words — pure SMIL, no CSS needed */}
           {([
@@ -183,9 +183,9 @@ function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
           ] as { begin: string }[]).map((w, i) => (
             <text key={i} fill="#ff4444" fontSize="14" fontWeight="bold" fontFamily="Arial, sans-serif" textAnchor="middle" opacity="0">
               Breaking!
-              <animateTransform attributeName="transform" type="translate" values="160,115; 110,85; 60,55; 10,25" keyTimes="0;0.33;0.66;1" dur="2s" begin={w.begin} repeatCount="indefinite" additive="replace"/>
-              <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.7;1" dur="2s" begin={w.begin} repeatCount="indefinite"/>
-              <animate attributeName="font-size" values="8;14;16;18" keyTimes="0;0.33;0.66;1" dur="2s" begin={w.begin} repeatCount="indefinite"/>
+              <animateTransform attributeName="transform" type="translate" values="160,115; 110,85; 60,55; 10,25" keyTimes="0;0.33;0.66;1" dur="2s" begin={w.begin} repeatCount="indefinite" additive="replace" />
+              <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.7;1" dur="2s" begin={w.begin} repeatCount="indefinite" />
+              <animate attributeName="font-size" values="8;14;16;18" keyTimes="0;0.33;0.66;1" dur="2s" begin={w.begin} repeatCount="indefinite" />
             </text>
           ))}
 
@@ -213,15 +213,13 @@ function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
                 <button
                   key={i}
                   onClick={(e) => { e.preventDefault(); goTo(i, i > active ? 'next' : 'prev'); }}
-                  className={`rounded-full transition-all duration-300 ${
-                    i === active ? 'w-5 h-2 bg-brand' : 'w-2 h-2 bg-white/30 hover:bg-white/60'
-                  }`}
+                  className={`rounded-full transition-all duration-300 ${i === active ? 'w-5 h-2 bg-brand' : 'w-2 h-2 bg-white/30 hover:bg-white/60'
+                    }`}
                   style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent' }}
                   aria-label={`Slide ${i + 1}`}
                 >
-                  <span className={`rounded-full transition-all duration-300 block ${
-                    i === active ? 'w-5 h-2 bg-brand' : 'w-2 h-2 bg-white/30'
-                  }`} />
+                  <span className={`rounded-full transition-all duration-300 block ${i === active ? 'w-5 h-2 bg-brand' : 'w-2 h-2 bg-white/30'
+                    }`} />
                 </button>
               ))}
             </div>

@@ -25,32 +25,34 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL("https://aistartupimpact.com"),
   title: {
-    default: "AIStartupImpact – AI Startup News, Tools & Funding in India",
-    template: '%s | AIStartupImpact',
+    default: "AI Startup Impact – #1 AI Startup India News, Tools & Funding",
+    template: '%s | AI Startup Impact',
   },
   description:
-    "Discover India's top AI startups, latest news, funding updates, tools, and founder stories on AIStartupImpact.",
-  alternates: {
-    canonical: "/",
-  },
+    "AI Startup Impact is the premier platform for AI Startup India news. Discover the top artificial intelligence companies, funding impact, native tools, and founder stories in India.",
   keywords: [
-    'India AI startups', 'AI ecosystem India', 'Indian AI news',
-    'AI funding India', 'AI tools India', 'startup funding India',
-    'artificial intelligence India', 'deep tech India',
+    'ai startups india 2026', 'Krutrim AI', 'India AI news', 'best AI tools India',
+    'Sarvam AI', 'India AI ecosystem', 'Bhavish Aggarwal AI', 'AI funding India 2026',
+    'top AI companies India', 'Sarvam AI funding', 'AI startup news India', 'IndiaAI Mission',
+    'India AI unicorn', 'AI jobs India', 'best AI assistant India', 'India AI funding tracker',
+    'Neysa AI India', 'sovereign AI India', 'AI newsletter India', 'Indian AI founder stories',
+    'ai startup impact'
   ],
   openGraph: {
-    title: "AIStartupImpact – AI Startup News, Tools & Funding in India",
-    description: "Discover India's top AI startups, latest news, funding updates, tools, and founder stories on AIStartupImpact.",
+    title: "AI Startup Impact – #1 AI Startup India News, Tools & Funding",
+    description: "AI Startup Impact is the premier platform for AI Startup India news. Discover the top artificial intelligence companies, funding impact, native tools, and founder stories in India.",
     url: "https://aistartupimpact.com",
-    siteName: "AIStartupImpact",
+    siteName: "AI Startup Impact",
     type: "website",
     locale: 'en_IN',
-    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: "AIStartupImpact – AI Startup News, Tools & Funding in India" }],
+    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: "AI Startup Impact – AI Startup India News & Funding" }],
   },
   twitter: {
     card: 'summary_large_image',
     site: '@aikitstartup',
     creator: '@aikitstartup',
+    title: "AI Startup Impact – #1 AI Startup India News, Tools & Funding",
+    description: "AI Startup Impact is the premier platform for AI Startup India news. Discover the top artificial intelligence companies, funding impact, native tools, and founder stories in India.",
   },
   robots: {
     index: true,

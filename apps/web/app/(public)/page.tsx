@@ -99,7 +99,7 @@ export default async function HomePage() {
   const heroSlides = (fetchedHeroSlots && fetchedHeroSlots.length > 0)
     ? fetchedHeroSlots
     : heroAd
-    ? [{
+      ? [{
         id: 'hero-ad',
         title: heroAd.headline,
         excerpt: heroAd.bodyText,
@@ -110,7 +110,7 @@ export default async function HomePage() {
         authorName: heroAd.companyName,
         readTimeMinutes: null,
       }]
-    : [{
+      : [{
         id: heroArticle.id || 'hero-article',
         title: heroArticle.title,
         excerpt: heroArticle.excerpt ?? null,
@@ -127,6 +127,11 @@ export default async function HomePage() {
       {/* ╔════════════════════════════════════════════╗
           ║  1. HERO — Scheduled Carousel / Ad / Article║
           ╚════════════════════════════════════════════╝ */}
+      <div className="bg-[#08111B] text-center pt-3 pb-2 border-b border-white/5">
+        <h1 className="text-[9px] sm:text-[10px] text-gray-500 font-jakarta font-medium tracking-[0.2em] uppercase">
+          AI Startup Impact — #1 AI Startup India News, AI Ecosystem, and Tools
+        </h1>
+      </div>
       <section>
         <HeroCarousel slides={heroSlides} />
       </section>
@@ -195,9 +200,9 @@ export default async function HomePage() {
                       {story.category?.name || 'News'}
                     </span>
                   </div>
-                  <h3 className="font-sora font-bold text-base sm:text-lg text-gray-900 dark:text-white leading-tight mb-3 group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors">
+                  <p className="font-sora font-bold text-base sm:text-lg text-gray-900 dark:text-white leading-tight mb-3 group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors">
                     {story.title}
-                  </h3>
+                  </p>
                   {story.excerpt && (
                     <p className="text-gray-600 dark:text-gray-400 font-jakarta text-sm leading-relaxed mb-4 line-clamp-3">
                       {story.excerpt}
@@ -306,9 +311,9 @@ export default async function HomePage() {
                   {/* Content */}
                   <div className="p-5 sm:p-6 flex flex-col flex-1">
                     {/* Title */}
-                    <h3 className="font-sora font-bold text-base sm:text-lg text-gray-900 dark:text-white leading-snug mb-2.5 group-hover:text-brand transition-colors line-clamp-2">
+                    <p className="font-sora font-bold text-base sm:text-lg text-gray-900 dark:text-white leading-snug mb-2.5 group-hover:text-brand transition-colors line-clamp-2">
                       {story.title}
-                    </h3>
+                    </p>
 
                     {/* Excerpt */}
                     {story.excerpt && (
@@ -403,9 +408,9 @@ export default async function HomePage() {
                       </div>
 
                       {/* Title — cleaned up, no "Week X:" prefix */}
-                      <h3 className="font-sora font-semibold text-sm text-gray-900 dark:text-white leading-snug group-hover:text-brand transition-colors line-clamp-2 flex-1">
+                      <p className="font-sora font-semibold text-sm text-gray-900 dark:text-white leading-snug group-hover:text-brand transition-colors line-clamp-2 flex-1">
                         {digest.title.replace(/^Week\s+\d+:\s*/i, '')}
-                      </h3>
+                      </p>
 
                       {/* Top deals preview */}
                       {digest.deals?.slice(0, 2).map((deal: any, i: number) => (
@@ -480,9 +485,9 @@ export default async function HomePage() {
                             {item.category?.name || 'Ecosystem'}
                           </span>
                         </div>
-                        <h3 className="font-sora font-bold text-sm text-gray-900 dark:text-white leading-tight mb-2 group-hover:text-red-500 transition-colors">
+                        <p className="font-sora font-bold text-sm text-gray-900 dark:text-white leading-tight mb-2 group-hover:text-red-500 transition-colors">
                           {item.title}
-                        </h3>
+                        </p>
                         <span className="text-xs text-gray-400 font-jakarta">
                           {formatDate(item.publishedAt)}
                         </span>
@@ -551,9 +556,9 @@ export default async function HomePage() {
                           )}
                         </div>
                         {/* Name */}
-                        <h3 className="font-sora font-bold text-sm text-gray-900 dark:text-white leading-tight mb-1.5 group-hover:text-brand transition-colors">
+                        <p className="font-sora font-bold text-sm text-gray-900 dark:text-white leading-tight mb-1.5 group-hover:text-brand transition-colors">
                           {tool.name}
-                        </h3>
+                        </p>
                         {/* Tagline */}
                         <p className="text-gray-500 dark:text-gray-400 text-xs font-jakarta leading-relaxed flex-1 line-clamp-2">
                           {tool.tagline}

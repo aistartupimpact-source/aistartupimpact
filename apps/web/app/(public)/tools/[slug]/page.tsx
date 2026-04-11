@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Metadata } from 'next';
 import { Star, Zap, ExternalLink, ChevronRight, Check, X as XIcon, ThumbsUp, ThumbsDown, Globe, IndianRupee, ArrowRight } from 'lucide-react';
 import { generateToolSchema } from '@/lib/seo';
+import EmbedBadge from '@/components/EmbedBadge';
 
 const tool = {
   name: 'Cursor',
@@ -208,6 +209,7 @@ export default function ToolDetailPage() {
 
         {/* Sidebar */}
         <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-6">
+          <EmbedBadge urlSlug={tool.slug} type="tools" />
           <div className="card p-5 sticky top-20">
             <h4 className="font-sora font-bold text-sm text-navy dark:text-white mb-4">Alternatives</h4>
             <div className="space-y-3">

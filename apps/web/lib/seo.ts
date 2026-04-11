@@ -30,6 +30,8 @@ export const generateOrganizationSchema = () => ({
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "AIStartupImpact",
+  alternateName: "AI Startup India",
+  description: "The premier platform for AI startup impact, news, funding, and ecosystem insights for Startups in India.",
   url: "https://aistartupimpact.com",
   logo: "https://aistartupimpact.com/logo.png",
   sameAs: [

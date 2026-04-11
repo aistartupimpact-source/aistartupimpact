@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Building2, MapPin, Users, IndianRupee, TrendingUp, ExternalLink, ChevronRight, Calendar, ArrowUpRight, Globe, Star } from 'lucide-react';
+import EmbedBadge from '@/components/EmbedBadge';
 
 const startup = {
   name: 'Sarvam AI',
@@ -148,6 +149,7 @@ export default function StartupDetailPage() {
 
         {/* Sidebar */}
         <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-6">
+          <EmbedBadge urlSlug={startup.slug} type="startups" />
           {/* Related News */}
           <div className="card p-5 sticky top-20">
             <h4 className="font-sora font-bold text-sm text-navy dark:text-white mb-4">Related News</h4>
