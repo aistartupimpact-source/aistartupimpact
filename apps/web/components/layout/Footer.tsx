@@ -56,7 +56,7 @@ export default function Footer() {
               {/* Background decoration */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-brand/10 rounded-full blur-[100px] -translate-y-32 translate-x-32" />
               <div className="absolute bottom-0 left-0 w-48 h-48 bg-brand/5 rounded-full blur-[80px] translate-y-24 -translate-x-24" />
-              
+
               <div className="relative z-10">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
                   {/* Left Content */}
@@ -67,15 +67,15 @@ export default function Footer() {
                         Free Weekly
                       </span>
                     </div>
-                    
+
                     <h3 className="font-sora font-extrabold text-2xl sm:text-3xl text-white leading-tight mb-3">
                       Don&apos;t miss the{' '}
                       <span className="text-brand italic">AI signal</span>
                       <span className="text-gray-400 font-normal"> in the noise</span>
                     </h3>
-                    
+
                     <p className="text-gray-400 text-sm sm:text-base font-jakarta leading-relaxed mb-6">
-                      Every Friday — the week&apos;s most important AI funding rounds, founder stories, 
+                      Every Friday — the week&apos;s most important AI funding rounds, founder stories,
                       and tool releases from India&apos;s ecosystem. Curated, not aggregated.
                     </p>
 
@@ -114,7 +114,7 @@ export default function Footer() {
                         Join <span className="text-brand font-bold">5,000+</span> founders, investors & engineers
                       </p>
                     </div>
-                    
+
                     <div className="space-y-3">
                       <SubscribeForm
                         buttonText="Get the Weekly Digest →"
@@ -122,7 +122,7 @@ export default function Footer() {
                         className="flex-col gap-3"
                       />
                     </div>
-                    
+
                     <div className="text-center lg:text-left mt-3 space-y-1">
                       <p className="text-gray-500 text-xs font-jakarta">
                         Every Friday. Free forever. No credit card.
@@ -198,6 +198,17 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500 font-jakarta">
             <span>&copy; {new Date().getFullYear()} AIStartupImpact. All rights reserved.</span>
+
+            <a href="https://www.producthunt.com/products/aistartupimpact?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-aistartupimpact" target="_blank" rel="noopener noreferrer" className="order-first sm:order-none mb-4 sm:mb-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                alt="AIStartupImpact - Discover, feature & grow AI startups in one place | Product Hunt"
+                width="250"
+                height="54"
+                src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1121108&theme=light&t=1775982559914"
+              />
+            </a>
+
             <span className="flex items-center gap-1.5">
               <Mail className="w-3.5 h-3.5" />
               hello@aistartupimpact.com
