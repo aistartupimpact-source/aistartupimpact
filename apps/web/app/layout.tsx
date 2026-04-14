@@ -36,7 +36,9 @@ export const metadata: Metadata = {
     'top AI companies India', 'Sarvam AI funding', 'AI startup news India', 'IndiaAI Mission',
     'India AI unicorn', 'AI jobs India', 'best AI assistant India', 'India AI funding tracker',
     'Neysa AI India', 'sovereign AI India', 'AI newsletter India', 'Indian AI founder stories',
-    'ai startup impact'
+    'ai startup impact', 'AI startups India', 'India AI startup news',
+    'AI startup funding India 2026', 'Indian AI ecosystem', 'AI founder stories India',
+    'India artificial intelligence news', 'AI startup news', 'IndiaAI startup ecosystem'
   ],
   openGraph: {
     title: "AI Startup Impact – #1 AI Startup India News, Tools & Funding",
@@ -95,6 +97,16 @@ export default function RootLayout({
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
               gtag('config', 'G-PVL3NC8DQ6');
+            `,
+          }}
+        />
+        {/* Google tag (gtag.js) event */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              gtag('event', 'conversion_event_page_view', {
+                // <event_parameters>
+              });
             `,
           }}
         />
