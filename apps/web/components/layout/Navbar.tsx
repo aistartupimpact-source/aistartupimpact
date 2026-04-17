@@ -116,10 +116,18 @@ export default function Navbar() {
                 )}
               </button>
 
+              {/* Submit Tool CTA */}
+              <Link
+                href="/submit-tool"
+                className="hidden md:inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-sm bg-gray-900 text-white dark:bg-white dark:text-gray-900 hover:scale-105 transition-transform"
+              >
+                Submit Tool
+              </Link>
+
               {/* Subscribe CTA — hidden on small mobile */}
               <Link
                 href="/newsletter"
-                className="btn-brand text-xs sm:text-sm hidden sm:inline-flex"
+                className="btn-brand text-xs sm:text-sm hidden sm:inline-flex px-3 py-1.5"
               >
                 Newsletter
               </Link>

@@ -79,7 +79,7 @@ export async function saveArticleAction(payload: any, articleId?: string | null)
   }
 
   try {
-    const { title, subtitle, content, type, category, tags, coverImage, thumbnailImage, seoTitle, seoDescription, focusKeyword, slug, status } = payload;
+    const { title, subtitle, content, type, category, tags, coverImage, thumbnailImage, seoTitle, seoDescription, focusKeyword, slug, status, canonicalUrl, ogImage, noIndex } = payload;
     const authorId = session.user.id;
 
     let baseSlug = slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
@@ -118,6 +118,9 @@ export async function saveArticleAction(payload: any, articleId?: string | null)
       seoTitle,
       seoDescription,
       focusKeyword,
+      canonicalUrl,
+      ogImage,
+      noIndex: noIndex || false,
       status: status || 'DRAFT',
     };
 
@@ -158,6 +161,7 @@ export async function getArticleByIdAction(id: string) {
         a.id, a.title, a.slug, a.status, a.type, a.excerpt,
         a.content, a."coverImage", a."thumbnailImage", a."seoTitle", a."seoDescription",
         a."focusKeyword", a."isFeatured", a."isPinned", a."isSponsored",
+        a."canonicalUrl", a."ogImage", a."noIndex",
         a."publishedAt"::text AS "publishedAt",
         a."scheduledAt"::text AS "scheduledAt",
         u.name AS "authorName",

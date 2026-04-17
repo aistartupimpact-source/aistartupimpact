@@ -67,6 +67,26 @@ enum ToolApprovalStatus {
   ARCHIVED
 }
 
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  FLAGGED
+}
+
+enum ListingTier {
+  FREE
+  PRIORITY
+  FEATURED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  TIMEOUT
+}
+
 enum StartupStage {
   IDEA
   PRE_SEED
@@ -128,29 +148,30 @@ enum InvestorType {
 // ════════════════════════════════════════════
 
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  passwordHash  String?
-  name          String
-  slug          String    @unique
-  role          UserRole  @default(CONTRIBUTOR)
-  bio           String?   @db.Text
-  avatar        String?
-  twitter       String?
-  linkedin      String?
-  isActive      Boolean   @default(true)
-  lastLoginAt   DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  deletedAt     DateTime?
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String?
+  name         String
+  slug         String    @unique
+  role         UserRole  @default(CONTRIBUTOR)
+  bio          String?   @db.Text
+  avatar       String?
+  twitter      String?
+  linkedin     String?
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
 
   // Relations
-  articles      Article[]
+  articles           Article[]
   coAuthoredArticles ArticleCoAuthor[]
-  sessions      UserSession[]
-  auditLogs     AuditLog[]
-  toolReviews   ToolReview[]
-  comments      Comment[]
+  sessions           UserSession[]
+  auditLogs          AuditLog[]
+  toolReviews        ToolReview[]
+  comments           Comment[]
+  mediaAssets        MediaAsset[]
 
   @@index([email])
   @@index([slug])
@@ -188,6 +209,30 @@ model AuditLog {
 }
 
 // ════════════════════════════════════════════
+// MEDIA LIBRARY
+// ════════════════════════════════════════════
+
+model MediaAsset {
+  id         String   @id @default(uuid())
+  url        String   @unique
+  fileHash   String   @unique // SHA-256 to prevent duplicate uploads
+  fileName   String
+  mimeType   String
+  sizeBytes  Int
+  width      Int?
+  height     Int?
+  altText    String?
+  uploadedBy String?
+  user       User?    @relation(fields: [uploadedBy], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([fileHash])
+  @@index([createdAt])
+  @@index([mimeType])
+}
+
+// ════════════════════════════════════════════
 // CONTENT
 // ════════════════════════════════════════════
 
@@ -197,7 +242,7 @@ model Category {
   slug        String     @unique
   description String?    @db.Text
   icon        String?
-  color       String?    // hex
+  color       String? // hex
   parentId    String?
   parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children    Category[] @relation("CategoryHierarchy")
@@ -205,70 +250,76 @@ model Category {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
-  articles    Article[]
+  articles Article[]
 
   @@index([slug])
   @@index([parentId])
 }
 
 model Tag {
-  id        String       @id @default(uuid())
-  name      String       @unique
-  slug      String       @unique
-  createdAt DateTime     @default(now())
+  id        String   @id @default(uuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
 
-  articles  ArticleTag[]
+  articles ArticleTag[]
 
   @@index([slug])
 }
 
 model Article {
-  id              String         @id @default(uuid())
+  id              String        @id @default(uuid())
   title           String
-  slug            String         @unique
-  excerpt         String?        @db.Text
-  content         Json           // TipTap JSON
-  contentText     String?        @db.Text // Plain text for search
-  type            ArticleType    @default(NEWS)
-  status          ArticleStatus  @default(DRAFT)
+  slug            String        @unique
+  excerpt         String?       @db.Text
+  content         Json // TipTap JSON
+  contentText     String?       @db.Text // Plain text for search
+  type            ArticleType   @default(NEWS)
+  status          ArticleStatus @default(DRAFT)
   authorId        String
-  author          User           @relation(fields: [authorId], references: [id])
+  author          User          @relation(fields: [authorId], references: [id])
   categoryId      String?
-  category        Category?      @relation(fields: [categoryId], references: [id])
+  category        Category?     @relation(fields: [categoryId], references: [id])
   coverImage      String?
   thumbnailImage  String?
-  readTimeMinutes Int            @default(1)
-  wordCount       Int            @default(0)
-  viewCount       Int            @default(0)
-  shareCount      Int            @default(0)
-  isFeatured      Boolean        @default(false)
-  isPinned        Boolean        @default(false)
-  isSponsored     Boolean        @default(false)
+  readTimeMinutes Int           @default(1)
+  wordCount       Int           @default(0)
+  viewCount       Int           @default(0)
+  shareCount      Int           @default(0)
+  isFeatured      Boolean       @default(false)
+  isPinned        Boolean       @default(false)
+  isSponsored     Boolean       @default(false)
   sponsorId       String?
 
   // SEO fields
-  seoTitle        String?
-  seoDescription  String?        @db.Text
-  focusKeyword    String?
-  ogImage         String?
-  canonicalUrl    String?
-  noIndex         Boolean        @default(false)
-  schemaType      String?
+  seoTitle       String?
+  seoDescription String? @db.Text
+  focusKeyword   String?
+  ogImage        String?
+  canonicalUrl   String?
+  noIndex        Boolean @default(false)
+  schemaType     String?
+
+  // Cross-Linking
+  toolId    String?
+  tool      AiTool?  @relation("ArticleToTool", fields: [toolId], references: [id])
+  startupId String?
+  startup   Startup? @relation("ArticleToStartup", fields: [startupId], references: [id])
 
   // Scheduling
-  scheduledAt     DateTime?
-  publishedAt     DateTime?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  deletedAt       DateTime?
+  scheduledAt DateTime?
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 
   // Relations
-  tags            ArticleTag[]
-  coAuthors       ArticleCoAuthor[]
-  versions        ArticleVersion[]
-  relatedFrom     RelatedArticle[] @relation("RelatedFrom")
-  relatedTo       RelatedArticle[] @relation("RelatedTo")
-  comments        Comment[]
+  tags        ArticleTag[]
+  coAuthors   ArticleCoAuthor[]
+  versions    ArticleVersion[]
+  relatedFrom RelatedArticle[]  @relation("RelatedFrom")
+  relatedTo   RelatedArticle[]  @relation("RelatedTo")
+  comments    Comment[]
 
   @@index([slug])
   @@index([status, publishedAt])
@@ -349,26 +400,31 @@ model ToolCategory {
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
 
-  tools       AiTool[]
+  tools AiTool[]
 
   @@index([slug])
 }
 
 model AiTool {
-  id                  String             @id @default(uuid())
-  name                String
-  slug                String             @unique
-  tagline             String
-  description         String             @db.Text
-  websiteUrl          String
-  affiliateUrl        String?
-  logoUrl             String?
-  screenshotUrls      String[]
-  categoryId          String
-  category            ToolCategory       @relation(fields: [categoryId], references: [id])
+  id             String       @id @default(uuid())
+  name           String
+  slug           String       @unique
+  tagline        String
+  description    String       @db.Text
+  websiteUrl     String
+  affiliateUrl   String?
+  logoUrl        String?
+  screenshotUrls String[]
+  categoryId     String
+  category       ToolCategory @relation(fields: [categoryId], references: [id])
+
+  startupId String?
+  startup   Startup? @relation(fields: [startupId], references: [id])
+
   pricingModel        PricingModel       @default(FREEMIUM)
+  pricingUrl          String?
   freeTrialDays       Int?
-  startingPrice       Int?               // Paise
+  startingPrice       Int? // Paise
   hasApi              Boolean            @default(false)
   hasMobileApp        Boolean            @default(false)
   launchYear          Int?
@@ -377,8 +433,32 @@ model AiTool {
   avgRating           Float              @default(0)
   reviewCount         Int                @default(0)
   status              ToolApprovalStatus @default(PENDING)
+  
+  // Tiers and Payments
+  listingTier         ListingTier        @default(FREE)
+  pendingTier         ListingTier?
+  paymentStatus       PaymentStatus      @default(PENDING)
+  razorpayOrderId     String?            @unique
+  razorpayPaymentId   String?            @unique
+
+  // AI Screening
+  aiQualityScore      Int?           
+  aiSpamFlag          Boolean            @default(false)
+  aiSuggestedEdits    String[]
+
+  // Legacy isFeatured toggle (if migrating to listingTier, keep as legacy for now)
   isFeatured          Boolean            @default(false)
+  
+  // Flags & Analytics
+  isUrlVerified       Boolean            @default(false)
   featuredUntil       DateTime?
+  tierExpiresAt       DateTime?
+  clicks              Int                @default(0)
+  
+  // Referral Engine
+  referralCode        String?            @unique
+  referredBy          String?            // Foreign key to another referralCode
+
   submittedBy         String?
   approvedBy          String?
   approvedAt          DateTime?
@@ -386,36 +466,65 @@ model AiTool {
   updatedAt           DateTime           @updatedAt
   deletedAt           DateTime?
 
-  reviews             ToolReview[]
-  pros                ToolPro[]
-  cons                ToolCon[]
-  useCases            ToolUseCase[]
-  tags                ToolTag[]
-  affiliateClicks     AffiliateClick[]
+  reviews          ToolReview[]
+  pros             ToolPro[]
+  cons             ToolCon[]
+  useCases         ToolUseCase[]
+  tags             ToolTag[]
+  affiliateClicks  AffiliateClick[]
+  traffic          ToolTraffic[]
+  featuredArticles Article[]        @relation("ArticleToTool")
 
   @@index([slug])
   @@index([categoryId])
   @@index([status])
+  @@index([status, listingTier])
   @@index([pricingModel])
   @@index([isFeatured, status])
   @@index([avgRating])
 }
 
-model ToolReview {
-  id           String   @id @default(uuid())
-  toolId       String
-  tool         AiTool   @relation(fields: [toolId], references: [id], onDelete: Cascade)
-  userId       String?
-  user         User?    @relation(fields: [userId], references: [id])
-  rating       Int      // 1-5
-  title        String
-  body         String   @db.Text
-  verdict      String?
-  isEditorPick Boolean  @default(false)
-  publishedAt  DateTime @default(now())
-  createdAt    DateTime @default(now())
+model ToolTraffic {
+  id          String   @id @default(uuid())
+  toolId      String
+  tool        AiTool   @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  source      String   // "DIRECT", "SEARCH", "REFERRAL"
+  pathname    String?
+  referrer    String?
+  ipHash      String?
+  createdAt   DateTime @default(now())
 
+  @@index([toolId, createdAt])
+  @@index([createdAt])
+}
+
+model ToolReview {
+  id                 String       @id @default(uuid())
+  toolId             String
+  tool               AiTool       @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  userId             String
+  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating             Int // 1-5
+  title              String
+  body               String       @db.Text
+  verdict            String?
+  isEditorPick       Boolean      @default(false)
+  
+  // Verification & Moderation
+  isVerifiedPurchase Boolean      @default(false)
+  proofImageUrl      String?
+  status             ReviewStatus @default(PENDING)
+  flagCount          Int          @default(0)
+  aiSpamScore        Int?
+  
+  publishedAt        DateTime     @default(now())
+  createdAt          DateTime     @default(now())
+
+  // Core Constraints: Only one review per tool per user
+  @@unique([toolId, userId])
+  
   @@index([toolId, publishedAt])
+  @@index([status])
 }
 
 model ToolPro {
@@ -465,30 +574,32 @@ model AffiliateClick {
 // ════════════════════════════════════════════
 
 model Startup {
-  id               String        @id @default(uuid())
+  id               String       @id @default(uuid())
   name             String
-  slug             String        @unique
+  slug             String       @unique
   tagline          String
-  description      String        @db.Text
+  description      String       @db.Text
   logoUrl          String?
   websiteUrl       String?
   linkedinUrl      String?
   twitterUrl       String?
   foundedYear      Int?
   headquartersCity String?
-  stage            StartupStage  @default(SEED)
-  totalFundingInr  BigInt        @default(0) // Paise
+  stage            StartupStage @default(SEED)
+  totalFundingInr  BigInt       @default(0) // Paise
   employeeCount    Int?
-  isIndian         Boolean       @default(true)
-  isFeatured       Boolean       @default(false)
+  isIndian         Boolean      @default(true)
+  isFeatured       Boolean      @default(false)
   featuredUntil    DateTime?
-  impactScore      Int           @default(0) // 0-100
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  impactScore      Int          @default(0) // 0-100
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
   deletedAt        DateTime?
 
-  fundingRounds    FundingRound[]
-  jobs             Job[]
+  fundingRounds FundingRound[]
+  jobs          Job[]
+  tools         AiTool[]
+  articles      Article[]      @relation("ArticleToStartup")
 
   @@index([slug])
   @@index([stage])
@@ -501,13 +612,13 @@ model FundingRound {
   id            String   @id @default(uuid())
   startupId     String
   startup       Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
-  roundType     String   // Flexible: "Seed", "Series A", etc.
-  amountInr     BigInt   // Paise
-  amountUsd     BigInt?  // Cents
+  roundType     String // Flexible: "Seed", "Series A", etc.
+  amountInr     BigInt // Paise
+  amountUsd     BigInt? // Cents
   announcedAt   DateTime
   leadInvestors String[]
   allInvestors  String[]
-  valuation     BigInt?  // Post-money paise
+  valuation     BigInt? // Post-money paise
   sourceUrl     String?
   createdAt     DateTime @default(now())
 
@@ -522,7 +633,7 @@ model FundingDigest {
   date        DateTime @db.Date
   status      String   @default("DRAFT") // DRAFT, PUBLISHED
   dealsCount  Int      @default(0)
-  totalRaised String   // e.g. "$98M"
+  totalRaised String // e.g. "$98M"
   deals       Json     @default("[]") // Array of deal objects
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -550,22 +661,22 @@ model Investor {
 }
 
 model Job {
-  id                String   @id @default(uuid())
+  id                String    @id @default(uuid())
   startupId         String
-  startup           Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  startup           Startup   @relation(fields: [startupId], references: [id], onDelete: Cascade)
   title             String
-  description       String   @db.Text
+  description       String    @db.Text
   location          String?
-  type              JobType  @default(REMOTE)
-  salaryRangeMin    Int?     // Paise
-  salaryRangeMax    Int?     // Paise
+  type              JobType   @default(REMOTE)
+  salaryRangeMin    Int? // Paise
+  salaryRangeMax    Int? // Paise
   postedBy          String?
   expiresAt         DateTime?
-  applicationsCount Int      @default(0)
-  isActive          Boolean  @default(true)
-  isFeatured        Boolean  @default(false)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  applicationsCount Int       @default(0)
+  isActive          Boolean   @default(true)
+  isFeatured        Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
   deletedAt         DateTime?
 
   @@index([startupId])
@@ -578,44 +689,44 @@ model Job {
 // ════════════════════════════════════════════
 
 model AdCampaign {
-  id              String         @id @default(uuid())
-  clientName      String
-  clientEmail     String
-  companyName     String
-  companyLogo     String?
-  status          CampaignStatus @default(DRAFT)
-  startDate       DateTime
-  endDate         DateTime
-  totalBudgetPaise BigInt        @default(0)
-  notes           String?        @db.Text
-  createdBy       String?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  id               String         @id @default(uuid())
+  clientName       String
+  clientEmail      String
+  companyName      String
+  companyLogo      String?
+  status           CampaignStatus @default(DRAFT)
+  startDate        DateTime
+  endDate          DateTime
+  totalBudgetPaise BigInt         @default(0)
+  notes            String?        @db.Text
+  createdBy        String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
-  creatives       AdCreative[]
+  creatives AdCreative[]
 
   @@index([status])
   @@index([startDate, endDate])
 }
 
 model AdCreative {
-  id              String       @id @default(uuid())
+  id              String     @id @default(uuid())
   campaignId      String
-  campaign        AdCampaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaign        AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   zone            AdZoneType
   headline        String
-  bodyText        String       @db.Text
+  bodyText        String     @db.Text
   ctaText         String
   ctaUrl          String
   imageUrl        String?
-  isActive        Boolean      @default(true)
-  impressionCount Int          @default(0)
-  clickCount      Int          @default(0)
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  isActive        Boolean    @default(true)
+  impressionCount Int        @default(0)
+  clickCount      Int        @default(0)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
-  impressions     AdImpression[]
-  clicks          AdClick[]
+  impressions AdImpression[]
+  clicks      AdClick[]
 
   @@index([zone, isActive])
   @@index([campaignId])
@@ -654,7 +765,7 @@ model NewsletterSubscriber {
   email          String    @unique
   name           String?
   subscribedAt   DateTime  @default(now())
-  source         String?   // "homepage", "article", "social"
+  source         String? // "homepage", "article", "social"
   isActive       Boolean   @default(true)
   tags           String[]
   lastOpenedAt   DateTime?
@@ -688,13 +799,13 @@ model NewsletterCampaign {
 // ════════════════════════════════════════════
 
 model GlossaryTerm {
-  id          String   @id @default(uuid())
-  term        String
-  slug        String   @unique
-  definition  String   @db.Text
+  id           String   @id @default(uuid())
+  term         String
+  slug         String   @unique
+  definition   String   @db.Text
   relatedTerms String[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([slug])
 }
@@ -737,15 +848,15 @@ model SiteSetting {
 }
 
 model Sponsor {
-  id          String   @id @default(uuid())
-  brand       String
-  tagline     String   @db.Text
-  ctaUrl      String
-  logoUrl     String?
-  isActive    Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(uuid())
+  brand     String
+  tagline   String   @db.Text
+  ctaUrl    String
+  logoUrl   String?
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([isActive, sortOrder])
 }

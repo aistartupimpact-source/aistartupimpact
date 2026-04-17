@@ -25,7 +25,8 @@ export async function getArticleBySlugDirect(slug: string) {
         a."coverImage", a."thumbnailImage", a."readTimeMinutes", a."viewCount", a."isFeatured",
         a."publishedAt"::text AS "publishedAt",
         u.name AS "authorName", u.slug AS "authorSlug",
-        c.name AS "categoryName", c.slug AS "categorySlug"
+        c.name AS "categoryName", c.slug AS "categorySlug",
+        a."toolId"
       FROM "Article" a
       LEFT JOIN "User" u ON u.id = a."authorId"
       LEFT JOIN "Category" c ON c.id = a."categoryId"
@@ -34,10 +35,24 @@ export async function getArticleBySlugDirect(slug: string) {
     `;
     if (!rows.length) return null;
     const a = rows[0];
+
+    // Cross-link: Fetch related tool if toolId is attached
+    let linkedTool = null;
+    if (a.toolId) {
+      const toolRows = await sql`
+        SELECT name, slug, tagline, "logoUrl", "pricingModel", "avgRating"
+        FROM "AiTool"
+        WHERE id = ${a.toolId} AND "deletedAt" IS NULL
+        LIMIT 1
+      `;
+      if (toolRows.length) linkedTool = toolRows[0];
+    }
+
     return {
       ...a,
       author: { name: a.authorName, slug: a.authorSlug },
       category: { name: a.categoryName, slug: a.categorySlug },
+      linkedTool
     };
   } catch (e) {
     console.error('getArticleBySlugDirect error:', e);
@@ -45,10 +60,148 @@ export async function getArticleBySlugDirect(slug: string) {
   }
 }
 
+// ── Directory Entities ─────────────────────────────────────────────────────────
+
+export async function getAiToolBySlugDirect(slug: string) {
+  try {
+    const rows = await sql`
+      SELECT 
+        t.*,
+        c.name AS "categoryName",
+        s.id AS "startupId", s.name AS "startupName", s."totalFundingInr"
+      FROM "AiTool" t
+      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+      LEFT JOIN "Startup" s ON s.id = t."startupId"
+      WHERE t.slug = ${slug} AND t."deletedAt" IS NULL
+      LIMIT 1
+    `;
+    if (!rows.length) return null;
+    const tool = rows[0];
+
+    // Cross-link: Fetch Founder Stories for this tool
+    const stories = await sql`
+      SELECT id, title, slug, excerpt, "coverImage", "publishedAt"::text AS "publishedAt"
+      FROM "Article"
+      WHERE "toolId" = ${tool.id} AND status = 'PUBLISHED' AND "deletedAt" IS NULL
+      ORDER BY "publishedAt" DESC
+    `;
+
+    // Cross-link: Fetch Funding Rounds if part of a Startup
+    let fundingRounds: any[] = [];
+    if (tool.startupId) {
+      fundingRounds = await sql`
+        SELECT "roundType", "amountInr", "amountUsd", "announcedAt"::text AS "announcedAt", "leadInvestors", sourceUrl
+        FROM "FundingRound"
+        WHERE "startupId" = ${tool.startupId}
+        ORDER BY "announcedAt" DESC
+      `;
+    }
+
+    return { ...tool, stories, fundingRounds, category: tool.categoryName };
+  } catch (e) {
+    console.error('getAiToolBySlugDirect error:', e);
+    return null;
+  }
+}
+
+export async function getFeaturedToolsDirect(limit = 4) {
+  try {
+    const rows: any[] = await sql`
+      SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", c.name AS "categoryName"
+      FROM "AiTool" t
+      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+      WHERE t."listingTier" = 'FEATURED' AND t.status = 'APPROVED' AND t."deletedAt" IS NULL
+      ORDER BY RANDOM()
+      LIMIT ${limit}
+    `;
+    return rows.map((t: any) => ({
+      ...t,
+      category: { name: t.categoryName }
+    }));
+  } catch (e) {
+    console.error('getFeaturedToolsDirect error:', e);
+    return [];
+  }
+}
+
+export async function getPriorityToolsDirect(limit = 6) {
+  try {
+    const rows: any[] = await sql`
+      SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", c.name AS "categoryName"
+      FROM "AiTool" t
+      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+      WHERE t."listingTier" = 'PRIORITY' AND t.status = 'APPROVED' AND t."deletedAt" IS NULL
+      ORDER BY RANDOM()
+      LIMIT ${limit}
+    `;
+    return rows.map((t: any) => ({
+      ...t,
+      category: { name: t.categoryName }
+    }));
+  } catch (e) {
+    console.error('getPriorityToolsDirect error:', e);
+    return [];
+  }
+}
+
+export async function getToolCategoriesDirect() {
+  try {
+    const rows = await sql`SELECT id, name, slug FROM "ToolCategory" ORDER BY name ASC`;
+    return rows;
+  } catch (e) {
+    console.error('getToolCategoriesDirect error:', e);
+    return [];
+  }
+}
+
+export async function getDirectoryToolsDirect(categorySlug?: string) {
+  try {
+    let rows: any[];
+    if (categorySlug && categorySlug !== 'all') {
+      rows = await sql`
+        SELECT t.id, t.name, t.slug, t.tagline, t.description, t."pricingModel", t."logoUrl", t."avgRating", c.name AS "categoryName", c.slug AS "categorySlug"
+        FROM "AiTool" t
+        LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+        WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL AND c.slug = ${categorySlug}
+        ORDER BY 
+          CASE WHEN t."listingTier" = 'FEATURED' THEN 1
+               WHEN t."listingTier" = 'PRIORITY' THEN 2
+               ELSE 3 END ASC,
+          t."createdAt" DESC
+      `;
+    } else {
+      rows = await sql`
+        SELECT t.id, t.name, t.slug, t.tagline, t.description, t."pricingModel", t."logoUrl", t."avgRating", c.name AS "categoryName", c.slug AS "categorySlug"
+        FROM "AiTool" t
+        LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+        WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
+        ORDER BY 
+          CASE WHEN t."listingTier" = 'FEATURED' THEN 1
+               WHEN t."listingTier" = 'PRIORITY' THEN 2
+               ELSE 3 END ASC,
+          t."createdAt" DESC
+      `;
+    }
+
+    return rows.map((t: any) => ({
+      slug: t.slug,
+      name: t.name,
+      tagline: t.tagline,
+      category: t.categoryName || 'General',
+      rating: parseFloat(t.avgRating || '4.0'),
+      pricing: t.pricingModel || 'Free',
+      verdict: t.description ? t.description.substring(0, 120) + '...' : 'An excellent AI tool optimized for productivity.'
+    }));
+  } catch (e) {
+    console.error('getDirectoryToolsDirect error:', e);
+    return [];
+  }
+}
+
 export async function getArticlesDirect(params: { type?: string; limit?: number; isFeatured?: boolean } = {}) {
   try {
     const limit = params.limit || 10;
-    
+
     if (params.type && params.isFeatured !== undefined) {
       const rows: any[] = await sql`
         SELECT
@@ -261,6 +414,23 @@ export async function getFundingDigestsDirect(limit = 3) {
     }));
   } catch (error) {
     console.error('getFundingDigestsDirect error:', error);
+    return [];
+  }
+}
+
+export async function getAllFundingRoundsDirect() {
+  try {
+    const rows = await sql`
+      SELECT 
+        fr.id, fr."roundType", fr."amountInr", fr."announcedAt"::text AS "announcedAt", fr."leadInvestors",
+        s.name AS "startupName", s.slug AS "startupSlug", s."headquartersCity"
+      FROM "FundingRound" fr
+      JOIN "Startup" s ON s.id = fr."startupId"
+      ORDER BY fr."announcedAt" DESC
+    `;
+    return rows;
+  } catch (error) {
+    console.error('getAllFundingRoundsDirect error:', error);
     return [];
   }
 }

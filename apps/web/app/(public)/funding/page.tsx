@@ -1,179 +1,67 @@
 import Link from 'next/link';
 import { Metadata } from 'next';
-import { IndianRupee, TrendingUp, Calendar, ArrowRight, Clock, Building2 } from 'lucide-react';
+import { IndianRupee, TrendingUp, Calendar, ArrowRight, Clock, Building2, Megaphone } from 'lucide-react';
 import { generateItemListSchema, generateBreadcrumbSchema, generateFAQSchema } from '@/lib/seo';
 
+import { getAllFundingRoundsDirect } from '@/lib/db';
+import FundingDashboard from './FundingDashboard';
+
 export const metadata: Metadata = {
-  title: 'Funding Digest — Indian AI Startup Funding Rounds',
-  description: 'Weekly roundup of Indian AI startup funding rounds. Track deals, investors, and capital flow in India\'s AI ecosystem.',
+  title: 'Funding Dashboard — Indian AI Startup Funding Rounds Tracker',
+  description: 'Filterable tracker of all Indian AI startup funding rounds. Track deals, top investors, and total capital flow in India\'s ecosystem.',
   alternates: { canonical: 'https://aistartupimpact.com/funding' },
   openGraph: {
-    title: 'Funding Digest — Indian AI Startup Funding Rounds',
-    description: 'Weekly roundup of Indian AI startup funding rounds. Track deals, investors, and capital flow in India\'s AI ecosystem.',
+    title: 'Funding Dashboard — Indian AI Startup Funding Rounds Tracker',
+    description: 'Filterable tracker of all Indian AI startup funding rounds. Track deals, top investors, and total capital flow.',
     type: 'website',
     url: 'https://aistartupimpact.com/funding',
     siteName: 'AIStartupImpact',
     images: [{ url: 'https://aistartupimpact.com/og-default.png', width: 1200, height: 630 }],
   },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Funding Digest — Indian AI Startup Funding Rounds',
-    description: 'Weekly roundup of Indian AI startup funding rounds.',
-    creator: '@aikitstartup',
-  },
 };
 
-const latestDigest = {
-  slug: 'funding-digest-mar-7-2025',
-  title: 'Funding Digest #12 — Sarvam AI raises ₹415Cr, MedAI Health closes seed, and more',
-  excerpt: 'This week saw ₹548Cr flow into Indian AI startups across 4 deals. Sarvam AI leads with a massive Series A, while healthcare and agri-tech continue attracting investor interest.',
-  date: 'March 7, 2025',
-  readTime: '5 min read',
-  deals: [
-    { startup: 'Sarvam AI', amount: '₹415Cr', round: 'Series A', investors: 'Lightspeed, Peak XV', sector: 'LLM/NLP' },
-    { startup: 'MedAI Health', amount: '₹83Cr', round: 'Seed', investors: 'Sequoia Scout, AngelList', sector: 'HealthTech' },
-    { startup: 'AgriBot Tech', amount: '₹50Cr', round: 'Series A', investors: 'Omnivore, Accel', sector: 'AgriTech' },
-  ],
-};
-
-const pastDigests = [
-  { slug: 'funding-digest-feb-28-2025', title: 'Funding Digest #11 — LendAI raises ₹250Cr, NeuralScale grows GPU cloud', date: 'Feb 28, 2025' },
-  { slug: 'funding-digest-feb-21-2025', title: 'Funding Digest #10 — PadhAI gets ₹33Cr to teach AI in 10 Indian languages', date: 'Feb 21, 2025' },
-  { slug: 'funding-digest-feb-14-2025', title: 'Funding Digest #9 — GreenAI closes ₹300Cr Series B for clean energy AI', date: 'Feb 14, 2025' },
-  { slug: 'funding-digest-feb-7-2025', title: 'Funding Digest #8 — Q4 2024 wrap-up: ₹3,100Cr across 34 deals', date: 'Feb 7, 2025' },
-];
-
-export default function FundingPage() {
+export default async function FundingPage() {
   const siteUrl = 'https://aistartupimpact.com';
 
-  const itemListSchema = generateItemListSchema({
-    name: 'Indian AI Startup Funding Digest',
-    description: 'Weekly roundup of Indian AI startup funding rounds, deals, and investor activity.',
-    url: `${siteUrl}/funding`,
-    items: [latestDigest, ...pastDigests].map((d, i) => ({
-      position: i + 1,
-      name: d.title,
-      url: `${siteUrl}/news/${d.slug}`,
-    })),
-  });
+  // Real DB connection 
+  const rounds = await getAllFundingRoundsDirect();
 
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: 'Home', url: siteUrl },
-    { name: 'Funding Digest', url: `${siteUrl}/funding` },
+    { name: 'Funding Tracker', url: `${siteUrl}/funding` },
   ]);
 
-  const faqSchema = generateFAQSchema([
-    {
-      question: 'How much funding have Indian AI startups raised?',
-      answer: 'Indian AI startups have raised over $3.5 billion in 2024–2025, with major rounds from Sarvam AI (₹415Cr Series A), Krutrim (Series B), and Qure.ai ($65M Series D). The ecosystem is growing rapidly with weekly new deals.',
-    },
-    {
-      question: 'Which Indian AI startups raised the most funding?',
-      answer: 'Top-funded Indian AI startups include Sarvam AI (₹415Cr), Krutrim by Ola, Qure.ai, and NeuralScale. The LLM, HealthTech, and EdTech sectors are attracting the most capital.',
-    },
-    {
-      question: 'When is the AIStartupImpact Funding Digest published?',
-      answer: 'The Funding Digest is published every Friday, covering all Indian AI startup funding rounds from the previous week.',
-    },
-    {
-      question: 'Which investors are most active in Indian AI startups?',
-      answer: 'The most active investors in Indian AI include Peak XV Partners (formerly Sequoia India), Lightspeed India, Accel India, Blume Ventures, and Omnivore. Global funds like a16z and Tiger Global are also increasing India exposure.',
-    },
-  ]);
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }} />
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       {/* Header */}
-      <div className="mb-6 sm:mb-10">
-        <div className="flex items-center gap-3 mb-2">
-          <IndianRupee className="w-6 h-6 text-brand" />
-          <h1 className="font-sora font-extrabold text-2xl sm:text-3xl md:text-4xl text-navy dark:text-white">
-            Funding Digest
+      <div className="mb-6 sm:mb-10 text-center">
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <IndianRupee className="w-8 h-8 text-brand" />
+          <h1 className="font-sora font-extrabold text-3xl sm:text-4xl md:text-5xl text-navy dark:text-white tracking-tight">
+            Indian AI <span className="text-brand">Funding Tracker</span>
           </h1>
         </div>
-        <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm sm:text-base max-w-2xl">
-          Weekly roundup of Indian AI startup funding rounds. Published every Friday.
+        <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm sm:text-base max-w-2xl mx-auto mt-4">
+          The most comprehensive, continuously-updated dashboard of capital raised by Artificial Intelligence startups in India. Filter by stage, year, or search for investors.
         </p>
-      </div>
-
-      {/* Latest Digest — Featured */}
-      <Link href={`/news/${latestDigest.slug}`} className="group block mb-8 sm:mb-10">
-        <div className="card-featured p-5 sm:p-8">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="badge-brand text-[10px]">Latest</span>
-            <span className="text-xs text-gray-400 font-jakarta flex items-center gap-1">
-              <Calendar className="w-3 h-3" /> {latestDigest.date}
-            </span>
-            <span className="text-xs text-gray-400 font-jakarta flex items-center gap-1">
-              <Clock className="w-3 h-3" /> {latestDigest.readTime}
-            </span>
-          </div>
-
-          <h2 className="font-sora font-extrabold text-lg sm:text-xl md:text-2xl text-navy dark:text-white group-hover:text-brand transition-colors leading-snug">
-            {latestDigest.title}
-          </h2>
-          <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm sm:text-base mt-3 leading-relaxed">
-            {latestDigest.excerpt}
-          </p>
-
-          {/* Deals Summary */}
-          <div className="mt-5 pt-5 border-t border-gray-100 dark:border-gray-800 space-y-3">
-            {latestDigest.deals.map((d) => (
-              <div key={d.startup} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-brand/10 dark:bg-brand/20 flex items-center justify-center">
-                    <Building2 className="w-4 h-4 text-brand" />
-                  </div>
-                  <div>
-                    <span className="font-sora font-bold text-sm text-navy dark:text-white">{d.startup}</span>
-                    <span className="text-xs text-gray-400 dark:text-gray-500 font-jakarta ml-2">{d.investors}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full uppercase">{d.round}</span>
-                  <span className="font-sora font-extrabold text-brand text-sm">{d.amount}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-5 flex items-center gap-1 text-brand font-semibold text-sm font-jakarta group-hover:gap-2 transition-all">
-            Read Full Digest <ArrowRight className="w-4 h-4" />
-          </div>
-        </div>
-      </Link>
-
-      {/* Past Digests */}
-      <h2 className="section-title mb-4">Past Digests</h2>
-      <div className="space-y-3">
-        {pastDigests.map((d) => (
-          <Link key={d.slug} href={`/news/${d.slug}`} className="group block">
-            <div className="card p-4 sm:p-5 flex items-center justify-between gap-4">
-              <div className="flex items-start gap-3 min-w-0">
-                <IndianRupee className="w-4 h-4 text-brand shrink-0 mt-1" />
-                <h3 className="font-sora font-bold text-[14px] sm:text-sm text-navy dark:text-white group-hover:text-brand transition-colors leading-snug line-clamp-2">
-                  {d.title}
-                </h3>
-              </div>
-              <span className="text-xs text-gray-400 font-jakarta whitespace-nowrap shrink-0">{d.date}</span>
+        <div className="mt-8 flex flex-wrap justify-center gap-4">
+          <Link href="/advertise" className="group flex items-center gap-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-brand/30 rounded-xl px-5 py-3 shadow-sm hover:shadow-md transition-all">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-brand/10 text-brand group-hover:bg-brand group-hover:text-white transition-colors">
+              <Megaphone className="w-4 h-4" />
+            </div>
+            <div className="flex flex-col text-left">
+              <span className="text-sm font-sora font-bold text-navy dark:text-white leading-none">Announce your round</span>
+              <span className="text-xs text-brand font-semibold mt-1 leading-none">Premium PR Service <ArrowRight className="inline w-3 h-3 ml-0.5" /></span>
             </div>
           </Link>
-        ))}
-      </div>
-
-      {/* Subscribe CTA */}
-      <div className="card p-6 mt-8 text-center bg-gradient-to-r from-brand-50 to-white dark:from-brand-900/15 dark:to-gray-900">
-        <h3 className="font-sora font-bold text-base text-navy dark:text-white">Never miss a deal</h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 font-jakarta mt-1">
-          Get the Funding Digest delivered to your inbox every Friday.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-2 max-w-sm mx-auto mt-4">
-          <input type="email" placeholder="your@email.com" className="input-field flex-1 text-sm" />
-          <button className="btn-brand text-sm whitespace-nowrap">Subscribe</button>
         </div>
       </div>
+
+      {/* Mount our Client Dashboard */}
+      <FundingDashboard data={rounds as any} />
+
+
     </div>
   );
 }

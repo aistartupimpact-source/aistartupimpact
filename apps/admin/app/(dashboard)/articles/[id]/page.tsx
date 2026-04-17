@@ -3,13 +3,14 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  ArrowLeft, Save, ChevronDown, Image as ImageIcon, Hash, Clock, Globe,
+  ArrowLeft, Save, ChevronDown, ChevronUp, Image as ImageIcon, Hash, Clock, Globe,
   Settings2, X, CheckCircle, Upload, Bold, Italic, Underline,
   Heading1, Heading2, Quote, List, ListOrdered, Code, Link2, Minus, Type, Eye,
   Plus, ImagePlus,
 } from 'lucide-react';
 
 import { uploadMediaAction, saveArticleAction, getArticleByIdAction } from '../actions';
+import MediaPicker from '../../../../components/MediaPicker';
 
 export default function EditArticlePage({ params }: { params: { id: string } }) {
   const [title, setTitle] = useState('');
@@ -42,7 +43,12 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
   const [seoTitle, setSeoTitle] = useState('');
   const [metaDesc, setMetaDesc] = useState('');
   const [focusKeyword, setFocusKeyword] = useState('');
+  const [canonicalUrl, setCanonicalUrl] = useState('');
+  const [ogImage, setOgImage] = useState('');
   const [noIndex, setNoIndex] = useState(false);
+  const [seoPanelOpen, setSeoPanelOpen] = useState(true);
+  const [isMediaPickerOpen, setMediaPickerOpen] = useState(false);
+
   const [featured, setFeatured] = useState(false);
   const [pinned, setPinned] = useState(false);
   const [sponsored, setSponsored] = useState(false);
@@ -127,6 +133,9 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       setSeoTitle(a.seoTitle || '');
       setMetaDesc(a.seoDescription || '');
       setFocusKeyword(a.focusKeyword || '');
+      setCanonicalUrl(a.canonicalUrl || '');
+      setOgImage(a.ogImage || '');
+      setNoIndex(a.noIndex || false);
       setFeatured(a.isFeatured || false);
       setPinned(a.isPinned || false);
       setSponsored(a.isSponsored || false);
@@ -136,8 +145,8 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         const html = typeof a.content === 'object' && a.content.html
           ? a.content.html
           : typeof a.content === 'string'
-          ? a.content
-          : '';
+            ? a.content
+            : '';
         editorRef.current.innerHTML = html;
         updateStats();
       }
@@ -232,6 +241,9 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         seoTitle,
         seoDescription: metaDesc,
         focusKeyword,
+        canonicalUrl,
+        ogImage,
+        noIndex,
         coverImage: coverImage,
         thumbnailImage: thumbnailImage
       };
@@ -272,7 +284,6 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     { id: 'status', label: 'Status & Schedule', icon: Clock },
     { id: 'category', label: 'Category & Tags', icon: Hash },
     { id: 'cover', label: 'Cover Image', icon: ImageIcon },
-    { id: 'seo', label: 'SEO Settings', icon: Globe },
     { id: 'options', label: 'Article Options', icon: Settings2 },
   ];
 
@@ -452,6 +463,99 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
               </div>
               <span className="text-xs">Saved {lastSaved}</span>
             </div>
+
+            {/* Bottom Collapsible SEO Panel */}
+            <div className="mt-12 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm">
+              <button
+                onClick={() => setSeoPanelOpen(!seoPanelOpen)}
+                className="w-full flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Globe className="w-5 h-5 text-brand" />
+                  <div>
+                    <h3 className="font-sora font-bold text-navy dark:text-white text-left text-[15px]">Search Engine Optimization</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta text-left mt-0.5">Title, Meta Description, OG Image, and Canonical Tags</p>
+                  </div>
+                </div>
+                {seoPanelOpen ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+              </button>
+
+              {seoPanelOpen && (
+                <div className="p-6 space-y-6">
+                  {/* Title & Desc */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 flex items-center justify-between font-jakarta">
+                        SEO Title
+                        <span className={`normal-case font-medium ${seoTitle.length > 60 ? 'text-red-500' : 'text-gray-400'}`}>{seoTitle.length}/60</span>
+                      </label>
+                      <input type="text" className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 focus:border-brand focus:ring-1 focus:ring-brand rounded-xl text-sm font-jakarta text-navy dark:text-white outline-none transition-all" placeholder="Enter highly optimized SEO title…" value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} />
+                      <p className="text-[11px] text-gray-400 mt-1.5 font-jakarta">What users see directly in Google search results.</p>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 flex items-center justify-between font-jakarta">
+                        Canonical URL
+                      </label>
+                      <input type="url" className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 focus:border-brand focus:ring-1 focus:ring-brand rounded-xl text-sm font-jakarta text-navy dark:text-white outline-none transition-all" placeholder="https://..." value={canonicalUrl} onChange={(e) => setCanonicalUrl(e.target.value)} />
+                      <p className="text-[11px] text-gray-400 mt-1.5 font-jakarta">Use if cross-posting from a different initial source.</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 flex items-center justify-between font-jakarta">
+                      Meta Description
+                      <span className={`normal-case font-medium ${metaDesc.length > 160 ? 'text-red-500' : 'text-gray-400'}`}>{metaDesc.length}/160</span>
+                    </label>
+                    <textarea className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 focus:border-brand focus:ring-1 focus:ring-brand rounded-xl text-sm font-jakarta text-navy dark:text-white outline-none transition-all resize-none" rows={3} placeholder="Write a compelling summary..." value={metaDesc} onChange={(e) => setMetaDesc(e.target.value)} />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 block font-jakarta">Social Preview (OG Image)</label>
+                      {ogImage ? (
+                        <div className="relative group rounded-xl overflow-hidden aspect-video bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-800">
+                          <img src={ogImage} className="w-full h-full object-cover" alt="OG Preview" />
+                          <button onClick={() => setOgImage('')} className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-red-600 text-white rounded-lg transition-colors">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button onClick={() => setMediaPickerOpen(true)} className="w-full py-8 border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-brand dark:hover:border-brand/60 rounded-xl text-center group transition-colors">
+                          <ImageIcon className="w-6 h-6 text-gray-300 dark:text-gray-600 mx-auto group-hover:text-brand/60 mb-2 transition-colors" />
+                          <span className="text-sm font-medium text-gray-500 font-jakarta group-hover:text-brand transition-colors">Select from Media Library</span>
+                        </button>
+                      )}
+                      <p className="text-[11px] text-gray-400 mt-2 font-jakarta">Used when shared on Twitter, LinkedIn, etc. (1200x630px recommended).</p>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div>
+                        <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 block font-jakarta">Focus Keyword</label>
+                        <input type="text" className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 focus:border-brand focus:ring-1 focus:ring-brand rounded-xl text-sm font-jakarta text-navy dark:text-white outline-none transition-all" placeholder="e.g. AI startup tools in India" value={focusKeyword} onChange={(e) => setFocusKeyword(e.target.value)} />
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                        <div>
+                          <span className="block text-sm font-bold text-navy dark:text-white font-jakarta">No Index</span>
+                          <span className="block text-xs text-gray-500 font-jakarta mt-0.5">Hide this article from search engines</span>
+                        </div>
+                        <Toggle value={noIndex} onChange={setNoIndex} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Integrated Media Picker */}
+            <MediaPicker
+              isOpen={isMediaPickerOpen}
+              onClose={() => setMediaPickerOpen(false)}
+              title="Select OG Image"
+              onSelect={(url: string) => setOgImage(url)}
+            />
+
           </div>
         </div>
 
@@ -519,12 +623,6 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                           </div>
                         </div>
                       )}
-                      {panel.id === 'seo' && (<>
-                        <div><label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 flex items-center justify-between font-jakarta">SEO Title<span className={`normal-case ${seoTitle.length > 60 ? 'text-red-500' : 'text-gray-300 dark:text-gray-600'}`}>{seoTitle.length}/60</span></label><input type="text" className="input-field text-sm" placeholder="SEO title…" value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} /></div>
-                        <div><label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 flex items-center justify-between font-jakarta">Meta Description<span className={`normal-case ${metaDesc.length > 160 ? 'text-red-500' : 'text-gray-300 dark:text-gray-600'}`}>{metaDesc.length}/160</span></label><textarea className="input-field text-sm" rows={3} placeholder="Meta description…" value={metaDesc} onChange={(e) => setMetaDesc(e.target.value)} /></div>
-                        <div><label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Focus Keyword</label><input type="text" className="input-field text-sm" placeholder="Primary keyword…" value={focusKeyword} onChange={(e) => setFocusKeyword(e.target.value)} /></div>
-                        <div className="flex items-center justify-between"><span className="text-sm text-gray-600 dark:text-gray-400 font-jakarta">No Index</span><Toggle value={noIndex} onChange={setNoIndex} /></div>
-                      </>)}
                       {panel.id === 'options' && (<>
                         <div className="flex items-center justify-between py-2"><span className="text-sm text-gray-600 dark:text-gray-400 font-jakarta">Featured Article</span><Toggle value={featured} onChange={setFeatured} /></div>
                         <div className="flex items-center justify-between py-2"><span className="text-sm text-gray-600 dark:text-gray-400 font-jakarta">Pinned to Top</span><Toggle value={pinned} onChange={setPinned} /></div>

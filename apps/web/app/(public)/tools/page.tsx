@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Metadata } from 'next';
 import { Star, Zap, ArrowRight, Sparkles } from 'lucide-react';
 import { generateItemListSchema, generateCollectionPageSchema, generateBreadcrumbSchema } from '@/lib/seo';
+import ToolsListWithComparison from '@/components/ToolsListWithComparison';
 
 export const metadata: Metadata = {
   title: "Editor's Picks: Best AI Tools — Reviewed & Rated",
@@ -25,7 +26,9 @@ export const metadata: Metadata = {
   },
 };
 
-const picks = [
+import { getDirectoryToolsDirect, getToolCategoriesDirect } from '@/lib/db';
+
+const editorialPicks = [
   { slug: 'cursor', name: 'Cursor', tagline: 'AI-first code editor that writes, edits, and debugs for you', category: 'Dev Tools', rating: 4.8, pricing: 'Freemium', verdict: 'Best AI code editor right now. The Composer feature for multi-file edits is unmatched.' },
   { slug: 'perplexity', name: 'Perplexity', tagline: 'AI search engine with cited sources and zero hallucinations', category: 'Research', rating: 4.8, pricing: 'Freemium', verdict: 'Replaced Google for research queries. The citation system builds real trust.' },
   { slug: 'midjourney', name: 'Midjourney', tagline: 'The gold standard for AI image generation and design', category: 'Design', rating: 4.7, pricing: 'Paid ($10/mo)', verdict: 'Nothing else comes close for creative image generation quality.' },
@@ -40,7 +43,22 @@ const picks = [
   { slug: 'intercom-fin', name: 'Intercom Fin', tagline: 'AI customer service agent that resolves 50% of queries', category: 'Support', rating: 4.4, pricing: 'Paid', verdict: 'Real ROI — cuts support tickets in half. Best for SaaS companies with docs.' },
 ];
 
-export default function ToolsPage() {
+export default async function ToolsPage({ searchParams }: { searchParams: { category?: string } }) {
+  const categorySlug = searchParams.category || 'all';
+
+  const [dbPicks, categories] = await Promise.all([
+    getDirectoryToolsDirect(categorySlug),
+    getToolCategoriesDirect()
+  ]);
+
+  // Combine DB tools with the editorial fallback tools to guarantee the grid is full
+  // and apply frontend category filtering to the static array if selected.
+  const staticFiltered = categorySlug === 'all'
+    ? editorialPicks
+    : editorialPicks.filter(p => p.category.toLowerCase().replace(' ', '-') === categorySlug);
+
+  const picks = [...dbPicks, ...staticFiltered];
+
   const siteUrl = 'https://aistartupimpact.com';
 
   const itemListSchema = generateItemListSchema({
@@ -66,74 +84,49 @@ export default function ToolsPage() {
     { name: 'AI Tools', url: `${siteUrl}/tools` },
   ]);
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       {/* Header */}
-      <div className="mb-8 sm:mb-10">
-        <div className="flex items-center gap-2 sm:gap-3 mb-2">
-          <Sparkles className="w-6 h-6 text-brand" />
-          <h1 className="font-sora font-extrabold text-2xl sm:text-3xl md:text-4xl text-navy dark:text-white">
-            Editor&apos;s Picks: AI Tools
-          </h1>
+      <div className="mb-8 sm:mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 sm:gap-3 mb-2">
+            <Sparkles className="w-6 h-6 text-brand" />
+            <h1 className="font-sora font-extrabold text-2xl sm:text-3xl md:text-4xl text-navy dark:text-white">
+              Editor&apos;s Picks: AI Tools
+            </h1>
+          </div>
+          <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm sm:text-base max-w-2xl">
+            {picks.length} AI tools we actually use and recommend. Honest verdicts from our editorial team — no pay-to-play, no affiliate bias.
+          </p>
         </div>
-        <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm sm:text-base max-w-2xl">
-          {picks.length} AI tools we actually use and recommend. Honest verdicts from our editorial team — no pay-to-play, no affiliate bias.
-        </p>
+        <Link href="/submit-tool" className="bg-brand text-white px-5 py-2.5 rounded-xl font-bold font-jakarta text-sm hover:scale-105 transition-transform shadow-lg shadow-brand/20 whitespace-nowrap text-center">
+          + Submit Your Tool
+        </Link>
       </div>
 
-      {/* Tools List */}
-      <div className="space-y-4 sm:space-y-5">
-        {picks.map((tool, i) => (
-          <Link key={tool.slug} href={`/tools/${tool.slug}`} className="group block">
-            <div className="card p-4 sm:p-6 flex flex-col sm:flex-row gap-4">
-              {/* Icon + Rank */}
-              <div className="flex sm:flex-col items-center gap-3 sm:gap-2 sm:w-16 shrink-0">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-900/30 dark:to-brand-800/20 flex items-center justify-center">
-                  <Zap className="w-6 h-6 sm:w-7 sm:h-7 text-brand" />
-                </div>
-                <span className="text-xs font-sora font-bold text-gray-300 dark:text-gray-600 sm:text-center">#{i + 1}</span>
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h2 className="font-sora font-bold text-base sm:text-lg text-navy dark:text-white group-hover:text-brand transition-colors">
-                      {tool.name}
-                    </h2>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm font-jakarta mt-0.5">{tool.tagline}</p>
-                  </div>
-                  <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/30 px-2 py-1 rounded-full shrink-0">
-                    <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
-                    <span className="text-sm font-bold text-yellow-700 dark:text-yellow-400">{tool.rating}</span>
-                  </div>
-                </div>
-
-                {/* Verdict */}
-                <p className="text-sm text-gray-600 dark:text-gray-300 font-jakarta mt-2 italic leading-relaxed">
-                  &ldquo;{tool.verdict}&rdquo;
-                </p>
-
-                {/* Tags */}
-                <div className="flex flex-wrap items-center gap-2 mt-3">
-                  <span className="badge-category text-[10px]">{tool.category}</span>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${tool.pricing === 'Free' ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
-                      : tool.pricing === 'Freemium' ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
-                    }`}>
-                    {tool.pricing}
-                  </span>
-                  <span className="text-brand text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 ml-auto">
-                    Read Review <ArrowRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </div>
-            </div>
+      {/* Category Filter */}
+      <div className="flex flex-wrap gap-2 mb-6 sm:mb-8">
+        <Link
+          href="/tools?category=all"
+          className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${categorySlug === 'all' ? 'bg-navy text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+        >
+          All Tools
+        </Link>
+        {categories.map((cat: any) => (
+          <Link
+            key={cat.slug}
+            href={`/tools?category=${cat.slug}`}
+            className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${categorySlug === cat.slug ? 'bg-brand text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+          >
+            {cat.name}
           </Link>
         ))}
       </div>
+
+      {/* Tools List Component with State */}
+      <ToolsListWithComparison picks={picks} />
 
       {/* CTA */}
       <div className="card p-6 mt-8 text-center bg-gradient-to-r from-brand-50 to-white dark:from-brand-900/15 dark:to-gray-900">

@@ -4,6 +4,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Clock, Calendar, Bookmark, ChevronRight, Users } from 'lucide-react';
 import { getArticleBySlugDirect, getArticlesDirect } from '@/lib/db';
+import { defaultFounderSpotlights } from '@/lib/fallbacks';
 import { buildArticleMetadata, generateArticleSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import { sanitizeHtml } from '@/lib/sanitize';
 import ShareButton from '@/components/ShareButton';
@@ -17,10 +18,14 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 export default async function StoryDetailPage({ params }: { params: { slug: string } }) {
-  const [story, related] = await Promise.all([
-    getArticleBySlugDirect(params.slug),
-    getArticlesDirect({ type: 'STORY', limit: 4 }),
-  ]);
+  let story = await getArticleBySlugDirect(params.slug);
+  const related = await getArticlesDirect({ type: 'STORY', limit: 4 });
+
+  if (!story) {
+    if (defaultFounderSpotlights.find(s => s.slug === params.slug)) {
+      story = defaultFounderSpotlights.find(s => s.slug === params.slug) as any;
+    }
+  }
 
   if (!story) notFound();
 

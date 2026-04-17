@@ -88,9 +88,9 @@ export default function AboutPage() {
           For partnerships, advertising, press, or general inquiries.
         </p>
         <div className="flex flex-wrap justify-center gap-4 mt-4">
-          <a href="mailto:hello@aistartupimpact.com" className="btn-brand text-sm flex items-center gap-2">
-            <Mail className="w-4 h-4" /> hello@aistartupimpact.com
-          </a>
+          <Link href="/contact" className="btn-brand text-sm flex items-center gap-2">
+            <Mail className="w-4 h-4" /> Contact Us
+          </Link>
         </div>
       </div>
     </div>

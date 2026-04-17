@@ -4,6 +4,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Clock, Calendar, Bookmark, ChevronRight } from 'lucide-react';
 import { getArticleBySlugDirect, getArticlesDirect } from '@/lib/db';
+import { defaultHeroArticle, defaultLatestStories, defaultIndiaAI } from '@/lib/fallbacks';
 import { buildArticleMetadata, generateArticleSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import { sanitizeHtml } from '@/lib/sanitize';
 import ShareButton from '@/components/ShareButton';
@@ -18,10 +19,14 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 export default async function ArticlePage({ params }: { params: { slug: string } }) {
-  const [article, related] = await Promise.all([
-    getArticleBySlugDirect(params.slug),
-    getArticlesDirect({ limit: 4 }),
-  ]);
+  let article = await getArticleBySlugDirect(params.slug);
+  const related = await getArticlesDirect({ limit: 4 });
+
+  if (!article) {
+    if (params.slug === defaultHeroArticle.slug) article = defaultHeroArticle as any;
+    else if (defaultLatestStories.find(s => s.slug === params.slug)) article = defaultLatestStories.find(s => s.slug === params.slug) as any;
+    else if (defaultIndiaAI.find(s => s.slug === params.slug)) article = defaultIndiaAI.find(s => s.slug === params.slug) as any;
+  }
 
   if (!article) notFound();
 
@@ -140,6 +145,34 @@ export default async function ArticlePage({ params }: { params: { slug: string }
         </article>
 
         <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-6">
+          {article.linkedTool && (
+            <div className="card p-5 border-brand-200 dark:border-brand-900/50 bg-gradient-to-br from-brand-50 to-white dark:from-brand-900/20 dark:to-gray-900">
+              <span className="badge-brand text-[9px] mb-2 inline-block">Featured Tool</span>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-800 flex flex-shrink-0 items-center justify-center shadow-sm">
+                  {article.linkedTool.logoUrl ? (
+                    <img src={article.linkedTool.logoUrl} alt={article.linkedTool.name} className="w-6 h-6 object-contain" />
+                  ) : (
+                    <span className="font-sora font-bold text-brand">{article.linkedTool.name.charAt(0)}</span>
+                  )}
+                </div>
+                <div>
+                  <h4 className="font-sora font-bold text-sm text-navy dark:text-white">{article.linkedTool.name}</h4>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="text-[10px] bg-yellow-50 text-yellow-700 px-1.5 py-0.5 rounded-sm font-bold block whitespace-nowrap">★ {article.linkedTool.avgRating}</span>
+                    <span className="text-[10px] text-gray-500">{article.linkedTool.pricingModel}</span>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-gray-600 dark:text-gray-300 font-jakarta mb-4 line-clamp-2">
+                {article.linkedTool.tagline}
+              </p>
+              <Link href={`/tools/${article.linkedTool.slug}`} className="btn-brand text-xs w-full justify-center">
+                Try {article.linkedTool.name}
+              </Link>
+            </div>
+          )}
+
           <div className="card p-5 bg-gradient-to-br from-brand-50 to-white dark:from-brand-900/20 dark:to-gray-900">
             <h4 className="font-sora font-bold text-sm text-navy dark:text-white mb-2">Get weekly insights</h4>
             <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta mb-4">Join 5,000+ founders reading our AI ecosystem digest.</p>

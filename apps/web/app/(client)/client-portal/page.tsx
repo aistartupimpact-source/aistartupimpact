@@ -140,8 +140,14 @@ export default async function ClientPortalPage() {
               {creatives.map((cr: any, i: number) => (
                 <div key={i} className="border border-gray-100 dark:border-gray-800 rounded-xl p-4">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center">
-                      <Zap className="w-4 h-4 text-brand" />
+                    <div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center overflow-hidden shrink-0">
+                      {(cr as any).imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={(cr as any).imageUrl} alt={cr.headline || 'Brand'} className="w-full h-full object-cover" />
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(companyName)}&background=random&color=fff&size=150`} alt={companyName} className="w-full h-full object-cover" />
+                      )}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">

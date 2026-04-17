@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import crypto from 'crypto';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -37,6 +38,75 @@ router.post('/resend', async (req: Request, res: Response) => {
     return res.status(200).send('Webhook processed');
   } catch (error) {
     console.error('Webhook processing error:', error);
+    return res.status(500).send('Internal Server Error');
+  }
+});
+
+// Razorpay Idempotent Webhook
+router.post('/razorpay', async (req: Request, res: Response): Promise<any> => {
+  try {
+    const signature = req.headers['x-razorpay-signature'] as string;
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET || 'fallback_secret';
+
+    const shasum = crypto.createHmac('sha256', secret);
+    shasum.update(JSON.stringify(req.body));
+    const digest = shasum.digest('hex');
+
+    if (digest !== signature) {
+      return res.status(400).send('Invalid signature');
+    }
+
+    const { event, payload } = req.body;
+
+    if (event === 'payment.captured' || event === 'order.paid') {
+      const paymentEntity = payload.payment.entity;
+      const orderId = paymentEntity.order_id;
+      const paymentId = paymentEntity.id;
+
+      // 1. Idempotency Check
+      const existingPayment = await prisma.aiTool.findUnique({
+        where: { razorpayPaymentId: paymentId }
+      });
+      if (existingPayment) {
+        return res.status(200).send('Already processed (Idempotency Hit)');
+      }
+
+      // 2. Fetch Tool
+      const tool = await prisma.aiTool.findUnique({
+        where: { razorpayOrderId: orderId }
+      });
+
+      if (!tool) {
+        return res.status(404).send('Tool mapping not found for order');
+      }
+
+      // 3. Upgrade Listing Tier to pendingTier
+      await prisma.aiTool.update({
+        where: { id: tool.id },
+        data: {
+          razorpayPaymentId: paymentId,
+          paymentStatus: 'SUCCESS',
+          listingTier: tool.pendingTier || 'FREE'
+        }
+      });
+
+      // 4. In a real system, trigger workers/transactional.ts to send "Payment Success" email here.
+      console.log(`Razorpay success! Activated Premium for tool: ${tool.name}`);
+    }
+
+    if (event === 'payment.failed') {
+      const paymentEntity = payload.payment.entity;
+      const orderId = paymentEntity.order_id;
+
+      await prisma.aiTool.updateMany({
+        where: { razorpayOrderId: orderId },
+        data: { paymentStatus: 'FAILED' }
+      });
+    }
+
+    return res.status(200).send('OK');
+  } catch (error) {
+    console.error('Razorpay Webhook Error:', error);
     return res.status(500).send('Internal Server Error');
   }
 });

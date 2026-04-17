@@ -1,0 +1,13 @@
+# AI Startup Impact
+
+> AI Startup Impact is the premier platform for Indian AI news. Discover top artificial intelligence startups, funding, tools, and founder stories.
+
+AI Startup Impact aggregates news, tools, metrics, funding data and founder stories for the AI ecosystem in India. 
+
+## Structure
+- Home: General news and comprehensive platform introduction.
+- Funding Dashboard `/funding`: Tracks capital raised by AI companies in India.
+- Directory `/tools`: Library of native AI tools developed by Indian founders.
+
+## Mission
+Our mission is to track, boost, and highlight the Indian artificial intelligence ecosystem, showcasing the impact that Indian companies have globally.

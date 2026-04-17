@@ -3,6 +3,7 @@ import { Sora, Plus_Jakarta_Sans } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import ThemeProvider from '@/components/ThemeProvider';
 import { generateWebSiteSchema, generateOrganizationSchema } from '@/lib/seo';
+import Script from 'next/script';
 import './globals.css';
 
 // Only load the two fonts actually used in UI — JetBrains is code-only, loaded on demand
@@ -24,12 +25,15 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://aistartupimpact.com"),
+  alternates: {
+    canonical: '/',
+  },
   title: {
-    default: "AI Startup Impact – #1 AI Startup India News, Tools & Funding",
+    default: "AI Startup Impact – AI Startup India News & Funding",
     template: '%s | AI Startup Impact',
   },
   description:
-    "AI Startup Impact is the premier platform for AI Startup India news. Discover the top artificial intelligence companies, funding impact, native tools, and founder stories in India.",
+    "AI Startup Impact is the premier platform for Indian AI news. Discover top artificial intelligence startups, funding, tools, and founder stories.",
   keywords: [
     'ai startups india 2026', 'Krutrim AI', 'India AI news', 'best AI tools India',
     'Sarvam AI', 'India AI ecosystem', 'Bhavish Aggarwal AI', 'AI funding India 2026',
@@ -41,8 +45,8 @@ export const metadata: Metadata = {
     'India artificial intelligence news', 'AI startup news', 'IndiaAI startup ecosystem'
   ],
   openGraph: {
-    title: "AI Startup Impact – #1 AI Startup India News, Tools & Funding",
-    description: "AI Startup Impact is the premier platform for AI Startup India news. Discover the top artificial intelligence companies, funding impact, native tools, and founder stories in India.",
+    title: "AI Startup Impact – AI Startup India News & Funding",
+    description: "AI Startup Impact is the premier platform for Indian AI news. Discover top artificial intelligence startups, funding, tools, and founder stories.",
     url: "https://aistartupimpact.com",
     siteName: "AI Startup Impact",
     type: "website",
@@ -53,8 +57,8 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@aikitstartup',
     creator: '@aikitstartup',
-    title: "AI Startup Impact – #1 AI Startup India News, Tools & Funding",
-    description: "AI Startup Impact is the premier platform for AI Startup India news. Discover the top artificial intelligence companies, funding impact, native tools, and founder stories in India.",
+    title: "AI Startup Impact – AI Startup India News & Funding",
+    description: "AI Startup Impact is the premier platform for Indian AI news. Discover top artificial intelligence startups, funding, tools, and founder stories.",
   },
   robots: {
     index: true,
@@ -89,8 +93,10 @@ export default function RootLayout({
           }}
         />
         {/* Google Analytics */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-PVL3NC8DQ6"></script>
-        <script
+        <Script strategy="afterInteractive" src="https://www.googletagmanager.com/gtag/js?id=G-PVL3NC8DQ6" />
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
@@ -101,7 +107,9 @@ export default function RootLayout({
           }}
         />
         {/* Google tag (gtag.js) event */}
-        <script
+        <Script
+          id="google-conversion"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               gtag('event', 'conversion_event_page_view', {

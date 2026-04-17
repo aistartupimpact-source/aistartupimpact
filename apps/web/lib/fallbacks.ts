@@ -33,12 +33,18 @@ export const defaultFounderSpotlights = [
 ];
 
 export const defaultToolPicks = [
-  { slug: 'krutrim', name: 'Krutrim AI', tagline: "India's own foundational AI assistant fluent in 22 official languages", category: { name: 'Assistant' }, avgRating: 4.8 },
-  { slug: 'karya', name: 'Karya', tagline: 'Ethical data platform paying rural Indians to train regional AI models', category: { name: 'Data Ops' }, avgRating: 4.9 },
-  { slug: 'dubu', name: 'Dubverse', tagline: 'AI-powered video dubbing tool supporting purely Indian languages natively', category: { name: 'Video Gen' }, avgRating: 4.6 },
-  { slug: 'sarvam', name: 'Sarvam AI', tagline: 'Foundation models built for Indic languages and voice-first interfaces', category: { name: 'LLM' }, avgRating: 4.7 },
-  { slug: 'gnani', name: 'Gnani.ai', tagline: 'Enterprise voice AI processing 10M+ calls daily across Indian enterprises', category: { name: 'Voice AI' }, avgRating: 4.5 },
-  { slug: 'murf', name: 'Murf AI', tagline: 'Studio-quality AI voiceover in Hindi, Tamil, Telugu and 20+ languages', category: { name: 'Audio Gen' }, avgRating: 4.6 },
+  { slug: 'krutrim', name: 'Krutrim AI', tagline: "India's own foundational AI assistant fluent in 22 official languages", category: { name: 'Assistant' }, avgRating: 4.8, logoUrl: 'https://ui-avatars.com/api/?name=Krutrim+AI&background=4F46E5&color=fff&size=150' },
+  { slug: 'karya', name: 'Karya', tagline: 'Ethical data platform paying rural Indians to train regional AI models', category: { name: 'Data Ops' }, avgRating: 4.9, logoUrl: 'https://ui-avatars.com/api/?name=Karya&background=E11D48&color=fff&size=150' },
+  { slug: 'dubu', name: 'Dubverse', tagline: 'AI-powered video dubbing tool supporting purely Indian languages natively', category: { name: 'Video Gen' }, avgRating: 4.6, logoUrl: 'https://ui-avatars.com/api/?name=Dubverse&background=059669&color=fff&size=150' },
+  { slug: 'sarvam', name: 'Sarvam AI', tagline: 'Foundation models built for Indic languages and voice-first interfaces', category: { name: 'LLM' }, avgRating: 4.7, logoUrl: 'https://ui-avatars.com/api/?name=Sarvam+AI&background=D97706&color=fff&size=150' },
+  { slug: 'gnani', name: 'Gnani.ai', tagline: 'Enterprise voice AI processing 10M+ calls daily across Indian enterprises', category: { name: 'Voice AI' }, avgRating: 4.5, logoUrl: 'https://ui-avatars.com/api/?name=Gnani+AI&background=7C3AED&color=fff&size=150' },
+  { slug: 'murf', name: 'Murf AI', tagline: 'Studio-quality AI voiceover in Hindi, Tamil, Telugu and 20+ languages', category: { name: 'Audio Gen' }, avgRating: 4.6, logoUrl: 'https://ui-avatars.com/api/?name=Murf+AI&background=3B82F6&color=fff&size=150' },
+  { slug: 'bhashini', name: 'Bhashini AI', tagline: 'Open-source language AI models breaking language barriers across India', category: { name: 'Translation' }, avgRating: 4.9, logoUrl: 'https://ui-avatars.com/api/?name=Bhashini&background=0EA5E9&color=fff&size=150' },
+  { slug: 'kissanai', name: 'KissanAI', tagline: 'Multilingual generative AI voice advisor designed directly for Indian farmers', category: { name: 'AgriTech' }, avgRating: 4.8, logoUrl: 'https://ui-avatars.com/api/?name=KissanAI&background=22C55E&color=fff&size=150' },
+  { slug: 'wadhwani', name: 'Wadhwani AI', tagline: 'AI solutions for public health and agriculture across the global south', category: { name: 'HealthTech' }, avgRating: 4.8, logoUrl: 'https://ui-avatars.com/api/?name=Wadhwani&background=EF4444&color=fff&size=150' },
+  { slug: 'rephrase', name: 'Rephrase.ai', tagline: 'Pioneering synthetic video generation platform for personalized marketing', category: { name: 'Video Gen' }, avgRating: 4.6, logoUrl: 'https://ui-avatars.com/api/?name=Rephrase&background=8B5CF6&color=fff&size=150' },
+  { slug: 'corover', name: 'CoRover.ai', tagline: 'Conversational AI powering IRCTC and large public sector platforms in India', category: { name: 'Conversational' }, avgRating: 4.5, logoUrl: 'https://ui-avatars.com/api/?name=CoRover&background=EC4899&color=fff&size=150' },
+  { slug: 'jugalbandi', name: 'Jugalbandi', tagline: 'Open ecosystem providing AI-driven citizen services via WhatsApp', category: { name: 'Public Tech' }, avgRating: 4.9, logoUrl: 'https://ui-avatars.com/api/?name=Jugalbandi&background=14B8A6&color=fff&size=150' },
 ];
 
 export const defaultFundingDigests = [

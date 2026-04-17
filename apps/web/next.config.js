@@ -11,6 +11,7 @@ const nextConfig = {
       { protocol: 'https', hostname: '**.r2.dev' },
       { protocol: 'https', hostname: 'pub-13cc9cc075664a129c48949c52d1908f.r2.dev' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'ui-avatars.com' },
     ],
     formats: ['image/avif', 'image/webp'],
   },
@@ -30,7 +31,7 @@ const nextConfig = {
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // unsafe-inline needed for Next.js inline scripts
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://*.r2.cloudflarestorage.com https://*.r2.dev https://pub-13cc9cc075664a129c48949c52d1908f.r2.dev https://images.unsplash.com https://api.producthunt.com",
+      "img-src 'self' data: blob: https://*.r2.cloudflarestorage.com https://*.r2.dev https://pub-13cc9cc075664a129c48949c52d1908f.r2.dev https://images.unsplash.com https://api.producthunt.com https://ui-avatars.com",
       "connect-src 'self' https://aistartupimpact.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",

@@ -57,6 +57,7 @@ app.use('/v1/funding', publicFundingRoutes);
 app.use('/v1/media', require('./routes/public/media').default);
 app.use('/v1/upload', require('./routes/upload').default);
 app.use('/v1/auth', require('./routes/public/auth').default);
+app.use('/v1/payments', require('./routes/public/payments').default);
 
 // ─── Admin API Routes ────────────────────────
 app.use('/v1/admin/articles', adminArticleRoutes);

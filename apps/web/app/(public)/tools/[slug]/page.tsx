@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { Metadata } from 'next';
-import { Star, Zap, ExternalLink, ChevronRight, Check, X as XIcon, ThumbsUp, ThumbsDown, Globe, IndianRupee, ArrowRight } from 'lucide-react';
+import { Star, Zap, ExternalLink, ChevronRight, Check, X as XIcon, ThumbsUp, ThumbsDown, Globe, IndianRupee, ArrowRight, Sparkles } from 'lucide-react';
 import { generateToolSchema } from '@/lib/seo';
 import EmbedBadge from '@/components/EmbedBadge';
+import WriteReviewClient from '@/components/WriteReviewClient';
 
 const tool = {
   name: 'Cursor',
@@ -57,7 +58,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default function ToolDetailPage() {
+import { getAiToolBySlugDirect } from '@/lib/db';
+
+export default async function ToolDetailPage({ params }: { params: { slug: string } }) {
+  const dbTool = await getAiToolBySlugDirect(params.slug);
+  const stories = dbTool?.stories || [];
+  const fundingRounds = dbTool?.fundingRounds || [];
+
   const jsonLd = generateToolSchema({
     name: tool.name,
     description: tool.description,
@@ -84,8 +91,14 @@ export default function ToolDetailPage() {
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 mb-8">
-        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-900/30 dark:to-brand-800/20 flex items-center justify-center shrink-0">
-          <Zap className="w-8 h-8 sm:w-10 sm:h-10 text-brand" />
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700/50">
+          {(dbTool as any)?.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={(dbTool as any).logoUrl} alt={tool.name} className="w-full h-full object-cover" />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(tool.name)}&background=random&color=fff&size=150`} alt={tool.name} className="w-full h-full object-cover" />
+          )}
         </div>
         <div className="flex-1">
           <div className="flex items-start justify-between gap-4">
@@ -182,7 +195,10 @@ export default function ToolDetailPage() {
 
           {/* User Reviews */}
           <div>
-            <h2 className="section-title mb-6">User Reviews</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="section-title mb-0">User Reviews</h2>
+              <WriteReviewClient toolSlug={tool.slug} toolName={tool.name} />
+            </div>
             <div className="space-y-4">
               {tool.userReviews.map((rev) => (
                 <div key={rev.author} className="card p-5">
@@ -216,7 +232,10 @@ export default function ToolDetailPage() {
               {tool.alternatives.map((alt) => (
                 <Link key={alt.slug} href={`/tools/${alt.slug}`} className="flex items-center justify-between group p-2 -mx-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center"><Zap className="w-4 h-4 text-brand" /></div>
+                    <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={(alt as any).logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(alt.name)}&background=random&color=fff&size=150`} alt={alt.name} className="w-full h-full object-cover" />
+                    </div>
                     <span className="font-jakarta font-medium text-sm text-navy dark:text-white group-hover:text-brand transition-colors">{alt.name}</span>
                   </div>
                   <div className="flex items-center gap-1 text-xs text-gray-400">
@@ -226,6 +245,48 @@ export default function ToolDetailPage() {
               ))}
             </div>
           </div>
+
+          {/* Cross-Linking: Founder Story */}
+          {stories.length > 0 && (
+            <div className="card p-5 mt-6 bg-gradient-to-br from-brand-50 to-brand-100/30 dark:from-brand-900/20 dark:to-gray-800 border-brand-100 dark:border-brand-900/50">
+              <h4 className="font-sora font-extrabold text-sm text-brand mb-4 flex items-center gap-2">
+                <Sparkles className="w-4 h-4" /> Founder Story
+              </h4>
+              <div className="space-y-4">
+                {stories.map((story: any) => (
+                  <Link key={story.id} href={`/news/${story.slug}`} className="block group">
+                    <h5 className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand leading-snug transition-colors">{story.title}</h5>
+                    <p className="text-xs text-gray-500 font-jakarta mt-1 line-clamp-2">{story.excerpt}</p>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-brand mt-2 inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">Read Story <ArrowRight className="w-3 h-3" /></span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Cross-Linking: Funding Rounds */}
+          {fundingRounds.length > 0 && (
+            <div className="card p-5 mt-6">
+              <h4 className="font-sora font-bold text-sm text-green-600 dark:text-green-400 mb-4 flex items-center gap-2">
+                <IndianRupee className="w-4 h-4" /> Funding History
+              </h4>
+              <div className="space-y-3">
+                {fundingRounds.map((round: any, idx: number) => (
+                  <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800 last:border-0 last:pb-0">
+                    <div>
+                      <span className="font-sora font-bold text-sm text-navy dark:text-white block">{round.roundType}</span>
+                      <span className="text-xs text-gray-400 font-jakarta">{new Date(round.announcedAt).toLocaleDateString()}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-sora font-extrabold text-sm text-green-600 dark:text-green-400 block">{round.amountInr ? `₹${(round.amountInr / 10000000).toFixed(1)}Cr` : 'Undisclosed'}</span>
+                      <span className="text-[10px] text-gray-400 font-jakarta uppercase">{round.leadInvestors?.[0] || 'Investors'}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
         </aside>
       </div>
     </div>

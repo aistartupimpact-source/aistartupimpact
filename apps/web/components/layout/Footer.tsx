@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Mail, Twitter, Linkedin, Instagram, Facebook } from 'lucide-react';
+import { Mail, Twitter, Linkedin, Instagram, Facebook, Youtube } from 'lucide-react';
 import SubscribeForm from '@/components/SubscribeForm';
 
 const footerLinks = [
@@ -41,6 +41,7 @@ const footerLinks = [
 ];
 
 const socials = [
+  { icon: Youtube, href: 'https://www.youtube.com/@aistartupimpact', label: 'YouTube' },
   { icon: Twitter, href: 'https://x.com/aistartupimapct', label: 'Twitter' },
   { icon: Linkedin, href: 'https://www.linkedin.com/company/ai-startup-imapact', label: 'LinkedIn' },
   { icon: Instagram, href: 'https://www.instagram.com/aistartupimpact/', label: 'Instagram' },
@@ -211,10 +212,10 @@ export default function Footer() {
               />
             </a>
 
-            <span className="flex items-center gap-1.5">
+            <Link href="/contact" className="flex items-center gap-1.5 hover:text-brand transition-colors">
               <Mail className="w-3.5 h-3.5" />
-              hello@aistartupimpact.com
-            </span>
+              Contact Us
+            </Link>
           </div>
         </div>
       </div>

@@ -81,11 +81,10 @@ function FeaturedPartnerRotator({ partners }: { partners: Partner[] }) {
                 <button
                   key={i}
                   onClick={() => goTo(i)}
-                  className={`rounded-full transition-all duration-300 ${
-                    i === active
+                  className={`rounded-full transition-all duration-300 ${i === active
                       ? 'w-4 h-1.5 bg-brand'
                       : 'w-1.5 h-1.5 bg-white/20 hover:bg-white/40'
-                  }`}
+                    }`}
                   aria-label={`Go to partner ${i + 1}`}
                 />
               ))}
@@ -113,7 +112,8 @@ function FeaturedPartnerRotator({ partners }: { partners: Partner[] }) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={p.logoUrl} alt={p.name} className="w-full h-full object-contain p-1.5" />
                 ) : (
-                  <Zap className="w-7 h-7 sm:w-8 sm:h-8 text-brand" />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=random&color=fff&size=150`} alt={p.name} className="w-full h-full object-cover" />
                 )}
               </div>
               <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-[#0D1B2A] flex items-center justify-center">

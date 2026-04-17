@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import {
   ArrowRight, TrendingUp, Star, Users, ChevronRight,
@@ -21,10 +22,11 @@ import {
   getFundingDigestsDirect,
   getActiveSponsorDirect,
   getActiveHeroSlotsDirect,
+  getFeaturedToolsDirect,
+  getPriorityToolsDirect,
 } from '@/lib/db';
 import {
   getTrendingNews,
-  getToolPicks,
 } from '@/lib/api';
 
 // Fallbacks in a separate file — keeps this bundle lean
@@ -68,12 +70,14 @@ export default async function HomePage() {
     fetchedLiveTickers,
     fetchedSponsor,
     fetchedHeroSlots,
+    fetchedFeaturedTools,
+    fetchedPriorityTools,
   ] = await Promise.all([
     getHeroArticle(),
     getTrendingNews(),
-    getLatestStories(4),
-    getFounderSpotlights(5),
-    getToolPicks(6),
+    getLatestStories(8),
+    getFounderSpotlights(8),
+    Promise.resolve([]), // toolPicks deprecated locally
     getFundingDigestsDirect(3),
     getFeaturedStartup(),
     getIndiaAIEcosystem(4),
@@ -83,6 +87,8 @@ export default async function HomePage() {
     getActiveLiveTickers(),
     getActiveSponsorDirect(),
     getActiveHeroSlotsDirect(),
+    getFeaturedToolsDirect(),
+    getPriorityToolsDirect(12),
   ]);
 
   // Use fetched data, but provide elegant fallbacks if DB is empty or backend is unreachable
@@ -90,9 +96,23 @@ export default async function HomePage() {
   const trendingItems = fetchedLiveTickers?.length > 0 ? fetchedLiveTickers : (fetchedTrending?.length > 0 ? fetchedTrending : defaultTrendingItems);
   const latestStories = fetchedLatest?.length > 0 ? fetchedLatest : defaultLatestStories;
   const founderSpotlights = (fetchedSpotlights && fetchedSpotlights.length > 0) ? fetchedSpotlights : defaultFounderSpotlights;
-  const toolPicks = fetchedTools?.length > 0 ? fetchedTools : defaultToolPicks;
+  const toolPicks = fetchedPriorityTools?.length > 0 ? fetchedPriorityTools : defaultToolPicks;
   const fundingDigests = fetchedFundingDigests?.length > 0 ? fetchedFundingDigests : defaultFundingDigests;
   const premiumStartups = (fetchedFeaturedStartup && fetchedFeaturedStartup.length > 0) ? fetchedFeaturedStartup : defaultPremiumStartup;
+
+  // Merge premium startups and featured tools into one slider
+  const featuredPartnersList = [
+    ...(fetchedFeaturedTools?.length > 0 ? fetchedFeaturedTools.map((t: any) => ({
+      name: t.name,
+      tagline: t.tagline,
+      description: t.description,
+      ctaUrl: `/tools/${t.slug}`,
+      logoUrl: t.logoUrl,
+      statValue: t.avgRating ? `${t.avgRating}` : null,
+      statLabel: t.avgRating ? 'Rating' : null,
+    })) : []),
+    ...premiumStartups
+  ];
   const indiaAI = fetchedIndiaAI?.length > 0 ? fetchedIndiaAI : defaultIndiaAI;
   const activeSponsor = fetchedSponsor || defaultSponsor;
   // Hero: scheduled slots take priority, fallback to heroAd or featured article as a single slide
@@ -115,7 +135,7 @@ export default async function HomePage() {
         title: heroArticle.title,
         excerpt: heroArticle.excerpt ?? null,
         coverImage: heroArticle.coverImage ?? null,
-        ctaUrl: `/news/${heroArticle.slug}`,
+        ctaUrl: heroArticle.type === 'STORY' ? `/stories/${heroArticle.slug}` : `/news/${heroArticle.slug}`,
         ctaLabel: 'Read Story',
         badgeText: heroArticle.category?.name || 'Story',
         authorName: heroArticle.author?.name ?? null,
@@ -127,8 +147,8 @@ export default async function HomePage() {
       {/* ╔════════════════════════════════════════════╗
           ║  1. HERO — Scheduled Carousel / Ad / Article║
           ╚════════════════════════════════════════════╝ */}
-      <div className="bg-[#08111B] text-center pt-3 pb-2 border-b border-white/5">
-        <h1 className="text-[9px] sm:text-[10px] text-gray-500 font-jakarta font-medium tracking-[0.2em] uppercase">
+      <div className="bg-[#08111B] text-center pt-3 pb-2 border-b border-white/5 px-4">
+        <h1 className="text-[9px] sm:text-[10px] text-gray-500 font-jakarta font-medium tracking-[0.2em] uppercase truncate max-w-full">
           AI Startup Impact — #1 AI Startup India News, AI Ecosystem, and Tools
         </h1>
       </div>
@@ -183,15 +203,15 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        {/* Seamless 2x2 Grid */}
+        {/* Seamless Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
-          {latestStories.slice(0, 4).map((story: any, idx: number) => {
+          {latestStories.slice(0, 8).map((story: any, idx: number, arr: any[]) => {
+            const N = arr.length;
             const borderClass = [
-              'border-b sm:border-r border-gray-200 dark:border-gray-700',
-              'border-b border-gray-200 dark:border-gray-700',
-              'border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-700',
-              '',
-            ][idx] || '';
+              idx < N - 1 ? 'border-b border-gray-200 dark:border-gray-700' : '',
+              idx >= N - (N % 2 === 0 ? 2 : 1) ? 'sm:border-b-0' : '',
+              idx % 2 === 0 ? 'sm:border-r border-gray-200 dark:border-gray-700' : ''
+            ].filter(Boolean).join(' ');
             return (
               <Link key={story.slug} href={`/news/${story.slug}`} className="group">
                 <div className={`bg-gray-50 dark:bg-gray-900 p-5 sm:p-6 relative hover:bg-white dark:hover:bg-gray-800 transition-all duration-300 ${borderClass} hover:border-l-4 hover:border-l-red-500`}>
@@ -263,13 +283,13 @@ export default async function HomePage() {
 
         {/* Premium seamless 2-col grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
-          {founderSpotlights.slice(0, 4).map((story: any, idx: number) => {
+          {founderSpotlights.slice(0, 8).map((story: any, idx: number, arr: any[]) => {
+            const N = arr.length;
             const borderClass = [
-              'border-b sm:border-r border-gray-200 dark:border-gray-700',
-              'border-b border-gray-200 dark:border-gray-700',
-              'border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-700',
-              '',
-            ][idx] || '';
+              idx < N - 1 ? 'border-b border-gray-200 dark:border-gray-700' : '',
+              idx >= N - (N % 2 === 0 ? 2 : 1) ? 'sm:border-b-0' : '',
+              idx % 2 === 0 ? 'sm:border-r border-gray-200 dark:border-gray-700' : ''
+            ].filter(Boolean).join(' ');
             return (
               <Link key={story.slug} href={`/stories/${story.slug}`} className="group h-full">
                 <div className={`relative bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-300 ${borderClass} flex flex-col h-full`}>
@@ -279,11 +299,12 @@ export default async function HomePage() {
                   {/* Thumbnail */}
                   <div className="relative h-48 sm:h-64 lg:h-72 bg-gradient-to-br from-brand/10 to-gray-100 dark:from-brand/20 dark:to-gray-800 overflow-hidden shrink-0">
                     {(story.thumbnailImage || story.coverImage) ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <Image
                         src={story.thumbnailImage || story.coverImage}
                         alt={story.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center">
@@ -429,11 +450,13 @@ export default async function HomePage() {
       </section>
 
       {/* ╔════════════════════════════════════════════╗
-          ║  8. PREMIUM FEATURED STARTUP — Rotator      ║
+          ║  8. PREMIUM FEATURED PARTNER ROTATOR        ║
           ╚════════════════════════════════════════════╝ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12">
-        <FeaturedPartnerRotator partners={premiumStartups} />
-      </section>
+      {featuredPartnersList.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 mt-8">
+          <FeaturedPartnerRotator partners={featuredPartnersList} />
+        </section>
+      )}
 
       {/* ╔════════════════════════════════════════════╗
           ║  9. INDIA AI ECOSYSTEM — Redesigned        ║
@@ -528,25 +551,36 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* 3-col seamless grid, 2 rows */}
+            {/* 4-col seamless grid, 2 rows */}
             <div className="p-0 bg-gray-50 dark:bg-gray-800">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {toolPicks.map((tool: any, idx: number) => {
-                  const col = idx % 3;
-                  const row = Math.floor(idx / 3);
-                  const totalRows = Math.ceil(toolPicks.length / 3);
-                  const isLastRow = row === totalRows - 1;
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                {toolPicks.map((tool: any, idx: number, arr: any[]) => {
+                  const N = arr.length;
+                  const isMobileLast = idx === N - 1;
+                  const isTabletLastRow = idx >= N - 2;
+                  const isDesktopLastRow = idx >= N - 4;
+
+                  const isTabletRightEdge = idx % 2 === 1;
+                  const isDesktopRightEdge = idx % 4 === 3;
+
                   const borderClass = [
-                    col < 2 ? 'border-r border-gray-200 dark:border-gray-700' : '',
-                    !isLastRow ? 'border-b border-gray-200 dark:border-gray-700' : '',
+                    !isMobileLast ? 'border-b border-gray-200 dark:border-gray-700' : '',
+                    isTabletLastRow ? 'sm:border-b-0' : '',
+                    isDesktopLastRow ? 'lg:border-b-0' : 'lg:border-b border-gray-200 dark:border-gray-700',
+                    !isTabletRightEdge ? 'sm:border-r border-gray-200 dark:border-gray-700' : 'sm:border-r-0',
+                    !isDesktopRightEdge ? 'lg:border-r border-gray-200 dark:border-gray-700' : 'lg:border-r-0'
                   ].filter(Boolean).join(' ');
                   return (
                     <Link key={tool.slug} href={`/tools/${tool.slug}`} className={`group ${borderClass}`}>
                       <div className="bg-gray-50 dark:bg-gray-800 p-5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 h-full flex flex-col">
                         {/* Top row: icon + rating */}
                         <div className="flex items-start justify-between mb-3">
-                          <div className="w-10 h-10 rounded-xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center shrink-0">
-                            <Zap className="w-5 h-5 text-brand" />
+                          <div className="relative w-10 h-10 rounded-xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center shrink-0 overflow-hidden">
+                            {tool.logoUrl ? (
+                              <Image src={tool.logoUrl} alt={tool.name} fill sizes="40px" className="object-cover" />
+                            ) : (
+                              <Image src={`https://ui-avatars.com/api/?name=${encodeURIComponent(tool.name)}&background=random&color=fff&size=150`} alt={tool.name} fill sizes="40px" className="object-cover" />
+                            )}
                           </div>
                           {tool.avgRating && (
                             <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/30 px-2 py-0.5 rounded-full">

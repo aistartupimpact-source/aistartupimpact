@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '@aistartupimpact/database';
+import { authenticateToken, AuthRequest } from '../../middleware/auth';
 
 const router = Router();
 
@@ -90,6 +91,56 @@ router.get('/compare/:toolIds', async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, data: null, error: 'Comparison failed' });
+  }
+});
+
+// POST /v1/tools/:slug/reviews — Submit a review securely
+router.post('/:slug/reviews', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const { slug } = req.params;
+    const { rating, title, body, isVerifiedPurchase, proofImageUrl } = req.body;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, data: null, error: 'Unauthorized' });
+    }
+
+    // 1. Lookup Tool
+    const tool = await prisma.aiTool.findUnique({ where: { slug, status: 'APPROVED' } });
+    if (!tool) {
+      return res.status(404).json({ success: false, data: null, error: 'Tool not found' });
+    }
+
+    // 2. Prevent Review Manipulation (Check Duplicates)
+    const existingReview = await prisma.toolReview.findUnique({
+      where: {
+        toolId_userId: { toolId: tool.id, userId }
+      }
+    });
+
+    if (existingReview) {
+      return res.status(409).json({ success: false, data: null, error: 'You have already reviewed this tool' });
+    }
+
+    // 3. Create the robust PENDING review
+    const review = await prisma.toolReview.create({
+      data: {
+        toolId: tool.id,
+        userId: userId,
+        rating: Math.max(1, Math.min(5, Number(rating))),
+        title: title,
+        body: body,
+        isVerifiedPurchase: !!isVerifiedPurchase,
+        proofImageUrl: proofImageUrl || null,
+        status: 'PENDING',
+        aiSpamScore: 0 // Mocked score, to be flagged by workers later
+      }
+    });
+
+    res.status(201).json({ success: true, data: review, message: 'Review successfully submitted pending moderation' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, data: null, error: 'Failed to submit review' });
   }
 });
 
