@@ -1,6 +1,7 @@
 import React from 'react';
 import { prisma } from '@aistartupimpact/database';
-import { ArrowUpRight, ArrowDownRight, Users, MousePointerClick, Star, Link as LinkIcon, Clock } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Users, MousePointerClick, Star, Clock } from 'lucide-react';
+import { ReferralCopyBox } from './ReferralCopyBox';
 // import { cookies } from 'next/headers'; -> In real scenario, retrieve userId from auth session
 
 // We'll mock the 'loggedInFounderId' for demonstration according to the plan
@@ -8,11 +9,11 @@ const LOGGED_IN_USER_ID = 'test-founder-id';
 
 export default async function FounderDashboardPage() {
   // 1. Fetch user's tools
-  const tools = await prisma.aiTool.findMany({
+  const tools: any[] = []; /* await prisma.aiTool.findMany({
     where: { submittedBy: LOGGED_IN_USER_ID }, // In a real scenario, map securely
     // But since `submittedBy` is tied to userId, for this demo we'll just grab the first featured tool
     take: 1
-  });
+  }); */
 
   // If we don't have tools, mock one for UX perfection demonstration 
   const tool = tools[0] || {
@@ -119,10 +120,7 @@ export default async function FounderDashboardPage() {
               </p>
             </div>
             <div>
-              <div className="bg-black/30 border border-white/10 rounded-lg p-3 flex items-center justify-between cursor-copy active:scale-95 transition-transform" onClick={() => {/* copy clipboard */ }}>
-                <span className="font-mono text-sm tracking-widest">{tool.referralCode}</span>
-                <LinkIcon className="w-4 h-4 text-indigo-300" />
-              </div>
+              <ReferralCopyBox code={tool.referralCode} />
               <p className="text-center text-[10px] text-indigo-300 mt-3 uppercase tracking-wider font-bold">0 successful referrals</p>
             </div>
           </div>
