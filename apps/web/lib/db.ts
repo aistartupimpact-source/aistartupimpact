@@ -111,7 +111,7 @@ export async function getFeaturedToolsDirect(limit = 4) {
       FROM "AiTool" t
       LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
       WHERE t."listingTier" = 'FEATURED' AND t.status = 'APPROVED' AND t."deletedAt" IS NULL
-      ORDER BY RANDOM()
+      ORDER BY t."updatedAt" DESC
       LIMIT ${limit}
     `;
     return rows.map((t: any) => ({
