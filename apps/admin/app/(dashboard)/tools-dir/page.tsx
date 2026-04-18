@@ -80,7 +80,7 @@ export default function ToolsDirPage() {
     setError('');
     startTransition(async () => {
       const slug = editing.slug || editing.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      const payload = { ...editing, slug };
+      const payload = { ...editing, slug, logoUrl: editing.logoUrl || undefined };
       const result = editing.id === '__new__'
         ? await createToolAction(payload)
         : await updateToolAction(editing.id, payload);
