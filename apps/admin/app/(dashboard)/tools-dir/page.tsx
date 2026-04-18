@@ -1,9 +1,7 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
-import {
-  Plus, Search, Star, Zap, X, Edit3, Trash2, Save, Crown, ArrowUp,
-} from 'lucide-react';
+import { Plus, Search, Star, Zap, X, Edit3, Trash2, Save, Crown, ArrowUp } from 'lucide-react';
 import {
   getToolsAction, getCategoriesAction, createToolAction,
   updateToolAction, deleteToolAction, setListingTierAction,
@@ -18,10 +16,10 @@ interface Category { id: string; name: string; slug: string; }
 
 const PRICING_MODELS = ['FREE', 'FREEMIUM', 'PAID', 'SUBSCRIPTION', 'ENTERPRISE'];
 const LISTING_TIERS = ['FREE', 'PRIORITY', 'FEATURED'];
-const STATUSES = ['PENDING', 'APPROVED', 'REJECTED'];
+const STATUSES = ['PENDING', 'APPROVED', 'ARCHIVED'];
 
-const emptyTool = {
-  id: '', name: '', slug: '', tagline: '', description: '', websiteUrl: '',
+const emptyTool: Tool = {
+  id: '__new__', name: '', slug: '', tagline: '', description: '', websiteUrl: '',
   logoUrl: '', categoryId: '', categoryName: '', pricingModel: 'FREEMIUM',
   avgRating: 4.5, listingTier: 'FREE', status: 'APPROVED',
 };
@@ -35,7 +33,7 @@ const tierBadge: Record<string, string> = {
 const statusBadge: Record<string, string> = {
   APPROVED: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
   PENDING: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
-  REJECTED: 'bg-red-100 dark:bg-red-900/30 text-red-500',
+  ARCHIVED: 'bg-red-100 dark:bg-red-900/30 text-red-500',
 };
 
 export default function ToolsDirPage() {
@@ -60,38 +58,33 @@ export default function ToolsDirPage() {
 
   const filtered = tools.filter(t => {
     const matchSearch = t.name.toLowerCase().includes(search.toLowerCase()) ||
-      t.tagline?.toLowerCase().includes(search.toLowerCase());
+      (t.tagline || '').toLowerCase().includes(search.toLowerCase());
     const matchTier = tierFilter === 'ALL' || t.listingTier === tierFilter;
     return matchSearch && matchTier;
   });
 
   const openCreate = () => {
-    setEditing({ ...emptyTool, id: '__new__', categoryId: categories[0]?.id || '' });
+    setEditing({ ...emptyTool, categoryId: categories[0]?.id || '' });
     setError('');
     setModalOpen(true);
   };
-  const openEdit = (tool: Tool) => { setEditing({ ...tool }); setError(''); setModalOpen(true); };
+
+  const openEdit = (tool: Tool) => {
+    setEditing({ ...tool });
+    setError('');
+    setModalOpen(true);
+  };
 
   const handleSave = () => {
     if (!editing) return;
     setError('');
     startTransition(async () => {
-      // Auto-generate slug from name if new
       const slug = editing.slug || editing.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
       const payload = { ...editing, slug };
-
-      let result;
-      if (editing.id === '__new__') {
-        result = await createToolAction(payload);
-      } else {
-        result = await updateToolAction(editing.id, payload);
-      }
-
-      if (!result.success) {
-        setError((result as any).error || 'Save failed');
-        return;
-      }
-
+      const result = editing.id === '__new__'
+        ? await createToolAction(payload)
+        : await updateToolAction(editing.id, payload);
+      if (!result.success) { setError((result as any).error || 'Save failed'); return; }
       const updated = await getToolsAction();
       setTools(updated as Tool[]);
       setModalOpen(false);
@@ -122,12 +115,11 @@ export default function ToolsDirPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-sora font-extrabold text-2xl text-navy dark:text-white">AI Tools Directory</h1>
           <p className="text-gray-400 text-sm font-jakarta mt-1">
-            {tools.length} tools in DB · {counts.FEATURED} Featured · {counts.PRIORITY} Priority
+            {tools.length} tools · {counts.FEATURED} Featured · {counts.PRIORITY} Priority
           </p>
         </div>
         <button onClick={openCreate} className="btn-brand text-sm flex items-center gap-2">
@@ -135,7 +127,6 @@ export default function ToolsDirPage() {
         </button>
       </div>
 
-      {/* Tier summary cards */}
       <div className="grid grid-cols-3 gap-4">
         {(['FEATURED', 'PRIORITY', 'FREE'] as const).map(tier => (
           <button key={tier} onClick={() => setTierFilter(tierFilter === tier ? 'ALL' : tier)}
@@ -152,17 +143,15 @@ export default function ToolsDirPage() {
         ))}
       </div>
 
-      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <input type="text" placeholder="Search tools..." value={search}
           onChange={e => setSearch(e.target.value)} className="input-field pl-10" />
       </div>
 
-      {/* Table */}
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
         {loading ? (
-          <div className="py-16 text-center text-gray-400 font-jakarta text-sm">Loading tools from database...</div>
+          <div className="py-16 text-center text-gray-400 font-jakarta text-sm">Loading from database...</div>
         ) : (
           <table className="w-full">
             <thead>
@@ -203,12 +192,9 @@ export default function ToolsDirPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <select
-                      value={tool.listingTier}
-                      onChange={e => handleTierChange(tool.id, e.target.value)}
+                    <select value={tool.listingTier} onChange={e => handleTierChange(tool.id, e.target.value)}
                       disabled={isPending}
-                      className={`text-[11px] font-semibold px-2 py-1 rounded-full border-0 cursor-pointer ${tierBadge[tool.listingTier]}`}
-                    >
+                      className={`text-[11px] font-semibold px-2 py-1 rounded-full border-0 cursor-pointer ${tierBadge[tool.listingTier] || ''}`}>
                       {LISTING_TIERS.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </td>
@@ -229,7 +215,7 @@ export default function ToolsDirPage() {
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && !loading && (
+              {filtered.length === 0 && (
                 <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400 font-jakarta text-sm">No tools found</td></tr>
               )}
             </tbody>
@@ -237,7 +223,6 @@ export default function ToolsDirPage() {
         )}
       </div>
 
-      {/* Create/Edit Modal */}
       {modalOpen && editing && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-lg shadow-2xl border border-gray-200 dark:border-gray-800">
@@ -252,41 +237,77 @@ export default function ToolsDirPage() {
             <div className="px-6 py-5 space-y-4 max-h-[65vh] overflow-y-auto">
               {error && <p className="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg">{error}</p>}
               <div>
-                <label className="label-field">Name *</label>
+                <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Name *</label>
                 <input type="text" className="input-field text-sm" value={editing.name}
                   onChange={e => setEditing({ ...editing, name: e.target.value })} placeholder="e.g. Krutrim AI" />
               </div>
               <div>
-                <label className="label-field">Slug (auto-generated if blank)</label>
+                <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Slug (auto if blank)</label>
                 <input type="text" className="input-field text-sm" value={editing.slug}
                   onChange={e => setEditing({ ...editing, slug: e.target.value })} placeholder="e.g. krutrim-ai" />
               </div>
               <div>
-                <label className="label-field">Ta> handleDelete(deleteConfirm)}
-                className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-xl transition-colors">
-                Delete
-              </button>
+                <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Tagline *</label>
+                <input type="text" className="input-field text-sm" value={editing.tagline}
+                  onChange={e => setEditing({ ...editing, tagline: e.target.value })} placeholder="One-line description" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Description</label>
+                <textarea className="input-field text-sm" rows={3} value={editing.description}
+                  onChange={e => setEditing({ ...editing, description: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Website URL *</label>
+                <input type="url" className="input-field text-sm" value={editing.websiteUrl}
+                  onChange={e => setEditing({ ...editing, websiteUrl: e.target.value })} placeholder="https://..." />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Logo URL</label>
+                <input type="url" className="input-field text-sm" value={editing.logoUrl || ''}
+                  onChange={e => setEditing({ ...editing, logoUrl: e.target.value })} placeholder="https://..." />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Category</label>
+                  <select className="input-field text-sm" value={editing.categoryId}
+                    onChange={e => setEditing({ ...editing, categoryId: e.target.value })}>
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Pricing</label>
+                  <select className="input-field text-sm" value={editing.pricingModel}
+                    onChange={e => setEditing({ ...editing, pricingModel: e.target.value })}>
+                    {PRICING_MODELS.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Listing Tier</label>
+                  <select className="input-field text-sm" value={editing.listingTier}
+                    onChange={e => setEditing({ ...editing, listingTier: e.target.value })}>
+                    {LISTING_TIERS.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Status</label>
+                  <select className="input-field text-sm" value={editing.status}
+                    onChange={e => setEditing({ ...editing, status: e.target.value })}>
+                    {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Avg Rating (1–5)</label>
+                <input type="number" className="input-field text-sm w-24" min={1} max={5} step={0.1}
+                  value={editing.avgRating}
+                  onChange={e => setEditing({ ...editing, avgRating: parseFloat(e.target.value) || 4.0 })} />
+              </div>
             </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-ame="text-sm text-gray-500 font-jakarta mt-1">This will soft-delete the tool. It won't appear on the site.</p>
-            <div className="flex gap-3 mt-5">
-              <button onClick={() => setDeleteConfirm(null)}
-                className="flex-1 px-4 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition-colors">
-                Cancel
-              </button>
-              <button onClick={() =
-      {/* Delete Confirmation */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl border border-gray-200 dark:border-gray-800 p-6 text-center">
-            <Trash2 className="w-10 h-10 text-red-500 mx-auto mb-3" />
-            <h3 className="font-sora font-bold text-lg text-navy dark:text-white">Delete Tool?</h3>
-            <p classN0 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 dark:border-gray-800">
+              <button onClick={() => { setModalOpen(false); setEditing(null); }}
+                className="px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
                 Cancel
               </button>
               <button onClick={handleSave} disabled={!editing.name || !editing.websiteUrl || isPending}
@@ -297,64 +318,26 @@ ame="text-sm text-gray-500 font-jakarta mt-1">This will soft-delete the tool. It
           </div>
         </div>
       )}
-field text-sm w-24" min={1} max={5} step={0.1}
-                  value={editing.avgRating}
-                  onChange={e => setEditing({ ...editing, avgRating: parseFloat(e.target.value) || 4.0 })} />
-              </div>
+
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl border border-gray-200 dark:border-gray-800 p-6 text-center">
+            <Trash2 className="w-10 h-10 text-red-500 mx-auto mb-3" />
+            <h3 className="font-sora font-bold text-lg text-navy dark:text-white">Delete Tool?</h3>
+            <p className="text-sm text-gray-500 font-jakarta mt-1">This will soft-delete the tool from the site.</p>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setDeleteConfirm(null)}
+                className="flex-1 px-4 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition-colors">
+                Cancel
+              </button>
+              <button onClick={() => handleDelete(deleteConfirm)}
+                className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-xl transition-colors">
+                Delete
+              </button>
             </div>
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 dark:border-gray-800">
-              <button onClick={() => { setModalOpen(false); setEditing(null); }}
-                className="px-4 py-2 text-sm font-medium text-gray-50       <label className="label-field">Status</label>
-                  <select className="input-field text-sm" value={editing.status}
-                    onChange={e => setEditing({ ...editing, status: e.target.value })}>
-                    {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="label-field">Avg Rating (1–5)</label>
-                <input type="number" className="input-          </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="label-field">Listing Tier</label>
-                  <select className="input-field text-sm" value={editing.listingTier}
-                    onChange={e => setEditing({ ...editing, listingTier: e.target.value })}>
-                    {LISTING_TIERS.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-                <div>
-            <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="label-field">Pricing</label>
-                  <select className="input-field text-sm" value={editing.pricingModel}
-                    onChange={e => setEditing({ ...editing, pricingModel: e.target.value })}>
-                    {PRICING_MODELS.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
-                </div>
-    ing.logoUrl || ''}
-                  onChange={e => setEditing({ ...editing, logoUrl: e.target.value })} placeholder="https://..." />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="label-field">Category</label>
-                  <select className="input-field text-sm" value={editing.categoryId}
-                    onChange={e => setEditing({ ...editing, categoryId: e.target.value })}>
-                    {categories.map(c =>ue })} />
-              </div>
-              <div>
-                <label className="label-field">Website URL *</label>
-                <input type="url" className="input-field text-sm" value={editing.websiteUrl}
-                  onChange={e => setEditing({ ...editing, websiteUrl: e.target.value })} placeholder="https://..." />
-              </div>
-              <div>
-                <label className="label-field">Logo URL</label>
-                <input type="url" className="input-field text-sm" value={editgline *</label>
-                <input type="text" className="input-field text-sm" value={editing.tagline}
-                  onChange={e => setEditing({ ...editing, tagline: e.target.value })} placeholder="One-line description" />
-              </div>
-              <div>
-                <label className="label-field">Description</label>
-                <textarea className="input-field text-sm" rows={3} value={editing.description}
-                  onChange={e => setEditing({ ...editing, description: e.target.val
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
