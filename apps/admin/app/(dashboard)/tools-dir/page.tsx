@@ -1,73 +1,133 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import {
-  Plus, Search, MoreHorizontal, Star, Zap, X,
-  Edit3, Trash2, CheckCircle, Clock, Save,
+  Plus, Search, Star, Zap, X, Edit3, Trash2, Save, Crown, ArrowUp,
 } from 'lucide-react';
+import {
+  getToolsAction, getCategoriesAction, createToolAction,
+  updateToolAction, deleteToolAction, setListingTierAction,
+} from './actions';
 
 interface Tool {
-  id: string; name: string; category: string;
-  pricing: string; rating: number; status: string; verdict: string;
-  website: string;
+  id: string; name: string; slug: string; tagline: string; description: string;
+  websiteUrl: string; logoUrl: string | null; categoryId: string; categoryName: string;
+  pricingModel: string; avgRating: number; listingTier: string; status: string;
 }
+interface Category { id: string; name: string; slug: string; }
 
-const initialTools: Tool[] = [
-  { id: '1', name: 'Cursor', category: 'Code Editor', pricing: 'Freemium', rating: 4.9, status: 'PUBLISHED', verdict: 'Best AI code editor for serious developers', website: 'https://cursor.sh' },
-  { id: '2', name: 'Perplexity AI', category: 'Search', pricing: 'Freemium', rating: 4.7, status: 'PUBLISHED', verdict: 'Replaces Google for research-heavy queries', website: 'https://perplexity.ai' },
-  { id: '3', name: 'Notion AI', category: 'Productivity', pricing: 'Paid Add-on', rating: 4.5, status: 'PUBLISHED', verdict: 'Great for teams already in Notion', website: 'https://notion.so' },
-  { id: '4', name: 'Midjourney', category: 'Image Gen', pricing: 'Paid', rating: 4.8, status: 'PUBLISHED', verdict: 'Still the gold standard for image generation', website: 'https://midjourney.com' },
-  { id: '5', name: 'Lovable', category: 'App Builder', pricing: 'Freemium', rating: 4.3, status: 'DRAFT', verdict: 'Promising but needs polish', website: 'https://lovable.dev' },
-];
+const PRICING_MODELS = ['FREE', 'FREEMIUM', 'PAID', 'SUBSCRIPTION', 'ENTERPRISE'];
+const LISTING_TIERS = ['FREE', 'PRIORITY', 'FEATURED'];
+const STATUSES = ['PENDING', 'APPROVED', 'REJECTED'];
 
-const categories = ['Code Editor', 'Search', 'Productivity', 'Image Gen', 'App Builder', 'Writing', 'Video', 'Data', 'DevOps'];
-const pricingOptions = ['Free', 'Freemium', 'Paid', 'Paid Add-on', 'Enterprise'];
+const emptyTool = {
+  id: '', name: '', slug: '', tagline: '', description: '', websiteUrl: '',
+  logoUrl: '', categoryId: '', categoryName: '', pricingModel: 'FREEMIUM',
+  avgRating: 4.5, listingTier: 'FREE', status: 'APPROVED',
+};
 
-const emptyTool: Tool = { id: '', name: '', category: 'Code Editor', pricing: 'Freemium', rating: 4.0, status: 'DRAFT', verdict: '', website: '' };
+const tierBadge: Record<string, string> = {
+  FEATURED: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+  PRIORITY: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
+  FREE: 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400',
+};
+
+const statusBadge: Record<string, string> = {
+  APPROVED: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+  PENDING: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
+  REJECTED: 'bg-red-100 dark:bg-red-900/30 text-red-500',
+};
 
 export default function ToolsDirPage() {
-  const [tools, setTools] = useState<Tool[]>(initialTools);
+  const [tools, setTools] = useState<Tool[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [search, setSearch] = useState('');
+  const [tierFilter, setTierFilter] = useState('ALL');
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Tool | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState('');
 
-  const filtered = tools.filter(t =>
-    t.name.toLowerCase().includes(search.toLowerCase()) ||
-    t.category.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    Promise.all([getToolsAction(), getCategoriesAction()]).then(([t, c]) => {
+      setTools(t as Tool[]);
+      setCategories(c as Category[]);
+      setLoading(false);
+    });
+  }, []);
 
-  const openCreate = () => { setEditing({ ...emptyTool, id: Date.now().toString() }); setModalOpen(true); };
-  const openEdit = (tool: Tool) => { setEditing({ ...tool }); setModalOpen(true); };
+  const filtered = tools.filter(t => {
+    const matchSearch = t.name.toLowerCase().includes(search.toLowerCase()) ||
+      t.tagline?.toLowerCase().includes(search.toLowerCase());
+    const matchTier = tierFilter === 'ALL' || t.listingTier === tierFilter;
+    return matchSearch && matchTier;
+  });
+
+  const openCreate = () => {
+    setEditing({ ...emptyTool, id: '__new__', categoryId: categories[0]?.id || '' });
+    setError('');
+    setModalOpen(true);
+  };
+  const openEdit = (tool: Tool) => { setEditing({ ...tool }); setError(''); setModalOpen(true); };
 
   const handleSave = () => {
     if (!editing) return;
-    const exists = tools.find(t => t.id === editing.id);
-    if (exists) {
-      setTools(tools.map(t => t.id === editing.id ? editing : t));
-    } else {
-      setTools([editing, ...tools]);
-    }
-    setModalOpen(false);
-    setEditing(null);
+    setError('');
+    startTransition(async () => {
+      // Auto-generate slug from name if new
+      const slug = editing.slug || editing.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const payload = { ...editing, slug };
+
+      let result;
+      if (editing.id === '__new__') {
+        result = await createToolAction(payload);
+      } else {
+        result = await updateToolAction(editing.id, payload);
+      }
+
+      if (!result.success) {
+        setError((result as any).error || 'Save failed');
+        return;
+      }
+
+      const updated = await getToolsAction();
+      setTools(updated as Tool[]);
+      setModalOpen(false);
+      setEditing(null);
+    });
   };
 
   const handleDelete = (id: string) => {
-    setTools(tools.filter(t => t.id !== id));
-    setDeleteConfirm(null);
+    startTransition(async () => {
+      await deleteToolAction(id);
+      setTools(tools.filter(t => t.id !== id));
+      setDeleteConfirm(null);
+    });
   };
 
-  const toggleStatus = (id: string) => {
-    setTools(tools.map(t => t.id === id ? { ...t, status: t.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED' } : t));
+  const handleTierChange = (id: string, tier: string) => {
+    startTransition(async () => {
+      await setListingTierAction(id, tier);
+      setTools(tools.map(t => t.id === id ? { ...t, listingTier: tier } : t));
+    });
+  };
+
+  const counts = {
+    FEATURED: tools.filter(t => t.listingTier === 'FEATURED').length,
+    PRIORITY: tools.filter(t => t.listingTier === 'PRIORITY').length,
+    FREE: tools.filter(t => t.listingTier === 'FREE').length,
   };
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-sora font-extrabold text-2xl text-navy dark:text-white">AI Tools</h1>
-          <p className="text-gray-400 dark:text-gray-500 text-sm font-jakarta mt-1">
-            Manage the Editor&apos;s Picks shown on <span className="text-brand">/tools</span>
+          <h1 className="font-sora font-extrabold text-2xl text-navy dark:text-white">AI Tools Directory</h1>
+          <p className="text-gray-400 text-sm font-jakarta mt-1">
+            {tools.length} tools in DB · {counts.FEATURED} Featured · {counts.PRIORITY} Priority
           </p>
         </div>
         <button onClick={openCreate} className="btn-brand text-sm flex items-center gap-2">
@@ -75,159 +135,137 @@ export default function ToolsDirPage() {
         </button>
       </div>
 
+      {/* Tier summary cards */}
+      <div className="grid grid-cols-3 gap-4">
+        {(['FEATURED', 'PRIORITY', 'FREE'] as const).map(tier => (
+          <button key={tier} onClick={() => setTierFilter(tierFilter === tier ? 'ALL' : tier)}
+            className={`p-4 rounded-xl border text-left transition-all ${tierFilter === tier ? 'border-brand bg-brand/5' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900'}`}>
+            <div className="flex items-center gap-2 mb-1">
+              {tier === 'FEATURED' && <Crown className="w-4 h-4 text-yellow-500" />}
+              {tier === 'PRIORITY' && <ArrowUp className="w-4 h-4 text-blue-500" />}
+              {tier === 'FREE' && <Zap className="w-4 h-4 text-gray-400" />}
+              <span className="font-sora font-bold text-sm text-navy dark:text-white">{tier}</span>
+            </div>
+            <span className="text-2xl font-extrabold text-brand">{counts[tier]}</span>
+            <span className="text-xs text-gray-400 font-jakarta ml-1">tools</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <input type="text" placeholder="Search tools..." value={search}
-          onChange={(e) => setSearch(e.target.value)} className="input-field pl-10" />
+          onChange={e => setSearch(e.target.value)} className="input-field pl-10" />
       </div>
 
+      {/* Table */}
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50 dark:bg-gray-800/50 text-left">
-              <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Tool</th>
-              <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden md:table-cell">Category</th>
-              <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden md:table-cell">Rating</th>
-              <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden sm:table-cell">Pricing</th>
-              <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Status</th>
-              <th className="px-6 py-3 w-24"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((tool) => (
-              <tr key={tool.id} className="border-t border-gray-50 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-brand/10 flex items-center justify-center">
-                      <Zap className="w-4 h-4 text-brand" />
-                    </div>
-                    <div>
-                      <h4 className="font-sora font-semibold text-sm text-navy dark:text-white">{tool.name}</h4>
-                      <p className="text-xs text-gray-400 font-jakarta mt-0.5 line-clamp-1">{tool.verdict}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 hidden md:table-cell">
-                  <span className="badge-category text-[10px]">{tool.category}</span>
-                </td>
-                <td className="px-6 py-4 hidden md:table-cell">
-                  <div className="flex items-center gap-1">
-                    <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
-                    <span className="text-sm font-bold text-navy dark:text-white">{tool.rating}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 hidden sm:table-cell">
-                  <span className="text-sm text-gray-600 dark:text-gray-400 font-jakarta">{tool.pricing}</span>
-                </td>
-                <td className="px-6 py-4">
-                  <button onClick={() => toggleStatus(tool.id)} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold cursor-pointer transition-colors ${tool.status === 'PUBLISHED'
-                      ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
-                    }`}>
-                    {tool.status === 'PUBLISHED' ? <CheckCircle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
-                    {tool.status}
-                  </button>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => openEdit(tool)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                      <Edit3 className="w-3.5 h-3.5 text-gray-400" />
-                    </button>
-                    <button onClick={() => setDeleteConfirm(tool.id)} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                      <Trash2 className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" />
-                    </button>
-                  </div>
-                </td>
+        {loading ? (
+          <div className="py-16 text-center text-gray-400 font-jakarta text-sm">Loading tools from database...</div>
+        ) : (
+          <table className="w-full">
+            <thead>
+              <tr className="bg-gray-50 dark:bg-gray-800/50 text-left">
+                <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 uppercase tracking-wide">Tool</th>
+                <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 uppercase tracking-wide hidden md:table-cell">Category</th>
+                <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 uppercase tracking-wide hidden md:table-cell">Rating</th>
+                <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 uppercase tracking-wide">Tier</th>
+                <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 uppercase tracking-wide hidden sm:table-cell">Status</th>
+                <th className="px-6 py-3 w-24"></th>
               </tr>
-            ))}
-            {filtered.length === 0 && (
-              <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400 font-jakarta text-sm">No tools found</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.map(tool => (
+                <tr key={tool.id} className="border-t border-gray-50 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      {tool.logoUrl ? (
+                        <img src={tool.logoUrl} alt={tool.name} className="w-9 h-9 rounded-xl object-cover" />
+                      ) : (
+                        <div className="w-9 h-9 rounded-xl bg-brand/10 flex items-center justify-center">
+                          <Zap className="w-4 h-4 text-brand" />
+                        </div>
+                      )}
+                      <div>
+                        <h4 className="font-sora font-semibold text-sm text-navy dark:text-white">{tool.name}</h4>
+                        <p className="text-xs text-gray-400 font-jakarta mt-0.5 line-clamp-1 max-w-xs">{tool.tagline}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 hidden md:table-cell">
+                    <span className="text-xs text-gray-500 font-jakarta">{tool.categoryName || '—'}</span>
+                  </td>
+                  <td className="px-6 py-4 hidden md:table-cell">
+                    <div className="flex items-center gap-1">
+                      <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
+                      <span className="text-sm font-bold text-navy dark:text-white">{tool.avgRating}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <select
+                      value={tool.listingTier}
+                      onChange={e => handleTierChange(tool.id, e.target.value)}
+                      disabled={isPending}
+                      className={`text-[11px] font-semibold px-2 py-1 rounded-full border-0 cursor-pointer ${tierBadge[tool.listingTier]}`}
+                    >
+                      {LISTING_TIERS.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-6 py-4 hidden sm:table-cell">
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold ${statusBadge[tool.status] || ''}`}>
+                      {tool.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => openEdit(tool)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                        <Edit3 className="w-3.5 h-3.5 text-gray-400" />
+                      </button>
+                      <button onClick={() => setDeleteConfirm(tool.id)} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                        <Trash2 className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {filtered.length === 0 && !loading && (
+                <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400 font-jakarta text-sm">No tools found</td></tr>
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
 
-      {/* ─── Create/Edit Modal ─── */}
+      {/* Create/Edit Modal */}
       {modalOpen && editing && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-lg shadow-2xl border border-gray-200 dark:border-gray-800">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
               <h2 className="font-sora font-bold text-lg text-navy dark:text-white">
-                {tools.find(t => t.id === editing.id) ? 'Edit Tool' : 'Add New Tool'}
+                {editing.id === '__new__' ? 'Add New Tool' : 'Edit Tool'}
               </h2>
               <button onClick={() => { setModalOpen(false); setEditing(null); }} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
                 <X className="w-4 h-4 text-gray-400" />
               </button>
             </div>
-            <div className="px-6 py-5 space-y-4 max-h-[60vh] overflow-y-auto">
+            <div className="px-6 py-5 space-y-4 max-h-[65vh] overflow-y-auto">
+              {error && <p className="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg">{error}</p>}
               <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Name *</label>
+                <label className="label-field">Name *</label>
                 <input type="text" className="input-field text-sm" value={editing.name}
-                  onChange={(e) => setEditing({ ...editing, name: e.target.value })} placeholder="e.g. Cursor" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Category</label>
-                  <select className="input-field text-sm" value={editing.category}
-                    onChange={(e) => setEditing({ ...editing, category: e.target.value })}>
-                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Pricing</label>
-                  <select className="input-field text-sm" value={editing.pricing}
-                    onChange={(e) => setEditing({ ...editing, pricing: e.target.value })}>
-                    {pricingOptions.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
-                </div>
+                  onChange={e => setEditing({ ...editing, name: e.target.value })} placeholder="e.g. Krutrim AI" />
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Rating (1-5)</label>
-                <input type="number" className="input-field text-sm w-24" min={1} max={5} step={0.1} value={editing.rating}
-                  onChange={(e) => setEditing({ ...editing, rating: parseFloat(e.target.value) || 0 })} />
+                <label className="label-field">Slug (auto-generated if blank)</label>
+                <input type="text" className="input-field text-sm" value={editing.slug}
+                  onChange={e => setEditing({ ...editing, slug: e.target.value })} placeholder="e.g. krutrim-ai" />
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Website URL</label>
-                <input type="url" className="input-field text-sm" value={editing.website}
-                  onChange={(e) => setEditing({ ...editing, website: e.target.value })} placeholder="https://..." />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Editorial Verdict *</label>
-                <textarea className="input-field text-sm" rows={2} value={editing.verdict}
-                  onChange={(e) => setEditing({ ...editing, verdict: e.target.value })} placeholder="One-line editorial opinion..." />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Status</label>
-                <select className="input-field text-sm" value={editing.status}
-                  onChange={(e) => setEditing({ ...editing, status: e.target.value })}>
-                  <option value="DRAFT">Draft</option>
-                  <option value="PUBLISHED">Published</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 dark:border-gray-800">
-              <button onClick={() => { setModalOpen(false); setEditing(null); }} className="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
-                Cancel
+                <label className="label-field">Ta> handleDelete(deleteConfirm)}
+                className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-xl transition-colors">
+                Delete
               </button>
-              <button onClick={handleSave} disabled={!editing.name || !editing.verdict}
-                className="btn-brand text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                <Save className="w-4 h-4" /> Save Tool
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── Delete Confirmation ─── */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl border border-gray-200 dark:border-gray-800 p-6 text-center">
-            <Trash2 className="w-10 h-10 text-red-500 mx-auto mb-3" />
-            <h3 className="font-sora font-bold text-lg text-navy dark:text-white">Delete Tool?</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 font-jakarta mt-1">This action cannot be undone.</p>
-            <div className="flex gap-3 mt-5">
-              <button onClick={() => setDeleteConfirm(null)} className="flex-1 px-4 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition-colors">Cancel</button>
-              <button onClick={() => handleDelete(deleteConfirm)} className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-xl transition-colors">Delete</button>
             </div>
           </div>
         </div>
@@ -235,3 +273,88 @@ export default function ToolsDirPage() {
     </div>
   );
 }
+ame="text-sm text-gray-500 font-jakarta mt-1">This will soft-delete the tool. It won't appear on the site.</p>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setDeleteConfirm(null)}
+                className="flex-1 px-4 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition-colors">
+                Cancel
+              </button>
+              <button onClick={() =
+      {/* Delete Confirmation */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl border border-gray-200 dark:border-gray-800 p-6 text-center">
+            <Trash2 className="w-10 h-10 text-red-500 mx-auto mb-3" />
+            <h3 className="font-sora font-bold text-lg text-navy dark:text-white">Delete Tool?</h3>
+            <p classN0 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                Cancel
+              </button>
+              <button onClick={handleSave} disabled={!editing.name || !editing.websiteUrl || isPending}
+                className="btn-brand text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                <Save className="w-4 h-4" /> {isPending ? 'Saving...' : 'Save Tool'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+field text-sm w-24" min={1} max={5} step={0.1}
+                  value={editing.avgRating}
+                  onChange={e => setEditing({ ...editing, avgRating: parseFloat(e.target.value) || 4.0 })} />
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 dark:border-gray-800">
+              <button onClick={() => { setModalOpen(false); setEditing(null); }}
+                className="px-4 py-2 text-sm font-medium text-gray-50       <label className="label-field">Status</label>
+                  <select className="input-field text-sm" value={editing.status}
+                    onChange={e => setEditing({ ...editing, status: e.target.value })}>
+                    {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="label-field">Avg Rating (1–5)</label>
+                <input type="number" className="input-          </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label-field">Listing Tier</label>
+                  <select className="input-field text-sm" value={editing.listingTier}
+                    onChange={e => setEditing({ ...editing, listingTier: e.target.value })}>
+                    {LISTING_TIERS.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div>
+            <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="label-field">Pricing</label>
+                  <select className="input-field text-sm" value={editing.pricingModel}
+                    onChange={e => setEditing({ ...editing, pricingModel: e.target.value })}>
+                    {PRICING_MODELS.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+    ing.logoUrl || ''}
+                  onChange={e => setEditing({ ...editing, logoUrl: e.target.value })} placeholder="https://..." />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label-field">Category</label>
+                  <select className="input-field text-sm" value={editing.categoryId}
+                    onChange={e => setEditing({ ...editing, categoryId: e.target.value })}>
+                    {categories.map(c =>ue })} />
+              </div>
+              <div>
+                <label className="label-field">Website URL *</label>
+                <input type="url" className="input-field text-sm" value={editing.websiteUrl}
+                  onChange={e => setEditing({ ...editing, websiteUrl: e.target.value })} placeholder="https://..." />
+              </div>
+              <div>
+                <label className="label-field">Logo URL</label>
+                <input type="url" className="input-field text-sm" value={editgline *</label>
+                <input type="text" className="input-field text-sm" value={editing.tagline}
+                  onChange={e => setEditing({ ...editing, tagline: e.target.value })} placeholder="One-line description" />
+              </div>
+              <div>
+                <label className="label-field">Description</label>
+                <textarea className="input-field text-sm" rows={3} value={editing.description}
+                  onChange={e => setEditing({ ...editing, description: e.target.val
