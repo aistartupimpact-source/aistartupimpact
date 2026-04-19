@@ -354,7 +354,7 @@ export default function SubmitToolWizard() {
                     <h3 className="font-sora font-semibold text-lg text-brand">Priority</h3>
                     <p className="text-xs text-gray-500 font-jakarta mt-1 h-8">Accelerate your growth and traffic.</p>
                     <div className="mt-4 mb-6 flex items-baseline gap-1">
-                      <span className="font-sora font-extrabold text-3xl text-navy dark:text-white">₹4,999</span>
+                      <span className="font-sora font-extrabold text-3xl text-navy dark:text-white">₹299</span>
                       <span className="text-gray-400 text-xs font-jakarta lowercase">/once</span>
                     </div>
                     <ul className="flex-1 space-y-3 font-jakarta text-[13px] text-gray-700 dark:text-gray-300 mb-6 border-t border-brand/10 pt-6">
@@ -372,7 +372,7 @@ export default function SubmitToolWizard() {
                     <h3 className="font-sora font-semibold text-lg text-indigo-600 dark:text-indigo-400">Featured Partner</h3>
                     <p className="text-xs text-gray-500 font-jakarta mt-1 h-8">Maximum ecosystem dominance.</p>
                     <div className="mt-4 mb-6 flex items-baseline gap-1">
-                      <span className="font-sora font-extrabold text-3xl text-navy dark:text-white">₹14,999</span>
+                      <span className="font-sora font-extrabold text-3xl text-navy dark:text-white">₹999</span>
                       <span className="text-gray-400 text-xs font-jakarta lowercase">/once</span>
                     </div>
                     <ul className="flex-1 space-y-3 font-jakarta text-[13px] text-gray-700 dark:text-gray-300 mb-6 border-t border-gray-200 dark:border-gray-800 pt-6">

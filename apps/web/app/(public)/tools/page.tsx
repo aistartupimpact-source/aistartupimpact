@@ -1,18 +1,20 @@
 import Link from 'next/link';
 import { Metadata } from 'next';
-import { Star, Zap, ArrowRight, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { generateItemListSchema, generateCollectionPageSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import ToolsListWithComparison from '@/components/ToolsListWithComparison';
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Editor's Picks: Best AI Tools — Reviewed & Rated",
   description:
-    "12 AI tools our editorial team actually uses and recommends. Honest verdicts, ratings, and pricing — no pay-to-play, no affiliate bias.",
+    "24 AI tools our editorial team actually uses and recommends. Honest verdicts, ratings, and pricing — no pay-to-play, no affiliate bias.",
   alternates: { canonical: 'https://aistartupimpact.com/tools' },
   openGraph: {
     title: "Editor's Picks: Best AI Tools — Reviewed & Rated",
     description:
-      "12 AI tools our editorial team actually uses and recommends. Honest verdicts, ratings, and pricing.",
+      "24 AI tools our editorial team actually uses and recommends. Honest verdicts, ratings, and pricing.",
     type: 'website',
     url: 'https://aistartupimpact.com/tools',
     siteName: 'AIStartupImpact',

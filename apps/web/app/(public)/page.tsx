@@ -571,12 +571,13 @@ export default async function HomePage() {
                       <div className="bg-gray-50 dark:bg-gray-800 p-5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 h-full flex flex-col">
                         {/* Top row: icon + rating */}
                         <div className="flex items-start justify-between mb-3">
-                          <div className="relative w-10 h-10 rounded-xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center shrink-0 overflow-hidden">
-                            {tool.logoUrl ? (
-                              <Image src={tool.logoUrl} alt={tool.name} fill sizes="40px" className="object-cover" />
-                            ) : (
-                              <Image src={`https://ui-avatars.com/api/?name=${encodeURIComponent(tool.name)}&background=random&color=fff&size=150`} alt={tool.name} fill sizes="40px" className="object-cover" />
-                            )}
+                          <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-700 border border-gray-100 dark:border-gray-600 flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={tool.logoUrl || `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${tool.slug}.com&size=128`}
+                              alt={tool.name}
+                              className="w-8 h-8 object-contain"
+                            />
                           </div>
                           {tool.avgRating && (
                             <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/30 px-2 py-0.5 rounded-full">
