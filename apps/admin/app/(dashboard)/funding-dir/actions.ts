@@ -110,3 +110,115 @@ export async function toggleFundingDigestStatusAction(id: string) {
     return { success: false, error: 'Failed to toggle status' };
   }
 }
+
+// ── Funding Rounds (individual deals) ────────────────────────────────────────
+
+export async function getFundingRoundsDirectAction() {
+  try {
+    const rows = await sql`
+      SELECT
+        fr.id, fr."roundType", fr."amountUsd", fr."amountInr",
+        fr."announcedAt"::text AS "announcedAt", fr."leadInvestors", fr."allInvestors",
+        fr."valuation", fr."sourceUrl", fr."createdAt",
+        s.name AS "startupName", s.id AS "startupId"
+      FROM "FundingRound" fr
+      JOIN "Startup" s ON s.id = fr."startupId"
+      WHERE s."deletedAt" IS NULL
+      ORDER BY fr."announcedAt" DESC
+    `;
+    return rows;
+  } catch (error) {
+    console.error('getFundingRoundsDirectAction error:', error);
+    return [];
+  }
+}
+
+export async function createFundingRoundDirectAction(data: {
+  startupName: string;
+  roundType: string;
+  amountUsd?: string;
+  announcedAt: string;
+  leadInvestors: string[];
+  allInvestors?: string[];
+  valuation?: string;
+  sourceUrl?: string;
+  headquartersCity?: string;
+  sector?: string;
+}) {
+  try {
+    // Find or create startup by name
+    let startupId: string;
+    const existing = await sql`SELECT id FROM "Startup" WHERE name = ${data.startupName} AND "deletedAt" IS NULL LIMIT 1`;
+    if (existing.length > 0) {
+      startupId = (existing[0] as any).id;
+    } else {
+      const slug = data.startupName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const created = await sql`
+        INSERT INTO "Startup" (id, name, slug, tagline, description, stage, "isIndian", "isFeatured", "createdAt", "updatedAt")
+        VALUES (gen_random_uuid(), ${data.startupName}, ${slug}, ${data.startupName}, ${data.startupName}, 'SEED'::"StartupStage", true, false, NOW(), NOW())
+        RETURNING id
+      `;
+      startupId = (created[0] as any).id;
+    }
+
+    await sql`
+      INSERT INTO "FundingRound" (
+        id, "startupId", "roundType", "amountUsd", "amountInr",
+        "announcedAt", "leadInvestors", "allInvestors", valuation, "sourceUrl", "createdAt"
+      ) VALUES (
+        gen_random_uuid(), ${startupId}, ${data.roundType},
+        ${data.amountUsd ? parseInt(data.amountUsd) : null},
+        ${data.amountUsd ? BigInt(Math.round(parseInt(data.amountUsd) * 83)) : null},
+        ${data.announcedAt}::timestamp,
+        ${data.leadInvestors}, ${data.allInvestors || []},
+        ${data.valuation ? parseInt(data.valuation) : null},
+        ${data.sourceUrl || null}, NOW()
+      )
+    `;
+    revalidatePath('/funding-dir');
+    return { success: true };
+  } catch (error: any) {
+    console.error('createFundingRoundDirectAction error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateFundingRoundDirectAction(id: string, data: {
+  startupName: string;
+  roundType: string;
+  amountUsd?: string;
+  announcedAt: string;
+  leadInvestors: string[];
+  valuation?: string;
+  sourceUrl?: string;
+  headquartersCity?: string;
+  sector?: string;
+}) {
+  try {
+    await sql`
+      UPDATE "FundingRound" SET
+        "roundType" = ${data.roundType},
+        "amountUsd" = ${data.amountUsd ? parseInt(data.amountUsd) : null},
+        "announcedAt" = ${data.announcedAt}::timestamp,
+        "leadInvestors" = ${data.leadInvestors},
+        "valuation" = ${data.valuation ? parseInt(data.valuation) : null},
+        "sourceUrl" = ${data.sourceUrl || null}
+      WHERE id = ${id}
+    `;
+    revalidatePath('/funding-dir');
+    return { success: true };
+  } catch (error: any) {
+    console.error('updateFundingRoundDirectAction error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteFundingRoundDirectAction(id: string) {
+  try {
+    await sql`DELETE FROM "FundingRound" WHERE id = ${id}`;
+    revalidatePath('/funding-dir');
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

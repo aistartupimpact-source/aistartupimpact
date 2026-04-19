@@ -423,10 +423,12 @@ export async function getAllFundingRoundsDirect() {
   try {
     const rows = await sql`
       SELECT 
-        fr.id, fr."roundType", fr."amountInr", fr."announcedAt"::text AS "announcedAt", fr."leadInvestors",
+        fr.id, fr."roundType", fr."amountInr", fr."amountUsd",
+        fr."announcedAt"::text AS "announcedAt", fr."leadInvestors", fr."allInvestors",
         s.name AS "startupName", s.slug AS "startupSlug", s."headquartersCity"
       FROM "FundingRound" fr
       JOIN "Startup" s ON s.id = fr."startupId"
+      WHERE s."deletedAt" IS NULL
       ORDER BY fr."announcedAt" DESC
     `;
     return rows;

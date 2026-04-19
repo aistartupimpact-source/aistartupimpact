@@ -7,9 +7,11 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 interface FundingRound {
   id: string;
   roundType: string;
-  amountInr: number;
+  amountInr: number | null;
+  amountUsd: number | null;
   announcedAt: string;
   leadInvestors: string[];
+  allInvestors: string[];
   startupName: string;
   startupSlug: string;
   headquartersCity: string | null;
@@ -20,20 +22,35 @@ export default function FundingDashboard({ data }: { data: FundingRound[] }) {
   const [filterYear, setFilterYear] = useState('All');
   const [filterInvestor, setFilterInvestor] = useState('All');
 
-  const getMockSector = (slug: string) => {
-    if (slug.includes('health') || slug.includes('med')) return 'Healthcare';
-    if (slug.includes('fin') || slug.includes('pay')) return 'FinTech';
-    if (slug.includes('ed') || slug.includes('learn')) return 'EdTech';
-    return 'AI Enterprise';
+  // Format amount — prefer USD (more accurate for 2026 rounds), fallback to INR
+  const formatAmount = (row: FundingRound) => {
+    if (row.amountUsd && Number(row.amountUsd) > 0) {
+      const usd = Number(row.amountUsd) / 100;
+      if (usd >= 1e9) return `$${(usd / 1e9).toFixed(1)}B`;
+      if (usd >= 1e6) return `$${(usd / 1e6).toFixed(0)}M`;
+      return `$${(usd / 1e3).toFixed(0)}K`;
+    }
+    if (row.amountInr && Number(row.amountInr) > 0) {
+      return `₹${(Number(row.amountInr) / 10000000).toFixed(1)}Cr`;
+    }
+    return 'Undisclosed';
   };
 
-  // Compute Total Capital Raised YTD
-  const totalRaisedPaise = useMemo(() => {
-    return data.reduce((acc, curr) => acc + Number(curr.amountInr || 0), 0);
-  }, [data]);
-  const totalRaisedCr = (totalRaisedPaise / 10000000).toFixed(0);
+  // For sorting/highlighting — use USD cents or INR paise
+  const getAmountForSort = (row: FundingRound) => {
+    if (row.amountUsd) return Number(row.amountUsd) * 83; // rough paise equiv
+    return Number(row.amountInr || 0);
+  };
 
-  // Filter Logic
+  // Compute Total Capital Raised
+  const totalRaisedUsd = useMemo(() => {
+    return data.reduce((acc, curr) => acc + (Number(curr.amountUsd || 0) / 100), 0);
+  }, [data]);
+
+  const totalDisplay = totalRaisedUsd >= 1e9
+    ? `$${(totalRaisedUsd / 1e9).toFixed(1)}B`
+    : `$${(totalRaisedUsd / 1e6).toFixed(0)}M`;
+
   const filteredData = useMemo(() => {
     const matched = data.filter(d => {
       const matchStage = filterStage === 'All' || d.roundType.toLowerCase().includes(filterStage.toLowerCase());
@@ -95,7 +112,7 @@ export default function FundingDashboard({ data }: { data: FundingRound[] }) {
             <TrendingUp className="w-4 h-4 text-brand" /> Total Ecosystem Capital
           </div>
           <div className="font-sora font-extrabold text-3xl text-navy dark:text-white">
-            ₹{totalRaisedCr}Cr+
+            {totalDisplay}+
           </div>
         </div>
         <div className="card p-6">
@@ -191,6 +208,7 @@ export default function FundingDashboard({ data }: { data: FundingRound[] }) {
               </select>
               <select className="input-field py-2.5 px-5 shadow-sm text-base min-w-[150px] cursor-pointer" value={filterYear} onChange={(e) => setFilterYear(e.target.value)}>
                 <option value="All">All Years</option>
+                <option value="2026">2026</option>
                 <option value="2025">2025</option>
                 <option value="2024">2024</option>
               </select>
@@ -212,23 +230,24 @@ export default function FundingDashboard({ data }: { data: FundingRound[] }) {
                 <th className="px-6 py-4">Startup</th>
                 <th className="px-6 py-4">Round</th>
                 <th className="px-6 py-4">Amount</th>
-                <th className="px-6 py-4 hidden sm:table-cell">Investors</th>
+                <th className="px-6 py-4 hidden sm:table-cell">Lead Investors</th>
+                <th className="px-6 py-4 hidden lg:table-cell">Other Investors</th>
                 <th className="px-6 py-4 hidden md:table-cell">Date</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {filteredData.map((row) => (
-                <tr key={row.id} className={`transition-colors ${row.amountInr > 1000000000 ? 'bg-amber-50/30 hover:bg-amber-50/60 dark:bg-amber-900/5 dark:hover:bg-amber-900/10' : 'hover:bg-gray-50/50 dark:hover:bg-gray-800/20'}`}>
+                <tr key={row.id} className={`transition-colors ${getAmountForSort(row) > 1000000000 ? 'bg-amber-50/30 hover:bg-amber-50/60 dark:bg-amber-900/5 dark:hover:bg-amber-900/10' : 'hover:bg-gray-50/50 dark:hover:bg-gray-800/20'}`}>
                   <td className="px-6 py-4">
                     <a href={`/startups/${row.startupSlug}`} className="font-sora font-bold text-sm text-navy dark:text-white hover:text-brand transition-colors block">
                       {row.startupName}
-                      {row.amountInr > 1000000000 && (
+                      {getAmountForSort(row) > 1000000000 && (
                         <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 align-middle">FEATURED</span>
                       )}
                     </a>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full inline-block font-semibold">
-                        {getMockSector(row.startupSlug)}
+                        AI Startup
                       </span>
                       {row.headquartersCity && (
                         <span className="text-xs text-gray-400 flex items-center gap-0.5">
@@ -241,15 +260,9 @@ export default function FundingDashboard({ data }: { data: FundingRound[] }) {
                     <span className="text-[10px] font-bold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 py-1 rounded-full uppercase">{row.roundType}</span>
                   </td>
                   <td className="px-6 py-4">
-                    {row.amountInr ? (
-                      <span className="font-sora font-extrabold text-sm text-brand block">
-                        ₹{(Number(row.amountInr) / 10000000).toFixed(1)}Cr
-                      </span>
-                    ) : (
-                      <span className="font-sora text-sm text-gray-500 dark:text-gray-400 block whitespace-nowrap">
-                        {row.roundType.toLowerCase().includes('seed') ? '~₹3-10 Cr (est.)' : row.roundType.toLowerCase().includes('series a') ? '~₹20-50 Cr (est.)' : 'Undisclosed'}
-                      </span>
-                    )}
+                    <span className="font-sora font-extrabold text-sm text-brand block">
+                      {formatAmount(row)}
+                    </span>
                   </td>
                   <td className="px-6 py-4 hidden sm:table-cell text-xs text-gray-500">
                     <div className="max-w-[150px] flex flex-wrap gap-1">
@@ -261,6 +274,15 @@ export default function FundingDashboard({ data }: { data: FundingRound[] }) {
                           {i < row.leadInvestors.length - 1 && <span className="opacity-50">,</span>}
                         </React.Fragment>
                       )) : '-'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 hidden lg:table-cell text-xs text-gray-400">
+                    <div className="max-w-[160px]">
+                      {row.allInvestors && row.allInvestors.length > 0
+                        ? row.allInvestors
+                            .filter(inv => !row.leadInvestors.includes(inv))
+                            .join(', ') || '—'
+                        : '—'}
                     </div>
                   </td>
                   <td className="px-6 py-4 hidden md:table-cell text-xs text-gray-500 whitespace-nowrap">
