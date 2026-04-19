@@ -247,9 +247,14 @@ export default function ToolsDirPage() {
                   onChange={e => setEditing({ ...editing, slug: e.target.value })} placeholder="e.g. krutrim-ai" />
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Tagline *</label>
-                <input type="text" className="input-field text-sm" value={editing.tagline}
+                <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">
+                  Tagline * <span className="text-gray-400 normal-case">(max 60 chars)</span>
+                </label>
+                <input type="text" className="input-field text-sm" value={editing.tagline} maxLength={60}
                   onChange={e => setEditing({ ...editing, tagline: e.target.value })} placeholder="One-line description" />
+                <p className={`text-xs mt-1 text-right font-jakarta ${editing.tagline.length > 55 ? 'text-amber-500' : 'text-gray-400'}`}>
+                  {editing.tagline.length}/60
+                </p>
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Description</label>

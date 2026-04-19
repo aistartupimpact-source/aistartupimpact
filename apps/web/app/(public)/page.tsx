@@ -98,21 +98,17 @@ export default async function HomePage() {
   const founderSpotlights = (fetchedSpotlights && fetchedSpotlights.length > 0) ? fetchedSpotlights : defaultFounderSpotlights;
   const toolPicks = fetchedPriorityTools?.length > 0 ? fetchedPriorityTools : defaultToolPicks;
   const fundingDigests = fetchedFundingDigests?.length > 0 ? fetchedFundingDigests : defaultFundingDigests;
-  const premiumStartups = (fetchedFeaturedStartup && fetchedFeaturedStartup.length > 0) ? fetchedFeaturedStartup : defaultPremiumStartup;
 
-  // Merge premium startups and featured tools into one slider
-  const featuredPartnersList = [
-    ...(fetchedFeaturedTools?.length > 0 ? fetchedFeaturedTools.map((t: any) => ({
-      name: t.name,
-      tagline: t.tagline,
-      description: t.description,
-      ctaUrl: `/tools/${t.slug}`,
-      logoUrl: t.logoUrl,
-      statValue: t.avgRating ? `${t.avgRating}` : null,
-      statLabel: t.avgRating ? 'Rating' : null,
-    })) : []),
-    ...premiumStartups
-  ];
+  // Featured partner rotator — only FEATURED tier AiTools, no startup merging
+  const featuredPartnersList = fetchedFeaturedTools?.length > 0
+    ? fetchedFeaturedTools.map((t: any) => ({
+        name: t.name,
+        tagline: t.tagline,
+        description: t.description,
+        ctaUrl: `/tools/${t.slug}`,
+        logoUrl: t.logoUrl,
+      }))
+    : [];
   const indiaAI = fetchedIndiaAI?.length > 0 ? fetchedIndiaAI : defaultIndiaAI;
   const activeSponsor = fetchedSponsor || defaultSponsor;
   // Hero: scheduled slots take priority, fallback to heroAd or featured article as a single slide

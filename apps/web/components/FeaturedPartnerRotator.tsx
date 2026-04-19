@@ -105,12 +105,13 @@ function FeaturedPartnerRotator({ partners }: { partners: Partner[] }) {
           style={{ opacity: animating ? 0 : 1 }}
         >
           {/* Logo + Name + Tagline */}
-          <div className="flex items-center gap-4 shrink-0">
+          {/* Logo + Name + Tagline — fixed width so layout is consistent across all partners */}
+          <div className="flex items-center gap-4 shrink-0 w-full sm:w-72">
             <div className="relative shrink-0">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-brand/30 to-brand/10 border border-brand/20 flex items-center justify-center overflow-hidden shadow-lg shadow-brand/10">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white border border-white/10 flex items-center justify-center overflow-hidden shadow-lg shadow-brand/10">
                 {p.logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.logoUrl} alt={p.name} className="w-full h-full object-contain p-1.5" />
+                  <img src={p.logoUrl} alt={p.name} className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />
                 ) : (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=random&color=fff&size=150`} alt={p.name} className="w-full h-full object-cover" />
@@ -120,20 +121,23 @@ function FeaturedPartnerRotator({ partners }: { partners: Partner[] }) {
                 <span className="text-[8px] text-white font-bold">✓</span>
               </div>
             </div>
-            <div>
-              <h3 className="font-sora font-extrabold text-lg sm:text-2xl text-white leading-tight">
+            <div className="min-w-0">
+              <h3 className="font-sora font-extrabold text-lg sm:text-xl text-white leading-tight">
                 {p.name}
               </h3>
-              <p className="text-brand text-xs sm:text-sm font-jakarta font-medium mt-0.5">{p.tagline}</p>
+              {/* Tagline: single line, consistent across all tools */}
+              <p className="text-brand text-xs sm:text-sm font-jakarta font-medium mt-1 leading-snug">
+                {p.tagline}
+              </p>
             </div>
           </div>
 
           {/* Divider */}
           <div className="hidden sm:block w-px h-20 bg-white/10 shrink-0" />
 
-          {/* Description */}
-          <div className="flex-1 min-w-0">
-            <p className="text-gray-300 font-jakarta text-sm sm:text-base leading-relaxed line-clamp-3 sm:line-clamp-4">
+          {/* Description — exactly 3 lines, vertically centered */}
+          <div className="flex-1 min-w-0 flex items-center">
+            <p className="text-gray-300 font-jakarta text-sm sm:text-base leading-relaxed line-clamp-3">
               {p.description}
             </p>
           </div>
@@ -141,18 +145,8 @@ function FeaturedPartnerRotator({ partners }: { partners: Partner[] }) {
           {/* Divider */}
           <div className="hidden sm:block w-px h-20 bg-white/10 shrink-0" />
 
-          {/* Stat + CTA */}
-          <div className="flex items-center justify-between sm:justify-start sm:flex-col sm:items-end gap-4 shrink-0 border-t border-white/10 sm:border-0 pt-4 sm:pt-0">
-            {p.statValue && (
-              <div>
-                <div className="font-sora font-extrabold text-3xl sm:text-5xl text-brand leading-none">
-                  {p.statValue}
-                </div>
-                <div className="text-gray-400 text-[10px] sm:text-[11px] font-jakarta mt-1 uppercase tracking-wider">
-                  {p.statLabel || ''}
-                </div>
-              </div>
-            )}
+          {/* CTA */}
+          <div className="flex items-center justify-end shrink-0 border-t border-white/10 sm:border-0 pt-4 sm:pt-0">
             <Link
               href={p.ctaUrl}
               target="_blank"

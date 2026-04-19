@@ -107,7 +107,7 @@ export async function getAiToolBySlugDirect(slug: string) {
 export async function getFeaturedToolsDirect(limit = 4) {
   try {
     const rows: any[] = await sql`
-      SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", c.name AS "categoryName"
+      SELECT t.id, t.name, t.slug, t.tagline, t.description, t."logoUrl", t."websiteUrl", t."avgRating", c.name AS "categoryName"
       FROM "AiTool" t
       LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
       WHERE t."listingTier" = 'FEATURED' AND t.status = 'APPROVED' AND t."deletedAt" IS NULL
@@ -187,6 +187,7 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
       slug: t.slug,
       name: t.name,
       tagline: t.tagline,
+      logoUrl: t.logoUrl || null,
       category: t.categoryName || 'General',
       rating: parseFloat(t.avgRating || '4.0'),
       pricing: t.pricingModel || 'Free',

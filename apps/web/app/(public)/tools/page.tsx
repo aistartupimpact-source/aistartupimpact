@@ -28,36 +28,13 @@ export const metadata: Metadata = {
 
 import { getDirectoryToolsDirect, getToolCategoriesDirect } from '@/lib/db';
 
-const editorialPicks = [
-  { slug: 'cursor', name: 'Cursor', tagline: 'AI-first code editor that writes, edits, and debugs for you', category: 'Dev Tools', rating: 4.8, pricing: 'Freemium', verdict: 'Best AI code editor right now. The Composer feature for multi-file edits is unmatched.' },
-  { slug: 'perplexity', name: 'Perplexity', tagline: 'AI search engine with cited sources and zero hallucinations', category: 'Research', rating: 4.8, pricing: 'Freemium', verdict: 'Replaced Google for research queries. The citation system builds real trust.' },
-  { slug: 'midjourney', name: 'Midjourney', tagline: 'The gold standard for AI image generation and design', category: 'Design', rating: 4.7, pricing: 'Paid ($10/mo)', verdict: 'Nothing else comes close for creative image generation quality.' },
-  { slug: 'v0-dev', name: 'v0.dev', tagline: 'AI-powered UI generation from text prompts by Vercel', category: 'Dev Tools', rating: 4.6, pricing: 'Freemium', verdict: 'Cuts frontend prototyping time by 80%. Ideal for rapid MVP building.' },
-  { slug: 'claude', name: 'Claude', tagline: "Anthropic's conversational AI with 200K context window", category: 'Productivity', rating: 4.7, pricing: 'Freemium', verdict: 'Best for long-document analysis. The 200K context window is game-changing.' },
-  { slug: 'hugging-face', name: 'Hugging Face', tagline: 'The open-source AI community — models, datasets, spaces', category: 'Open Source', rating: 4.9, pricing: 'Free', verdict: 'Essential for any ML engineer. The Spaces feature alone makes it invaluable.' },
-  { slug: 'notion-ai', name: 'Notion AI', tagline: 'AI writing assistant built into your workspace', category: 'Writing', rating: 4.4, pricing: 'Add-on ($10/mo)', verdict: 'Useful if you already live in Notion. Summarization and Q&A features are solid.' },
-  { slug: 'gamma', name: 'Gamma', tagline: 'AI-powered presentations from text — beautiful slides in seconds', category: 'Productivity', rating: 4.6, pricing: 'Freemium', verdict: 'Killed PowerPoint for us. Feed it a doc and get a deck in 30 seconds.' },
-  { slug: 'descript', name: 'Descript', tagline: 'AI-powered video and podcast editing platform', category: 'Media', rating: 4.5, pricing: 'Freemium', verdict: 'Edit video by editing text. The filler word removal alone saves hours.' },
-  { slug: 'replit-ai', name: 'Replit AI', tagline: 'AI-powered cloud IDE with code generation and deployment', category: 'Dev Tools', rating: 4.5, pricing: 'Freemium', verdict: 'Deploy a full app from a text prompt. Best for hackathons and quick prototypes.' },
-  { slug: 'jasper', name: 'Jasper', tagline: 'Enterprise AI content platform for marketing teams', category: 'Marketing', rating: 4.3, pricing: 'Paid ($49/mo)', verdict: 'Expensive but powerful for marketing teams that need brand-consistent copy at scale.' },
-  { slug: 'intercom-fin', name: 'Intercom Fin', tagline: 'AI customer service agent that resolves 50% of queries', category: 'Support', rating: 4.4, pricing: 'Paid', verdict: 'Real ROI — cuts support tickets in half. Best for SaaS companies with docs.' },
-];
-
 export default async function ToolsPage({ searchParams }: { searchParams: { category?: string } }) {
   const categorySlug = searchParams.category || 'all';
 
-  const [dbPicks, categories] = await Promise.all([
+  const [picks, categories] = await Promise.all([
     getDirectoryToolsDirect(categorySlug),
     getToolCategoriesDirect()
   ]);
-
-  // Combine DB tools with the editorial fallback tools to guarantee the grid is full
-  // and apply frontend category filtering to the static array if selected.
-  const staticFiltered = categorySlug === 'all'
-    ? editorialPicks
-    : editorialPicks.filter(p => p.category.toLowerCase().replace(' ', '-') === categorySlug);
-
-  const picks = [...dbPicks, ...staticFiltered];
 
   const siteUrl = 'https://aistartupimpact.com';
 

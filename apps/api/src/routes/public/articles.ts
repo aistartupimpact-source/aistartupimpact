@@ -24,7 +24,7 @@ router.get('/', cacheRoute(120), async (req: Request, res: Response) => {
 
     const whereClause = conditions.join(' AND ');
 
-    const [articles, countResult]: [any[], any[]] = await Promise.all([
+    const [articles, countResult] = (await Promise.all([
       prisma.$queryRawUnsafe(`
         SELECT
           a.id, a.title, a.slug, a.type, a.excerpt, a."coverImage",
@@ -40,7 +40,7 @@ router.get('/', cacheRoute(120), async (req: Request, res: Response) => {
         LIMIT ${take} OFFSET ${skip}
       `),
       prisma.$queryRawUnsafe(`SELECT COUNT(*)::int AS count FROM "Article" a LEFT JOIN "Category" c ON c.id = a."categoryId" LEFT JOIN "User" u ON u.id = a."authorId" WHERE ${whereClause}`),
-    ]);
+    ])) as [any[], any[]];
 
     const total = countResult[0]?.count || 0;
     const data = articles.map((a: any) => ({

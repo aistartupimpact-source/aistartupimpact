@@ -58,9 +58,9 @@ export default function ToolsListWithComparison({ picks }: { picks: ToolPick[] }
 
                 {/* Header: Logo + Rank */}
                 <div className="flex items-center gap-3 pr-8">
-                  <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700/50">
+                  <div className="w-12 h-12 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700/50">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={iconUrl} alt={tool.name} className="w-full h-full object-cover" />
+                    <img src={iconUrl} alt={tool.name} className="w-10 h-10 object-contain" />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[10px] font-jakarta font-bold text-gray-400 uppercase tracking-wider mb-0.5">Rank #{i + 1}</span>
