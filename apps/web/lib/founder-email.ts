@@ -1,14 +1,28 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization to avoid build-time errors
+let resend: Resend | null = null;
+function getResend() {
+  if (!resend && process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
+
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@aistartupimpact.com';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
 export async function sendVerificationEmail(email: string, name: string, token: string) {
   const verifyUrl = `${SITE_URL}/auth/verify?token=${token}`;
   
+  const client = getResend();
+  if (!client) {
+    console.warn('Resend API key not configured, skipping email send');
+    return;
+  }
+  
   try {
-    await resend.emails.send({
+    await client.emails.send({
       from: FROM_EMAIL,
       to: email,
       subject: 'Verify your email - AI Startup Impact',
@@ -34,8 +48,14 @@ export async function sendVerificationEmail(email: string, name: string, token: 
 export async function sendPasswordResetEmail(email: string, name: string, token: string) {
   const resetUrl = `${SITE_URL}/auth/reset-password?token=${token}`;
   
+  const client = getResend();
+  if (!client) {
+    console.warn('Resend API key not configured, skipping email send');
+    return;
+  }
+  
   try {
-    await resend.emails.send({
+    await client.emails.send({
       from: FROM_EMAIL,
       to: email,
       subject: 'Reset your password - AI Startup Impact',
@@ -65,8 +85,14 @@ export async function sendSubmissionReceivedEmail(
   entityType: 'startup' | 'tool',
   entityName: string
 ) {
+  const client = getResend();
+  if (!client) {
+    console.warn('Resend API key not configured, skipping email send');
+    return;
+  }
+  
   try {
-    await resend.emails.send({
+    await client.emails.send({
       from: FROM_EMAIL,
       to: email,
       subject: `We received your ${entityType} submission!`,
@@ -98,8 +124,14 @@ export async function sendApprovalEmail(
 ) {
   const liveUrl = `${SITE_URL}/${entityType === 'startup' ? 'startups' : 'tools'}/${entitySlug}`;
   
+  const client = getResend();
+  if (!client) {
+    console.warn('Resend API key not configured, skipping email send');
+    return;
+  }
+  
   try {
-    await resend.emails.send({
+    await client.emails.send({
       from: FROM_EMAIL,
       to: email,
       subject: `🎉 Your ${entityType} is now live!`,
