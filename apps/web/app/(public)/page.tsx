@@ -21,6 +21,7 @@ import {
   getFeaturedStartupDirect as getFeaturedStartup,
   getFundingDigestsDirect,
   getActiveSponsorDirect,
+  getActiveSponsorsDirect,
   getActiveHeroSlotsDirect,
   getFeaturedToolsDirect,
   getPriorityToolsDirect,
@@ -44,7 +45,11 @@ import {
 
 // Dynamic imports for heavy client components — reduces initial JS bundle
 const FeaturedPartnerRotator = dynamic(() => import('@/components/FeaturedPartnerRotator'), { ssr: false });
-const HeroCarousel = dynamic(() => import('@/components/HeroCarousel'), { ssr: false });
+const HeroCarousel = dynamic(() => import('@/components/HeroCarousel'), {
+  ssr: false,
+  loading: () => <div className="bg-[#0D1B2A] min-h-[340px] sm:min-h-[420px] md:min-h-[500px] animate-pulse" />,
+});
+const SponsorStrip = dynamic(() => import('@/components/SponsorStrip'), { ssr: false });
 
 const formatDate = (isoString: string) =>
   new Date(isoString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -85,7 +90,7 @@ export default async function HomePage() {
     getActiveCreativeForZone('H2_TRENDING_STRIP'),
     getActiveCreativeForZone('H3_SECTION_SPONSOR'),
     getActiveLiveTickers(),
-    getActiveSponsorDirect(),
+    getActiveSponsorsDirect(),
     getActiveHeroSlotsDirect(),
     getFeaturedToolsDirect(),
     getPriorityToolsDirect(12),
@@ -110,10 +115,20 @@ export default async function HomePage() {
       }))
     : [];
   const indiaAI = fetchedIndiaAI?.length > 0 ? fetchedIndiaAI : defaultIndiaAI;
-  const activeSponsor = fetchedSponsor || defaultSponsor;
+  const activeSponsors = (fetchedSponsor as any[]) || [];
   // Hero: scheduled slots take priority, fallback to heroAd or featured article as a single slide
   const heroSlides = (fetchedHeroSlots && fetchedHeroSlots.length > 0)
-    ? fetchedHeroSlots
+    ? fetchedHeroSlots.map((slot: any) => ({
+        id: slot.id,
+        title: slot.title,
+        excerpt: slot.excerpt ?? null,
+        coverImage: slot.coverImage ?? null,
+        ctaUrl: slot.ctaUrl,
+        ctaLabel: slot.ctaLabel || 'Learn More',
+        badgeText: slot.badgeText || 'Featured',
+        authorName: slot.authorName ?? null,
+        readTimeMinutes: slot.readTimeMinutes ?? null,
+      }))
     : heroAd
       ? [{
         id: 'hero-ad',
@@ -143,7 +158,7 @@ export default async function HomePage() {
       {/* ╔════════════════════════════════════════════╗
           ║  1. HERO — Scheduled Carousel / Ad / Article║
           ╚════════════════════════════════════════════╝ */}
-      <div className="bg-[#08111B] text-center pt-3 pb-2 border-b border-white/5 px-4">
+      <div className="bg-[#08111B] text-center pt-0 pb-0 border-b border-white/5 px-4">
         <h1 className="text-[9px] sm:text-[10px] text-gray-500 font-jakarta font-medium tracking-[0.2em] uppercase truncate max-w-full">
           AI Startup Impact — #1 AI Startup India News, AI Ecosystem, and Tools
         </h1>
@@ -174,8 +189,9 @@ export default async function HomePage() {
                     {tickerAd.headline}
                   </a>
                 )}
-                {trendingItems.map((item: any, i: number) => (
-                  <span key={i} className="text-gray-300 text-xs sm:text-sm font-jakarta inline-flex items-center gap-2 sm:gap-3">
+                {/* Duplicate items for seamless infinite loop */}
+                {[...trendingItems, ...trendingItems].map((item: any, i: number) => (
+                  <span key={i} className="text-gray-300 text-xs sm:text-sm font-jakarta inline-flex items-center gap-2 sm:gap-3 shrink-0">
                     <span className="text-brand font-bold">•</span>
                     {item}
                   </span>
@@ -239,6 +255,7 @@ export default async function HomePage() {
       {/* ╔════════════════════════════════════════════╗
           ║  4. SPONSOR STRIP — Native Ad               ║
           ╚════════════════════════════════════════════╝ */}
+      {(sectionAd || activeSponsors.length > 0) && (
       <section className="border-y border-brand/10 dark:border-brand/5 bg-brand/[0.02] dark:bg-brand/[0.03]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {sectionAd ? (
@@ -250,15 +267,11 @@ export default async function HomePage() {
               <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-brand opacity-0 group-hover:opacity-100 transition-opacity" />
             </a>
           ) : (
-            <a href={activeSponsor.ctaUrl} className="flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-3.5 group">
-              <span className="text-[10px] sm:text-xs text-gray-400 font-jakarta uppercase tracking-wider">Powered by</span>
-              <span className="font-sora font-bold text-brand text-xs sm:text-sm group-hover:underline">{activeSponsor.brand}</span>
-              <span className="text-gray-400 dark:text-gray-500 text-xs sm:text-sm font-jakarta hidden sm:inline">— {activeSponsor.tagline}</span>
-              <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-brand opacity-0 group-hover:opacity-100 transition-opacity" />
-            </a>
+            <SponsorStrip sponsors={activeSponsors} />
           )}
         </div>
       </section>
+      )}
 
       {/* ╔════════════════════════════════════════════╗
           ║  5. FOUNDER SPOTLIGHT — Premium Grid        ║
@@ -611,22 +624,151 @@ export default async function HomePage() {
         </div>
       </section>
       {/* ╔════════════════════════════════════════════╗
-          ║  11. EXPLORE SITE (INTERNAL LINKS)         ║
+          ║  11. FOR FOUNDERS CTA — Conversion Section ║
           ╚════════════════════════════════════════════╝ */}
-      <section className="mt-16 mb-16 text-center">
-        <h2 className="text-xl font-sora font-semibold mb-4 text-gray-900 dark:text-white">
-          Explore AIStartupImpact
-        </h2>
+      <section className="py-8 sm:py-10 relative overflow-hidden">
+        {/* Premium gradient background with texture */}
+        <div className="absolute inset-0 bg-gradient-to-br from-brand/5 via-purple-500/5 to-blue-500/5 dark:from-brand/10 dark:via-purple-500/10 dark:to-blue-500/10" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(239,68,68,0.1),transparent_50%)] dark:bg-[radial-gradient(circle_at_30%_50%,rgba(239,68,68,0.15),transparent_50%)]" />
+        
+        {/* Subtle dot pattern texture */}
+        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" style={{
+          backgroundImage: `radial-gradient(circle, currentColor 1px, transparent 1px)`,
+          backgroundSize: '24px 24px'
+        }} />
+        
+        {/* Decorative corner elements */}
+        <div className="absolute top-0 left-0 w-40 h-40 border-t-2 border-l-2 border-brand/10 rounded-tl-3xl" />
+        <div className="absolute bottom-0 right-0 w-40 h-40 border-b-2 border-r-2 border-purple-500/10 rounded-br-3xl" />
+        
+        {/* Floating gradient orbs */}
+        <div className="absolute top-10 right-20 w-32 h-32 bg-gradient-to-br from-brand/20 to-purple-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-10 left-20 w-24 h-24 bg-gradient-to-br from-blue-500/20 to-brand/20 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1s' }} />
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-5xl mx-auto">
+            {/* Premium card container with enhanced design */}
+            <div className="relative bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl border border-gray-200/60 dark:border-gray-800/60 shadow-2xl shadow-brand/10 p-6 sm:p-8 overflow-hidden">
+              {/* Inner glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-brand/5 via-transparent to-purple-500/5 pointer-events-none" />
+              
+              {/* Subtle grid overlay on card */}
+              <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03]" style={{
+                backgroundImage: `linear-gradient(rgba(239, 68, 68, 0.3) 1px, transparent 1px),
+                                 linear-gradient(90deg, rgba(239, 68, 68, 0.3) 1px, transparent 1px)`,
+                backgroundSize: '40px 40px'
+              }} />
+              
+              <div className="relative z-10 flex flex-col lg:flex-row items-center gap-6 lg:gap-10">
+                {/* Left: Header & CTA */}
+                <div className="flex-1 text-center lg:text-left">
+                  <div className="inline-flex items-center gap-2 bg-gradient-to-r from-brand/10 via-purple-500/10 to-brand/10 border border-brand/20 px-3 py-1 rounded-full mb-3 shadow-sm backdrop-blur-sm">
+                    <div className="w-2 h-2 bg-brand rounded-full animate-pulse" />
+                    <Users className="w-3.5 h-3.5 text-brand" />
+                    <span className="text-brand text-[10px] font-bold uppercase tracking-wider font-jakarta">
+                      For Founders
+                    </span>
+                  </div>
+                  <h2 className="font-sora font-extrabold text-xl sm:text-2xl lg:text-3xl bg-gradient-to-r from-gray-900 via-brand to-purple-600 dark:from-white dark:via-brand dark:to-purple-400 bg-clip-text text-transparent leading-tight mb-2">
+                    Get Discovered by India&apos;s Top VCs, Buyers, and 5,000+ AI Founders
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm font-jakarta leading-relaxed mb-5">
+                    List your AI tool or startup and get in front of the investors, enterprise buyers, and founders who are actively looking for what you built.
+                  </p>
+                  
+                  {/* CTA Buttons - Premium style with enhanced effects */}
+                  <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
+                    <Link
+                      href="/auth/signup"
+                      className="group inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-brand via-brand to-brand/90 text-white font-bold text-sm font-jakarta hover:shadow-xl hover:shadow-brand/40 transition-all hover:scale-105 w-full sm:w-auto relative overflow-hidden"
+                    >
+                      {/* Shimmer effect */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                      {/* Subtle inner glow */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <span className="relative z-10">Create Free Account</span>
+                    </Link>
+                    <Link
+                      href="/auth/login"
+                      className="group inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold text-sm font-jakarta hover:border-brand dark:hover:border-brand hover:shadow-lg transition-all w-full sm:w-auto relative overflow-hidden"
+                    >
+                      <Users className="w-4 h-4 relative z-10" />
+                      <span className="relative z-10">Founder Login</span>
+                    </Link>
+                  </div>
+                  
+                  {/* Trust Badge - Enhanced with premium styling */}
+                  <div className="flex items-center justify-center lg:justify-start gap-2 mt-4">
+                    <div className="flex -space-x-2">
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 border-2 border-white dark:border-gray-900 shadow-md shadow-emerald-500/30" />
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 border-2 border-white dark:border-gray-900 shadow-md shadow-blue-500/30" />
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 border-2 border-white dark:border-gray-900 shadow-md shadow-purple-500/30" />
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 font-jakarta">
+                      Trusted by <span className="text-brand font-bold">500+</span> AI founders
+                    </p>
+                  </div>
+                </div>
 
-        <div className="flex flex-col gap-3 font-jakarta">
-          <Link href="/news" className="text-brand hover:underline font-medium tracking-wide">
-            Read latest AI startup news →
-          </Link>
-          <Link href="/contact" className="text-gray-600 dark:text-gray-400 hover:text-brand hover:underline transition-colors font-medium">
-            Contact us for collaborations →
-          </Link>
+                {/* Right: Benefits Grid - Premium cards with enhanced styling */}
+                <div className="flex-1 grid grid-cols-1 gap-3 w-full">
+                  <div className="group relative flex items-start gap-3 bg-gradient-to-br from-white via-white to-gray-50/50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900/50 rounded-xl p-3.5 border border-gray-200 dark:border-gray-700 hover:border-brand/50 dark:hover:border-brand/50 transition-all hover:shadow-lg hover:shadow-brand/10 overflow-hidden">
+                    {/* Card inner glow */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-brand/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-brand/20 via-brand/15 to-brand/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm relative z-10">
+                      <TrendingUp className="w-4 h-4 text-brand" />
+                    </div>
+                    <div className="relative z-10">
+                      <h3 className="font-sora font-bold text-xs text-gray-900 dark:text-white mb-0.5">
+                        Real-Time Analytics
+                      </h3>
+                      <p className="text-[11px] text-gray-600 dark:text-gray-400 font-jakarta leading-snug">
+                        Track views, clicks, and engagement
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="group relative flex items-start gap-3 bg-gradient-to-br from-white via-white to-gray-50/50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900/50 rounded-xl p-3.5 border border-gray-200 dark:border-gray-700 hover:border-purple-500/50 dark:hover:border-purple-500/50 transition-all hover:shadow-lg hover:shadow-purple-500/10 overflow-hidden">
+                    {/* Card inner glow */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500/20 via-purple-500/15 to-purple-500/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm relative z-10">
+                      <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div className="relative z-10">
+                      <h3 className="font-sora font-bold text-xs text-gray-900 dark:text-white mb-0.5">
+                        Premium Visibility
+                      </h3>
+                      <p className="text-[11px] text-gray-600 dark:text-gray-400 font-jakarta leading-snug">
+                        Featured in newsletter & homepage
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="group relative flex items-start gap-3 bg-gradient-to-br from-white via-white to-gray-50/50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900/50 rounded-xl p-3.5 border border-gray-200 dark:border-gray-700 hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-all hover:shadow-lg hover:shadow-blue-500/10 overflow-hidden">
+                    {/* Card inner glow */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500/20 via-blue-500/15 to-blue-500/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm relative z-10">
+                      <Zap className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="relative z-10">
+                      <h3 className="font-sora font-bold text-xs text-gray-900 dark:text-white mb-0.5">
+                        Easy Management
+                      </h3>
+                      <p className="text-[11px] text-gray-600 dark:text-gray-400 font-jakarta leading-snug">
+                        Update listings anytime from dashboard
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
+
+      {/* ╔════════════════════════════════════════════╗
+          ║  12. EXPLORE SITE (INTERNAL LINKS)         ║
+          ╚════════════════════════════════════════════╝ */}
     </>
   );
 }

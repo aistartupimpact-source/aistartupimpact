@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
-import { Plus, Search, Star, Zap, X, Edit3, Trash2, Save, Crown, ArrowUp } from 'lucide-react';
+import { Plus, Search, Star, Zap, X, Edit3, Trash2, Save, Crown, ArrowUp, Upload, Loader2, Image as ImageIcon } from 'lucide-react';
+import { uploadLogoAction } from '../media/actions';
 import {
   getToolsAction, getCategoriesAction, createToolAction,
   updateToolAction, deleteToolAction, setListingTierAction,
@@ -10,7 +11,9 @@ import {
 interface Tool {
   id: string; name: string; slug: string; tagline: string; description: string;
   websiteUrl: string; logoUrl: string | null; categoryId: string; categoryName: string;
-  pricingModel: string; avgRating: number; listingTier: string; status: string;
+  pricingModel: string; pricingUrl: string | null; startingPrice: number | null;
+  hasApi: boolean; hasMobileApp: boolean; founderNames: string[];
+  headquartersCountry: string | null; avgRating: number; listingTier: string; status: string;
 }
 interface Category { id: string; name: string; slug: string; }
 
@@ -21,6 +24,8 @@ const STATUSES = ['PENDING', 'APPROVED', 'ARCHIVED'];
 const emptyTool: Tool = {
   id: '__new__', name: '', slug: '', tagline: '', description: '', websiteUrl: '',
   logoUrl: '', categoryId: '', categoryName: '', pricingModel: 'FREEMIUM',
+  pricingUrl: null, startingPrice: null, hasApi: false, hasMobileApp: false,
+  founderNames: [], headquartersCountry: null,
   avgRating: 4.5, listingTier: 'FREE', status: 'APPROVED',
 };
 
@@ -47,6 +52,27 @@ export default function ToolsDirPage() {
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState('');
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingLogo(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await uploadLogoAction(formData);
+      if (res.success && res.url) {
+        setEditing({ ...editing!, logoUrl: res.url });
+      } else {
+        alert(res.error || 'Logo upload failed');
+      }
+    } catch (err) {
+      alert('Upload error');
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
 
   useEffect(() => {
     Promise.all([getToolsAction(), getCategoriesAction()]).then(([t, c]) => {
@@ -80,7 +106,25 @@ export default function ToolsDirPage() {
     setError('');
     startTransition(async () => {
       const slug = editing.slug || editing.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      const payload = { ...editing, slug, logoUrl: editing.logoUrl || undefined };
+      const payload = {
+        name: editing.name,
+        slug,
+        tagline: editing.tagline,
+        description: editing.description,
+        websiteUrl: editing.websiteUrl,
+        logoUrl: editing.logoUrl || undefined,
+        categoryId: editing.categoryId,
+        pricingModel: editing.pricingModel,
+        pricingUrl: (editing as any).pricingUrl || undefined,
+        startingPrice: (editing as any).startingPrice ?? undefined,
+        hasApi: (editing as any).hasApi ?? false,
+        hasMobileApp: (editing as any).hasMobileApp ?? false,
+        founderNames: (editing as any).founderNames || [],
+        headquartersCountry: (editing as any).headquartersCountry || undefined,
+        avgRating: editing.avgRating,
+        listingTier: editing.listingTier,
+        status: editing.status,
+      };
       const result = editing.id === '__new__'
         ? await createToolAction(payload)
         : await updateToolAction(editing.id, payload);
@@ -225,7 +269,7 @@ export default function ToolsDirPage() {
 
       {modalOpen && editing && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-lg shadow-2xl border border-gray-200 dark:border-gray-800">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-2xl shadow-2xl border border-gray-200 dark:border-gray-800">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
               <h2 className="font-sora font-bold text-lg text-navy dark:text-white">
                 {editing.id === '__new__' ? 'Add New Tool' : 'Edit Tool'}
@@ -257,9 +301,14 @@ export default function ToolsDirPage() {
                 </p>
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Description</label>
-                <textarea className="input-field text-sm" rows={3} value={editing.description}
+                <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">
+                  Description <span className="text-gray-400 normal-case">(max 300 chars)</span>
+                </label>
+                <textarea className="input-field text-sm" rows={3} maxLength={300} value={editing.description}
                   onChange={e => setEditing({ ...editing, description: e.target.value })} />
+                <p className={`text-xs mt-1 text-right font-jakarta ${editing.description.length > 270 ? 'text-amber-500' : 'text-gray-400'}`}>
+                  {editing.description.length}/300
+                </p>
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Website URL *</label>
@@ -267,9 +316,31 @@ export default function ToolsDirPage() {
                   onChange={e => setEditing({ ...editing, websiteUrl: e.target.value })} placeholder="https://..." />
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Logo URL</label>
-                <input type="url" className="input-field text-sm" value={editing.logoUrl || ''}
-                  onChange={e => setEditing({ ...editing, logoUrl: e.target.value })} placeholder="https://..." />
+                <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Pricing Page URL</label>
+                <input type="url" className="input-field text-sm" value={(editing as any).pricingUrl || ''}
+                  onChange={e => setEditing({ ...editing, pricingUrl: e.target.value } as any)} placeholder="https://.../pricing" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Logo / Icon</label>
+                <div className="flex items-center gap-3">
+                  {editing.logoUrl ? (
+                    <img src={editing.logoUrl} className="w-12 h-12 rounded-xl object-cover shrink-0" alt="logo" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                      <ImageIcon className="w-5 h-5 text-gray-400" />
+                    </div>
+                  )}
+                  <div className="flex-1 space-y-2">
+                    <input type="url" className="input-field text-sm" value={editing.logoUrl || ''}
+                      onChange={e => setEditing({ ...editing, logoUrl: e.target.value })} placeholder="Or paste https:// URL..." />
+                    
+                    <input type="file" id="logo-upload" onChange={handleLogoUpload} accept="image/*" className="hidden" />
+                    <label htmlFor="logo-upload" className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border rounded-lg cursor-pointer transition-colors ${uploadingLogo ? 'opacity-50 pointer-events-none' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300'}`}>
+                      {uploadingLogo ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                      {uploadingLogo ? 'Uploading...' : 'Upload Image'}
+                    </label>
+                  </div>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -280,12 +351,46 @@ export default function ToolsDirPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Pricing</label>
+                  <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Pricing Model</label>
                   <select className="input-field text-sm" value={editing.pricingModel}
                     onChange={e => setEditing({ ...editing, pricingModel: e.target.value })}>
                     {PRICING_MODELS.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Starting Price (USD)</label>
+                  <input type="number" className="input-field text-sm" value={(editing as any).startingPrice ?? ''}
+                    onChange={e => setEditing({ ...editing, startingPrice: e.target.value ? parseFloat(e.target.value) : null } as any)}
+                    placeholder="e.g. 20" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">HQ / Country</label>
+                  <input type="text" className="input-field text-sm" value={(editing as any).headquartersCountry || ''}
+                    onChange={e => setEditing({ ...editing, headquartersCountry: e.target.value } as any)} placeholder="e.g. Bengaluru, India" />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">Founder Names (comma separated)</label>
+                <input type="text" className="input-field text-sm"
+                  value={((editing as any).founderNames || []).join(', ')}
+                  onChange={e => setEditing({ ...editing, founderNames: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) } as any)}
+                  placeholder="e.g. Pratyush Kumar, Vivek Raghavan" />
+              </div>
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2 text-sm text-navy dark:text-gray-300 font-jakarta cursor-pointer">
+                  <input type="checkbox" checked={!!(editing as any).hasApi}
+                    onChange={e => setEditing({ ...editing, hasApi: e.target.checked } as any)}
+                    className="w-4 h-4 rounded text-brand border-gray-300 focus:ring-brand" />
+                  Has Developer API
+                </label>
+                <label className="flex items-center gap-2 text-sm text-navy dark:text-gray-300 font-jakarta cursor-pointer">
+                  <input type="checkbox" checked={!!(editing as any).hasMobileApp}
+                    onChange={e => setEditing({ ...editing, hasMobileApp: e.target.checked } as any)}
+                    className="w-4 h-4 rounded text-brand border-gray-300 focus:ring-brand" />
+                  Has Mobile App
+                </label>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

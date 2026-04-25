@@ -85,6 +85,12 @@ export async function updateToolAction(id: string, data: {
   logoUrl?: string;
   categoryId: string;
   pricingModel: string;
+  pricingUrl?: string;
+  startingPrice?: number | null;
+  hasApi?: boolean;
+  hasMobileApp?: boolean;
+  founderNames?: string[];
+  headquartersCountry?: string;
   avgRating: number;
   listingTier: string;
   status: string;
@@ -100,6 +106,12 @@ export async function updateToolAction(id: string, data: {
         "logoUrl" = ${data.logoUrl || null},
         "categoryId" = ${data.categoryId},
         "pricingModel" = ${data.pricingModel}::"PricingModel",
+        "pricingUrl" = ${data.pricingUrl || null},
+        "startingPrice" = ${data.startingPrice ? Math.round(data.startingPrice * 8300 * 100) : null},
+        "hasApi" = ${data.hasApi ?? false},
+        "hasMobileApp" = ${data.hasMobileApp ?? false},
+        "founderNames" = ${data.founderNames || []},
+        "headquartersCountry" = ${data.headquartersCountry || null},
         "avgRating" = ${data.avgRating},
         "listingTier" = ${data.listingTier}::"ListingTier",
         status = ${data.status}::"ToolApprovalStatus",

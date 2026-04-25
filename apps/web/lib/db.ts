@@ -4,11 +4,11 @@ import { neon, NeonQueryFunction } from '@neondatabase/serverless';
 // Lazy sql client — not instantiated at module load time (avoids build-time DATABASE_URL errors)
 let _sql: NeonQueryFunction<false, false> | undefined;
 function getSql(): NeonQueryFunction<false, false> {
-  if (!_sql) _sql = neon(process.env.DATABASE_URL!);
+  if (!_sql) _sql = neon(process.env.DATABASE_URL!, { fetchOptions: { cache: 'no-store' } });
   return _sql;
 }
 // sql is used as a tagged template literal throughout this file
-const sql: NeonQueryFunction<false, false> = new Proxy(
+export const sql: NeonQueryFunction<false, false> = new Proxy(
   ((...args: Parameters<NeonQueryFunction<false, false>>) => getSql()(...args)) as NeonQueryFunction<false, false>,
   {
     get(_target, prop) {
@@ -23,6 +23,7 @@ export async function getArticleBySlugDirect(slug: string) {
       SELECT
         a.id, a.title, a.slug, a.type, a.excerpt, a.content,
         a."coverImage", a."thumbnailImage", a."readTimeMinutes", a."viewCount", a."isFeatured",
+        a."likeCount",
         a."publishedAt"::text AS "publishedAt",
         u.name AS "authorName", u.slug AS "authorSlug",
         c.name AS "categoryName", c.slug AS "categorySlug",
@@ -97,7 +98,17 @@ export async function getAiToolBySlugDirect(slug: string) {
       `;
     }
 
-    return { ...tool, stories, fundingRounds, category: tool.categoryName };
+    // Cross-link: Fetch Approved Tool Reviews
+    const userReviews = await sql`
+      SELECT r.id, r.rating, r.title, r.body, r."publishedAt"::text AS "publishedAt", r."helpfulCount",
+             u.name AS "authorName", u.role AS "authorRole"
+      FROM "ToolReview" r
+      JOIN "User" u ON u.id = r."userId"
+      WHERE r."toolId" = ${tool.id} AND r.status = 'APPROVED'
+      ORDER BY r."helpfulCount" DESC, r."publishedAt" DESC
+    `;
+
+    return { ...tool, stories, fundingRounds, userReviews, category: tool.categoryName };
   } catch (e) {
     console.error('getAiToolBySlugDirect error:', e);
     return null;
@@ -459,8 +470,8 @@ export async function getActiveHeroSlotsDirect() {
              "sortOrder"
       FROM "HeroSlot"
       WHERE "isActive" = true
-        AND "startDate" <= NOW()
-        AND "endDate" >= NOW()
+        AND ("startDate" IS NULL OR "startDate" <= NOW())
+        AND ("endDate" IS NULL OR "endDate" >= NOW())
       ORDER BY "sortOrder" ASC, "createdAt" DESC
       LIMIT 5
     `;
@@ -473,18 +484,24 @@ export async function getActiveHeroSlotsDirect() {
 
 // ── Sponsors ──────────────────────────────────────────────────────────────────
 
-export async function getActiveSponsorDirect() {
+export async function getActiveSponsorsDirect() {
   try {
     const sponsors = await sql`
       SELECT brand, tagline, "ctaUrl", "logoUrl"
-      FROM "Sponsor" 
-      WHERE "isActive" = true 
+      FROM "Sponsor"
+      WHERE "isActive" = true
+        AND ("startDate" IS NULL OR "startDate" <= NOW())
+        AND ("endDate" IS NULL OR "endDate" >= NOW())
       ORDER BY "sortOrder" ASC, "createdAt" DESC
-      LIMIT 1
     `;
-    return sponsors.length > 0 ? sponsors[0] : null;
+    return sponsors.length > 0 ? sponsors : null;
   } catch (error) {
-    console.error('Error fetching active sponsor:', error);
+    console.error('Error fetching active sponsors:', error);
     return null;
   }
+}
+
+export async function getActiveSponsorDirect() {
+  const sponsors = await getActiveSponsorsDirect();
+  return sponsors ? sponsors[0] : null;
 }

@@ -7,12 +7,12 @@ import { getAllFundingRoundsDirect } from '@/lib/db';
 import FundingDashboard from './FundingDashboard';
 
 export const metadata: Metadata = {
-  title: 'Funding Dashboard — Indian AI Startup Funding Rounds Tracker',
-  description: 'Filterable tracker of all Indian AI startup funding rounds. Track deals, top investors, and total capital flow in India\'s ecosystem.',
+  title: 'Funding Dashboard — AI Startups Funding Rounds Tracker',
+  description: 'Filterable tracker of all AI startup funding rounds. Track deals, top investors, and total capital flow in the AI ecosystem.',
   alternates: { canonical: 'https://aistartupimpact.com/funding' },
   openGraph: {
-    title: 'Funding Dashboard — Indian AI Startup Funding Rounds Tracker',
-    description: 'Filterable tracker of all Indian AI startup funding rounds. Track deals, top investors, and total capital flow.',
+    title: 'Funding Dashboard — AI Startups Funding Rounds Tracker',
+    description: 'Filterable tracker of all AI startup funding rounds. Track deals, top investors, and total capital flow.',
     type: 'website',
     url: 'https://aistartupimpact.com/funding',
     siteName: 'AIStartupImpact',
@@ -39,11 +39,11 @@ export default async function FundingPage() {
         <div className="flex items-center justify-center gap-3 mb-2">
           <IndianRupee className="w-8 h-8 text-brand" />
           <h1 className="font-sora font-extrabold text-3xl sm:text-4xl md:text-5xl text-navy dark:text-white tracking-tight">
-            Indian AI <span className="text-brand">Funding Tracker</span>
+            AI Startups <span className="text-brand">Funding Tracker</span>
           </h1>
         </div>
         <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm sm:text-base max-w-2xl mx-auto mt-4">
-          The most comprehensive, continuously-updated dashboard of capital raised by Artificial Intelligence startups in India. Filter by stage, year, or search for investors.
+          The most comprehensive, continuously-updated dashboard of capital raised by Artificial Intelligence startups. Filter by stage, year, or search for investors.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-4">
           <Link href="/advertise" className="group flex items-center gap-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-brand/30 rounded-xl px-5 py-3 shadow-sm hover:shadow-md transition-all">

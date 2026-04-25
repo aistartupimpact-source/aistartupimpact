@@ -5,14 +5,16 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Search, X, Menu, Moon, Sun,
-  Home, Newspaper, BookOpen, Wrench, Flag,
+  Home, Newspaper, BookOpen, Wrench, Flag, Building2, TrendingUp, Users, Star,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
+import SearchOverlay from './SearchOverlay';
 
 const mainNav = [
   { label: 'News', href: '/news' },
   { label: 'Stories', href: '/stories' },
   { label: 'Tools', href: '/tools' },
+  { label: 'Startups', href: '/startups' },
   { label: 'Funding', href: '/funding' },
   { label: 'India AI', href: '/india-ai' },
 ];
@@ -22,7 +24,7 @@ const mobileNav = [
   { label: 'News', href: '/news', icon: Newspaper },
   { label: 'Stories', href: '/stories', icon: BookOpen },
   { label: 'Tools', href: '/tools', icon: Wrench },
-  { label: 'India AI', href: '/india-ai', icon: Flag },
+  { label: 'Funding', href: '/funding', icon: TrendingUp },
 ];
 
 export default function Navbar() {
@@ -45,7 +47,7 @@ export default function Navbar() {
     setSearchOpen(false);
   }, [pathname]);
 
-  // Lock body scroll when mobile menu open
+  // Lock body scroll when mobile menu or search open
   useEffect(() => {
     document.body.style.overflow = mobileOpen || searchOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
@@ -53,6 +55,9 @@ export default function Navbar() {
 
   return (
     <>
+      {/* Search Overlay */}
+      <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+
       {/* ─── Fixed Header ──────────────────────────── */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
@@ -68,8 +73,8 @@ export default function Navbar() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-1 shrink-0">
               <span className="font-sora font-extrabold text-lg sm:text-xl">
-                <span className="text-brand">AI</span>
-                <span className="text-navy dark:text-white">StartupImpact</span>
+                <span className="text-brand">AI </span>
+                <span className="text-navy dark:text-white">Startup Impact</span>
               </span>
             </Link>
 
@@ -116,13 +121,45 @@ export default function Navbar() {
                 )}
               </button>
 
-              {/* Submit Tool CTA */}
-              <Link
-                href="/submit-tool"
-                className="hidden md:inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-sm bg-gray-900 text-white dark:bg-white dark:text-gray-900 hover:scale-105 transition-transform"
-              >
-                Submit Tool
-              </Link>
+              {/* For Founders dropdown */}
+              <div className="relative group hidden md:block">
+                <button className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg font-bold text-sm bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-md">
+                  For Founders
+                </button>
+                {/* Dropdown */}
+                <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50">
+                  <Link href="/auth/login"
+                    className="flex items-center gap-3 px-4 py-3.5 text-sm font-jakarta font-medium text-navy dark:text-white hover:bg-brand/5 dark:hover:bg-brand/10 transition-colors border-b border-gray-100 dark:border-gray-800">
+                    <div className="w-7 h-7 rounded-lg bg-brand flex items-center justify-center shrink-0">
+                      <Users className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-xs text-brand">Founder Login</p>
+                      <p className="text-[10px] text-gray-400 mt-0.5">Access your dashboard</p>
+                    </div>
+                  </Link>
+                  <Link href="/submit-tool"
+                    className="flex items-center gap-3 px-4 py-3.5 text-sm font-jakarta font-medium text-navy dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-b border-gray-100 dark:border-gray-800">
+                    <div className="w-7 h-7 rounded-lg bg-black dark:bg-white flex items-center justify-center shrink-0">
+                      <Wrench className="w-3.5 h-3.5 text-white dark:text-black" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-xs text-navy dark:text-white">Submit AI Tool</p>
+                      <p className="text-[10px] text-gray-400 mt-0.5">Get listed in directory</p>
+                    </div>
+                  </Link>
+                  <Link href="/submit-startup"
+                    className="flex items-center gap-3 px-4 py-3.5 text-sm font-jakarta font-medium text-navy dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <div className="w-7 h-7 rounded-lg bg-gray-700 dark:bg-gray-600 flex items-center justify-center shrink-0">
+                      <Building2 className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-xs text-navy dark:text-white">List Your Startup</p>
+                      <p className="text-[10px] text-gray-400 mt-0.5">Feature your company</p>
+                    </div>
+                  </Link>
+                </div>
+              </div>
 
               {/* Subscribe CTA — hidden on small mobile */}
               <Link
@@ -175,55 +212,30 @@ export default function Navbar() {
               </Link>
             ))}
 
-            {/* Mobile Newsletter CTA */}
-            <div className="pt-4 px-4">
-              <Link
-                href="/newsletter"
-                onClick={() => setMobileOpen(false)}
-                className="btn-brand w-full text-center"
-              >
+            {/* Mobile Founder CTAs */}
+            <div className="pt-4 px-4 space-y-2">
+              <Link href="/auth/login" onClick={() => setMobileOpen(false)}
+                className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-brand text-white font-bold text-sm font-jakarta transition-colors hover:bg-brand/90">
+                Founder Login
+              </Link>
+              <Link href="/auth/signup" onClick={() => setMobileOpen(false)}
+                className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl border-2 border-brand text-brand font-bold text-sm font-jakarta hover:bg-brand hover:text-white transition-colors">
+                Create Account
+              </Link>
+              <Link href="/submit-tool" onClick={() => setMobileOpen(false)}
+                className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-sm font-jakarta transition-colors hover:bg-gray-800 dark:hover:bg-gray-100">
+                Submit AI Tool
+              </Link>
+              <Link href="/submit-startup" onClick={() => setMobileOpen(false)}
+                className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl border-2 border-black dark:border-white text-black dark:text-white font-bold text-sm font-jakarta hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors">
+                List Your Startup
+              </Link>
+              <Link href="/newsletter" onClick={() => setMobileOpen(false)}
+                className="btn-brand w-full text-center">
                 Newsletter
               </Link>
             </div>
           </nav>
-        </div>
-      )}
-
-      {/* ─── Search Overlay ─────────────────────────── */}
-      {searchOpen && (
-        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-gray-950 w-full max-w-2xl mx-auto mt-20 sm:mt-32 rounded-2xl shadow-2xl overflow-hidden mx-4 sm:mx-auto">
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-              <Search className="w-5 h-5 text-gray-400 shrink-0" />
-              <input
-                type="text"
-                placeholder="Search articles, tools, startups..."
-                className="flex-1 text-base font-jakarta text-navy dark:text-white placeholder:text-gray-400 bg-transparent focus:outline-none"
-                autoFocus
-              />
-              <button
-                onClick={() => setSearchOpen(false)}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                <X className="w-4 h-4 text-gray-400" />
-              </button>
-            </div>
-            <div className="p-5">
-              <p className="text-xs text-gray-400 uppercase tracking-wider font-bold mb-3 font-jakarta">
-                Trending
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {['GPT-5', 'AI Regulation India', 'LLM Fine-tuning', 'Cursor AI', 'Krutrim'].map(
-                  (t) => (
-                    <button key={t} className="pill text-xs">
-                      {t}
-                    </button>
-                  )
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="absolute inset-0 -z-10" onClick={() => setSearchOpen(false)} />
         </div>
       )}
 

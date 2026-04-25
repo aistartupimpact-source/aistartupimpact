@@ -6,10 +6,10 @@ import {
 
 /* ── Audience Stats ─────────────────────── */
 const stats = [
-  { value: '50K+', label: 'Monthly Pageviews', icon: BarChart3 },
-  { value: '5,000+', label: 'Newsletter Subscribers', icon: Mail },
-  { value: '68%', label: 'Founder/CTO Audience', icon: Users },
+  { value: '10K+', label: 'Monthly Pageviews', icon: BarChart3 },
+  { value: '1,000+', label: 'Newsletter Subscribers', icon: Mail },
   { value: '4.2 min', label: 'Avg. Time on Page', icon: Globe },
+  { value: '60%', label: 'Organic / Direct Traffic', icon: TrendingUp },
 ];
 
 /* ── Placement Zones ────────────────────── */
@@ -37,7 +37,7 @@ const placements = [
         name: 'Newsletter Featured Story',
         icon: Mail,
         location: 'Weekly newsletter — top position',
-        description: 'Your story as the lead article in our newsletter sent to 5,000+ founders, CTOs, and investors.',
+        description: 'Your story as the lead article in our newsletter sent to 1,000+ founders, engineers, and AI enthusiasts.',
         metric: '42% open rate',
       },
     ],
@@ -108,7 +108,7 @@ const placements = [
         icon: Mail,
         location: 'Weekly newsletter — brief mention',
         description: 'A brief mention of your startup in our weekly newsletter with a link to your full story or product page.',
-        metric: '5,000+ subscribers',
+        metric: '1,000+ subscribers',
       },
     ],
   },
@@ -158,7 +158,7 @@ const packages = [
       'Everything in Growth, plus:',
       'Hero Cover Story on homepage',
       'Breaking Ticker headline',
-      'Newsletter lead story (5K+ subscribers)',
+      'Newsletter lead story (1K+ subscribers)',
       'Unlimited stories per month',
       'Dedicated account manager',
       'Priority editorial support',
@@ -169,11 +169,12 @@ const packages = [
 
 /* ── Audience Breakdown ─────────────────── */
 const audience = [
-  { segment: 'Startup Founders & CTOs', pct: 35 },
-  { segment: 'ML/AI Engineers', pct: 25 },
-  { segment: 'VC & Angel Investors', pct: 18 },
-  { segment: 'Product Managers', pct: 12 },
-  { segment: 'Tech Journalists & Analysts', pct: 10 },
+  { segment: 'Startup Founders & CTOs', pct: 28 },
+  { segment: 'Tech Enthusiasts & General Readers', pct: 24 },
+  { segment: 'ML/AI Engineers & Developers', pct: 20 },
+  { segment: 'VC, Angel Investors & Analysts', pct: 15 },
+  { segment: 'Product Managers & Operators', pct: 8 },
+  { segment: 'Tech Journalists & Researchers', pct: 5 },
 ];
 
 export default function AdvertisePage() {

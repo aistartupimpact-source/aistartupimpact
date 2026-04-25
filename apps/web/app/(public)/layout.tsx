@@ -1,5 +1,6 @@
 import dynamic from 'next/dynamic';
 import BreakingTicker from '@/components/layout/BreakingTicker';
+import { AuthContext } from '@/components/AuthContext';
 
 // Navbar is above-fold — keep SSR. Footer is below-fold — lazy load.
 import Navbar from '@/components/layout/Navbar';
@@ -11,7 +12,7 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <>
+    <AuthContext>
       <Navbar />
       <div className="pt-14 sm:pt-16 min-h-screen flex flex-col">
         <BreakingTicker />
@@ -20,6 +21,6 @@ export default function PublicLayout({
         </main>
       </div>
       <Footer />
-    </>
+    </AuthContext>
   );
 }

@@ -24,11 +24,11 @@ const nextConfig = {
   async headers() {
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // unsafe-inline needed for Next.js inline scripts
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com", 
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https:",
-      "connect-src 'self' https://aistartupimpact.com",
+      "connect-src 'self' https://aistartupimpact.com https://www.google-analytics.com https://ep-restless-shadow-a1jxwm0a.ap-southeast-1.aws.neon.tech",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
@@ -41,6 +41,8 @@ const nextConfig = {
         headers: [
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-DNS-Prefetch-Control', value: 'on' },
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
           { key: 'Content-Security-Policy', value: csp },

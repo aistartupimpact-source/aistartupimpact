@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Sora, Plus_Jakarta_Sans } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import ThemeProvider from '@/components/ThemeProvider';
+import AnalyticsTracker from '@/components/Analytics';
 import { generateWebSiteSchema, generateOrganizationSchema } from '@/lib/seo';
 import Script from 'next/script';
 import './globals.css';
@@ -130,6 +131,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
         />
         <ThemeProvider>
+          <AnalyticsTracker />
           {children}
         </ThemeProvider>
         <Analytics />

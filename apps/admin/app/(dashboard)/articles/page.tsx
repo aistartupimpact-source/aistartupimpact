@@ -31,6 +31,7 @@ export default function ArticlesPage() {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [actionMenu, setActionMenu] = useState<string | null>(null);
   const [sortField, setSortField] = useState<'views' | 'publishedAt' | null>(null);
@@ -69,6 +70,7 @@ export default function ArticlesPage() {
   // Filter articles
   let filtered = articles.filter(a => {
     if (activeTab !== 'all' && a.status !== activeTab) return false;
+    if (typeFilter !== 'all' && a.type !== typeFilter) return false;
 
     const searchLower = search.toLowerCase();
     const titleMatch = (a.title || '').toLowerCase().includes(searchLower);
@@ -78,8 +80,6 @@ export default function ArticlesPage() {
     return true;
   });
 
-  console.log("[DEBUG] page.tsx - Total fetched:", articles.length, "Filtered down to:", filtered.length);
-
   // Sort
   if (sortField === 'views') filtered = [...filtered].sort((a, b) => sortDir === 'desc' ? b.views - a.views : a.views - b.views);
 
@@ -87,9 +87,23 @@ export default function ArticlesPage() {
   const counts: Record<string, number> = { all: articles.length };
   articles.forEach(a => { counts[a.status] = (counts[a.status] || 0) + 1; });
 
+  // Type counts
+  const typeCounts: Record<string, number> = { all: articles.length };
+  articles.forEach(a => { typeCounts[a.type] = (typeCounts[a.type] || 0) + 1; });
+
   const statusTabs = [
     { label: 'All', value: 'all' }, { label: 'Draft', value: 'DRAFT' }, { label: 'In Review', value: 'IN_REVIEW' },
     { label: 'Published', value: 'PUBLISHED' }, { label: 'Scheduled', value: 'SCHEDULED' }, { label: 'Archived', value: 'ARCHIVED' },
+  ];
+
+  const typeTabs = [
+    { label: 'All Types', value: 'all' },
+    { label: 'News', value: 'NEWS' },
+    { label: 'Founder Stories', value: 'STORY' },
+    { label: 'Opinion', value: 'OPINION' },
+    { label: 'Guide', value: 'GUIDE' },
+    { label: 'Report', value: 'REPORT' },
+    { label: 'Sponsored', value: 'SPONSORED' },
   ];
 
   // Actions
@@ -152,6 +166,24 @@ export default function ArticlesPage() {
         ))}
       </div>
 
+      {/* Type Filter — News vs Founder Stories vs Opinion etc. */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        {typeTabs.map(tab => (
+          <button key={tab.value} onClick={() => setTypeFilter(tab.value)}
+            className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all font-jakarta ${
+              typeFilter === tab.value
+                ? tab.value === 'STORY' ? 'bg-brand text-white'
+                  : tab.value === 'NEWS' ? 'bg-blue-600 text-white'
+                  : tab.value === 'OPINION' ? 'bg-purple-600 text-white'
+                  : 'bg-navy dark:bg-white text-white dark:text-navy'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+            }`}>
+            {tab.label}
+            <span className="ml-1 opacity-70">{typeCounts[tab.value] ?? (tab.value === 'all' ? articles.length : 0)}</span>
+          </button>
+        ))}
+      </div>
+
       {/* Search */}
       <div className="flex gap-3">
         <div className="flex-1 relative">
@@ -193,7 +225,18 @@ export default function ArticlesPage() {
                   <td className="px-6 py-4">
                     <Link href={`/articles/${article.id}`} className="group cursor-pointer block">
                       <h4 className="font-sora font-semibold text-sm text-navy dark:text-white group-hover:text-brand transition-colors line-clamp-1">{article.title}</h4>
-                      <p className="text-xs text-gray-400 dark:text-gray-500 font-jakarta mt-0.5">by {article.author} · {article.type}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded font-jakarta ${
+                          article.type === 'STORY' ? 'bg-brand/10 text-brand' :
+                          article.type === 'NEWS' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
+                          article.type === 'OPINION' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
+                          article.type === 'SPONSORED' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' :
+                          'bg-gray-100 dark:bg-gray-800 text-gray-500'
+                        }`}>
+                          {article.type === 'STORY' ? 'Founder Story' : article.type}
+                        </span>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 font-jakarta">by {article.author}</p>
+                      </div>
                     </Link>
                   </td>
                   <td className="px-6 py-4 hidden md:table-cell">

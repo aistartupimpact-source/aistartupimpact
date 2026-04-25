@@ -1,36 +1,76 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Search as SearchIcon, Clock, Zap, Building2, IndianRupee, Newspaper, BookOpen, X } from 'lucide-react';
+import { Search as SearchIcon, Clock, Zap, Building2, IndianRupee, Newspaper, BookOpen, X, Loader2, Sparkles } from 'lucide-react';
 
 const tabs = [
   { label: 'All', icon: SearchIcon },
   { label: 'Articles', icon: Newspaper },
   { label: 'Tools', icon: Zap },
   { label: 'Startups', icon: Building2 },
-  { label: 'Funding', icon: IndianRupee },
 ];
 
-const mockResults = [
-  { type: 'article', title: "OpenAI's GPT-5 Launch: What Indian Developers Need to Know", slug: '/news/openai-gpt5-india', excerpt: 'The latest frontier model brings advanced reasoning and multimodal capabilities...', category: 'AI News', date: 'Mar 6, 2025' },
-  { type: 'tool', title: 'Cursor — AI-First Code Editor', slug: '/tools/cursor', excerpt: 'AI-first code editor that writes, edits, and debugs for you', category: 'Dev Tools', date: '' },
-  { type: 'startup', title: 'Sarvam AI', slug: '/startups/sarvam-ai', excerpt: 'India-first foundation models for enterprise', category: 'LLM/NLP', date: 'Series A • ₹415Cr' },
-  { type: 'article', title: "India's New AI Policy Framework: What Every Founder Must Know", slug: '/news/india-ai-policy', excerpt: 'Comprehensive guidelines covering data privacy, model transparency, and startup incentives.', category: 'Policy', date: 'Mar 4, 2025' },
-  { type: 'funding', title: 'MedAI Health — ₹83Cr Seed Round', slug: '/funding/medai-seed', excerpt: 'AI-powered diagnostics for rural healthcare', category: 'HealthTech', date: 'Mar 1, 2025' },
-  { type: 'tool', title: 'Perplexity — AI Search Engine', slug: '/tools/perplexity', excerpt: 'AI search engine with cited sources and zero hallucinations', category: 'Research', date: '' },
-];
+const typeIcons: Record<string, typeof Newspaper> = { 
+  news: Newspaper, 
+  story: BookOpen,
+  tool: Zap, 
+  startup: Building2,
+};
 
-const typeIcons: Record<string, typeof Newspaper> = { article: Newspaper, tool: Zap, startup: Building2, funding: IndianRupee };
+interface SearchResult {
+  id: string;
+  type: 'news' | 'story' | 'tool' | 'startup';
+  title: string;
+  slug: string;
+  excerpt?: string;
+  category?: string;
+  logoUrl?: string;
+}
 
 export default function SearchPage() {
-  const [query, setQuery] = useState('');
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get('q') || '';
+  
+  const [query, setQuery] = useState(initialQuery);
   const [activeTab, setActiveTab] = useState('All');
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch results when query changes
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setResults(data.results || []);
+        }
+      } catch (error) {
+        console.error('Search error:', error);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
   const hasQuery = query.length > 0;
 
   const filtered = activeTab === 'All'
-    ? mockResults
-    : mockResults.filter(r => r.type === activeTab.toLowerCase().replace('articles', 'article'));
+    ? results
+    : results.filter(r => {
+        if (activeTab === 'Articles') return r.type === 'news' || r.type === 'story';
+        return r.type === activeTab.toLowerCase();
+      });
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
@@ -43,11 +83,14 @@ export default function SearchPage() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search articles, tools, startups, funding..."
+          placeholder="Search articles, tools, startups..."
           className="input-field pl-12 pr-10 text-base"
           autoFocus
         />
-        {hasQuery && (
+        {loading && (
+          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand animate-spin" />
+        )}
+        {hasQuery && !loading && (
           <button onClick={() => setQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
             <X className="w-4 h-4 text-gray-400" />
           </button>
@@ -72,32 +115,63 @@ export default function SearchPage() {
         <div className="text-center py-16 sm:py-20">
           <SearchIcon className="w-12 h-12 text-gray-200 dark:text-gray-700 mx-auto mb-4" />
           <h2 className="font-sora font-bold text-lg text-gray-400 dark:text-gray-500">Start typing to search</h2>
-          <p className="text-sm text-gray-400 dark:text-gray-600 font-jakarta mt-1">Search across articles, tools, startups, and funding rounds</p>
+          <p className="text-sm text-gray-400 dark:text-gray-600 font-jakarta mt-1">Search across articles, tools, and startups</p>
           <div className="flex flex-wrap justify-center gap-2 mt-6">
             {['GPT-5', 'Krutrim', 'AI Tools', 'Funding India', 'LLM'].map((t) => (
               <button key={t} onClick={() => setQuery(t)} className="pill text-xs">{t}</button>
             ))}
           </div>
         </div>
+      ) : loading && results.length === 0 ? (
+        <div className="text-center py-16">
+          <Loader2 className="w-8 h-8 text-brand animate-spin mx-auto mb-3" />
+          <p className="text-sm text-gray-500">Searching...</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-16">
+          <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
+            <SearchIcon className="w-8 h-8 text-gray-400" />
+          </div>
+          <h2 className="font-sora font-bold text-lg text-gray-900 dark:text-white mb-1">No results found</h2>
+          <p className="text-sm text-gray-500">Try different keywords or browse our categories</p>
+        </div>
       ) : (
         <div className="space-y-3">
-          <p className="text-sm text-gray-400 font-jakarta mb-4">{filtered.length} results for &ldquo;{query}&rdquo;</p>
-          {filtered.map((r, i) => {
+          <p className="text-sm text-gray-400 font-jakarta mb-4">{filtered.length} result{filtered.length !== 1 ? 's' : ''} for &ldquo;{query}&rdquo;</p>
+          {filtered.map((r) => {
             const Icon = typeIcons[r.type] || Newspaper;
+            const href = r.type === 'news' 
+              ? `/news/${r.slug}` 
+              : r.type === 'story'
+              ? `/stories/${r.slug}`
+              : r.type === 'tool'
+              ? `/tools/${r.slug}`
+              : `/startups/${r.slug}`;
+            
             return (
-              <Link key={i} href={r.slug} className="group block">
+              <Link key={r.id} href={href} className="group block">
                 <div className="card p-4 sm:p-5 flex items-start gap-3 sm:gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-                    <Icon className="w-5 h-5 text-brand" />
+                  <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden">
+                    {r.logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={r.logoUrl} alt="" className="w-8 h-8 object-contain" />
+                    ) : (
+                      <Icon className="w-5 h-5 text-brand" />
+                    )}
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">{r.type}</span>
-                      <span className="badge-category text-[9px]">{r.category}</span>
+                      {r.category && <span className="badge-category text-[9px]">{r.category}</span>}
                     </div>
-                    <h3 className="font-sora font-bold text-[15px] sm:text-base text-navy dark:text-white group-hover:text-brand transition-colors">{r.title}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 font-jakarta mt-1 line-clamp-1">{r.excerpt}</p>
-                    {r.date && <span className="text-xs text-gray-400 font-jakarta mt-1 block">{r.date}</span>}
+                    <h3 className="font-sora font-bold text-[15px] sm:text-base text-navy dark:text-white group-hover:text-brand transition-colors line-clamp-2">
+                      {r.title}
+                    </h3>
+                    {r.excerpt && (
+                      <p className="text-sm text-gray-500 dark:text-gray-400 font-jakarta mt-1 line-clamp-2">
+                        {r.excerpt}
+                      </p>
+                    )}
                   </div>
                 </div>
               </Link>

@@ -20,6 +20,8 @@ import {
   FolderOpen,
   Radio,
   Layers,
+  MessageSquare,
+  UserCog,
 } from 'lucide-react';
 
 const sidebarItems = [
@@ -33,6 +35,7 @@ const sidebarItems = [
   
   { type: 'divider' as const, label: 'Directories' },
   { label: 'AI Tools', href: '/tools-dir', icon: Wrench },
+  { label: 'Tool Reviews', href: '/tool-reviews', icon: MessageSquare },
   { label: 'Startups', href: '/startups-dir', icon: Building2 },
   { label: 'Funding Digests', href: '/funding-dir', icon: IndianRupee },
   
@@ -43,9 +46,11 @@ const sidebarItems = [
   { label: 'Sponsors', href: '/sponsors', icon: Building2 },
   
   { type: 'divider' as const, label: 'System' },
+  { label: 'Founders', href: '/founders', icon: UserCog },
   { label: 'Users', href: '/users', icon: Users },
   { label: 'Analytics', href: '/analytics', icon: BarChart3 },
   { label: 'Settings', href: '/settings', icon: Settings },
+  { label: 'Dev Tools', href: '/dev-tools', icon: Wrench },
 ];
 
 export function AdminSidebar({ session }: { session: any }) {

@@ -25,8 +25,8 @@ export async function getNewsletterStatsAction() {
       prisma.$queryRaw<any[]>`
         SELECT
           COUNT(*) as total,
-          COALESCE(SUM(opens), 0) as total_opens,
-          COALESCE(SUM(clicks), 0) as total_clicks,
+          COALESCE(SUM("uniqueOpens"), 0) as total_opens,
+          COALESCE(SUM("uniqueClicks"), 0) as total_clicks,
           COALESCE(SUM("totalSent"), 0) as total_sent
         FROM "NewsletterCampaign" WHERE status = 'SENT'
       `,
@@ -62,7 +62,7 @@ export async function getCampaignsAction() {
     const rows = await prisma.$queryRaw<any[]>`
       SELECT id, subject, "previewText", status, "sentAt"::text AS "sentAt",
              "scheduledAt"::text AS "scheduledAt",
-             "totalSent", opens, clicks, "createdAt"::text AS "createdAt"
+             "totalSent", opens, "uniqueOpens", clicks, "uniqueClicks", unsubscribes, "createdAt"::text AS "createdAt"
       FROM "NewsletterCampaign"
       ORDER BY "createdAt" DESC
     `;
@@ -159,8 +159,28 @@ export async function sendCampaignAction(id: string) {
       return { success: true, sent: 0 };
     }
 
-    // Build unsubscribe-aware HTML
-    const buildHtml = (email: string) => `
+    // Wrap links with tracking
+    const wrapLinksWithTracking = (html: string, email: string, campaignId: string) => {
+      // Match all <a> tags and wrap their href with tracking
+      return html.replace(
+        /<a\s+([^>]*href=["']([^"']+)["'][^>]*)>([^<]*)<\/a>/gi,
+        (match, attrs, url, text) => {
+          // Skip if already a tracking link or unsubscribe link
+          if (url.includes('/api/newsletter/track-click') || url.includes('/unsubscribe')) {
+            return match;
+          }
+          const trackingUrl = `${SITE_URL}/api/newsletter/track-click?c=${encodeURIComponent(campaignId)}&e=${encodeURIComponent(email)}&url=${encodeURIComponent(url)}&label=${encodeURIComponent(text)}`;
+          return `<a ${attrs.replace(/href=["'][^"']+["']/, `href="${trackingUrl}"`)}>${text}</a>`;
+        }
+      );
+    };
+
+    // Build unsubscribe-aware HTML with tracking pixel
+    const buildHtml = (email: string, campaignId: string) => {
+      const trackedBody = wrapLinksWithTracking(htmlBody, email, campaignId);
+      const trackingPixel = `${SITE_URL}/api/newsletter/track-open?c=${encodeURIComponent(campaignId)}&e=${encodeURIComponent(email)}`;
+      
+      return `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -171,17 +191,19 @@ export async function sendCampaignAction(id: string) {
     </div>
     <div style="padding:32px 40px">
       <h1 style="color:#1a1a1a;font-size:24px;font-weight:700;margin:0 0 24px">${campaign.subject}</h1>
-      ${htmlBody}
+      ${trackedBody}
     </div>
     <div style="padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center">
       <p style="color:#8898aa;font-size:12px;margin:0">
         You're receiving this because you subscribed to AIStartupImpact.<br>
-        <a href="${SITE_URL}/unsubscribe?email=${encodeURIComponent(email)}" style="color:#8898aa">Unsubscribe</a>
+        <a href="${SITE_URL}/unsubscribe?email=${encodeURIComponent(email)}&c=${encodeURIComponent(campaignId)}" style="color:#3b82f6;text-decoration:underline">Unsubscribe</a>
       </p>
     </div>
   </div>
+  <img src="${trackingPixel}" width="1" height="1" alt="" style="display:block;width:1px;height:1px" />
 </body>
 </html>`;
+    };
 
     // Send in batches of 100 (Resend limit)
     let totalSent = 0;
@@ -192,7 +214,7 @@ export async function sendCampaignAction(id: string) {
         from: FROM_EMAIL,
         to: [sub.email],
         subject: campaign.subject,
-        html: buildHtml(sub.email),
+        html: buildHtml(sub.email, id),
       }));
       await resend.batch.send(batch);
       totalSent += chunk.length;

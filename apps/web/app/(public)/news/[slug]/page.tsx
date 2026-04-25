@@ -8,6 +8,7 @@ import { defaultHeroArticle, defaultLatestStories, defaultIndiaAI } from '@/lib/
 import { buildArticleMetadata, generateArticleSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import { sanitizeHtml } from '@/lib/sanitize';
 import ShareButton from '@/components/ShareButton';
+import ArticleActions from '@/components/ArticleActions';
 import SubscribeForm from '@/components/SubscribeForm';
 
 export const revalidate = 60;
@@ -125,6 +126,13 @@ export default async function ArticlePage({ params }: { params: { slug: string }
           )}
 
           <div className="article-content prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+
+          {/* Likes, Comments, Share */}
+          <ArticleActions
+            slug={article.slug}
+            initialLikes={(article as any).likeCount || 0}
+            title={article.title}
+          />
 
           {relatedArticles.length > 0 && (
             <div className="mt-10 sm:mt-12">

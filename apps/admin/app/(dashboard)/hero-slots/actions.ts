@@ -5,41 +5,18 @@ import { revalidatePath } from 'next/cache';
 
 const sql = neon(process.env.DATABASE_URL!);
 
-export async function getPublishedArticlesForHeroAction() {
-  try {
-    const rows = await sql`
-      SELECT
-        a.id, a.title, a.slug, a.type, a.excerpt,
-        a."coverImage", a."thumbnailImage", a."readTimeMinutes",
-        a."publishedAt"::text AS "publishedAt",
-        u.name AS "authorName",
-        c.name AS "categoryName"
-      FROM "Article" a
-      LEFT JOIN "User" u ON u.id = a."authorId"
-      LEFT JOIN "Category" c ON c.id = a."categoryId"
-      WHERE a.status = 'PUBLISHED' AND a."deletedAt" IS NULL
-      ORDER BY a."publishedAt" DESC NULLS LAST
-      LIMIT 50
-    `;
-    return rows as any[];
-  } catch (e) {
-    console.error('getPublishedArticlesForHeroAction error:', e);
-    return [];
-  }
-}
-
 export async function getHeroSlotsAction() {
   try {
     const rows = await sql`
-      SELECT id, title, excerpt, "coverImage", "ctaUrl", "ctaLabel",
-             "badgeText", "badgeColor", "authorName", "readTimeMinutes",
+      SELECT id, title, excerpt, "coverImage", "ctaUrl", "ctaLabel", "badgeText",
+             "authorName", "readTimeMinutes", "sortOrder", "isActive",
              "startDate"::text AS "startDate", "endDate"::text AS "endDate",
-             "isActive", "sortOrder", "createdAt"::text AS "createdAt"
+             "createdAt"::text AS "createdAt"
       FROM "HeroSlot"
       ORDER BY "sortOrder" ASC, "createdAt" DESC
     `;
     return rows;
-  } catch (e) {
+  } catch (e: any) {
     console.error('getHeroSlotsAction error:', e);
     return [];
   }
@@ -49,27 +26,26 @@ export async function createHeroSlotAction(data: {
   title: string; excerpt?: string; coverImage?: string;
   ctaUrl: string; ctaLabel?: string; badgeText?: string;
   authorName?: string; readTimeMinutes?: number;
-  startDate: string; endDate: string; isActive?: boolean; sortOrder?: number;
+  sortOrder?: number; isActive?: boolean;
+  startDate?: string; endDate?: string;
 }) {
   try {
     await sql`
-      INSERT INTO "HeroSlot" (
-        id, title, excerpt, "coverImage", "ctaUrl", "ctaLabel",
-        "badgeText", "authorName", "readTimeMinutes",
-        "startDate", "endDate", "isActive", "sortOrder", "createdAt", "updatedAt"
-      ) VALUES (
-        gen_random_uuid()::text,
-        ${data.title}, ${data.excerpt || null}, ${data.coverImage || null},
+      INSERT INTO "HeroSlot" (id, title, excerpt, "coverImage", "ctaUrl", "ctaLabel", "badgeText",
+        "authorName", "readTimeMinutes", "sortOrder", "isActive", "startDate", "endDate", "createdAt", "updatedAt")
+      VALUES (
+        gen_random_uuid()::text, ${data.title}, ${data.excerpt || null}, ${data.coverImage || null},
         ${data.ctaUrl}, ${data.ctaLabel || 'Read Story'}, ${data.badgeText || 'Featured'},
-        ${data.authorName || null}, ${data.readTimeMinutes || null},
-        ${data.startDate}::timestamptz, ${data.endDate}::timestamptz,
-        ${data.isActive !== false}, ${data.sortOrder || 0}, NOW(), NOW()
+        ${data.authorName || null}, ${data.readTimeMinutes || 5},
+        ${data.sortOrder ?? 0}, ${data.isActive ?? true},
+        ${data.startDate ? data.startDate + 'T00:00:00' : null}::timestamp,
+        ${data.endDate ? data.endDate + 'T23:59:59' : null}::timestamp,
+        NOW(), NOW()
       )
     `;
     revalidatePath('/hero-slots');
     return { success: true };
   } catch (e: any) {
-    console.error('createHeroSlotAction error:', e);
     return { success: false, error: e.message };
   }
 }
@@ -78,30 +54,25 @@ export async function updateHeroSlotAction(id: string, data: {
   title: string; excerpt?: string; coverImage?: string;
   ctaUrl: string; ctaLabel?: string; badgeText?: string;
   authorName?: string; readTimeMinutes?: number;
-  startDate: string; endDate: string; isActive: boolean; sortOrder?: number;
+  sortOrder?: number; isActive?: boolean;
+  startDate?: string; endDate?: string;
 }) {
   try {
     await sql`
       UPDATE "HeroSlot" SET
-        title = ${data.title},
-        excerpt = ${data.excerpt || null},
-        "coverImage" = ${data.coverImage || null},
-        "ctaUrl" = ${data.ctaUrl},
-        "ctaLabel" = ${data.ctaLabel || 'Read Story'},
-        "badgeText" = ${data.badgeText || 'Featured'},
-        "authorName" = ${data.authorName || null},
-        "readTimeMinutes" = ${data.readTimeMinutes || null},
-        "startDate" = ${data.startDate}::timestamptz,
-        "endDate" = ${data.endDate}::timestamptz,
-        "isActive" = ${data.isActive},
-        "sortOrder" = ${data.sortOrder || 0},
+        title = ${data.title}, excerpt = ${data.excerpt || null},
+        "coverImage" = ${data.coverImage || null}, "ctaUrl" = ${data.ctaUrl},
+        "ctaLabel" = ${data.ctaLabel || 'Read Story'}, "badgeText" = ${data.badgeText || 'Featured'},
+        "authorName" = ${data.authorName || null}, "readTimeMinutes" = ${data.readTimeMinutes || 5},
+        "sortOrder" = ${data.sortOrder ?? 0}, "isActive" = ${data.isActive ?? true},
+        "startDate" = ${data.startDate ? data.startDate + 'T00:00:00' : null}::timestamp,
+        "endDate" = ${data.endDate ? data.endDate + 'T23:59:59' : null}::timestamp,
         "updatedAt" = NOW()
       WHERE id = ${id}
     `;
     revalidatePath('/hero-slots');
     return { success: true };
   } catch (e: any) {
-    console.error('updateHeroSlotAction error:', e);
     return { success: false, error: e.message };
   }
 }
@@ -112,7 +83,44 @@ export async function deleteHeroSlotAction(id: string) {
     revalidatePath('/hero-slots');
     return { success: true };
   } catch (e: any) {
-    console.error('deleteHeroSlotAction error:', e);
     return { success: false, error: e.message };
+  }
+}
+
+export async function toggleHeroSlotAction(id: string, current: boolean) {
+  try {
+    await sql`UPDATE "HeroSlot" SET "isActive" = ${!current}, "updatedAt" = NOW() WHERE id = ${id}`;
+    revalidatePath('/hero-slots');
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+}
+
+export async function reorderHeroSlotAction(id: string, sortOrder: number) {
+  try {
+    await sql`UPDATE "HeroSlot" SET "sortOrder" = ${sortOrder}, "updatedAt" = NOW() WHERE id = ${id}`;
+    revalidatePath('/hero-slots');
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+}
+
+export async function getPublishedArticlesForHeroAction() {
+  try {
+    const rows = await sql`
+      SELECT a.id, a.title, a.slug, a.excerpt, a."coverImage", a."readTimeMinutes",
+             u.name AS "authorName"
+      FROM "Article" a
+      LEFT JOIN "User" u ON u.id = a."authorId"
+      WHERE a.status = 'PUBLISHED' AND a."deletedAt" IS NULL
+      ORDER BY a."publishedAt" DESC
+      LIMIT 50
+    `;
+    return rows;
+  } catch (e: any) {
+    console.error('getPublishedArticlesForHeroAction error:', e);
+    return [];
   }
 }

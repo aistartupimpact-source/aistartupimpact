@@ -13,13 +13,15 @@ import {
 interface Campaign {
   id: string; subject: string; previewText: string; body: string;
   sentAt: string | null; scheduledAt: string | null;
-  status: string; totalSent: number; opens: number; clicks: number;
+  status: string; totalSent: number; opens: number; uniqueOpens: number; 
+  clicks: number; uniqueClicks: number; unsubscribes: number;
 }
 interface Stats { total: number; active: number; sentCount: number; openRate: string; ctr: string; }
 
 const empty: Omit<Campaign, 'id'> = {
   subject: '', previewText: '', body: '', sentAt: null,
-  scheduledAt: null, status: 'DRAFT', totalSent: 0, opens: 0, clicks: 0,
+  scheduledAt: null, status: 'DRAFT', totalSent: 0, opens: 0, uniqueOpens: 0,
+  clicks: 0, uniqueClicks: 0, unsubscribes: 0,
 };
 const statusStyle: Record<string, string> = {
   SENT: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
@@ -56,7 +58,9 @@ export default function NewsletterAdminPage() {
       body: (r.contentJson as any)?.html || '',
       sentAt: r.sentAt, scheduledAt: r.scheduledAt,
       status: r.status, totalSent: Number(r.totalSent || 0),
-      opens: Number(r.opens || 0), clicks: Number(r.clicks || 0),
+      opens: Number(r.opens || 0), uniqueOpens: Number(r.uniqueOpens || 0),
+      clicks: Number(r.clicks || 0), uniqueClicks: Number(r.uniqueClicks || 0),
+      unsubscribes: Number(r.unsubscribes || 0),
     })));
     setLoading(false);
   }, []);
@@ -155,12 +159,13 @@ export default function NewsletterAdminPage() {
               <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden sm:table-cell">Sent To</th>
               <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden lg:table-cell">Opens</th>
               <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden lg:table-cell">Clicks</th>
+              <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden xl:table-cell">Unsubs</th>
               <th className="px-6 py-3 w-40"></th>
             </tr>
           </thead>
           <tbody>
             {campaigns.length === 0 && !loading && (
-              <tr><td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-400 font-jakarta">No campaigns yet. Create your first one.</td></tr>
+              <tr><td colSpan={7} className="px-6 py-12 text-center text-sm text-gray-400 font-jakarta">No campaigns yet. Create your first one.</td></tr>
             )}
             {campaigns.map((c) => (
               <tr key={c.id} className="border-t border-gray-50 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
@@ -179,8 +184,25 @@ export default function NewsletterAdminPage() {
                   </span>
                 </td>
                 <td className="px-6 py-4 hidden sm:table-cell"><span className="text-sm text-gray-600 dark:text-gray-400 font-jakarta">{c.totalSent > 0 ? c.totalSent.toLocaleString() : '—'}</span></td>
-                <td className="px-6 py-4 hidden lg:table-cell"><span className="text-sm text-gray-600 dark:text-gray-400 font-jakarta">{c.opens > 0 ? c.opens.toLocaleString() : '—'}</span></td>
-                <td className="px-6 py-4 hidden lg:table-cell"><span className="text-sm text-gray-600 dark:text-gray-400 font-jakarta">{c.clicks > 0 ? c.clicks.toLocaleString() : '—'}</span></td>
+                <td className="px-6 py-4 hidden lg:table-cell">
+                  <div className="flex flex-col">
+                    <span className="text-sm text-gray-600 dark:text-gray-400 font-jakarta font-semibold">{c.uniqueOpens > 0 ? c.uniqueOpens.toLocaleString() : '—'}</span>
+                    {c.totalSent > 0 && c.uniqueOpens > 0 && (
+                      <span className="text-xs text-gray-400 font-jakarta">{((c.uniqueOpens / c.totalSent) * 100).toFixed(1)}%</span>
+                    )}
+                  </div>
+                </td>
+                <td className="px-6 py-4 hidden lg:table-cell">
+                  <div className="flex flex-col">
+                    <span className="text-sm text-gray-600 dark:text-gray-400 font-jakarta font-semibold">{c.uniqueClicks > 0 ? c.uniqueClicks.toLocaleString() : '—'}</span>
+                    {c.totalSent > 0 && c.uniqueClicks > 0 && (
+                      <span className="text-xs text-gray-400 font-jakarta">{((c.uniqueClicks / c.totalSent) * 100).toFixed(1)}%</span>
+                    )}
+                  </div>
+                </td>
+                <td className="px-6 py-4 hidden xl:table-cell">
+                  <span className="text-sm text-gray-600 dark:text-gray-400 font-jakarta">{c.unsubscribes > 0 ? c.unsubscribes.toLocaleString() : '—'}</span>
+                </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-1">
                     {(c.status === 'DRAFT' || c.status === 'SCHEDULED') && (

@@ -11,6 +11,8 @@ import {
 
 import { uploadMediaAction, saveArticleAction, getArticleByIdAction } from '../actions';
 import MediaPicker from '../../../../components/MediaPicker';
+import SEOScorePanel from '../../../../components/SEOScorePanel';
+import ImageAltTextManager from '../../../../components/ImageAltTextManager';
 
 export default function EditArticlePage({ params }: { params: { id: string } }) {
   const [title, setTitle] = useState('');
@@ -117,6 +119,25 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       setUploadingThumbnail(false);
       e.target.value = '';
     }
+  };
+
+  // Handler for updating image alt text
+  const handleUpdateImageAlt = (oldSrc: string, newAltText: string) => {
+    if (!editorRef.current) return;
+    
+    const content = editorRef.current.innerHTML;
+    // Find and replace the image tag with updated alt text
+    const imgRegex = new RegExp(`<img([^>]*?)src=["']${oldSrc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']([^>]*?)>`, 'g');
+    
+    const updatedContent = content.replace(imgRegex, (match, before, after) => {
+      // Remove existing alt attribute if present
+      let cleaned = (before + after).replace(/\s*alt=["'][^"']*["']/g, '');
+      // Add new alt attribute
+      return `<img${cleaned} alt="${newAltText}">`;
+    });
+    
+    editorRef.current.innerHTML = updatedContent;
+    updateStats();
   };
 
   // Load real article data
@@ -546,6 +567,27 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* SEO Score Panel */}
+            <div className="mt-8">
+              <SEOScorePanel
+                title={title}
+                seoTitle={seoTitle}
+                metaDescription={metaDesc}
+                focusKeyword={focusKeyword}
+                content={editorRef.current?.innerHTML || ''}
+                slug={slug}
+              />
+            </div>
+
+            {/* Image Alt Text Manager */}
+            <div className="mt-8">
+              <ImageAltTextManager
+                content={editorRef.current?.innerHTML || ''}
+                focusKeyword={focusKeyword}
+                onUpdateImage={handleUpdateImageAlt}
+              />
             </div>
 
             {/* Integrated Media Picker */}

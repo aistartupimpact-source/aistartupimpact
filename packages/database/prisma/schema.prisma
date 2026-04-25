@@ -143,6 +143,20 @@ enum InvestorType {
   GOVERNMENT
 }
 
+enum FounderUserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+enum ClaimStatus {
+  UNCLAIMED
+  PENDING
+  CLAIMED
+  VERIFIED
+  REJECTED
+}
+
 // ════════════════════════════════════════════
 // USER & AUTH
 // ════════════════════════════════════════════
@@ -286,6 +300,7 @@ model Article {
   wordCount       Int           @default(0)
   viewCount       Int           @default(0)
   shareCount      Int           @default(0)
+  likeCount       Int           @default(0)
   isFeatured      Boolean       @default(false)
   isPinned        Boolean       @default(false)
   isSponsored     Boolean       @default(false)
@@ -459,6 +474,12 @@ model AiTool {
   referralCode        String?            @unique
   referredBy          String?            // Foreign key to another referralCode
 
+  // Founder Portal Integration
+  ownerId             String?
+  owner               FounderUser?       @relation(fields: [ownerId], references: [id])
+  claimStatus         ClaimStatus        @default(UNCLAIMED)
+  claimedAt           DateTime?
+  
   submittedBy         String?
   approvedBy          String?
   approvedAt          DateTime?
@@ -482,6 +503,8 @@ model AiTool {
   @@index([pricingModel])
   @@index([isFeatured, status])
   @@index([avgRating])
+  @@index([ownerId])
+  @@index([claimStatus])
 }
 
 model ToolTraffic {
@@ -516,6 +539,7 @@ model ToolReview {
   status             ReviewStatus @default(PENDING)
   flagCount          Int          @default(0)
   aiSpamScore        Int?
+  helpfulCount       Int          @default(0)
   
   publishedAt        DateTime     @default(now())
   createdAt          DateTime     @default(now())
@@ -592,6 +616,16 @@ model Startup {
   isFeatured       Boolean      @default(false)
   featuredUntil    DateTime?
   impactScore      Int          @default(0) // 0-100
+  founders         String[]     @default([])
+  foundersData     Json?
+  
+  // Founder Portal Integration
+  ownerId          String?
+  owner            FounderUser? @relation(fields: [ownerId], references: [id])
+  claimStatus      ClaimStatus  @default(UNCLAIMED)
+  claimedAt        DateTime?
+  submittedBy      String?      // "ADMIN" or "FOUNDER"
+  
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
   deletedAt        DateTime?
@@ -606,6 +640,8 @@ model Startup {
   @@index([isIndian])
   @@index([impactScore])
   @@index([isFeatured])
+  @@index([ownerId])
+  @@index([claimStatus])
 }
 
 model FundingRound {
@@ -786,12 +822,67 @@ model NewsletterCampaign {
   sentAt       DateTime?
   totalSent    Int                      @default(0)
   opens        Int                      @default(0)
+  uniqueOpens  Int                      @default(0)
   clicks       Int                      @default(0)
+  uniqueClicks Int                      @default(0)
   unsubscribes Int                      @default(0)
+  bounces      Int                      @default(0)
   createdAt    DateTime                 @default(now())
   updatedAt    DateTime                 @updatedAt
 
+  // Relations
+  opens_tracking        NewsletterOpen[]
+  clicks_tracking       NewsletterClick[]
+  unsubscribes_tracking NewsletterUnsubscribe[]
+
   @@index([status])
+  @@index([sentAt])
+}
+
+model NewsletterOpen {
+  id         String             @id @default(uuid())
+  campaignId String
+  campaign   NewsletterCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  email      String
+  ipAddress  String?
+  userAgent  String?            @db.Text
+  openedAt   DateTime           @default(now())
+
+  @@index([campaignId, email])
+  @@index([campaignId, openedAt])
+  @@index([email])
+}
+
+model NewsletterClick {
+  id         String             @id @default(uuid())
+  campaignId String
+  campaign   NewsletterCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  email      String
+  linkUrl    String             @db.Text
+  linkLabel  String?
+  ipAddress  String?
+  userAgent  String?            @db.Text
+  clickedAt  DateTime           @default(now())
+
+  @@index([campaignId, email])
+  @@index([campaignId, clickedAt])
+  @@index([email])
+  @@index([campaignId])
+}
+
+model NewsletterUnsubscribe {
+  id              String             @id @default(uuid())
+  campaignId      String?
+  campaign        NewsletterCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  email           String
+  reason          String?            @db.Text
+  feedback        String?            @db.Text
+  ipAddress       String?
+  unsubscribedAt  DateTime           @default(now())
+
+  @@index([campaignId, unsubscribedAt])
+  @@index([email])
+  @@index([unsubscribedAt])
 }
 
 // ════════════════════════════════════════════
@@ -813,6 +904,29 @@ model GlossaryTerm {
 // ════════════════════════════════════════════
 // TICKERS
 // ════════════════════════════════════════════
+
+model HeroSlot {
+  id              String    @id @default(uuid())
+  articleId       String?
+  title           String?
+  excerpt         String?   @db.Text
+  subtitle        String?
+  imageUrl        String?
+  coverImage      String?
+  ctaUrl          String?
+  ctaLabel        String?
+  badgeText       String?
+  authorName      String?
+  readTimeMinutes Int?
+  startDate       DateTime?
+  endDate         DateTime?
+  sortOrder       Int       @default(0)
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([isActive, sortOrder])
+}
 
 model BreakingTicker {
   id        String   @id @default(uuid())
@@ -848,15 +962,17 @@ model SiteSetting {
 }
 
 model Sponsor {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   brand     String
-  tagline   String   @db.Text
+  tagline   String    @db.Text
   ctaUrl    String
   logoUrl   String?
-  isActive  Boolean  @default(true)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isActive  Boolean   @default(true)
+  sortOrder Int       @default(0)
+  startDate DateTime?
+  endDate   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   @@index([isActive, sortOrder])
 }
@@ -869,4 +985,145 @@ model Redirect {
   createdAt DateTime @default(now())
 
   @@index([fromPath])
+}
+
+// ════════════════════════════════════════════
+// FOUNDER PORTAL
+// ════════════════════════════════════════════
+
+model FounderUser {
+  id            String             @id @default(uuid())
+  email         String             @unique
+  name          String
+  passwordHash  String?            // Optional for OAuth users
+  company       String?
+  companyDomain String?            // Extracted from email (e.g., "yotta.com")
+  role          String?            // CEO, CTO, Founder, etc.
+  phone         String?
+  avatar        String?
+  bio           String?            @db.Text
+  linkedin      String?
+  twitter       String?
+  website       String?
+  
+  // OAuth fields
+  googleId      String?            @unique
+  authProvider  String             @default("email") // "email" or "google"
+  
+  emailVerified Boolean            @default(false)
+  verifyToken   String?            @unique
+  resetToken    String?            @unique
+  resetExpiry   DateTime?
+  
+  status        FounderUserStatus  @default(PENDING_VERIFICATION)
+  
+  // Onboarding tracking
+  onboardingCompleted Boolean       @default(false)
+  onboardingStep      Int           @default(0) // 0=signup, 1=profile, 2=first_submission
+  
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  lastLoginAt   DateTime?
+  
+  // Relations
+  startups      Startup[]
+  tools         AiTool[]
+  sessions      FounderSession[]
+  analytics     FounderAnalytics[]
+  notifications FounderNotification[]
+  
+  @@index([email])
+  @@index([status])
+  @@index([verifyToken])
+  @@index([resetToken])
+  @@index([googleId])
+  @@index([companyDomain])
+}
+
+model FounderSession {
+  id        String      @id @default(uuid())
+  userId    String
+  user      FounderUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String      @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime    @default(now())
+  
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model FounderAnalytics {
+  id         String      @id @default(uuid())
+  userId     String
+  user       FounderUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  entityType String // STARTUP, TOOL
+  entityId   String
+  
+  date       DateTime    @db.Date
+  views      Int         @default(0)
+  clicks     Int         @default(0)
+  inquiries  Int         @default(0)
+  favorites  Int         @default(0)
+  shares     Int         @default(0)
+  
+  // Traffic sources
+  directViews    Int @default(0)
+  searchViews    Int @default(0)
+  socialViews    Int @default(0)
+  referralViews  Int @default(0)
+  
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  
+  @@unique([userId, entityType, entityId, date])
+  @@index([userId, date])
+  @@index([entityType, entityId, date])
+}
+
+model FounderNotification {
+  id        String      @id @default(uuid())
+  userId    String
+  user      FounderUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type      String // SUBMISSION, APPROVAL, REJECTION, REVISION, ANALYTICS, SYSTEM
+  title     String
+  message   String      @db.Text
+  link      String?
+  
+  read      Boolean     @default(false)
+  createdAt DateTime    @default(now())
+  
+  @@index([userId, read])
+  @@index([userId, createdAt])
+}
+
+// ════════════════════════════════════════════
+// ANALYTICS & TRACKING
+// ════════════════════════════════════════════
+
+model PageView {
+  id          String   @id @default(uuid())
+  pathname    String
+  referrer    String?
+  source      String   // "DIRECT", "SEARCH", "SOCIAL", "REFERRAL", "EMAIL"
+  device      String   // "DESKTOP", "MOBILE", "TABLET"
+  browser     String?
+  os          String?
+  country     String?
+  sessionHash String   // Hash of IP + User Agent for session tracking
+  ipHash      String?  // Hashed IP for privacy
+  userAgent   String?  @db.Text
+  duration    Int?     // Session duration in seconds (updated on exit)
+  bounced     Boolean  @default(false) // True if only one page viewed
+  createdAt   DateTime @default(now())
+
+  @@index([pathname, createdAt])
+  @@index([sessionHash, createdAt])
+  @@index([source, createdAt])
+  @@index([device, createdAt])
+  @@index([createdAt])
 }

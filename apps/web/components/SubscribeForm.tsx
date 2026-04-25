@@ -50,12 +50,12 @@ export default function SubscribeForm({ buttonText = 'Subscribe', source = 'webs
 
       if (res.ok && data.success) {
         setStatus('success');
-        setMessage('Successfully subscribed!');
+        setMessage(data.data?.message || 'Successfully subscribed!');
         setEmail('');
       } else {
         setStatus('error');
-        // Never reflect raw server error — use generic message
-        setMessage('Failed to subscribe. Please try again.');
+        // Show the specific error message from the API (e.g., "already subscribed")
+        setMessage(data.error || 'Failed to subscribe. Please try again.');
       }
     } catch {
       setStatus('error');

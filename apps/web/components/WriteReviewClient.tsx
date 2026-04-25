@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Star, X, UploadCloud, ShieldCheck, CheckCircle } from 'lucide-react';
+import { Star, X, UploadCloud, ShieldCheck, CheckCircle, LogIn } from 'lucide-react';
+import { useSession, signIn } from 'next-auth/react';
+import { submitToolReview } from '../app/actions/reviews';
+import { uploadToStorage } from '@/lib/upload';
 
 interface WriteReviewClientProps {
   toolSlug: string;
@@ -9,6 +12,7 @@ interface WriteReviewClientProps {
 }
 
 export default function WriteReviewClient({ toolSlug, toolName }: WriteReviewClientProps) {
+  const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -18,6 +22,14 @@ export default function WriteReviewClient({ toolSlug, toolName }: WriteReviewCli
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+
+  const handleOpenClick = () => {
+    if (!session) {
+      signIn('google');
+      return;
+    }
+    setIsOpen(true);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,12 +42,27 @@ export default function WriteReviewClient({ toolSlug, toolName }: WriteReviewCli
     setError('');
 
     try {
-      // In a real flow with Auth, NextAuth session token is sent automatically
-      // We are simulating the API call since public web auth is pending.
-      await new Promise(res => setTimeout(res, 1500));
+      let finalImageUrl = undefined;
+      
+      if (receipt) {
+        finalImageUrl = await uploadToStorage(receipt);
+      }
+
+      const res = await submitToolReview({
+        toolSlug,
+        rating,
+        title,
+        body,
+        proofImageUrl: finalImageUrl,
+      });
+
+      if (!res.success) {
+        throw new Error(res.error);
+      }
+
       setSubmitted(true);
-    } catch (err) {
-      setError('Something went wrong. Please try again.');
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -44,10 +71,10 @@ export default function WriteReviewClient({ toolSlug, toolName }: WriteReviewCli
   return (
     <>
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpenClick}
         className="btn-brand text-sm shadow-md"
       >
-        Write a Review
+        {session ? 'Write a Review' : 'Sign In to Review'}
       </button>
 
       {isOpen && (
@@ -125,7 +152,7 @@ export default function WriteReviewClient({ toolSlug, toolName }: WriteReviewCli
                     />
                   </div>
 
-                  {/* Verification Upload (Mock) */}
+                  {/* Verification Upload */}
                   <div className="border border-dashed border-brand/30 bg-brand/5 dark:bg-brand/10 p-4 rounded-xl">
                     <div className="flex items-start gap-3">
                       <ShieldCheck className="w-5 h-5 text-brand shrink-0 mt-0.5" />
@@ -134,7 +161,7 @@ export default function WriteReviewClient({ toolSlug, toolName }: WriteReviewCli
                         <p className="text-xs text-brand/80 mt-1 mb-3">Upload a receipt or screenshot of your active dashboard to earn the prestigious "Verified User" badge.</p>
                         <label className="inline-flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 border border-brand/20 rounded-md text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer shadow-sm transition-colors">
                           <UploadCloud className="w-4 h-4" />
-                          {receipt ? receipt.name : 'Upload Proof'}
+                          {receipt ? (receipt.name.length > 20 ? receipt.name.slice(0, 20) + '...' : receipt.name) : 'Upload Proof'}
                           <input
                             type="file"
                             accept="image/*"
@@ -157,7 +184,7 @@ export default function WriteReviewClient({ toolSlug, toolName }: WriteReviewCli
                   </button>
 
                   <p className="text-center text-[10px] text-gray-400 mt-2">
-                    Must be logged in to review. Fake reviews will be permanently removed.
+                    Logged in as {session?.user?.name}. Fake reviews will be removed.
                   </p>
                 </form>
               </div>

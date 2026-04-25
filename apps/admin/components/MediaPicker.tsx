@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Upload, Image as ImageIcon, Search, Trash2, CheckCircle2 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { listMediaAction, uploadMediaFileAction, deleteMediaAction } from '../app/(dashboard)/media/actions';
 
 // Helper for standardizing tailwind classes
 function cn(...inputs: ClassValue[]) {
@@ -15,7 +16,7 @@ interface MediaFile {
   name: string;
   url: string;
   size: string;
-  dimensions: string;
+  dimensions?: string;
   uploadedAt: string;
 }
 
@@ -45,17 +46,14 @@ export default function MediaPicker({ isOpen, onClose, onSelect, title = "Select
   const fetchLibrary = async () => {
     setLoading(true);
     try {
-      // In Next.js App Router, env vars can be accessed differently or proxied. Hardcoding generic path.
-      const res = await fetch('/api/v1/admin/media', {
-        // Headers handled via middleware / standard session layout
-      });
-      if (!res.ok) throw new Error('Failed to fetch');
-      const data = await res.json();
-      if (data.success) {
-        setFiles(data.data);
+      const res = await listMediaAction();
+      if (res.success && res.data) {
+        setFiles(res.data);
+      } else {
+        console.error('Failed to fetch media:', res.error);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching media:', err);
     } finally {
       setLoading(false);
     }
@@ -70,25 +68,17 @@ export default function MediaPicker({ isOpen, onClose, onSelect, title = "Select
     formData.append('file', file);
 
     try {
-      const res = await fetch('/api/v1/admin/media/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        if (data.data.isDuplicate) {
-          alert("Duplicate Image detected! We gracefully skipped the upload to save your bandwidth.");
-        }
-
+      const res = await uploadMediaFileAction(formData);
+      
+      if (res.success && res.data) {
         // Immediately select the returned file
-        onSelect(data.data.url);
+        onSelect(res.data.url);
         onClose();
       } else {
-        alert(data.error || "Upload failed");
+        alert(res.error || "Upload failed");
       }
     } catch (err) {
-      console.error(err);
+      console.error('Upload error:', err);
       alert("An error occurred during upload.");
     } finally {
       setUploading(false);
@@ -100,16 +90,16 @@ export default function MediaPicker({ isOpen, onClose, onSelect, title = "Select
     if (!confirm("Are you sure you want to delete this asset? It will be removed globally.")) return;
 
     try {
-      const res = await fetch(`/api/v1/admin/media/${encodeURIComponent(fileId)}`, {
-        method: 'DELETE',
-      });
-      const data = await res.json();
-      if (data.success) {
+      const res = await deleteMediaAction(fileId);
+      if (res.success) {
         setFiles(f => f.filter(x => x.id !== fileId));
         if (selectedFile?.id === fileId) setSelectedFile(null);
+      } else {
+        alert(res.error || 'Delete failed');
       }
     } catch (err) {
-      console.error(err);
+      console.error('Delete error:', err);
+      alert('Delete failed');
     }
   };
 

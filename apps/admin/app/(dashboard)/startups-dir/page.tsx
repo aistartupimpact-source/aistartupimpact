@@ -25,8 +25,9 @@ interface Startup {
   headquartersCity?: string;
   isFeatured: boolean;
   featuredUntil?: string;
-  statValue?: string;
-  statLabel?: string;
+  foundedYear?: number | null;
+  employeeCount?: number | null;
+  impactScore?: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -34,16 +35,9 @@ interface Startup {
 const stages = ['IDEA', 'PRE_SEED', 'SEED', 'SERIES_A', 'SERIES_B', 'SERIES_C', 'GROWTH', 'PUBLIC'];
 
 const emptyStartup: Omit<Startup, 'id' | 'createdAt' | 'updatedAt'> = {
-  name: '',
-  tagline: '',
-  description: '',
-  logoUrl: '',
-  websiteUrl: '',
-  stage: 'SEED',
-  headquartersCity: '',
-  isFeatured: false,
-  statValue: '',
-  statLabel: '',
+  name: '', tagline: '', description: '', logoUrl: '', websiteUrl: '',
+  stage: 'SEED', headquartersCity: '', isFeatured: false,
+  foundedYear: null, employeeCount: null, impactScore: null,
 };
 
 export default function StartupsDirPage() {
@@ -75,7 +69,7 @@ export default function StartupsDirPage() {
 
   const filtered = startups.filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
-    s.tagline.toLowerCase().includes(search.toLowerCase())
+    (s.tagline || '').toLowerCase().includes(search.toLowerCase())
   );
 
   const featuredCount = startups.filter(s => s.isFeatured).length;
@@ -127,8 +121,9 @@ export default function StartupsDirPage() {
         stage: editing.stage,
         headquartersCity: editing.headquartersCity,
         isFeatured: editing.isFeatured,
-        statValue: editing.statValue,
-        statLabel: editing.statLabel,
+        foundedYear: editing.foundedYear,
+        employeeCount: editing.employeeCount,
+        impactScore: editing.impactScore,
       };
 
       if (editing.id && startups.find(s => s.id === editing.id)) {
@@ -371,33 +366,27 @@ export default function StartupsDirPage() {
                 )}
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Highlight Stat (shown on homepage card)</label>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <input
-                      type="text"
-                      className="input-field text-sm"
-                      value={editing.statValue || ''}
-                      onChange={(e) => setEditing({ ...editing, statValue: e.target.value })}
-                      placeholder="e.g. 40% or ₹10Cr or 99.9%"
-                    />
-                    <p className="text-[10px] text-gray-400 font-jakarta mt-1">Stat value (big number)</p>
-                  </div>
-                  <div>
-                    <input
-                      type="text"
-                      className="input-field text-sm"
-                      value={editing.statLabel || ''}
-                      onChange={(e) => setEditing({ ...editing, statLabel: e.target.value })}
-                      placeholder="e.g. Lower GPU Cost"
-                    />
-                    <p className="text-[10px] text-gray-400 font-jakarta mt-1">Stat label (description)</p>
-                  </div>
-                </div>
+                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
+                  Description <span className="text-gray-400 normal-case font-normal">(max 500 words)</span>
+                </label>
+                <textarea className="input-field text-sm" rows={4} value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} placeholder="Brief description of the startup..." />
               </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Description</label>
-                <textarea className="input-field text-sm" rows={3} value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} placeholder="Brief description of the startup..." />
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Founded Year</label>
+                  <input type="number" className="input-field text-sm" value={editing.foundedYear ?? ''} placeholder="2023"
+                    onChange={e => setEditing({ ...editing, foundedYear: e.target.value ? parseInt(e.target.value) : null })} />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Employees</label>
+                  <input type="number" className="input-field text-sm" value={editing.employeeCount ?? ''} placeholder="50"
+                    onChange={e => setEditing({ ...editing, employeeCount: e.target.value ? parseInt(e.target.value) : null })} />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Impact Score</label>
+                  <input type="number" className="input-field text-sm" value={editing.impactScore ?? ''} placeholder="1-100" min={1} max={100}
+                    onChange={e => setEditing({ ...editing, impactScore: e.target.value ? parseInt(e.target.value) : null })} />
+                </div>
               </div>
               <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
                 <label className="flex items-center gap-3 cursor-pointer">

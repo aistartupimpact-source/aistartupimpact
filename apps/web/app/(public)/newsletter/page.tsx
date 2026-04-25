@@ -63,26 +63,28 @@ export default function NewsletterPage() {
         ))}
       </div>
 
-      {/* Jobs Coming Soon */}
-      <div className="card p-5 sm:p-6 border-l-4 border-l-brand bg-gradient-to-r from-brand-50/50 to-white dark:from-brand-900/10 dark:to-gray-900">
-        <div className="flex items-start gap-4">
-          <div className="w-10 h-10 rounded-xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center shrink-0">
-            <Briefcase className="w-5 h-5 text-brand" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-sora font-bold text-sm text-navy dark:text-white">AI Jobs Board — Coming Soon</h3>
-              <span className="text-[9px] font-bold bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2 py-0.5 rounded-full uppercase">Soon</span>
+      {/* Jobs Coming Soon - Hidden */}
+      {false && (
+        <div className="card p-5 sm:p-6 border-l-4 border-l-brand bg-gradient-to-r from-brand-50/50 to-white dark:from-brand-900/10 dark:to-gray-900">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center shrink-0">
+              <Briefcase className="w-5 h-5 text-brand" />
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 font-jakarta leading-relaxed">
-              We&apos;re building a curated AI jobs board for the Indian ecosystem — ML engineers, AI researchers, startup roles, and more. Subscribe to get notified when it launches.
-            </p>
-            <button className="btn-brand mt-3 text-xs flex items-center gap-1.5">
-              <Bell className="w-3.5 h-3.5" /> Notify Me When It Launches
-            </button>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-sora font-bold text-sm text-navy dark:text-white">AI Jobs Board — Coming Soon</h3>
+                <span className="text-[9px] font-bold bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2 py-0.5 rounded-full uppercase">Soon</span>
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 font-jakarta leading-relaxed">
+                We&apos;re building a curated AI jobs board for the Indian ecosystem — ML engineers, AI researchers, startup roles, and more. Subscribe to get notified when it launches.
+              </p>
+              <button className="btn-brand mt-3 text-xs flex items-center gap-1.5">
+                <Bell className="w-3.5 h-3.5" /> Notify Me When It Launches
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

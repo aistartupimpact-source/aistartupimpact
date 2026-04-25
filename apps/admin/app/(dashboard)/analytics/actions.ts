@@ -35,6 +35,7 @@ export async function getAnalyticsDataAction(period: string = '7 days') {
       placementStats,
       subscriberStats,
       userStats,
+      pageViewStats,
     ] = await Promise.all([
       // Article view counts and metrics
       prisma.$queryRawUnsafe(`
@@ -94,46 +95,124 @@ export async function getAnalyticsDataAction(period: string = '7 days') {
         FROM "User"
         WHERE "isActive" = true
       `),
+
+      // PageView analytics
+      prisma.$queryRawUnsafe(`
+        SELECT 
+          COUNT(*) as total_pageviews,
+          COUNT(DISTINCT "sessionHash") as unique_visitors,
+          COUNT(DISTINCT "ipHash") as unique_ips,
+          AVG(CASE WHEN duration IS NOT NULL THEN duration ELSE 0 END) as avg_duration,
+          COUNT(*) FILTER (WHERE bounced = true) as bounced_sessions
+        FROM "PageView"
+        WHERE "createdAt" >= NOW() - INTERVAL '${daysBack} days'
+      `),
     ]);
 
     const stats = (articleStats as any[])[0] || {};
     const placements = (placementStats as any[])[0] || {};
     const subscribers = (subscriberStats as any[])[0] || {};
     const users = (userStats as any[])[0] || {};
+    const pageViews = (pageViewStats as any[])[0] || {};
 
     // Calculate CTR
     const totalImpressions = Number(placements.total_impressions || 0);
     const totalClicks = Number(placements.total_clicks || 0);
     const ctr = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : '0.00';
 
-    // Mock some additional metrics that would come from analytics service
-    const mockMetrics = {
-      uniqueVisitors: Math.floor(Number(stats.total_views || 0) * 0.65),
-      avgSession: '4m 12s',
-      bounceRate: '38%',
-      // Traffic sources (would come from analytics service)
-      referrers: [
-        { source: 'Google Search', visits: Math.floor(Number(stats.total_views || 0) * 0.45), pct: 45 },
-        { source: 'Twitter / X', visits: Math.floor(Number(stats.total_views || 0) * 0.20), pct: 20 },
-        { source: 'LinkedIn', visits: Math.floor(Number(stats.total_views || 0) * 0.16), pct: 16 },
-        { source: 'Direct', visits: Math.floor(Number(stats.total_views || 0) * 0.12), pct: 12 },
-        { source: 'Newsletter', visits: Math.floor(Number(stats.total_views || 0) * 0.07), pct: 7 },
-      ],
-      devices: [
-        { type: 'Desktop', pct: 58 },
-        { type: 'Mobile', pct: 38 },
-        { type: 'Other', pct: 4 },
-      ],
-    };
+    // Calculate real metrics from PageView data
+    const totalPageviews = Number(pageViews.total_pageviews || 0);
+    const uniqueVisitors = Number(pageViews.unique_visitors || 0);
+    const avgDurationSeconds = Number(pageViews.avg_duration || 0);
+    const bouncedSessions = Number(pageViews.bounced_sessions || 0);
+    
+    // Format average session duration
+    const avgSession = avgDurationSeconds > 0 
+      ? `${Math.floor(avgDurationSeconds / 60)}m ${avgDurationSeconds % 60}s`
+      : 'N/A';
+    
+    // Calculate bounce rate
+    const bounceRate = totalPageviews > 0 
+      ? `${Math.round((bouncedSessions / totalPageviews) * 100)}%`
+      : 'N/A';
+
+    // Fetch real traffic data by source
+    const trafficBySource = await prisma.$queryRawUnsafe<any[]>(`
+      SELECT 
+        source,
+        COUNT(*) as visits
+      FROM "PageView"
+      WHERE "createdAt" >= NOW() - INTERVAL '${daysBack} days'
+      GROUP BY source
+      ORDER BY visits DESC
+    `);
+
+    // Calculate traffic source percentages
+    const referrers = trafficBySource.map((item: any) => {
+      const visits = Number(item.visits || 0);
+      const pct = totalPageviews > 0 ? Math.round((visits / totalPageviews) * 100) : 0;
+      
+      // Map source codes to friendly names
+      const sourceNames: Record<string, string> = {
+        'DIRECT': 'Direct',
+        'SEARCH': 'Search Engines',
+        'SOCIAL': 'Social Media',
+        'REFERRAL': 'Referral',
+        'EMAIL': 'Email/Newsletter',
+      };
+      
+      return {
+        source: sourceNames[item.source] || item.source,
+        visits,
+        pct,
+      };
+    });
+
+    // If no traffic data, show placeholder
+    const finalReferrers = referrers.length > 0 ? referrers : [
+      { source: 'No traffic data yet', visits: 0, pct: 0 },
+    ];
+
+    // Fetch real device breakdown
+    const deviceBreakdown = await prisma.$queryRawUnsafe<any[]>(`
+      SELECT 
+        device,
+        COUNT(*) as count
+      FROM "PageView"
+      WHERE "createdAt" >= NOW() - INTERVAL '${daysBack} days'
+      GROUP BY device
+      ORDER BY count DESC
+    `);
+
+    // Calculate device percentages
+    const devices = deviceBreakdown.map((item: any) => {
+      const count = Number(item.count || 0);
+      const pct = totalPageviews > 0 ? Math.round((count / totalPageviews) * 100) : 0;
+      
+      // Capitalize device names
+      const deviceName = item.device.charAt(0) + item.device.slice(1).toLowerCase();
+      
+      return {
+        type: deviceName,
+        pct,
+      };
+    });
+
+    // If no device data, show placeholder
+    const finalDevices = devices.length > 0 ? devices : [
+      { type: 'Desktop', pct: 0 },
+      { type: 'Mobile', pct: 0 },
+      { type: 'Tablet', pct: 0 },
+    ];
 
     return {
       success: true,
       data: {
         metrics: {
-          pageviews: Number(stats.total_views || 0),
-          uniqueVisitors: mockMetrics.uniqueVisitors,
-          avgSession: mockMetrics.avgSession,
-          bounceRate: mockMetrics.bounceRate,
+          pageviews: totalPageviews,
+          uniqueVisitors,
+          avgSession,
+          bounceRate,
           totalArticles: Number(stats.total_articles || 0),
           avgReadTime: Number(stats.avg_read_time || 0).toFixed(1),
           totalImpressions,
@@ -153,8 +232,8 @@ export async function getAnalyticsDataAction(period: string = '7 days') {
           author: a.author_name,
           category: a.category_name,
         })),
-        referrers: mockMetrics.referrers,
-        devices: mockMetrics.devices,
+        referrers: finalReferrers,
+        devices: finalDevices,
       },
     };
   } catch (e: any) {

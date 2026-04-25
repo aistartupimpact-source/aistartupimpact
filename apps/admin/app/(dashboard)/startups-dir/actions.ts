@@ -11,12 +11,11 @@ export async function getStartupsAction() {
       SELECT 
         id, name, tagline, description, "logoUrl", "websiteUrl", "linkedinUrl", "twitterUrl",
         "foundedYear", "headquartersCity", stage, "totalFundingInr", "employeeCount",
-        "isFeatured", "featuredUntil", "impactScore", "statValue", "statLabel", "createdAt", "updatedAt"
+        "isFeatured", "featuredUntil", "impactScore", "createdAt", "updatedAt"
       FROM "Startup"
       WHERE "deletedAt" IS NULL
       ORDER BY "isFeatured" DESC, "createdAt" DESC
-    `;
-    return startups;
+    `;    return startups;
   } catch (error) {
     console.error('Error fetching startups:', error);
     return [];
@@ -36,15 +35,16 @@ export async function createStartupAction(data: {
   statLabel?: string;
 }) {
   try {
+    const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Math.random().toString(36).substring(2, 6);
     await sql`
       INSERT INTO "Startup" (
-        id, name, tagline, description, "logoUrl", "websiteUrl", stage, "headquartersCity",
-        "isFeatured", "isIndian", "statValue", "statLabel", "createdAt", "updatedAt"
+        id, name, slug, tagline, description, "logoUrl", "websiteUrl", stage, "headquartersCity",
+        "isFeatured", "isIndian", "createdAt", "updatedAt"
       )
       VALUES (
-        gen_random_uuid(), ${data.name}, ${data.tagline}, ${data.description},
+        gen_random_uuid(), ${data.name}, ${slug}, ${data.tagline}, ${data.description},
         ${data.logoUrl || null}, ${data.websiteUrl || null}, ${data.stage}::"StartupStage", ${data.headquartersCity || null},
-        ${data.isFeatured || false}, true, ${data.statValue || null}, ${data.statLabel || null}, NOW(), NOW()
+        ${data.isFeatured || false}, true, NOW(), NOW()
       )
     `;
 
@@ -65,8 +65,9 @@ export async function updateStartupAction(id: string, data: {
   stage: string;
   headquartersCity?: string;
   isFeatured?: boolean;
-  statValue?: string;
-  statLabel?: string;
+  foundedYear?: number | null;
+  employeeCount?: number | null;
+  impactScore?: number | null;
 }) {
   try {
     await sql`
@@ -80,8 +81,9 @@ export async function updateStartupAction(id: string, data: {
         stage = ${data.stage}::"StartupStage",
         "headquartersCity" = ${data.headquartersCity || null},
         "isFeatured" = ${data.isFeatured || false},
-        "statValue" = ${data.statValue || null},
-        "statLabel" = ${data.statLabel || null},
+        "foundedYear" = ${data.foundedYear || null},
+        "employeeCount" = ${data.employeeCount || null},
+        "impactScore" = ${data.impactScore || null},
         "updatedAt" = NOW()
       WHERE id = ${id}
     `;
