@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { existsSync } from 'fs';
-import path from 'path';
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,40 +22,15 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = path.join(process.cwd(), 'public', 'temp-resumes');
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
-
-    // Generate unique filename with timestamp
-    const timestamp = Date.now();
-    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const filename = `${timestamp}_${sanitizedName}`;
-    const filepath = path.join(uploadsDir, filename);
-
-    // Convert file to buffer and save
+    // Convert file to base64 data URL (works in serverless environments)
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    await writeFile(filepath, buffer);
-
-    // Schedule deletion after 3 minutes (180000 ms)
-    setTimeout(async () => {
-      try {
-        const { unlink } = await import('fs/promises');
-        await unlink(filepath);
-        console.log(`Deleted temporary resume: ${filename}`);
-      } catch (err) {
-        console.error(`Failed to delete temporary resume: ${filename}`, err);
-      }
-    }, 180000);
-
-    // Return the public URL
-    const fileUrl = `/temp-resumes/${filename}`;
+    const base64 = buffer.toString('base64');
+    const dataUrl = `data:application/pdf;base64,${base64}`;
     
     return NextResponse.json({ 
       success: true, 
-      url: fileUrl,
+      url: dataUrl,
       filename: file.name 
     });
   } catch (error: any) {
