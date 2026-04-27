@@ -59,17 +59,22 @@ export async function POST(req: NextRequest) {
 
       if (existing.length === 0) {
         // Add as new subscriber with job application label
-        await sql`
+        const insertResult = await sql`
           INSERT INTO "NewsletterSubscriber" (
             id, email, name, source, "isActive", "subscribedAt", tags
           ) VALUES (
-            gen_random_uuid(), ${email}, ${fullName}, 'job_application', true, NOW(), ARRAY['job_application']
+            gen_random_uuid(), ${email}, ${fullName}, 'job_application', true, NOW(), ARRAY['job_application']::text[]
           )
+          RETURNING id, email
         `;
+        console.log('Newsletter subscriber added:', insertResult);
+      } else {
+        console.log('Newsletter subscriber already exists:', email);
       }
       // If already exists, don't update - they're already a subscriber
     } catch (subError: any) {
-      console.error('Newsletter subscriber update error:', subError.message);
+      console.error('Newsletter subscriber update error:', subError);
+      console.error('Error details:', subError.message, subError.code);
       // Don't fail the application if subscriber update fails
       // The job application was still saved successfully
     }

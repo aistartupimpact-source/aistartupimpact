@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Briefcase, ChevronRight, CheckCircle2, Loader2, ChevronDown } from 'lucide-react';
+import { Briefcase, ChevronRight, CheckCircle2, Loader2, ChevronDown, Upload, X } from 'lucide-react';
 
 const JOB_ROLES = [
   'Frontend Developer',
@@ -30,6 +30,8 @@ export default function CareersPage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState('');
 
   // Load resume data from localStorage on mount
   useEffect(() => {
@@ -87,11 +89,111 @@ export default function CareersPage() {
     }
   };
 
+  // Handle file upload
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (file.type !== 'application/pdf') {
+      setFileError('Only PDF files are allowed');
+      return;
+    }
+
+    // Validate file size (300KB = 300 * 1024 bytes)
+    const maxSize = 300 * 1024;
+    if (file.size > maxSize) {
+      setFileError(`File size must be less than 300KB (current: ${Math.round(file.size / 1024)}KB)`);
+      return;
+    }
+
+    setFileError('');
+    setUploadedFile(file);
+
+    try {
+      // Upload file to server
+      const uploadFormData = new FormData();
+      uploadFormData.append('resume', file);
+
+      const response = await fetch('/api/careers/upload-resume', {
+        method: 'POST',
+        body: uploadFormData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Store the server URL in localStorage
+        const uploadData = {
+          fileName: file.name,
+          fileUrl: data.url,
+          timestamp: Date.now(),
+        };
+        
+        localStorage.setItem('career_resume_upload', JSON.stringify(uploadData));
+        
+        // Set the resume link in form data when file is uploaded
+        setFormData(prev => ({ ...prev, resumeLink: data.url }));
+
+        // Set auto-delete from localStorage after 3 minutes
+        setTimeout(() => {
+          localStorage.removeItem('career_resume_upload');
+          setUploadedFile(null);
+        }, 180000);
+      } else {
+        setFileError(data.error || 'Failed to upload file');
+        setUploadedFile(null);
+      }
+    } catch (err) {
+      setFileError('Failed to upload file. Please try again.');
+      setUploadedFile(null);
+    }
+  };
+
+  // Remove uploaded file
+  const handleRemoveFile = () => {
+    setUploadedFile(null);
+    setFileError('');
+    localStorage.removeItem('career_resume_upload');
+  };
+
+  // Load uploaded file from localStorage on mount
+  useEffect(() => {
+    const savedUpload = localStorage.getItem('career_resume_upload');
+    if (savedUpload) {
+      try {
+        const parsed = JSON.parse(savedUpload);
+        const savedTime = parsed.timestamp;
+        const now = Date.now();
+        
+        // Delete if older than 3 minutes (180000 ms)
+        if (now - savedTime > 180000) {
+          localStorage.removeItem('career_resume_upload');
+        } else {
+          // Create a mock file object for display
+          const file = new File([''], parsed.fileName, { type: 'application/pdf' });
+          setUploadedFile(file);
+          setFormData(prev => ({ ...prev, resumeLink: parsed.fileUrl }));
+          
+          // Set remaining auto-delete timer
+          const remainingTime = 180000 - (now - savedTime);
+          setTimeout(() => {
+            localStorage.removeItem('career_resume_upload');
+            setUploadedFile(null);
+          }, remainingTime);
+        }
+      } catch (e) {
+        localStorage.removeItem('career_resume_upload');
+      }
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Check if either resume link or uploaded file is provided
     if (!formData.role || !formData.fullName || !formData.email || !formData.resumeLink) {
-      setError('Please fill in all required fields');
+      setError('Please fill in all required fields including resume');
       return;
     }
 
@@ -133,6 +235,8 @@ export default function CareersPage() {
           resumeLink: '',
           consent: false,
         });
+        setUploadedFile(null);
+        localStorage.removeItem('career_resume_upload');
         setTimeout(() => {
           setShowForm(false);
           setSuccess(false);
@@ -274,22 +378,90 @@ export default function CareersPage() {
                     )}
                   </div>
 
-                  {/* Resume Link */}
+                  {/* Resume Upload or Link */}
                   <div>
                     <label className="block font-sora font-bold text-sm text-navy dark:text-white mb-2">
-                      Resume Link *
+                      Resume * <span className="text-xs text-gray-400 font-normal">(Upload or provide link)</span>
                     </label>
-                    <input
-                      type="url"
-                      value={formData.resumeLink}
-                      onChange={(e) => setFormData({ ...formData, resumeLink: e.target.value })}
-                      placeholder="https://drive.google.com/... or PDF URL"
-                      className="input-field w-full"
-                      required
-                    />
-                    <p className="text-xs text-gray-400 font-jakarta mt-1">
-                      Share a Google Drive link or direct PDF URL
-                    </p>
+                    
+                    {/* File Upload Section */}
+                    {!uploadedFile && !formData.resumeLink && (
+                      <div className="mb-3">
+                        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer hover:border-brand hover:bg-brand/5 transition-all">
+                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                            <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                            <p className="text-sm text-gray-600 dark:text-gray-400 font-jakarta">
+                              <span className="font-semibold">Click to upload</span> or drag and drop
+                            </p>
+                            <p className="text-xs text-gray-400 font-jakarta mt-1">
+                              PDF only, max 300KB
+                            </p>
+                          </div>
+                          <input
+                            type="file"
+                            accept=".pdf,application/pdf"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                          />
+                        </label>
+                        {fileError && (
+                          <p className="text-xs text-red-500 mt-2">{fileError}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Uploaded File Display */}
+                    {uploadedFile && (
+                      <div className="mb-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-green-600" />
+                          <div>
+                            <p className="text-sm font-semibold text-green-700 dark:text-green-400">
+                              {uploadedFile.name}
+                            </p>
+                            <p className="text-xs text-green-600 dark:text-green-500">
+                              Uploaded successfully
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleRemoveFile}
+                          className="text-red-500 hover:text-red-700 transition-colors"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Divider */}
+                    {!uploadedFile && !formData.resumeLink && (
+                      <div className="relative my-4">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
+                        </div>
+                        <div className="relative flex justify-center text-xs">
+                          <span className="px-2 bg-white dark:bg-gray-900 text-gray-500">OR</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Resume Link Input */}
+                    {!uploadedFile && (
+                      <div>
+                        <input
+                          type="url"
+                          value={formData.resumeLink}
+                          onChange={(e) => setFormData({ ...formData, resumeLink: e.target.value })}
+                          placeholder="https://drive.google.com/... or PDF URL"
+                          className="input-field w-full"
+                          disabled={!!uploadedFile}
+                        />
+                        <p className="text-xs text-gray-400 font-jakarta mt-1">
+                          Share a Google Drive link or direct PDF URL
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Consent Checkbox - CRITICAL for DPDP Act 2023 */}

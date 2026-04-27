@@ -78,7 +78,7 @@ export default function SubscribeForm({ buttonText = 'Subscribe', source = 'webs
 
   return (
     <form onSubmit={handleSubscribe} className={`w-full ${className}`}>
-      <div className={`flex flex-col ${source === 'sidebar' ? '' : 'sm:flex-row'} gap-3 w-full`}>
+      <div className={`flex flex-col ${source === 'footer' ? 'sm:flex-row' : ''} gap-3 w-full`}>
         <input
           type="email"
           placeholder="your@email.com"
