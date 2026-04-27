@@ -29,6 +29,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Newsletter consent is required to submit application' }, { status: 400 });
     }
 
+    // Log resume link size for debugging
+    console.log('Resume link size:', resumeLink.length, 'characters');
+
     // Check if user already applied for the same role
     const existingApplication = await sql`
       SELECT id FROM "JobApplication" 
@@ -43,13 +46,21 @@ export async function POST(req: NextRequest) {
     }
 
     // Store job application (mobile field is nullable)
-    await sql`
-      INSERT INTO "JobApplication" (
-        id, role, "fullName", email, mobile, "resumeLink", status, "createdAt"
-      ) VALUES (
-        gen_random_uuid(), ${role}, ${fullName}, ${email}, NULL, ${resumeLink}, 'NEW', NOW()
-      )
-    `;
+    try {
+      await sql`
+        INSERT INTO "JobApplication" (
+          id, role, "fullName", email, mobile, "resumeLink", status, "createdAt"
+        ) VALUES (
+          gen_random_uuid(), ${role}, ${fullName}, ${email}, NULL, ${resumeLink}, 'NEW', NOW()
+        )
+      `;
+      console.log('Job application saved successfully for:', email);
+    } catch (dbError: any) {
+      console.error('Database insert error:', dbError);
+      console.error('Error code:', dbError.code);
+      console.error('Error message:', dbError.message);
+      throw dbError; // Re-throw to be caught by outer catch
+    }
 
     // Add to newsletter subscribers with job_application label (only if not already subscribed)
     try {
@@ -59,11 +70,12 @@ export async function POST(req: NextRequest) {
 
       if (existing.length === 0) {
         // Add as new subscriber with job application label
+        // Using string literal for array to avoid type casting issues
         const insertResult = await sql`
           INSERT INTO "NewsletterSubscriber" (
             id, email, name, source, "isActive", "subscribedAt", tags
           ) VALUES (
-            gen_random_uuid(), ${email}, ${fullName}, 'job_application', true, NOW(), ARRAY['job_application']::text[]
+            gen_random_uuid(), ${email}, ${fullName}, 'job_application', true, NOW(), '{job_application}'
           )
           RETURNING id, email
         `;
