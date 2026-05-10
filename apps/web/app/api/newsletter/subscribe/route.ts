@@ -5,6 +5,13 @@ import { newsletterSchema, validateInput } from '@/lib/validation';
 
 export const runtime = 'edge';
 
+function generateId(): string {
+  // Use Web Crypto API for edge runtime
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
 export async function POST(request: Request) {
   try {
     // Rate limiting (with fallback if Redis is unavailable)
@@ -75,8 +82,11 @@ export async function POST(request: Request) {
     }
 
     // Insert new subscriber
+    const subscriberId = generateId();
+    
     await sql`
       INSERT INTO "NewsletterSubscriber" (
+        id,
         email,
         name,
         source,
@@ -84,6 +94,7 @@ export async function POST(request: Request) {
         "isActive",
         "subscribedAt"
       ) VALUES (
+        ${subscriberId},
         ${email.toLowerCase()},
         ${name || null},
         ${source || 'india-ai'},
