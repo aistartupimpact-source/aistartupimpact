@@ -43,6 +43,7 @@ export default function NewsletterAdminPage() {
   const [testEmail, setTestEmail] = useState('');
   const [testModalId, setTestModalId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+  const [showPreview, setShowPreview] = useState(true);
 
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok });
@@ -229,10 +230,19 @@ export default function NewsletterAdminPage() {
       {/* Create/Edit Modal */}
       {modalOpen && editing && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-2xl shadow-2xl border border-gray-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-6xl shadow-2xl border border-gray-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
               <h2 className="font-sora font-bold text-lg text-navy dark:text-white">{editing.id ? 'Edit Campaign' : 'New Campaign'}</h2>
-              <button onClick={closeModal} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><X className="w-4 h-4 text-gray-400" /></button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setShowPreview(!showPreview)}
+                  className="px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center gap-1.5"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  {showPreview ? 'Hide Preview' : 'Show Preview'}
+                </button>
+                <button onClick={closeModal} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><X className="w-4 h-4 text-gray-400" /></button>
+              </div>
             </div>
             <div className="px-6 py-5 space-y-4 overflow-y-auto">
               <div>
@@ -245,8 +255,41 @@ export default function NewsletterAdminPage() {
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Email Body (HTML)</label>
-                <textarea className="input-field text-sm font-mono" rows={12} value={editing.body} onChange={(e) => setEditing({ ...editing, body: e.target.value })} placeholder="<p>Hello readers,</p><p>This week in Indian AI...</p>" />
-                <p className="text-xs text-gray-400 font-jakarta mt-1">Write HTML. It will be wrapped in the branded email template automatically.</p>
+                <div className={`grid ${showPreview ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
+                  {/* Code Editor */}
+                  <div className="flex flex-col">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 font-jakarta">HTML Code</div>
+                    <textarea 
+                      className="input-field text-sm font-mono resize-none" 
+                      rows={16} 
+                      value={editing.body} 
+                      onChange={(e) => setEditing({ ...editing, body: e.target.value })} 
+                      placeholder="<p>Hello readers,</p><p>This week in Indian AI...</p>" 
+                    />
+                    <p className="text-xs text-gray-400 font-jakarta mt-2">Write HTML. It will be wrapped in the branded email template automatically.</p>
+                  </div>
+                  
+                  {/* Live Preview */}
+                  {showPreview && (
+                    <div className="flex flex-col">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 font-jakarta">Live Preview</div>
+                      <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-800/50">
+                        <div className="h-[400px] overflow-y-auto p-4">
+                          {editing.body ? (
+                            <div 
+                              className="prose prose-sm dark:prose-invert max-w-none"
+                              dangerouslySetInnerHTML={{ __html: editing.body }}
+                            />
+                          ) : (
+                            <div className="flex items-center justify-center h-full text-sm text-gray-400">
+                              Start typing HTML to see preview...
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Schedule (optional)</label>

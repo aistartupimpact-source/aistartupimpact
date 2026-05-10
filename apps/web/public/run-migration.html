@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Run Category Migration</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        button {
+            background: #0070f3;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        button:hover {
+            background: #0051cc;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .steps {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+        }
+        .steps h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .steps ol {
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Run Category Migration</h1>
+        <p class="subtitle">Add the category column to the Startup table</p>
+        
+        <div class="info">
+            <strong>What this does:</strong>
+            <ul>
+                <li>Adds a <code>category</code> column to the Startup table</li>
+                <li>Creates an index for better performance</li>
+                <li>Enables category selection and display</li>
+                <li>Safe to run multiple times</li>
+            </ul>
+        </div>
+
+        <button id="runMigration" onclick="runMigration()">
+            Run Migration Now
+        </button>
+
+        <div id="result" class="result"></div>
+
+        <div class="steps">
+            <h3>After Migration:</h3>
+            <ol>
+                <li>Go to <strong>Founder Portal</strong></li>
+                <li>Edit your startup</li>
+                <li>Select <strong>"Media & Entertainment"</strong> (or any category)</li>
+                <li>Click <strong>"Save Changes"</strong></li>
+                <li>Visit your startup page</li>
+                <li>✅ Your selected category will now display!</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        async function runMigration() {
+            const button = document.getElementById('runMigration');
+            const resultDiv = document.getElementById('result');
+            
+            button.disabled = true;
+            button.textContent = 'Running migration...';
+            resultDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/admin/migrate-category', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h3>✅ Migration Successful!</h3>
+                        <p>${data.message}</p>
+                        <p><strong>Next steps:</strong></p>
+                        <ol>
+                            <li>Go to Founder Portal</li>
+                            <li>Edit your startup</li>
+                            <li>Select a category</li>
+                            <li>Save and verify it displays correctly</li>
+                        </ol>
+                    `;
+                    button.textContent = '✅ Migration Complete';
+                } else {
+                    throw new Error(data.error || 'Migration failed');
+                }
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Migration Failed</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p>Please try one of these alternatives:</p>
+                    <ol>
+                        <li>Run the migration from Neon Dashboard</li>
+                        <li>Use psql command line</li>
+                        <li>Check MIGRATION_INSTRUCTIONS.md for details</li>
+                    </ol>
+                `;
+                button.textContent = 'Try Again';
+                button.disabled = false;
+            }
+            
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

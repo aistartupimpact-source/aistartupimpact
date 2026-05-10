@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { put } from '@vercel/blob';
-import crypto from 'crypto';
-import { prisma } from '@aistartupimpact/database';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
+import { existsSync } from 'fs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,49 +31,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate file hash to prevent duplicates
-    const buffer = await file.arrayBuffer();
-    const fileHash = crypto
-      .createHash('sha256')
-      .update(Buffer.from(buffer))
-      .digest('hex');
+    // Generate unique filename
+    const timestamp = Date.now();
+    const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const filename = `${timestamp}-${originalName}`;
 
-    // Check if file already exists
-    const existing = await prisma.mediaAsset.findUnique({
-      where: { fileHash },
-    });
-
-    if (existing) {
-      return NextResponse.json({
-        url: existing.url,
-        id: existing.id,
-      });
+    // Create uploads directory if it doesn't exist
+    const uploadsDir = join(process.cwd(), 'public', 'uploads');
+    if (!existsSync(uploadsDir)) {
+      await mkdir(uploadsDir, { recursive: true });
     }
 
-    // Upload to Cloudflare R2 via Vercel Blob
-    const blob = await put(file.name, file, {
-      access: 'public',
-    });
+    // Convert file to buffer and save
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const filepath = join(uploadsDir, filename);
+    await writeFile(filepath, buffer);
 
-    // Save to database
-    const mediaAsset = await prisma.mediaAsset.create({
-      data: {
-        url: blob.url,
-        fileHash,
-        fileName: file.name,
-        mimeType: file.type,
-        sizeBytes: file.size,
-      },
-    });
+    // Return the public URL
+    const url = `/uploads/${filename}`;
 
-    return NextResponse.json({
-      url: mediaAsset.url,
-      id: mediaAsset.id,
-    });
+    return NextResponse.json({ url, success: true });
   } catch (error: any) {
     console.error('Upload error:', error);
     return NextResponse.json(
-      { error: error.message || 'Upload failed' },
+      { error: error.message || 'Failed to upload file' },
       { status: 500 }
     );
   }

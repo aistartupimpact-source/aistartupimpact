@@ -378,15 +378,19 @@ export default function FounderDetailPage({ params }: { params: { id: string } }
               <div className="space-y-3">
                 {founder.startups.map((startup) => (
                   <div key={startup.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-brand transition-colors">
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-900 dark:text-white">{startup.name}</h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{startup.tagline}</p>
                         <div className="flex items-center gap-2 mt-2">
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            startup.status === 'APPROVED' 
+                          <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
+                            startup.status === 'CLAIMED' || startup.status === 'VERIFIED'
                               ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                              : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
+                              : startup.status === 'PENDING'
+                              ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
+                              : startup.status === 'REJECTED'
+                              ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400'
                           }`}>
                             {startup.status}
                           </span>
@@ -395,12 +399,59 @@ export default function FounderDetailPage({ params }: { params: { id: string } }
                           </span>
                         </div>
                       </div>
-                      <Link 
-                        href={`/startups-dir?search=${startup.slug}`}
-                        className="text-brand hover:underline text-sm font-medium flex items-center gap-1"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Link>
+                      <div className="flex flex-col gap-2 shrink-0">
+                        {startup.status === 'PENDING' && (
+                          <div className="flex flex-col gap-2">
+                            <button
+                              onClick={async () => {
+                                if (confirm(`Approve "${startup.name}"?`)) {
+                                  try {
+                                    const res = await fetch(`/api/founder/startups/${startup.id}/approve`, { method: 'POST' });
+                                    if (res.ok) {
+                                      alert('Startup approved!');
+                                      loadFounder();
+                                    } else {
+                                      alert('Failed to approve');
+                                    }
+                                  } catch (err) {
+                                    alert('Error approving startup');
+                                  }
+                                }
+                              }}
+                              className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors whitespace-nowrap"
+                            >
+                              ✓ Approve
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (confirm(`Reject "${startup.name}"?`)) {
+                                  try {
+                                    const res = await fetch(`/api/founder/startups/${startup.id}/reject`, { method: 'POST' });
+                                    if (res.ok) {
+                                      alert('Startup rejected');
+                                      loadFounder();
+                                    } else {
+                                      alert('Failed to reject');
+                                    }
+                                  } catch (err) {
+                                    alert('Error rejecting startup');
+                                  }
+                                }
+                              }}
+                              className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors whitespace-nowrap"
+                            >
+                              ✗ Reject
+                            </button>
+                          </div>
+                        )}
+                        <Link 
+                          href={`/startups-dir?search=${startup.slug}`}
+                          className="text-brand hover:underline text-xs font-medium flex items-center gap-1 justify-center py-1"
+                        >
+                          <Eye className="w-4 h-4" />
+                          View
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -421,15 +472,19 @@ export default function FounderDetailPage({ params }: { params: { id: string } }
               <div className="space-y-3">
                 {founder.tools.map((tool) => (
                   <div key={tool.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-brand transition-colors">
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-900 dark:text-white">{tool.name}</h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{tool.tagline}</p>
                         <div className="flex items-center gap-2 mt-2">
-                          <span className={`text-xs px-2 py-1 rounded-full ${
+                          <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
                             tool.status === 'APPROVED' 
                               ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                              : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
+                              : tool.status === 'PENDING'
+                              ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
+                              : tool.status === 'ARCHIVED'
+                              ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400'
                           }`}>
                             {tool.status}
                           </span>
@@ -438,12 +493,59 @@ export default function FounderDetailPage({ params }: { params: { id: string } }
                           </span>
                         </div>
                       </div>
-                      <Link 
-                        href={`/tools-dir?search=${tool.slug}`}
-                        className="text-brand hover:underline text-sm font-medium flex items-center gap-1"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Link>
+                      <div className="flex flex-col gap-2 shrink-0">
+                        {tool.status === 'PENDING' && (
+                          <div className="flex flex-col gap-2">
+                            <button
+                              onClick={async () => {
+                                if (confirm(`Approve "${tool.name}"?`)) {
+                                  try {
+                                    const res = await fetch(`/api/admin/tools/${tool.id}/approve`, { method: 'POST' });
+                                    if (res.ok) {
+                                      alert('Tool approved!');
+                                      loadFounder();
+                                    } else {
+                                      alert('Failed to approve');
+                                    }
+                                  } catch (err) {
+                                    alert('Error approving tool');
+                                  }
+                                }
+                              }}
+                              className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors whitespace-nowrap"
+                            >
+                              ✓ Approve
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (confirm(`Reject "${tool.name}"?`)) {
+                                  try {
+                                    const res = await fetch(`/api/admin/tools/${tool.id}/reject`, { method: 'POST' });
+                                    if (res.ok) {
+                                      alert('Tool rejected');
+                                      loadFounder();
+                                    } else {
+                                      alert('Failed to reject');
+                                    }
+                                  } catch (err) {
+                                    alert('Error rejecting tool');
+                                  }
+                                }
+                              }}
+                              className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors whitespace-nowrap"
+                            >
+                              ✗ Reject
+                            </button>
+                          </div>
+                        )}
+                        <Link 
+                          href={`/tools-dir?search=${tool.slug}`}
+                          className="text-brand hover:underline text-xs font-medium flex items-center gap-1 justify-center py-1"
+                        >
+                          <Eye className="w-4 h-4" />
+                          View
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 ))}

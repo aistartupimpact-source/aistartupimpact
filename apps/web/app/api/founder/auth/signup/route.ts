@@ -1,131 +1,99 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
-import { hashPassword, generateToken } from '@/lib/founder-auth';
-import { sendVerificationEmail } from '@/lib/founder-email';
-import { isCompanyEmail, extractCompanyDomain, getCompanyNameFromDomain } from '@/lib/google-oauth';
-import { z } from 'zod';
+import { prisma } from '@aistartupimpact/database';
+import bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 
-const sql = neon(process.env.DATABASE_URL!);
+function generateId(): string {
+  return randomBytes(16).toString('hex');
+}
 
-const signupSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters').max(100),
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  company: z.string().optional(),
-});
+function generateSlug(name: string): string {
+  const base = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+  const random = randomBytes(3).toString('hex');
+  return `${base}-${random}`;
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    
-    // Validate input
-    const validated = signupSchema.parse(body);
-    
-    // Validate company email
-    if (!isCompanyEmail(validated.email)) {
+    const { email, password, name } = await request.json();
+
+    if (!email || !password || !name) {
       return NextResponse.json(
-        { error: 'Please use your company email address. Personal emails (Gmail, Yahoo, etc.) are not allowed.' },
+        { error: 'Email, password, and name are required' },
         { status: 400 }
       );
     }
-    
-    // Check if email already exists
-    const existing = await sql`
-      SELECT id FROM "FounderUser" WHERE email = ${validated.email.toLowerCase()} LIMIT 1
-    `;
-    
-    if (existing.length > 0) {
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
       return NextResponse.json(
-        { error: 'Email already registered' },
+        { error: 'Invalid email format' },
         { status: 400 }
       );
     }
-    
-    // Extract company domain
-    const companyDomain = extractCompanyDomain(validated.email);
-    const suggestedCompany = companyDomain ? getCompanyNameFromDomain(companyDomain) : null;
-    
+
+    // Validate password strength
+    if (password.length < 8) {
+      return NextResponse.json(
+        { error: 'Password must be at least 8 characters long' },
+        { status: 400 }
+      );
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
+
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'User with this email already exists' },
+        { status: 409 }
+      );
+    }
+
     // Hash password
-    const passwordHash = await hashPassword(validated.password);
-    
-    // Generate verification token
-    const verifyToken = generateToken();
-    
-    // Create user with raw SQL
-    const result = await sql`
-      INSERT INTO "FounderUser" (
-        id, email, name, "passwordHash", company, "companyDomain",
-        "authProvider", "emailVerified", "verifyToken", status,
-        "onboardingCompleted", "onboardingStep",
-        "createdAt", "updatedAt"
-      ) VALUES (
-        gen_random_uuid(),
-        ${validated.email.toLowerCase()},
-        ${validated.name},
-        ${passwordHash},
-        ${validated.company || suggestedCompany},
-        ${companyDomain},
-        'email',
-        false,
-        ${verifyToken},
-        'PENDING_VERIFICATION',
-        false,
-        0,
-        NOW(),
-        NOW()
-      )
-      RETURNING id, email, name
-    `;
-    
-    const user = result[0];
-    
-    // Send verification email
-    try {
-      await sendVerificationEmail(user.email, user.name, verifyToken);
-      console.log('✅ Verification email sent successfully to:', user.email);
-    } catch (emailError) {
-      console.error('❌ Failed to send verification email:', emailError);
-      console.error('Email error details:', JSON.stringify(emailError, null, 2));
-      
-      // In development, auto-verify the email
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔧 Development mode: Auto-verifying email...');
-        await sql`
-          UPDATE "FounderUser"
-          SET "emailVerified" = true, status = 'ACTIVE', "updatedAt" = NOW()
-          WHERE id = ${user.id}
-        `;
-        console.log('✅ Email auto-verified in development mode');
-      }
-    }
-    
-    // Check if email was auto-verified in development
-    const finalUser = await sql`
-      SELECT "emailVerified" FROM "FounderUser" WHERE id = ${user.id} LIMIT 1
-    `;
-    
-    const message = finalUser[0].emailVerified 
-      ? 'Account created and verified! You can now login.'
-      : 'Account created! Please check your email to verify.';
-    
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    // Create founder user with FOUNDER role
+    const user = await prisma.user.create({
+      data: {
+        id: generateId(),
+        email: email.toLowerCase(),
+        passwordHash,
+        name,
+        slug: generateSlug(name),
+        role: 'FOUNDER', // Set role as FOUNDER
+        isActive: true,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        slug: true,
+        role: true,
+      },
+    });
+
     return NextResponse.json({
       success: true,
-      message,
-      autoVerified: finalUser[0].emailVerified
+      message: 'Founder account created successfully',
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        slug: user.slug,
+        role: user.role,
+      },
     });
-    
-  } catch (error: any) {
-    console.error('Signup error:', error);
-    
-    if (error.name === 'ZodError') {
-      return NextResponse.json(
-        { error: error.errors[0]?.message || 'Invalid input data' },
-        { status: 400 }
-      );
-    }
-    
+  } catch (error) {
+    console.error('Founder signup error:', error);
     return NextResponse.json(
-      { error: 'Failed to create account. Please try again.' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

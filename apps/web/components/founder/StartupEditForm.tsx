@@ -35,6 +35,41 @@ const STARTUP_STAGES = [
   'PUBLIC',
 ];
 
+const STARTUP_CATEGORIES = [
+  'FinTech',
+  'HealthTech',
+  'EdTech',
+  'E-commerce',
+  'SaaS',
+  'AI/ML',
+  'Enterprise Software',
+  'Consumer Tech',
+  'DeepTech',
+  'CleanTech',
+  'AgriTech',
+  'LogisticsTech',
+  'HRTech',
+  'MarTech',
+  'PropTech',
+  'FoodTech',
+  'Mobility',
+  'Gaming',
+  'Media & Entertainment',
+  'Other',
+];
+
+const BUSINESS_TYPES = [
+  'B2B',
+  'B2C',
+  'B2B2C',
+  'B2G',
+  'C2C',
+  'D2C',
+  'B2B2B',
+  'Marketplace',
+  'Platform',
+];
+
 interface StartupEditFormProps {
   startup: Startup;
 }
@@ -58,12 +93,31 @@ export default function StartupEditForm({ startup }: StartupEditFormProps) {
     employeeCount: startup.employeeCount?.toString() || '',
     founders: startup.founders.join(', '),
     logoUrl: startup.logoUrl || '',
+    category: startup.category || '',
+    businessType: startup.businessType || '',
+    totalFundingInr: startup.totalFundingInr ? (Number(startup.totalFundingInr) / 100).toString() : '',
+    fundingCurrency: 'INR',
   });
 
+  const taglineCharLimit = 60;
+  const descriptionCharLimit = 500;
+  const taglineCharsRemaining = taglineCharLimit - (formData.tagline?.length || 0);
+  const descriptionCharsRemaining = descriptionCharLimit - (formData.description?.length || 0);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    
+    // Enforce character limits
+    if (name === 'tagline' && value.length > taglineCharLimit) {
+      return;
+    }
+    if (name === 'description' && value.length > descriptionCharLimit) {
+      return;
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
     }));
   };
 
@@ -112,7 +166,7 @@ export default function StartupEditForm({ startup }: StartupEditFormProps) {
     setError('');
 
     try {
-      if (!formData.name || !formData.tagline || !formData.description || !formData.websiteUrl) {
+      if (!formData.name || !formData.tagline || !formData.description || !formData.websiteUrl || !formData.category) {
         throw new Error('Please fill in all required fields');
       }
 
@@ -134,6 +188,9 @@ export default function StartupEditForm({ startup }: StartupEditFormProps) {
         employeeCount: formData.employeeCount ? parseInt(formData.employeeCount) : undefined,
         founders: foundersArray,
         logoUrl: formData.logoUrl || undefined,
+        category: formData.category || undefined,
+        businessType: formData.businessType || undefined,
+        totalFundingInr: formData.totalFundingInr ? Math.round(parseFloat(formData.totalFundingInr) * 100) : undefined,
       });
 
       if (!result.success) {
@@ -216,6 +273,9 @@ export default function StartupEditForm({ startup }: StartupEditFormProps) {
       <div>
         <label htmlFor="tagline" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Tagline <span className="text-red-500">*</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+            ({taglineCharsRemaining} characters remaining)
+          </span>
         </label>
         <input
           type="text"
@@ -224,19 +284,29 @@ export default function StartupEditForm({ startup }: StartupEditFormProps) {
           value={formData.tagline}
           onChange={handleChange}
           required
-          maxLength={200}
+          maxLength={taglineCharLimit}
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
-          placeholder="A short, catchy description (max 200 characters)"
+          placeholder="A short, catchy description"
         />
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          {formData.tagline.length}/200 characters
-        </p>
+        <div className="flex justify-between items-center mt-1">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Keep it concise and compelling
+          </p>
+          <p className={`text-xs font-medium ${
+            taglineCharsRemaining < 10 ? 'text-orange-600 dark:text-orange-400' : 'text-gray-500 dark:text-gray-400'
+          }`}>
+            {formData.tagline.length} / {taglineCharLimit}
+          </p>
+        </div>
       </div>
 
       {/* Description */}
       <div>
         <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Description <span className="text-red-500">*</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+            ({descriptionCharsRemaining} characters remaining)
+          </span>
         </label>
         <textarea
           id="description"
@@ -245,9 +315,69 @@ export default function StartupEditForm({ startup }: StartupEditFormProps) {
           onChange={handleChange}
           required
           rows={6}
+          maxLength={descriptionCharLimit}
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
           placeholder="Describe your startup, what problem it solves, and what makes it unique..."
         />
+        <div className="flex justify-between items-center mt-1">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Provide a clear and compelling description of your startup
+          </p>
+          <p className={`text-xs font-medium ${
+            descriptionCharsRemaining < 50 ? 'text-orange-600 dark:text-orange-400' : 'text-gray-500 dark:text-gray-400'
+          }`}>
+            {formData.description.length} / {descriptionCharLimit}
+          </p>
+        </div>
+      </div>
+
+      {/* Category/Sector */}
+      <div>
+        <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Category / Sector <span className="text-red-500">*</span>
+        </label>
+        <select
+          id="category"
+          name="category"
+          value={formData.category}
+          onChange={handleChange}
+          required
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+        >
+          <option value="">Select a category</option>
+          {STARTUP_CATEGORIES.map(category => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Choose the primary sector your startup operates in
+        </p>
+      </div>
+
+      {/* Business Type */}
+      <div>
+        <label htmlFor="businessType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Business Model
+        </label>
+        <select
+          id="businessType"
+          name="businessType"
+          value={formData.businessType}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+        >
+          <option value="">Select business model</option>
+          {BUSINESS_TYPES.map(type => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Select your primary business model (B2B, B2C, B2G, etc.)
+        </p>
       </div>
 
       {/* Website URL */}
@@ -351,6 +481,75 @@ export default function StartupEditForm({ startup }: StartupEditFormProps) {
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
             placeholder="e.g. 10"
           />
+        </div>
+      </div>
+
+      {/* Funding Information */}
+      <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
+          Funding Information (Optional)
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="totalFundingInr" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Total Funding Raised
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                ₹
+              </span>
+              <input
+                type="number"
+                id="totalFundingInr"
+                name="totalFundingInr"
+                value={formData.totalFundingInr}
+                onChange={handleChange}
+                min="0"
+                step="100000"
+                className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+                placeholder="e.g. 10000000"
+              />
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Enter amount in INR (e.g., 1 Crore = 10000000)
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Quick Amount
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, totalFundingInr: '5000000' }))}
+                className="px-3 py-2 text-xs border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                ₹50 Lakhs
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, totalFundingInr: '10000000' }))}
+                className="px-3 py-2 text-xs border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                ₹1 Crore
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, totalFundingInr: '50000000' }))}
+                className="px-3 py-2 text-xs border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                ₹5 Crores
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, totalFundingInr: '100000000' }))}
+                className="px-3 py-2 text-xs border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                ₹10 Crores
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Star, X, UploadCloud, ShieldCheck, CheckCircle, LogIn } from 'lucide-react';
-import { useSession, signIn } from 'next-auth/react';
+import { Star, X, CheckCircle } from 'lucide-react';
+import { useUser } from './UserProvider';
 import { submitToolReview } from '../app/actions/reviews';
-import { uploadToStorage } from '@/lib/upload';
 
 interface WriteReviewClientProps {
   toolSlug: string;
@@ -12,20 +11,19 @@ interface WriteReviewClientProps {
 }
 
 export default function WriteReviewClient({ toolSlug, toolName }: WriteReviewClientProps) {
-  const { data: session } = useSession();
+  const { user, signIn } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
-  const [receipt, setReceipt] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
 
   const handleOpenClick = () => {
-    if (!session) {
-      signIn('google');
+    if (!user) {
+      signIn(`/tools/${toolSlug}`);
       return;
     }
     setIsOpen(true);
@@ -42,18 +40,12 @@ export default function WriteReviewClient({ toolSlug, toolName }: WriteReviewCli
     setError('');
 
     try {
-      let finalImageUrl = undefined;
-      
-      if (receipt) {
-        finalImageUrl = await uploadToStorage(receipt);
-      }
-
       const res = await submitToolReview({
         toolSlug,
         rating,
         title,
         body,
-        proofImageUrl: finalImageUrl,
+        proofImageUrl: undefined,
       });
 
       if (!res.success) {
@@ -74,7 +66,7 @@ export default function WriteReviewClient({ toolSlug, toolName }: WriteReviewCli
         onClick={handleOpenClick}
         className="btn-brand text-sm shadow-md"
       >
-        {session ? 'Write a Review' : 'Sign In to Review'}
+        {user ? 'Write a Review' : 'Sign In to Review'}
       </button>
 
       {isOpen && (
@@ -135,8 +127,12 @@ export default function WriteReviewClient({ toolSlug, toolName }: WriteReviewCli
                       placeholder="Summarize your experience"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
+                      maxLength={50}
                       className="input-field w-full text-sm py-2.5"
                     />
+                    <p className={`text-xs mt-1 ${title.length >= 50 ? 'text-red-500 font-semibold' : 'text-gray-500 dark:text-gray-400'}`}>
+                      {title.length >= 50 ? 'Limit reached' : `${title.length}/50 characters`}
+                    </p>
                   </div>
 
                   {/* Body */}
@@ -145,46 +141,33 @@ export default function WriteReviewClient({ toolSlug, toolName }: WriteReviewCli
                     <textarea
                       required
                       placeholder="What did you like or dislike? How does it compare to alternatives?"
-                      rows={4}
+                      rows={5}
                       value={body}
                       onChange={(e) => setBody(e.target.value)}
+                      maxLength={200}
                       className="input-field w-full text-sm py-2.5 resize-none"
                     />
-                  </div>
-
-                  {/* Verification Upload */}
-                  <div className="border border-dashed border-brand/30 bg-brand/5 dark:bg-brand/10 p-4 rounded-xl">
-                    <div className="flex items-start gap-3">
-                      <ShieldCheck className="w-5 h-5 text-brand shrink-0 mt-0.5" />
-                      <div>
-                        <h4 className="font-semibold text-sm text-brand">Get Verified (Optional)</h4>
-                        <p className="text-xs text-brand/80 mt-1 mb-3">Upload a receipt or screenshot of your active dashboard to earn the prestigious "Verified User" badge.</p>
-                        <label className="inline-flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 border border-brand/20 rounded-md text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer shadow-sm transition-colors">
-                          <UploadCloud className="w-4 h-4" />
-                          {receipt ? (receipt.name.length > 20 ? receipt.name.slice(0, 20) + '...' : receipt.name) : 'Upload Proof'}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => setReceipt(e.target.files?.[0] || null)}
-                          />
-                        </label>
-                      </div>
-                    </div>
+                    <p className={`text-xs mt-1 ${body.length >= 200 ? 'text-red-500 font-semibold' : 'text-gray-500 dark:text-gray-400'}`}>
+                      {body.length >= 200 ? 'Limit reached' : `${body.length}/200 characters (minimum 50)`}
+                    </p>
                   </div>
 
                   {error && <p className="text-red-500 text-sm font-semibold">{error}</p>}
 
                   <button
                     type="submit"
-                    disabled={isSubmitting}
-                    className={`w-full py-3 rounded-full font-bold text-white transition-all shadow-md ${isSubmitting ? 'bg-brand/50' : 'bg-brand hover:bg-brand-600'}`}
+                    disabled={isSubmitting || (!title.trim() && !body.trim())}
+                    className={`w-full py-3 rounded-full font-bold text-white transition-all shadow-md ${
+                      isSubmitting || (!title.trim() && !body.trim())
+                        ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed' 
+                        : 'bg-brand hover:bg-brand-600'
+                    }`}
                   >
                     {isSubmitting ? 'Submitting...' : 'Submit Review'}
                   </button>
 
-                  <p className="text-center text-[10px] text-gray-400 mt-2">
-                    Logged in as {session?.user?.name}. Fake reviews will be removed.
+                  <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-3">
+                    Posting as <span className="font-semibold text-gray-700 dark:text-gray-300">{user?.name}</span>
                   </p>
                 </form>
               </div>

@@ -22,6 +22,12 @@ import {
   Layers,
   MessageSquare,
   UserCog,
+  Shield,
+  Sparkles,
+  MapPin,
+  Newspaper,
+  GraduationCap,
+  Star,
 } from 'lucide-react';
 
 const sidebarItems = [
@@ -37,18 +43,31 @@ const sidebarItems = [
   { label: 'AI Tools', href: '/tools-dir', icon: Wrench },
   { label: 'Tool Reviews', href: '/tool-reviews', icon: MessageSquare },
   { label: 'Startups', href: '/startups-dir', icon: Building2 },
+  { label: 'Startup Reviews', href: '/startup-reviews', icon: Star },
   { label: 'Funding Digests', href: '/funding-dir', icon: IndianRupee },
+  
+  { type: 'divider' as const, label: 'India AI' },
+  { label: 'Stats & Cities', href: '/india-ai/stats', icon: MapPin },
+  { label: 'Gov Schemes', href: '/india-ai/schemes', icon: FileText },
+  { label: 'Policy Updates', href: '/india-ai/policy', icon: Newspaper },
+  { label: 'AI Researchers', href: '/india-ai/researchers', icon: GraduationCap },
+  { label: 'Indian AI Tools', href: '/india-ai/tools', icon: Wrench },
+  { label: 'Featured Founders', href: '/india-ai/founders', icon: Star },
   
   { type: 'divider' as const, label: 'Marketing' },
   { label: 'Subscribers', href: '/subscribers', icon: Users },
   { label: 'Newsletter', href: '/newsletter-admin', icon: Mail },
+  { label: 'Highlights', href: '/newsletter-highlights', icon: Sparkles },
+  { label: 'Testimonials', href: '/testimonials', icon: MessageSquare },
   { label: 'Placements', href: '/placements', icon: Megaphone },
   { label: 'Sponsors', href: '/sponsors', icon: Building2 },
   
   { type: 'divider' as const, label: 'System' },
   { label: 'Founders', href: '/founders', icon: UserCog },
-  { label: 'Users', href: '/users', icon: Users },
+  { label: 'Admin Users', href: '/users', icon: Shield },
+  { label: 'Web Users', href: '/web-users', icon: Users },
   { label: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { label: 'Consent Logs', href: '/consent-logs', icon: Shield },
   { label: 'Settings', href: '/settings', icon: Settings },
   { label: 'Dev Tools', href: '/dev-tools', icon: Wrench },
 ];

@@ -2,11 +2,13 @@
 
 import { UserRole } from "@prisma/client";
 import { prisma } from "@aistartupimpact/database";
+import { neon } from '@neondatabase/serverless';
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Resend } from "resend";
 
+const sql = neon(process.env.DATABASE_URL!);
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 // Helper to create a URL-friendly slug from name
@@ -22,28 +24,30 @@ export async function getUsers() {
   if (!session?.user) throw new Error("Unauthorized");
 
   try {
-    const users = await prisma.user.findMany({
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        isActive: true,
-        lastLoginAt: true,
-        _count: {
-          select: { articles: true }
-        }
-      }
-    });
+    // Use raw SQL to avoid Prisma DateTime serialization issues
+    const users = await sql`
+      SELECT 
+        u.id,
+        u.name,
+        u.email,
+        u.role,
+        u."isActive",
+        u."lastLoginAt"::text as "lastLoginAt",
+        u."createdAt"::text as "createdAt",
+        COUNT(a.id)::int as article_count
+      FROM "User" u
+      LEFT JOIN "Article" a ON a."authorId" = u.id
+      GROUP BY u.id, u.name, u.email, u.role, u."isActive", u."lastLoginAt", u."createdAt"
+      ORDER BY u."createdAt" DESC
+    `;
 
-    return users.map(u => ({
+    return users.map((u: any) => ({
       id: u.id,
       name: u.name,
       email: u.email,
       role: u.role,
       status: u.isActive ? 'ACTIVE' : 'INACTIVE',
-      articles: u._count.articles,
+      articles: u.article_count,
       lastActive: u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString() : 'Never'
     }));
   } catch (error) {
@@ -70,6 +74,7 @@ export async function inviteUser(data: { name: string; email: string; role: stri
 
     await prisma.user.create({
       data: {
+        id: `user_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
         name: data.name,
         email: data.email,
         role: data.role as UserRole,

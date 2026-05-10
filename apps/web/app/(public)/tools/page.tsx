@@ -31,10 +31,8 @@ export const metadata: Metadata = {
 import { getDirectoryToolsDirect, getToolCategoriesDirect } from '@/lib/db';
 
 export default async function ToolsPage({ searchParams }: { searchParams: { category?: string } }) {
-  const categorySlug = searchParams.category || 'all';
-
   const [picks, categories] = await Promise.all([
-    getDirectoryToolsDirect(categorySlug),
+    getDirectoryToolsDirect(),
     getToolCategoriesDirect()
   ]);
 
@@ -83,25 +81,6 @@ export default async function ToolsPage({ searchParams }: { searchParams: { cate
         <Link href="/submit-tool" className="bg-brand text-white px-5 py-2.5 rounded-xl font-bold font-jakarta text-sm hover:scale-105 transition-transform shadow-lg shadow-brand/20 whitespace-nowrap text-center">
           + Submit Your Tool
         </Link>
-      </div>
-
-      {/* Category Filter */}
-      <div className="flex flex-wrap gap-2 mb-6 sm:mb-8">
-        <Link
-          href="/tools?category=all"
-          className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${categorySlug === 'all' ? 'bg-navy text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-        >
-          All Tools
-        </Link>
-        {categories.map((cat: any) => (
-          <Link
-            key={cat.slug}
-            href={`/tools?category=${cat.slug}`}
-            className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${categorySlug === cat.slug ? 'bg-brand text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-          >
-            {cat.name}
-          </Link>
-        ))}
       </div>
 
       {/* Tools List Component with State */}

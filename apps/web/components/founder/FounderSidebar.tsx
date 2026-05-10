@@ -7,9 +7,9 @@ import {
   Rocket,
   Wrench,
   BarChart3,
-  Plus,
   User,
   Settings,
+  Shield,
 } from 'lucide-react';
 
 const navigation = [
@@ -33,18 +33,10 @@ const navigation = [
     href: '/founder/analytics',
     icon: BarChart3,
   },
-];
-
-const quickActions = [
   {
-    name: 'Submit Startup',
-    href: '/founder/startups/new',
-    icon: Plus,
-  },
-  {
-    name: 'Submit Tool',
-    href: '/founder/tools/new',
-    icon: Plus,
+    name: 'Admin Users',
+    href: '/founder/admin-users',
+    icon: Shield,
   },
 ];
 
@@ -95,27 +87,6 @@ export default function FounderSidebar() {
               </Link>
             );
           })}
-
-          {/* Quick Actions */}
-          <div className="pt-6">
-            <p className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-              Quick Actions
-            </p>
-            {quickActions.map((item) => {
-              const Icon = item.icon;
-              
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <Icon className="w-5 h-5" />
-                  {item.name}
-                </Link>
-              );
-            })}
-          </div>
         </nav>
 
         {/* Bottom Navigation */}

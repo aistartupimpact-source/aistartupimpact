@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       INSERT INTO "Startup" (
         id, name, slug, tagline, description, "websiteUrl", "linkedinUrl", "logoUrl",
         stage, "headquartersCity", "foundedYear", "employeeCount",
-        category, "useCases",
+        founders, "foundersData",
         "isIndian", "isFeatured", "createdAt", "updatedAt"
       ) VALUES (
         gen_random_uuid(), ${name}, ${slug},
@@ -41,25 +41,14 @@ export async function POST(req: NextRequest) {
         ${headquartersCity || null},
         ${foundedYear ? parseInt(foundedYear) : null},
         ${employeeCount ? parseInt(employeeCount) : null},
-        ${finalCategory || null},
-        ${useCases && useCases.length > 0 ? useCases : null},
+        ${founders && founders.length > 0 ? founders.filter((f: any) => f.name?.trim()).map((f: any) => f.name) : null},
+        ${founders && founders.length > 0 ? JSON.stringify(founders.filter((f: any) => f.name?.trim())) : null}::jsonb,
         true, false, NOW(), NOW()
       )
       RETURNING id
     `;
 
     const startupId = (result[0] as any).id;
-
-    // Save founders data if provided
-    if (founders?.length > 0) {
-      const validFounders = founders.filter((f: any) => f.name?.trim());
-      if (validFounders.length > 0) {
-        await sql`
-          UPDATE "Startup" SET "foundersData" = ${JSON.stringify(validFounders)}::jsonb
-          WHERE id = ${startupId}
-        `;
-      }
-    }
 
     return NextResponse.json({ success: true, slug });
   } catch (e: any) {

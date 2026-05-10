@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://aistartupimpact.com/startups' },
 };
 
-async function getInitialStartups(q?: string, stage?: string) {
+async function getInitialStartups(q?: string, stage?: string, category?: string, businessType?: string) {
   try {
     const limit = 12;
     let rows: any[];
@@ -21,52 +21,63 @@ async function getInitialStartups(q?: string, stage?: string) {
 
     if (q) {
       const tsQuery = q.split(/\s+/).filter(Boolean).map((w: string) => w + ':*').join(' & ');
+      
+      // Build query with optional filters
+      let queryConditions = `s."deletedAt" IS NULL AND s."searchVector" @@ to_tsquery('english', '${tsQuery}')`;
+      if (stage) queryConditions += ` AND s.stage = '${stage}'::"StartupStage"`;
+      if (category) queryConditions += ` AND s.category = '${category}'`;
+      if (businessType) queryConditions += ` AND s."businessType" = '${businessType}'`;
+      
       rows = await sql`
         SELECT s.id, s.name, s.slug, s.tagline, s."logoUrl", s.stage,
-               s."headquartersCity", s."isFeatured",
+               s."headquartersCity", s."isFeatured", s."isVerified",
+               s."employeeCount", s."foundedYear", s.category, s."businessType", s.founders,
                COALESCE(SUM(fr."amountUsd") / 100, 0) AS "totalUsd",
-               ts_rank(s.search_vector, to_tsquery('english', ${tsQuery})) AS rank
+               ts_rank(s."searchVector", to_tsquery('english', ${tsQuery})) AS rank
         FROM "Startup" s
         LEFT JOIN "FundingRound" fr ON fr."startupId" = s.id
         WHERE s."deletedAt" IS NULL
-          AND s.search_vector @@ to_tsquery('english', ${tsQuery})
+          AND s."searchVector" @@ to_tsquery('english', ${tsQuery})
           ${stage ? sql`AND s.stage = ${stage}::"StartupStage"` : sql``}
+          ${category ? sql`AND s.category = ${category}` : sql``}
+          ${businessType ? sql`AND s."businessType" = ${businessType}` : sql``}
         GROUP BY s.id
         ORDER BY rank DESC, s."isFeatured" DESC
         LIMIT ${limit}
       `;
+      
       countRows = await sql`
-        SELECT COUNT(*) FROM "Startup"
-        WHERE "deletedAt" IS NULL
-          AND search_vector @@ to_tsquery('english', ${tsQuery})
-          ${stage ? sql`AND stage = ${stage}::"StartupStage"` : sql``}
+        SELECT COUNT(*) FROM "Startup" s
+        WHERE s."deletedAt" IS NULL
+          AND s."searchVector" @@ to_tsquery('english', ${tsQuery})
+          ${stage ? sql`AND s.stage = ${stage}::"StartupStage"` : sql``}
+          ${category ? sql`AND s.category = ${category}` : sql``}
+          ${businessType ? sql`AND s."businessType" = ${businessType}` : sql``}
       `;
-    } else if (stage) {
-      rows = await sql`
-        SELECT s.id, s.name, s.slug, s.tagline, s."logoUrl", s.stage,
-               s."headquartersCity", s."isFeatured",
-               COALESCE(SUM(fr."amountUsd") / 100, 0) AS "totalUsd"
-        FROM "Startup" s
-        LEFT JOIN "FundingRound" fr ON fr."startupId" = s.id
-        WHERE s."deletedAt" IS NULL AND s.stage = ${stage}::"StartupStage"
-        GROUP BY s.id
-        ORDER BY s."isFeatured" DESC, s."createdAt" DESC
-        LIMIT ${limit}
-      `;
-      countRows = await sql`SELECT COUNT(*) FROM "Startup" WHERE "deletedAt" IS NULL AND stage = ${stage}::"StartupStage"`;
     } else {
       rows = await sql`
         SELECT s.id, s.name, s.slug, s.tagline, s."logoUrl", s.stage,
-               s."headquartersCity", s."isFeatured",
+               s."headquartersCity", s."isFeatured", s."isVerified",
+               s."employeeCount", s."foundedYear", s.category, s."businessType", s.founders,
                COALESCE(SUM(fr."amountUsd") / 100, 0) AS "totalUsd"
         FROM "Startup" s
         LEFT JOIN "FundingRound" fr ON fr."startupId" = s.id
         WHERE s."deletedAt" IS NULL
+          ${stage ? sql`AND s.stage = ${stage}::"StartupStage"` : sql``}
+          ${category ? sql`AND s.category = ${category}` : sql``}
+          ${businessType ? sql`AND s."businessType" = ${businessType}` : sql``}
         GROUP BY s.id
         ORDER BY s."isFeatured" DESC, s."createdAt" DESC
         LIMIT ${limit}
       `;
-      countRows = await sql`SELECT COUNT(*) FROM "Startup" WHERE "deletedAt" IS NULL`;
+      
+      countRows = await sql`
+        SELECT COUNT(*) FROM "Startup" s
+        WHERE s."deletedAt" IS NULL
+          ${stage ? sql`AND s.stage = ${stage}::"StartupStage"` : sql``}
+          ${category ? sql`AND s.category = ${category}` : sql``}
+          ${businessType ? sql`AND s."businessType" = ${businessType}` : sql``}
+      `;
     }
 
     return { startups: rows, total: parseInt((countRows[0] as any).count || '0') };
@@ -79,9 +90,14 @@ async function getInitialStartups(q?: string, stage?: string) {
 export default async function StartupsPage({
   searchParams,
 }: {
-  searchParams: { q?: string; stage?: string };
+  searchParams: { q?: string; stage?: string; category?: string; businessType?: string };
 }) {
-  const { startups, total } = await getInitialStartups(searchParams.q, searchParams.stage);
+  const { startups, total } = await getInitialStartups(
+    searchParams.q, 
+    searchParams.stage,
+    searchParams.category,
+    searchParams.businessType
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">

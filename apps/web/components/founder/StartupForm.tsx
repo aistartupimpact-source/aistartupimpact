@@ -227,10 +227,14 @@ export default function StartupForm() {
           value={formData.description}
           onChange={handleChange}
           required
+          maxLength={1000}
           rows={6}
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
           placeholder="Describe your startup, what problem it solves, and what makes it unique..."
         />
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          {formData.description.length}/1000 characters
+        </p>
       </div>
 
       {/* Website URL */}

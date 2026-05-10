@@ -1,53 +1,102 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { NextResponse } from 'next/server';
+import { neon } from '@neondatabase/serverless';
+import { apiRateLimit, getClientIdentifier } from '@/lib/rate-limit';
+import { newsletterSchema, validateInput } from '@/lib/validation';
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const ALLOWED_SOURCES = ['footer', 'sidebar', 'newsletter', 'website'];
+export const runtime = 'edge';
 
-export async function POST(req: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const { email, source = 'website' } = await req.json();
-
-    if (!email || !EMAIL_REGEX.test(email)) {
-      return NextResponse.json({ success: false, error: 'Valid email required' }, { status: 400 });
+    // Rate limiting
+    const identifier = getClientIdentifier(request);
+    const { success: rateLimitSuccess } = await apiRateLimit.limit(identifier);
+    
+    if (!rateLimitSuccess) {
+      return NextResponse.json(
+        { success: false, error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
     }
 
-    const safeSource = ALLOWED_SOURCES.includes(source) ? source : 'website';
-    const emailLower = email.toLowerCase();
+    // Input validation
+    const body = await request.json();
+    const validation = validateInput(newsletterSchema, body);
+    
+    if (!validation.success) {
+      return NextResponse.json(
+        { success: false, error: validation.error },
+        { status: 400 }
+      );
+    }
 
-    // Check if email already exists and is active
-    const existing = await prisma.$queryRaw<any[]>`
+    const { email, source, name } = validation.data;
+    const tags = body.tags; // Optional field
+
+    const sql = neon(process.env.DATABASE_URL!);
+
+    // Check if email already exists
+    const existing = await sql`
       SELECT id, "isActive" FROM "NewsletterSubscriber"
-      WHERE email = ${emailLower}
+      WHERE email = ${email.toLowerCase()}
       LIMIT 1
     `;
 
-    if (existing.length > 0 && existing[0].isActive) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'You are already subscribed to our newsletter!' 
-      }, { status: 400 });
+    if (existing.length > 0) {
+      if (existing[0].isActive) {
+        return NextResponse.json(
+          { success: false, error: 'This email is already subscribed' },
+          { status: 400 }
+        );
+      } else {
+        // Reactivate subscription
+        await sql`
+          UPDATE "NewsletterSubscriber"
+          SET "isActive" = true,
+              "subscribedAt" = NOW(),
+              "unsubscribedAt" = NULL,
+              source = ${source || 'india-ai'},
+              tags = ${tags || ['india-ai']}
+          WHERE email = ${email.toLowerCase()}
+        `;
+
+        return NextResponse.json({
+          success: true,
+          message: 'Successfully resubscribed!',
+        });
+      }
     }
 
-    // If previously unsubscribed, reactivate
-    if (existing.length > 0 && !existing[0].isActive) {
-      await prisma.$executeRaw`
-        UPDATE "NewsletterSubscriber"
-        SET "isActive" = true, source = ${safeSource}, "subscribedAt" = NOW(), "unsubscribedAt" = NULL
-        WHERE email = ${emailLower}
-      `;
-      return NextResponse.json({ success: true, data: { message: 'Welcome back! Successfully resubscribed!' } });
-    }
-
-    // New subscriber
-    await prisma.$executeRaw`
-      INSERT INTO "NewsletterSubscriber" (id, email, "subscribedAt", source, "isActive")
-      VALUES (gen_random_uuid(), ${emailLower}, NOW(), ${safeSource}, true)
+    // Insert new subscriber
+    await sql`
+      INSERT INTO "NewsletterSubscriber" (
+        email,
+        name,
+        source,
+        tags,
+        "isActive",
+        "subscribedAt"
+      ) VALUES (
+        ${email.toLowerCase()},
+        ${name || null},
+        ${source || 'india-ai'},
+        ${tags || ['india-ai']},
+        true,
+        NOW()
+      )
     `;
 
-    return NextResponse.json({ success: true, data: { message: 'Successfully subscribed!' } });
+    // TODO: Send welcome email via Resend
+    // TODO: Add to Mailchimp/Beehiiv if integrated
+
+    return NextResponse.json({
+      success: true,
+      message: 'Successfully subscribed! Check your email for confirmation.',
+    });
   } catch (error) {
-    console.error('Newsletter subscribe error:', error);
-    return NextResponse.json({ success: false, error: 'Subscription failed' }, { status: 500 });
+    console.error('Newsletter subscription error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to subscribe. Please try again.' },
+      { status: 500 }
+    );
   }
 }

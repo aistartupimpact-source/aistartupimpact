@@ -1,28 +1,64 @@
 import Link from 'next/link';
 import { Metadata } from 'next';
-import { Building2, MapPin, IndianRupee, TrendingUp, ExternalLink, ChevronRight, Globe, Users, Calendar, Star, ArrowUpRight, Tag, ThumbsUp } from 'lucide-react';
+import { Building2, MapPin, IndianRupee, TrendingUp, ExternalLink, ChevronRight, Globe, Users, Calendar, Star, ArrowUpRight, Tag, ThumbsUp, Shield } from 'lucide-react';
 import { sql } from '@/lib/db';
-import EmbedBadge from '@/components/EmbedBadge';
+// import EmbedBadge from '@/components/EmbedBadge'; // Temporarily hidden - can be shown in future
+import ClaimStartupCard from '@/components/ClaimStartupCard';
 import { detectCategory } from '@/lib/categories';
 import WriteStartupReviewClient from '@/components/WriteStartupReviewClient';
+import { VerifiedBadge } from '@/components/VerifiedBadge';
+import { getUserSession } from '@/lib/user-session';
+import FoundersSection from '@/components/FoundersSection';
+import BookmarkButton from '@/components/BookmarkButton';
 
-export const revalidate = 60;
+export const revalidate = 0; // Disable cache for debugging
+export const dynamic = 'force-dynamic'; // Force dynamic rendering
 
 async function getStartup(slug: string) {
+  console.log(`[getStartup] START - Fetching startup with slug: "${slug}"`);
   try {
-    const rows = await sql`
-      SELECT id, name, slug, tagline,
-             LEFT(description, 2500) AS description,
-             "logoUrl", "websiteUrl", "linkedinUrl", stage,
-             "headquartersCity", "foundedYear", "employeeCount",
-             "isFeatured", "impactScore", founders, "foundersData",
-             category, "useCases", "employeeGrowthData"
-      FROM "Startup"
-      WHERE slug = ${slug} AND "deletedAt" IS NULL
-      LIMIT 1
-    `;
-    if (!rows.length) return null;
+    // Try to fetch with category and businessType columns, but handle if they don't exist
+    let rows;
+    try {
+      rows = await sql`
+        SELECT id, name, slug, tagline,
+               LEFT(description, 2500) AS description,
+               "logoUrl", "websiteUrl", "linkedinUrl", stage,
+               "headquartersCity", "foundedYear", "employeeCount",
+               "isFeatured", "impactScore", founders, "foundersData",
+               "isVerified", "verifiedAt", "claimedBy", category, "businessType"
+        FROM "Startup"
+        WHERE slug = ${slug} AND "deletedAt" IS NULL
+        LIMIT 1
+      `;
+    } catch (columnError: any) {
+      // If category or businessType column doesn't exist, fetch without them
+      if (columnError.message?.includes('category') || columnError.message?.includes('businessType') || columnError.message?.includes('column')) {
+        console.log('[getStartup] Category or businessType column not found, fetching without them');
+        rows = await sql`
+          SELECT id, name, slug, tagline,
+                 LEFT(description, 2500) AS description,
+                 "logoUrl", "websiteUrl", "linkedinUrl", stage,
+                 "headquartersCity", "foundedYear", "employeeCount",
+                 "isFeatured", "impactScore", founders, "foundersData",
+                 "isVerified", "verifiedAt", "claimedBy"
+          FROM "Startup"
+          WHERE slug = ${slug} AND "deletedAt" IS NULL
+          LIMIT 1
+        `;
+      } else {
+        throw columnError;
+      }
+    }
+    
+    console.log(`[getStartup] Query returned ${rows.length} rows`);
+    if (!rows.length) {
+      console.log(`[getStartup] No startup found with slug: "${slug}"`);
+      return null;
+    }
     const s = rows[0] as any;
+    console.log(`[getStartup] Found startup: ${s.name} (id: ${s.id})`);
+
 
     const rounds = await sql`
       SELECT "roundType", "amountUsd", "amountInr",
@@ -43,53 +79,77 @@ async function getStartup(slug: string) {
       LIMIT 4
     `;
 
-    // Get similar startups based on category or stage
+    // Get similar startups based on stage
     const similar = await sql`
-      SELECT name, slug, tagline, "logoUrl", stage, "headquartersCity", category
+      SELECT name, slug, tagline, "logoUrl", stage, "headquartersCity"
       FROM "Startup"
       WHERE "deletedAt" IS NULL 
         AND slug != ${slug}
-        AND (
-          (category IS NOT NULL AND category = ${s.category})
-          OR stage = ${s.stage}
-        )
+        AND stage = ${s.stage}
       ORDER BY 
-        CASE WHEN category = ${s.category} THEN 0 ELSE 1 END,
         "impactScore" DESC NULLS LAST, 
         "createdAt" DESC
       LIMIT 4
     `;
 
-    // Get reviews
-    const reviews = await sql`
-      SELECT 
-        r.id, r.rating, r.title, r.body, r."helpfulCount",
-        r."createdAt"::text AS "createdAt",
-        r."isVerifiedFounder", r."isVerifiedInvestor",
-        u.name AS "userName", u.email AS "userEmail", u.avatar AS "userAvatar"
-      FROM "StartupReview" r
-      LEFT JOIN "User" u ON u.id = r."userId"
-      WHERE r."startupId" = ${s.id} AND r.status = 'APPROVED'
-      ORDER BY r."createdAt" DESC
-      LIMIT 10
-    `;
+    // Reviews feature not yet implemented - return empty arrays
+    const reviews: any[] = [];
+    const avgRating = 0;
 
-    // Calculate average rating
-    const avgRating = reviews.length > 0
-      ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length
-      : 0;
+    // Enrich foundersData with FounderUser profile information if startup is claimed
+    let enrichedFoundersData = s.foundersData || [];
+    if (s.claimedBy) {
+      try {
+        const founderProfile = await sql`
+          SELECT name, role, bio, avatar, linkedin, twitter, website
+          FROM "FounderUser"
+          WHERE id = ${s.claimedBy}
+          LIMIT 1
+        `;
+        
+        if (founderProfile.length > 0) {
+          const profile = founderProfile[0];
+          
+          // If foundersData exists, update the first founder with profile data
+          if (enrichedFoundersData.length > 0) {
+            enrichedFoundersData[0] = {
+              ...enrichedFoundersData[0],
+              bio: profile.bio || enrichedFoundersData[0].bio,
+              avatar: profile.avatar || enrichedFoundersData[0].avatar,
+              linkedin: profile.linkedin || enrichedFoundersData[0].linkedin,
+              twitter: profile.twitter || enrichedFoundersData[0].twitter,
+              website: profile.website || enrichedFoundersData[0].website,
+            };
+          } else {
+            // If no foundersData, create from profile
+            enrichedFoundersData = [{
+              name: profile.name,
+              role: profile.role || 'Founder',
+              bio: profile.bio,
+              avatar: profile.avatar,
+              linkedin: profile.linkedin,
+              twitter: profile.twitter,
+              website: profile.website,
+            }];
+          }
+        }
+      } catch (error) {
+        console.error('[getStartup] Error enriching founder data:', error);
+      }
+    }
 
     return { 
       ...s, 
+      foundersData: enrichedFoundersData,
       fundingRounds: rounds, 
       relatedNews: news, 
       similarStartups: similar,
       reviews,
-      avgRating: avgRating > 0 ? avgRating.toFixed(1) : null,
-      reviewCount: reviews.length
+      avgRating: null,
+      reviewCount: 0
     };
   } catch (e) {
-    console.error('getStartup error:', e);
+    console.error('[getStartup] ERROR:', e);
     return null;
   }
 }
@@ -106,20 +166,22 @@ function stageLabel(s: string) {
   return s?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || '';
 }
 
-// Get industry tag - use database category first, fallback to detection
+// Get industry tag - use selected category if available, otherwise detect
 function getIndustryTag(startup: any): string | null {
-  // Use database category if available
+  // First, check if startup has a manually selected category
   if (startup.category) {
     return startup.category;
   }
   
-  // Fallback to detection algorithm
+  // Fallback to auto-detection if no category is set
   const combined = `${startup.name || ''} ${startup.description || ''} ${startup.tagline || ''}`;
   return detectCategory(combined);
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  console.log('[generateMetadata] Called with slug:', params.slug);
   const s = await getStartup(params.slug) as any;
+  console.log('[generateMetadata] getStartup returned:', s ? `${s.name} (${s.id})` : 'null');
   if (!s) return { title: 'Startup Not Found' };
   return {
     title: `${s.name} — ${s.tagline}`,
@@ -129,7 +191,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 export default async function StartupDetailPage({ params }: { params: { slug: string } }) {
+  console.log('[StartupDetailPage] Called with slug:', params.slug);
   const startup = await getStartup(params.slug) as any;
+  console.log('[StartupDetailPage] getStartup returned:', startup ? `${startup.name} (${startup.id})` : 'null');
+  const session = await getUserSession();
 
   if (!startup) {
     return (
@@ -156,26 +221,37 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
         <span className="text-gray-600 dark:text-gray-300">{startup.name}</span>
       </nav>
 
+      {/* Claim Banner - Removed (now in sidebar only) */}
+
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 mb-8">
         {/* Logo */}
-        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-brand/10">
+        <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center shrink-0 shadow-sm border border-brand/10">
           {startup.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={startup.logoUrl} alt={startup.name} className="w-14 h-14 object-contain" />
           ) : (
             <Building2 className="w-8 h-8 text-brand" />
           )}
+          {startup.isVerified && <VerifiedBadge onLogo size="md" />}
         </div>
 
         {/* Name + badges */}
         <div className="flex-1">
-          <h1 className="font-sora font-extrabold text-2xl sm:text-3xl text-navy dark:text-white">{startup.name}</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="font-sora font-extrabold text-2xl sm:text-3xl text-navy dark:text-white">{startup.name}</h1>
+            {startup.isVerified && <VerifiedBadge size="md" showText />}
+          </div>
           <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm sm:text-base mt-1">{startup.tagline}</p>
           <div className="flex flex-wrap items-center gap-2 mt-3">
             {industryTag && (
               <span className="flex items-center gap-1 text-[10px] font-bold bg-brand/10 dark:bg-brand/20 text-brand px-2.5 py-1 rounded-full uppercase">
                 <Tag className="w-3 h-3" />{industryTag}
+              </span>
+            )}
+            {startup.businessType && (
+              <span className="flex items-center gap-1 text-[10px] font-bold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2.5 py-1 rounded-full uppercase">
+                {startup.businessType}
               </span>
             )}
             <span className="text-[10px] font-bold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2.5 py-1 rounded-full uppercase">
@@ -199,6 +275,13 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
             {startup.linkedinUrl && (
               <a href={startup.linkedinUrl} target="_blank" rel="noopener noreferrer" className="btn-outline text-sm">LinkedIn</a>
             )}
+            <BookmarkButton 
+              type="startup" 
+              itemId={startup.slug} 
+              itemName={startup.name} 
+              variant="button" 
+              size="md" 
+            />
           </div>
         </div>
 
@@ -270,7 +353,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                     <Globe className="w-3 h-3" /> Website
                   </span>
                   <a href={startup.websiteUrl} target="_blank" rel="noopener noreferrer"
-                    className="font-sora font-bold text-sm text-brand hover:underline truncate block">
+                    className="font-sora font-bold text-sm text-brand hover:underline break-all block">
                     {startup.websiteUrl.replace('https://', '').replace('http://', '').replace(/\/$/, '')}
                   </a>
                 </div>
@@ -280,23 +363,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
 
           {/* Founders */}
           {startup.foundersData?.length > 0 && (
-            <div className="card p-5 sm:p-6">
-              <h2 className="section-title mb-4">Founders</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {startup.foundersData.map((f: any) => (
-                  <div key={f.name} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
-                    <div className="w-11 h-11 rounded-full bg-brand/10 dark:bg-brand/20 flex items-center justify-center text-brand font-bold font-sora text-lg shrink-0">
-                      {f.name.charAt(0)}
-                    </div>
-                    <div>
-                      <span className="font-sora font-bold text-sm text-navy dark:text-white block">{f.name}</span>
-                      <span className="text-xs text-gray-400 dark:text-gray-500 font-jakarta block">{f.role}</span>
-                      <span className="text-[10px] text-brand font-jakarta font-semibold">{f.prev}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <FoundersSection founders={startup.foundersData} />
           )}
 
           {/* Funding History */}
@@ -400,7 +467,17 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
 
         {/* ── Sidebar ── */}
         <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-6">
-          <EmbedBadge urlSlug={startup.slug} type="startups" />
+          {/* Claim This Startup Card */}
+          <ClaimStartupCard 
+            startupId={startup.id}
+            startupSlug={startup.slug}
+            isVerified={startup.isVerified || false}
+            isClaimed={!!startup.claimedBy}
+            isOwner={session?.id === startup.claimedBy}
+          />
+          
+          {/* EmbedBadge temporarily hidden - can be shown in future */}
+          {/* <EmbedBadge urlSlug={startup.slug} type="startups" /> */}
 
           {/* Related News */}
           {startup.relatedNews.length > 0 && (

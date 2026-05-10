@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Upload, X, Loader2, Plus } from 'lucide-react';
 import { updateToolAction } from '@/app/founder/tools/actions';
@@ -17,6 +17,12 @@ interface AiTool {
   pricingModel: string;
   pricingUrl?: string | null;
   affiliateUrl?: string | null;
+  categoryId?: string | null;
+  hasApi?: boolean;
+  hasMobileApp?: boolean;
+  launchYear?: number;
+  founderNames?: string[];
+  headquartersCountry?: string | null;
   status: string;
   [key: string]: any;
 }
@@ -41,6 +47,23 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
   const [error, setError] = useState('');
   const [logoPreview, setLogoPreview] = useState(tool.logoUrl || '');
   const [screenshots, setScreenshots] = useState<string[]>(tool.screenshotUrls || []);
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+
+  // Load categories on mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const res = await fetch('/api/tool-categories');
+        const data = await res.json();
+        if (data.success && data.categories) {
+          setCategories(data.categories);
+        }
+      } catch (err) {
+        console.error('Failed to load categories:', err);
+      }
+    };
+    loadCategories();
+  }, []);
 
   // Extract features and use cases from the useCases array
   const existingUseCases = tool.useCases.map(uc => uc.text).join('\n');
@@ -51,12 +74,15 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
     description: tool.description,
     websiteUrl: tool.websiteUrl,
     affiliateUrl: tool.affiliateUrl || '',
+    categoryId: tool.categoryId || '',
     pricingModel: tool.pricingModel,
     pricingUrl: tool.pricingUrl || '',
     startingPrice: tool.startingPrice ? (tool.startingPrice / 100).toString() : '',
-    hasApi: tool.hasApi,
-    hasMobileApp: tool.hasMobileApp,
+    hasApi: tool.hasApi || false,
+    hasMobileApp: tool.hasMobileApp || false,
     launchYear: tool.launchYear || new Date().getFullYear(),
+    founderNames: tool.founderNames?.join(', ') || '',
+    headquartersCountry: tool.headquartersCountry || '',
     features: existingUseCases,
     useCases: existingUseCases,
     logoUrl: tool.logoUrl || '',
@@ -67,6 +93,36 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: value,
+    }));
+  };
+
+  const handleBulletPointPaste = (e: React.ClipboardEvent<HTMLTextAreaElement>, fieldName: 'features' | 'useCases') => {
+    e.preventDefault();
+    const pastedText = e.clipboardData.getData('text');
+    
+    // Split by newlines and filter empty lines
+    const lines = pastedText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+    
+    // Add bullet points if not already present
+    const bulletPoints = lines.map(line => {
+      // Check if line already starts with a bullet point or dash
+      if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) {
+        return `• ${line.substring(1).trim()}`;
+      }
+      return `• ${line}`;
+    });
+    
+    const formattedText = bulletPoints.join('\n');
+    
+    // Apply character limit
+    const limitedText = formattedText.substring(0, 500);
+    
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: limitedText,
     }));
   };
 
@@ -153,6 +209,30 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
     setScreenshots(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Drag and drop handlers for screenshots
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    const newScreenshots = [...screenshots];
+    const draggedItem = newScreenshots[draggedIndex];
+    newScreenshots.splice(draggedIndex, 1);
+    newScreenshots.splice(index, 0, draggedItem);
+
+    setScreenshots(newScreenshots);
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -173,18 +253,26 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
         .map(u => u.trim())
         .filter(Boolean);
 
+      const founderNamesArray = formData.founderNames
+        .split(',')
+        .map((f: string) => f.trim())
+        .filter(Boolean);
+
       const result = await updateToolAction(tool.id, {
         name: formData.name,
         tagline: formData.tagline,
         description: formData.description,
         websiteUrl: formData.websiteUrl,
         affiliateUrl: formData.affiliateUrl || undefined,
+        categoryId: (formData.categoryId || tool.categoryId) as string,
         pricingModel: formData.pricingModel as any,
         pricingUrl: formData.pricingUrl || undefined,
         startingPrice: formData.startingPrice ? parseFloat(formData.startingPrice) : undefined,
         hasApi: formData.hasApi,
         hasMobileApp: formData.hasMobileApp,
         launchYear: formData.launchYear,
+        founderNames: founderNamesArray.length > 0 ? founderNamesArray : undefined,
+        headquartersCountry: formData.headquartersCountry || undefined,
         features: featuresArray,
         useCases: useCasesArray,
         logoUrl: formData.logoUrl || undefined,
@@ -286,6 +374,28 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
           {formData.tagline.length}/200 characters
         </p>
+      </div>
+
+      {/* Category */}
+      <div>
+        <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Category <span className="text-red-500">*</span>
+        </label>
+        <select
+          id="categoryId"
+          name="categoryId"
+          value={formData.categoryId}
+          onChange={handleChange}
+          required
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+        >
+          <option value="">Select a category</option>
+          {categories.map(cat => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Description */}
@@ -441,6 +551,42 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
         />
       </div>
 
+      {/* Founder Names and Country */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="founderNames" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Founder Names
+          </label>
+          <input
+            type="text"
+            id="founderNames"
+            name="founderNames"
+            value={formData.founderNames}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+            placeholder="e.g. John Doe, Jane Smith"
+          />
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Separate multiple founders with commas
+          </p>
+        </div>
+
+        <div>
+          <label htmlFor="headquartersCountry" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Headquarters Country
+          </label>
+          <input
+            type="text"
+            id="headquartersCountry"
+            name="headquartersCountry"
+            value={formData.headquartersCountry}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+            placeholder="e.g. USA, India, UK"
+          />
+        </div>
+      </div>
+
       {/* Key Features */}
       <div>
         <label htmlFor="features" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -451,10 +597,15 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
           name="features"
           value={formData.features}
           onChange={handleChange}
-          rows={4}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
-          placeholder="One feature per line&#10;e.g. Natural language processing&#10;Real-time collaboration&#10;Advanced analytics"
+          onPaste={(e) => handleBulletPointPaste(e, 'features')}
+          maxLength={500}
+          rows={6}
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent resize-none font-mono text-sm"
+          placeholder="Paste your features here - they'll be automatically formatted with bullet points"
         />
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          {formData.features.length}/500 characters • Paste content and it will be automatically converted to bullet points (•)
+        </p>
       </div>
 
       {/* Use Cases */}
@@ -467,10 +618,15 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
           name="useCases"
           value={formData.useCases}
           onChange={handleChange}
-          rows={4}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
-          placeholder="One use case per line&#10;e.g. Content creation&#10;Customer support automation&#10;Data analysis"
+          onPaste={(e) => handleBulletPointPaste(e, 'useCases')}
+          maxLength={500}
+          rows={6}
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent resize-none font-mono text-sm"
+          placeholder="Paste your use cases here - they'll be automatically formatted with bullet points"
         />
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          {formData.useCases.length}/500 characters • Paste content and it will be automatically converted to bullet points (•)
+        </p>
       </div>
 
       {/* Screenshots */}
@@ -478,17 +634,34 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Screenshots (Max 5)
         </label>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+          Drag and drop to reorder screenshots
+        </p>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {screenshots.map((url, index) => (
-            <div key={index} className="relative aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-              <img src={url} alt={`Screenshot ${index + 1}`} className="w-full h-full object-cover" />
+            <div
+              key={index}
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragEnd={handleDragEnd}
+              className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all cursor-move ${
+                draggedIndex === index
+                  ? 'border-brand opacity-50 scale-95'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-brand'
+              }`}
+            >
+              <img src={url} alt={`Screenshot ${index + 1}`} className="w-full h-full object-cover pointer-events-none" />
               <button
                 type="button"
                 onClick={() => removeScreenshot(index)}
-                className="absolute top-1 right-1 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
+                className="absolute top-1 right-1 p-1 bg-red-500 rounded-full text-white hover:bg-red-600 z-10"
               >
                 <X className="w-3 h-3" />
               </button>
+              <div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-2 py-0.5 rounded">
+                {index + 1}
+              </div>
             </div>
           ))}
           {screenshots.length < 5 && (

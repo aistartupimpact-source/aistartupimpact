@@ -5,6 +5,8 @@ import { generateToolSchema } from '@/lib/seo';
 import EmbedBadge from '@/components/EmbedBadge';
 import WriteReviewClient from '@/components/WriteReviewClient';
 import ReviewHelpfulButton from '@/components/ReviewHelpfulButton';
+import ScreenshotGallery from '@/components/ScreenshotGallery';
+import BookmarkButton from '@/components/BookmarkButton';
 import { getAiToolBySlugDirect } from '@/lib/db';
 import { notFound } from 'next/navigation';
 
@@ -125,13 +127,20 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
                 Pricing <ExternalLink className="w-3.5 h-3.5 ml-1" />
               </a>
             )}
+            <BookmarkButton 
+              type="tool" 
+              itemId={tool.slug} 
+              itemName={tool.name} 
+              variant="button" 
+              size="md" 
+            />
           </div>
         </div>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Main Content */}
-        <div className="flex-1 space-y-8">
+        <div className="flex-1 space-y-8 min-w-0">
 
           {/* Overview */}
           <div className="card p-5 sm:p-6">
@@ -154,6 +163,45 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
               )}
             </div>
           </div>
+
+          {/* Screenshots */}
+          {tool.screenshotUrls && tool.screenshotUrls.length > 0 && (
+            <ScreenshotGallery screenshots={tool.screenshotUrls} toolName={tool.name} />
+          )}
+
+          {/* Key Features */}
+          {tool.useCases && tool.useCases.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="card p-5 sm:p-6">
+                <h2 className="section-title mb-4">Key Features</h2>
+                <div className="space-y-2">
+                  {tool.useCases.slice(0, Math.ceil(tool.useCases.length / 2)).map((item: any) => (
+                    <div key={item.id} className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-brand mt-0.5 shrink-0" />
+                      <p className="text-sm text-gray-600 dark:text-gray-300 font-jakarta">
+                        {item.text.replace(/^[•\-\*]\s*/, '')}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Use Cases */}
+              <div className="card p-5 sm:p-6">
+                <h2 className="section-title mb-4">Use Cases</h2>
+                <div className="space-y-2">
+                  {tool.useCases.slice(Math.ceil(tool.useCases.length / 2)).map((item: any) => (
+                    <div key={item.id} className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
+                      <p className="text-sm text-gray-600 dark:text-gray-300 font-jakarta">
+                        {item.text.replace(/^[•\-\*]\s*/, '')}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Ideal Use Case + Not a Fit */}
           {(tool.idealUseCase || tool.notAFitFor) && (

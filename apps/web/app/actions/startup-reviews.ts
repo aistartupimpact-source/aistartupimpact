@@ -1,7 +1,6 @@
 "use server";
 
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { getUserSession } from "@/lib/user-session";
 import { sql } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
@@ -12,12 +11,12 @@ export async function submitStartupReview(data: {
   body: string;
   proofImageUrl?: string;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await getUserSession();
   
-  if (!(session?.user as any)?.id) {
+  if (!session?.id) {
     return { success: false, error: "Authentication required" };
   }
-  const userId = (session!.user as any).id;
+  const userId = session.id;
 
   try {
     const startups = await sql`
@@ -56,7 +55,7 @@ export async function submitStartupReview(data: {
     }
 
     // Account Age Gating
-    const user = await sql`SELECT "createdAt" FROM "User" WHERE id = ${userId}`;
+    const user = await sql`SELECT "createdAt" FROM "WebUser" WHERE id = ${userId}`;
     let finalStatus = 'APPROVED';
     
     if (user.length > 0) {

@@ -102,6 +102,7 @@ export async function trackPageView(pathname: string) {
     // Create page view record
     await prisma.pageView.create({
       data: {
+        id: `pv_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
         pathname,
         referrer,
         source,

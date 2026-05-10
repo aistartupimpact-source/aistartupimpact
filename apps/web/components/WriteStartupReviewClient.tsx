@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Star, X, CheckCircle, LogIn } from 'lucide-react';
-import { useSession, signIn } from 'next-auth/react';
+import { useUser } from './UserProvider';
 import { submitStartupReview } from '../app/actions/startup-reviews';
 
 interface WriteStartupReviewClientProps {
@@ -11,7 +11,7 @@ interface WriteStartupReviewClientProps {
 }
 
 export default function WriteStartupReviewClient({ startupSlug, startupName }: WriteStartupReviewClientProps) {
-  const { data: session } = useSession();
+  const { user, signIn } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -58,10 +58,10 @@ export default function WriteStartupReviewClient({ startupSlug, startupName }: W
     }
   };
 
-  if (!session) {
+  if (!user) {
     return (
       <button
-        onClick={() => signIn()}
+        onClick={() => signIn(`/startups/${startupSlug}`)}
         className="w-full py-2 text-sm font-jakarta font-semibold text-brand hover:text-brand/80 transition-colors flex items-center justify-center gap-2"
       >
         <LogIn className="w-4 h-4" />

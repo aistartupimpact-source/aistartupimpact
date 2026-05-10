@@ -3,8 +3,11 @@ import { Sora, Plus_Jakarta_Sans } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import ThemeProvider from '@/components/ThemeProvider';
 import AnalyticsTracker from '@/components/Analytics';
+import CookieConsent from '@/components/CookieConsent';
+import GoogleAnalytics from '@/components/GoogleAnalytics';
+import ClearConsentButton from '@/components/ClearConsentButton';
+import NewsletterPopup from '@/components/NewsletterPopup';
 import { generateWebSiteSchema, generateOrganizationSchema } from '@/lib/seo';
-import Script from 'next/script';
 import './globals.css';
 
 // Only load the two fonts actually used in UI — JetBrains is code-only, loaded on demand
@@ -93,32 +96,6 @@ export default function RootLayout({
             __html: `(function(){try{var t=localStorage.getItem('asi-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
           }}
         />
-        {/* Google Analytics */}
-        <Script strategy="afterInteractive" src="https://www.googletagmanager.com/gtag/js?id=G-PVL3NC8DQ6" />
-        <Script
-          id="google-analytics"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-PVL3NC8DQ6');
-            `,
-          }}
-        />
-        {/* Google tag (gtag.js) event */}
-        <Script
-          id="google-conversion"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              gtag('event', 'conversion_event_page_view', {
-                // <event_parameters>
-              });
-            `,
-          }}
-        />
       </head>
       <body className="font-jakarta antialiased bg-white dark:bg-gray-950 text-charcoal dark:text-gray-100">
         {/* Site-level structured data */}
@@ -133,6 +110,10 @@ export default function RootLayout({
         <ThemeProvider>
           <AnalyticsTracker />
           {children}
+          <NewsletterPopup />
+          <CookieConsent />
+          <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_ID || 'G-PVL3NC8DQ6'} />
+          <ClearConsentButton />
         </ThemeProvider>
         <Analytics />
       </body>

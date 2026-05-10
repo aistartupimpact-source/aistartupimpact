@@ -10,13 +10,18 @@ export async function getToolsAction() {
     const tools = await sql`
       SELECT
         t.id, t.name, t.slug, t.tagline, t.description, t."websiteUrl", t."logoUrl",
-        t."pricingModel", t."avgRating", t."listingTier", t.status,
+        t."pricingModel", t."avgRating", t."listingTier", t.status, t."claimStatus",
+        t."founderNames", t."headquartersCountry", t."hasApi", t."hasMobileApp",
+        t."pricingUrl", t."startingPrice", t."ownerId",
         t."createdAt", t."updatedAt",
-        c.name AS "categoryName", c.id AS "categoryId"
+        c.name AS "categoryName", c.id AS "categoryId",
+        u.name AS "ownerName", u.email AS "ownerEmail"
       FROM "AiTool" t
       LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+      LEFT JOIN "User" u ON u.id = t."ownerId"
       WHERE t."deletedAt" IS NULL
       ORDER BY
+        CASE WHEN t.status = 'PENDING' THEN 0 ELSE 1 END ASC,
         CASE WHEN t."listingTier" = 'FEATURED' THEN 1
              WHEN t."listingTier" = 'PRIORITY' THEN 2
              ELSE 3 END ASC,
@@ -26,6 +31,42 @@ export async function getToolsAction() {
   } catch (error) {
     console.error('getToolsAction error:', error);
     return [];
+  }
+}
+
+export async function approveToolAction(id: string) {
+  try {
+    await sql`
+      UPDATE "AiTool"
+      SET
+        status = 'APPROVED'::"ToolApprovalStatus",
+        "claimStatus" = 'CLAIMED',
+        "updatedAt" = NOW()
+      WHERE id = ${id}
+    `;
+    revalidatePath('/tools-dir');
+    return { success: true };
+  } catch (error: any) {
+    console.error('approveToolAction error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function rejectToolAction(id: string, reason?: string) {
+  try {
+    await sql`
+      UPDATE "AiTool"
+      SET
+        status = 'ARCHIVED'::"ToolApprovalStatus",
+        "claimStatus" = 'REJECTED',
+        "updatedAt" = NOW()
+      WHERE id = ${id}
+    `;
+    revalidatePath('/tools-dir');
+    return { success: true };
+  } catch (error: any) {
+    console.error('rejectToolAction error:', error);
+    return { success: false, error: error.message };
   }
 }
 

@@ -30,6 +30,7 @@ export async function submitFreeToolAction(draft: any) {
 
     const tool = await prisma.aiTool.create({
       data: {
+        id: `tool_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
         name: draft.name,
         slug,
         tagline: draft.tagline,
@@ -44,6 +45,7 @@ export async function submitFreeToolAction(draft: any) {
         founderNames: draft.founderNames ? draft.founderNames.split(',').map((s: string) => s.trim()) : [],
         headquartersCountry: draft.hqCity,
         categoryId: firstCategory.id,
+        updatedAt: new Date(),
 
         status: 'PENDING',
         listingTier: 'FREE',

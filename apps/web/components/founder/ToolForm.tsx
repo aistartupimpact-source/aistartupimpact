@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Upload, X, Loader2, Plus } from 'lucide-react';
 import { submitToolAction } from '@/app/founder/tools/actions';
@@ -26,22 +26,74 @@ export default function ToolForm() {
     description: '',
     websiteUrl: '',
     affiliateUrl: '',
+    categoryId: '',
     pricingModel: 'FREEMIUM',
     pricingUrl: '',
     startingPrice: '',
     hasApi: false,
     hasMobileApp: false,
     launchYear: new Date().getFullYear(),
+    founderNames: '',
+    headquartersCountry: '',
     features: '',
     useCases: '',
     logoUrl: '',
   });
+
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+
+  // Load categories on mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const res = await fetch('/api/tool-categories');
+        const data = await res.json();
+        if (data.success && data.categories) {
+          setCategories(data.categories);
+          // Set first category as default if available
+          if (data.categories.length > 0 && !formData.categoryId) {
+            setFormData(prev => ({ ...prev, categoryId: data.categories[0].id }));
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load categories:', err);
+      }
+    };
+    loadCategories();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const value = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value;
     setFormData(prev => ({
       ...prev,
       [e.target.name]: value,
+    }));
+  };
+
+  const handleBulletPointPaste = (e: React.ClipboardEvent<HTMLTextAreaElement>, fieldName: 'features' | 'useCases') => {
+    e.preventDefault();
+    const pastedText = e.clipboardData.getData('text');
+    
+    // Split by newlines and filter empty lines
+    const lines = pastedText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+    
+    // Add bullet points if not already present
+    const bulletPoints = lines.map(line => {
+      // Check if line already starts with a bullet point or dash
+      if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) {
+        return `• ${line.substring(1).trim()}`;
+      }
+      return `• ${line}`;
+    });
+    
+    const formattedText = bulletPoints.join('\n');
+    
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: formattedText,
     }));
   };
 
@@ -128,6 +180,30 @@ export default function ToolForm() {
     setScreenshots(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Drag and drop handlers for screenshots
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    const newScreenshots = [...screenshots];
+    const draggedItem = newScreenshots[draggedIndex];
+    newScreenshots.splice(draggedIndex, 1);
+    newScreenshots.splice(index, 0, draggedItem);
+
+    setScreenshots(newScreenshots);
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -155,6 +231,7 @@ export default function ToolForm() {
         description: formData.description,
         websiteUrl: formData.websiteUrl,
         affiliateUrl: formData.affiliateUrl || undefined,
+        categoryId: formData.categoryId,
         pricingModel: formData.pricingModel as any,
         pricingUrl: formData.pricingUrl || undefined,
         startingPrice: formData.startingPrice ? parseFloat(formData.startingPrice) : undefined,
@@ -226,21 +303,44 @@ export default function ToolForm() {
         </div>
       </div>
 
-      {/* Tool Name */}
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Tool Name <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          id="name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
-          placeholder="e.g. ChatGPT"
-        />
+      {/* Tool Name & Category */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Tool Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+            placeholder="e.g. ChatGPT"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Category <span className="text-red-500">*</span>
+          </label>
+          <select
+            id="categoryId"
+            name="categoryId"
+            value={formData.categoryId}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+          >
+            <option value="">Select a category</option>
+            {categories.map(cat => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Tagline */}
@@ -275,10 +375,14 @@ export default function ToolForm() {
           value={formData.description}
           onChange={handleChange}
           required
+          maxLength={1000}
           rows={6}
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
           placeholder="Describe your tool, its features, and what makes it unique..."
         />
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          {formData.description.length}/1000 characters
+        </p>
       </div>
 
       {/* URLs */}
@@ -400,21 +504,56 @@ export default function ToolForm() {
         </div>
       </div>
 
-      {/* Launch Year */}
-      <div>
-        <label htmlFor="launchYear" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Launch Year
-        </label>
-        <input
-          type="number"
-          id="launchYear"
-          name="launchYear"
-          value={formData.launchYear}
-          onChange={handleChange}
-          min="1900"
-          max={new Date().getFullYear()}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
-        />
+      {/* Launch Year, Founders, HQ */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label htmlFor="launchYear" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Launch Year
+          </label>
+          <input
+            type="number"
+            id="launchYear"
+            name="launchYear"
+            value={formData.launchYear}
+            onChange={handleChange}
+            min="1900"
+            max={new Date().getFullYear()}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="founderNames" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Founder Names
+          </label>
+          <input
+            type="text"
+            id="founderNames"
+            name="founderNames"
+            value={formData.founderNames}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+            placeholder="e.g. Vivek Raghavan, John Doe"
+          />
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Comma-separated names
+          </p>
+        </div>
+
+        <div>
+          <label htmlFor="headquartersCountry" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Headquarters
+          </label>
+          <input
+            type="text"
+            id="headquartersCountry"
+            name="headquartersCountry"
+            value={formData.headquartersCountry}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+            placeholder="e.g. United States, India"
+          />
+        </div>
       </div>
 
       {/* Key Features */}
@@ -427,10 +566,14 @@ export default function ToolForm() {
           name="features"
           value={formData.features}
           onChange={handleChange}
-          rows={4}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
-          placeholder="One feature per line&#10;e.g. Natural language processing&#10;Real-time collaboration&#10;Advanced analytics"
+          onPaste={(e) => handleBulletPointPaste(e, 'features')}
+          rows={6}
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent resize-none font-mono text-sm"
+          placeholder="Paste your features here - they'll be automatically formatted with bullet points"
         />
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Paste content and it will be automatically converted to bullet points (•)
+        </p>
       </div>
 
       {/* Use Cases */}
@@ -443,10 +586,14 @@ export default function ToolForm() {
           name="useCases"
           value={formData.useCases}
           onChange={handleChange}
-          rows={4}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
-          placeholder="One use case per line&#10;e.g. Content creation&#10;Customer support automation&#10;Data analysis"
+          onPaste={(e) => handleBulletPointPaste(e, 'useCases')}
+          rows={6}
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent resize-none font-mono text-sm"
+          placeholder="Paste your use cases here - they'll be automatically formatted with bullet points"
         />
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Paste content and it will be automatically converted to bullet points (•)
+        </p>
       </div>
 
       {/* Screenshots */}
@@ -454,17 +601,34 @@ export default function ToolForm() {
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Screenshots (Max 5)
         </label>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+          Drag and drop to reorder screenshots
+        </p>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {screenshots.map((url, index) => (
-            <div key={index} className="relative aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-              <img src={url} alt={`Screenshot ${index + 1}`} className="w-full h-full object-cover" />
+            <div
+              key={index}
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragEnd={handleDragEnd}
+              className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all cursor-move ${
+                draggedIndex === index
+                  ? 'border-brand opacity-50 scale-95'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-brand'
+              }`}
+            >
+              <img src={url} alt={`Screenshot ${index + 1}`} className="w-full h-full object-cover pointer-events-none" />
               <button
                 type="button"
                 onClick={() => removeScreenshot(index)}
-                className="absolute top-1 right-1 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
+                className="absolute top-1 right-1 p-1 bg-red-500 rounded-full text-white hover:bg-red-600 z-10"
               >
                 <X className="w-3 h-3" />
               </button>
+              <div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-2 py-0.5 rounded">
+                {index + 1}
+              </div>
             </div>
           ))}
           {screenshots.length < 5 && (

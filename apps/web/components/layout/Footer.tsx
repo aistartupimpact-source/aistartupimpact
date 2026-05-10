@@ -1,8 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Mail, Twitter, Linkedin, Instagram, Facebook, Youtube, CheckCircle2 } from 'lucide-react';
 import SubscribeForm from '@/components/SubscribeForm';
+import { CookieSettingsLink } from '@/components/CookieConsent';
 import { useState } from 'react';
 
 const footerLinks = [
@@ -35,10 +37,20 @@ const footerLinks = [
     ],
   },
   {
+    title: 'For Founders',
+    links: [
+      { label: 'Submit Startup', href: '/submit-startup' },
+      { label: 'Submit AI Tool', href: '/submit-tool' },
+      { label: 'Founder Login', href: '/auth/founder-login' },
+      { label: 'User Login', href: '/auth/login' },
+    ],
+  },
+  {
     title: 'Legal',
     links: [
       { label: 'Privacy Policy', href: '/privacy' },
       { label: 'Terms of Service', href: '/terms' },
+      { label: 'Cookie Policy', href: '/cookie-policy' },
       { label: 'Refund Policy', href: '/refund' },
       { label: 'Disclaimer', href: '/disclaimer' },
     ],
@@ -54,6 +66,7 @@ const socials = [
 ];
 
 export default function Footer() {
+  const pathname = usePathname();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -97,6 +110,7 @@ export default function Footer() {
   return (
     <footer className="bg-navy dark:bg-gray-950 border-t border-gray-800 dark:border-gray-800">
       {/* Newsletter CTA Section - Redesigned to match image */}
+      {pathname !== '/newsletter' && (
       <div className="border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
           <div className="max-w-6xl mx-auto">
@@ -279,10 +293,11 @@ export default function Footer() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Link Columns */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-8">
           {/* Brand Column */}
           <div className="col-span-2 sm:col-span-3 lg:col-span-1 mb-4 lg:mb-0">
             <Link href="/" className="inline-block">
@@ -350,10 +365,13 @@ export default function Footer() {
               />
             </a>
 
-            <Link href="/contact" className="flex items-center gap-1.5 hover:text-brand transition-colors">
-              <Mail className="w-3.5 h-3.5" />
-              Contact Us
-            </Link>
+            <div className="flex items-center gap-4">
+              <CookieSettingsLink className="hover:text-brand transition-colors" />
+              <Link href="/contact" className="flex items-center gap-1.5 hover:text-brand transition-colors">
+                <Mail className="w-3.5 h-3.5" />
+                Contact Us
+              </Link>
+            </div>
           </div>
         </div>
       </div>

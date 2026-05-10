@@ -1,23 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 import { verifyPassword, setFounderSession } from '@/lib/founder-auth';
-import { z } from 'zod';
+import { authRateLimit, getClientIdentifier } from '@/lib/rate-limit';
+import { loginSchema, validateInput } from '@/lib/validation';
 
 const sql = neon(process.env.DATABASE_URL!);
 
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
-});
-
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const identifier = getClientIdentifier(request);
+    const { success: rateLimitSuccess, remaining } = await authRateLimit.limit(identifier);
+    
+    if (!rateLimitSuccess) {
+      return NextResponse.json(
+        { error: 'Too many login attempts. Please try again in 15 minutes.' },
+        { status: 429, headers: { 'X-RateLimit-Remaining': '0' } }
+      );
+    }
+
+    // Input validation
     const body = await request.json();
-    const validated = loginSchema.parse(body);
+    const validation = validateInput(loginSchema, body);
+    
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error },
+        { status: 400, headers: { 'X-RateLimit-Remaining': remaining.toString() } }
+      );
+    }
+    
+    const validated = validation.data;
     
     // Find user with raw SQL
     const users = await sql`
-      SELECT id, email, name, "passwordHash", company, "emailVerified", status
+      SELECT id, email, name, "passwordHash", company, "emailVerified", status, "twoFactorEnabled"
       FROM "FounderUser"
       WHERE email = ${validated.email.toLowerCase()}
       LIMIT 1
@@ -56,6 +73,18 @@ export async function POST(request: NextRequest) {
         { error: 'Your account has been suspended. Please contact support.' },
         { status: 403 }
       );
+    }
+    
+    // Check if 2FA is enabled
+    if (user.twoFactorEnabled) {
+      // Return special response indicating 2FA is required
+      // Don't set session yet - wait for 2FA verification
+      return NextResponse.json({
+        requires2FA: true,
+        userId: user.id,
+        email: user.email,
+        message: 'Please enter your 2FA code',
+      });
     }
     
     // Update last login with raw SQL

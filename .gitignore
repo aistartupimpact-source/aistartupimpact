@@ -9,3 +9,5 @@ dist/
 coverage/
 .turbo/
 public/temp-resumes/
+public/uploads/
+!public/uploads/.gitkeep

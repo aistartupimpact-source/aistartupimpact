@@ -60,7 +60,7 @@ export async function getCampaignsAction() {
 
   try {
     const rows = await prisma.$queryRaw<any[]>`
-      SELECT id, subject, "previewText", status, "sentAt"::text AS "sentAt",
+      SELECT id, subject, "previewText", "contentJson", status, "sentAt"::text AS "sentAt",
              "scheduledAt"::text AS "scheduledAt",
              "totalSent", opens, "uniqueOpens", clicks, "uniqueClicks", unsubscribes, "createdAt"::text AS "createdAt"
       FROM "NewsletterCampaign"

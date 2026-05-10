@@ -1,98 +1,90 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { trackPageView } from '@/lib/analytics';
+import { neon } from '@neondatabase/serverless';
 
-// Simple in-memory rate limiting (for development)
-// In production, use Redis-based rate limiting
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const sql = neon(process.env.DATABASE_URL!);
 
-function rateLimit(ip: string, limit: number = 100, windowMs: number = 60000): boolean {
-  const now = Date.now();
-  const record = rateLimitMap.get(ip);
-  
-  if (!record || now > record.resetTime) {
-    rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
-    return true;
-  }
-  
-  if (record.count >= limit) {
-    return false;
-  }
-  
-  record.count++;
-  return true;
-}
-
-// Clean up old entries periodically
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, record] of rateLimitMap.entries()) {
-    if (now > record.resetTime) {
-      rateLimitMap.delete(ip);
-    }
-  }
-}, 60000); // Clean every minute
-
+/**
+ * POST /api/track
+ * Track views and clicks for tools and startups
+ */
 export async function POST(request: NextRequest) {
   try {
-    // Get IP for rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 
-               request.headers.get('x-real-ip') || 
-               'unknown';
-    
-    // Rate limiting: 100 requests per minute per IP
-    if (!rateLimit(ip, 100, 60000)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded. Please try again later.' }, 
-        { status: 429 }
-      );
-    }
-    
     const body = await request.json();
-    const { pathname } = body;
-    
-    // Validate pathname
-    if (!pathname || typeof pathname !== 'string') {
+    const { entityType, entityId, eventType, ownerId } = body;
+
+    // Validate input
+    if (!entityType || !entityId || !eventType) {
       return NextResponse.json(
-        { error: 'Pathname required and must be a string' }, 
+        { success: false, error: 'Missing required fields' },
         { status: 400 }
       );
     }
-    
-    // Validate pathname format (prevent XSS and injection)
-    if (pathname.length > 500) {
+
+    if (!['TOOL', 'STARTUP'].includes(entityType)) {
       return NextResponse.json(
-        { error: 'Pathname too long (max 500 characters)' }, 
+        { success: false, error: 'Invalid entity type' },
         { status: 400 }
       );
     }
-    
-    // Basic pathname validation (must start with /)
-    if (!pathname.startsWith('/')) {
+
+    if (!['VIEW', 'CLICK'].includes(eventType)) {
       return NextResponse.json(
-        { error: 'Invalid pathname format' }, 
+        { success: false, error: 'Invalid event type' },
         { status: 400 }
       );
     }
-    
-    // Sanitize pathname (remove any potential XSS)
-    const sanitizedPathname = pathname
-      .replace(/<script[^>]*>.*?<\/script>/gi, '')
-      .replace(/<[^>]+>/g, '')
-      .trim();
-    
-    // Track the page view
-    await trackPageView(sanitizedPathname);
-    
+
+    // Get today's date
+    const today = new Date().toISOString().split('T')[0];
+
+    // Check if analytics record exists for today
+    const existing = await sql`
+      SELECT id, views, clicks
+      FROM "FounderAnalytics"
+      WHERE "userId" = ${ownerId}
+        AND "entityType" = ${entityType}
+        AND "entityId" = ${entityId}
+        AND date = ${today}
+    `;
+
+    if (existing.length > 0) {
+      // Update existing record
+      if (eventType === 'VIEW') {
+        await sql`
+          UPDATE "FounderAnalytics"
+          SET views = views + 1, "updatedAt" = NOW()
+          WHERE id = ${existing[0].id}
+        `;
+      } else {
+        await sql`
+          UPDATE "FounderAnalytics"
+          SET clicks = clicks + 1, "updatedAt" = NOW()
+          WHERE id = ${existing[0].id}
+        `;
+      }
+    } else {
+      // Create new record
+      await sql`
+        INSERT INTO "FounderAnalytics" (
+          "userId", "entityType", "entityId", date,
+          views, clicks, "directViews", "searchViews", "socialViews", "referralViews",
+          "createdAt", "updatedAt"
+        ) VALUES (
+          ${ownerId}, ${entityType}, ${entityId}, ${today},
+          ${eventType === 'VIEW' ? 1 : 0},
+          ${eventType === 'CLICK' ? 1 : 0},
+          0, 0, 0, 0,
+          NOW(), NOW()
+        )
+      `;
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Track API error:', error);
-    
-    // Don't expose internal errors to client
+    console.error('Error tracking event:', error);
     return NextResponse.json(
-      { error: 'Tracking failed' }, 
+      { success: false, error: 'Failed to track event' },
       { status: 500 }
     );
   }
 }
-
-export const runtime = 'nodejs';

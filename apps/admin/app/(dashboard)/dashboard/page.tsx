@@ -72,22 +72,22 @@ export default async function DashboardPage() {
   // Fetch recent articles (as a proxy for activity)
   const recentArticles = await prisma.article.findMany({
     take: 5,
-    orderBy: { createdAt: 'desc' }, // Using createdAt just for sorting
+    orderBy: { createdAt: 'desc' },
     select: {
       id: true,
       title: true,
       status: true,
-      author: {
+      User: {
         select: { name: true }
       }
     }
   });
 
   const recentActivity = recentArticles.map((a: any) => ({
-    user: a.author?.name || 'Unknown',
+    user: a.User?.name || 'Unknown',
     action: a.status === 'PUBLISHED' ? 'Published' : a.status === 'IN_REVIEW' ? 'Submitted for review' : 'Updated',
     item: a.title,
-    time: "Recently", // Bypass Date parsing object entirely for safety
+    time: "Recently",
     type: a.status === 'PUBLISHED' ? 'publish' : a.status === 'IN_REVIEW' ? 'submit' : 'draft'
   }));
 

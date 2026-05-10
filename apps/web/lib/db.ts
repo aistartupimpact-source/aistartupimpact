@@ -108,7 +108,15 @@ export async function getAiToolBySlugDirect(slug: string) {
       ORDER BY r."helpfulCount" DESC, r."publishedAt" DESC
     `;
 
-    return { ...tool, stories, fundingRounds, userReviews, category: tool.categoryName };
+    // Fetch Tool Use Cases (features and use cases)
+    const useCases = await sql`
+      SELECT id, text
+      FROM "ToolUseCase"
+      WHERE "toolId" = ${tool.id}
+      ORDER BY id
+    `;
+
+    return { ...tool, stories, fundingRounds, userReviews, useCases, category: tool.categoryName };
   } catch (e) {
     console.error('getAiToolBySlugDirect error:', e);
     return null;
@@ -170,7 +178,9 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
     let rows: any[];
     if (categorySlug && categorySlug !== 'all') {
       rows = await sql`
-        SELECT t.id, t.name, t.slug, t.tagline, t.description, t."pricingModel", t."logoUrl", t."avgRating", c.name AS "categoryName", c.slug AS "categorySlug"
+        SELECT t.id, t.name, t.slug, t.tagline, t.description, t."pricingModel", t."logoUrl", t."avgRating", 
+               t."hasApi", t."hasMobileApp", t."launchYear", t."headquartersCountry", t."founderNames",
+               c.name AS "categoryName", c.slug AS "categorySlug"
         FROM "AiTool" t
         LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
         WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL AND c.slug = ${categorySlug}
@@ -182,7 +192,9 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
       `;
     } else {
       rows = await sql`
-        SELECT t.id, t.name, t.slug, t.tagline, t.description, t."pricingModel", t."logoUrl", t."avgRating", c.name AS "categoryName", c.slug AS "categorySlug"
+        SELECT t.id, t.name, t.slug, t.tagline, t.description, t."pricingModel", t."logoUrl", t."avgRating",
+               t."hasApi", t."hasMobileApp", t."launchYear", t."headquartersCountry", t."founderNames",
+               c.name AS "categoryName", c.slug AS "categorySlug"
         FROM "AiTool" t
         LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
         WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
@@ -200,9 +212,15 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
       tagline: t.tagline,
       logoUrl: t.logoUrl || null,
       category: t.categoryName || 'General',
+      categorySlug: t.categorySlug || 'general',
       rating: parseFloat(t.avgRating || '4.0'),
       pricing: t.pricingModel || 'Free',
-      verdict: t.description ? t.description.substring(0, 120) + '...' : 'An excellent AI tool optimized for productivity.'
+      verdict: t.description ? t.description.substring(0, 120) + '...' : 'An excellent AI tool optimized for productivity.',
+      hasApi: t.hasApi || false,
+      hasMobileApp: t.hasMobileApp || false,
+      launchYear: t.launchYear || null,
+      country: t.headquartersCountry || null,
+      founderNames: t.founderNames || []
     }));
   } catch (e) {
     console.error('getDirectoryToolsDirect error:', e);
