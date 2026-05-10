@@ -22,15 +22,25 @@ function generateSlug(name: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting - prevent spam signups
+    // Rate limiting - prevent spam signups (with fallback)
     const identifier = getClientIdentifier(request);
-    const { success: rateLimitSuccess, remaining } = await authRateLimit.limit(identifier);
+    let remaining = 999;
     
-    if (!rateLimitSuccess) {
-      return NextResponse.json(
-        { error: 'Too many signup attempts. Please try again in 15 minutes.' },
-        { status: 429, headers: { 'X-RateLimit-Remaining': '0' } }
-      );
+    if (authRateLimit) {
+      try {
+        const { success: rateLimitSuccess, remaining: rem } = await authRateLimit.limit(identifier);
+        remaining = rem;
+        
+        if (!rateLimitSuccess) {
+          return NextResponse.json(
+            { error: 'Too many signup attempts. Please try again in 15 minutes.' },
+            { status: 429, headers: { 'X-RateLimit-Remaining': '0' } }
+          );
+        }
+      } catch (rateLimitError) {
+        console.error('Rate limit check failed:', rateLimitError);
+        // Continue without rate limiting if it fails
+      }
     }
 
     // Input validation

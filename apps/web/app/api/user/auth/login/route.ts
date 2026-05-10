@@ -18,15 +18,25 @@ function generateId(): string {
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting - prevent brute force attacks
+    // Rate limiting - prevent brute force attacks (with fallback)
     const identifier = getClientIdentifier(request);
-    const { success: rateLimitSuccess, remaining } = await authRateLimit.limit(identifier);
+    let remaining = 999;
     
-    if (!rateLimitSuccess) {
-      return NextResponse.json(
-        { error: 'Too many login attempts. Please try again in 15 minutes.' },
-        { status: 429, headers: { 'X-RateLimit-Remaining': '0' } }
-      );
+    if (authRateLimit) {
+      try {
+        const { success: rateLimitSuccess, remaining: rem } = await authRateLimit.limit(identifier);
+        remaining = rem;
+        
+        if (!rateLimitSuccess) {
+          return NextResponse.json(
+            { error: 'Too many login attempts. Please try again in 15 minutes.' },
+            { status: 429, headers: { 'X-RateLimit-Remaining': '0' } }
+          );
+        }
+      } catch (rateLimitError) {
+        console.error('Rate limit check failed:', rateLimitError);
+        // Continue without rate limiting if it fails
+      }
     }
 
     // Input validation

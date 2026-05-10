@@ -7,15 +7,23 @@ export const runtime = 'edge';
 
 export async function POST(request: Request) {
   try {
-    // Rate limiting
+    // Rate limiting (with fallback if Redis is unavailable)
     const identifier = getClientIdentifier(request);
-    const { success: rateLimitSuccess } = await apiRateLimit.limit(identifier);
     
-    if (!rateLimitSuccess) {
-      return NextResponse.json(
-        { success: false, error: 'Too many requests. Please try again later.' },
-        { status: 429 }
-      );
+    if (apiRateLimit) {
+      try {
+        const { success: rateLimitSuccess } = await apiRateLimit.limit(identifier);
+        
+        if (!rateLimitSuccess) {
+          return NextResponse.json(
+            { success: false, error: 'Too many requests. Please try again later.' },
+            { status: 429 }
+          );
+        }
+      } catch (rateLimitError) {
+        console.error('Rate limit check failed:', rateLimitError);
+        // Continue without rate limiting if it fails
+      }
     }
 
     // Input validation
