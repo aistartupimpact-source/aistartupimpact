@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Mail, Users, Send, Plus, Eye, Clock, CheckCircle, TrendingUp,
   Edit3, X, Save, Trash2, Loader2, AlertCircle, FlaskConical,
+  Monitor, Smartphone, Tablet,
 } from 'lucide-react';
 import {
   getNewsletterStatsAction, getCampaignsAction, saveCampaignAction,
@@ -44,10 +45,133 @@ export default function NewsletterAdminPage() {
   const [testModalId, setTestModalId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [showPreview, setShowPreview] = useState(true);
+  const [previewDevice, setPreviewDevice] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
 
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok });
     setTimeout(() => setToast(null), 3500);
+  };
+
+  // Generate preview HTML with actual email template
+  const generatePreviewHtml = (body: string, subject: string) => {
+    const LOGO_URL = "https://aistartupimpact.com/logo.png";
+    const currentDate = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${subject}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f7fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f4f7fa;padding:20px 0">
+    <tr>
+      <td align="center" style="padding:0 15px">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08)">
+          
+          <!-- Header with Logo and Branding -->
+          <tr>
+            <td style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);padding:32px 40px;text-align:center">
+              <img src="${LOGO_URL}" alt="AI Startup Impact" width="180" height="45" style="display:block;margin:0 auto 16px;max-width:180px;height:auto" />
+              <div style="color:#ffffff;font-size:14px;font-weight:500;letter-spacing:0.5px;text-transform:uppercase;opacity:0.95">
+                India's Premier AI Newsletter
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Edition Info Bar -->
+          <tr>
+            <td style="background-color:#f8f9fb;padding:12px 40px;border-bottom:1px solid #e2e8f0">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td style="color:#64748b;font-size:13px;font-weight:500">
+                    📬 Weekly Edition
+                  </td>
+                  <td align="right" style="color:#64748b;font-size:13px;font-weight:500">
+                    ${currentDate}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Main Content -->
+          <tr>
+            <td style="padding:40px 40px 32px">
+              <h1 style="color:#1e293b;font-size:28px;font-weight:700;line-height:1.3;margin:0 0 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+                ${subject}
+              </h1>
+              
+              <div style="color:#475569;font-size:16px;line-height:1.7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+                ${body || '<p style="color:#94a3b8;font-style:italic">Start typing to see your content here...</p>'}
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Divider -->
+          <tr>
+            <td style="padding:0 40px">
+              <div style="border-top:2px solid #e2e8f0"></div>
+            </td>
+          </tr>
+          
+          <!-- Social Links -->
+          <tr>
+            <td style="padding:32px 40px;text-align:center;background-color:#f8f9fb">
+              <p style="color:#64748b;font-size:14px;font-weight:600;margin:0 0 16px">
+                Follow us for daily updates
+              </p>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">
+                <tr>
+                  <td style="padding:0 8px">
+                    <a href="https://x.com/aistartupimapct" style="display:inline-block;width:36px;height:36px;background-color:#1da1f2;border-radius:50%">
+                      <span style="color:#fff;font-size:18px;line-height:36px">𝕏</span>
+                    </a>
+                  </td>
+                  <td style="padding:0 8px">
+                    <a href="https://www.linkedin.com/company/ai-startup-imapact" style="display:inline-block;width:36px;height:36px;background-color:#0077b5;border-radius:50%">
+                      <span style="color:#fff;font-size:18px;line-height:36px">in</span>
+                    </a>
+                  </td>
+                  <td style="padding:0 8px">
+                    <a href="https://www.youtube.com/@aistartupimpact" style="display:inline-block;width:36px;height:36px;background-color:#ff0000;border-radius:50%">
+                      <span style="color:#fff;font-size:18px;line-height:36px">▶</span>
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding:24px 40px;text-align:center;background-color:#ffffff;border-top:1px solid #e2e8f0">
+              <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0 0 12px">
+                You're receiving this because you subscribed to <strong style="color:#64748b">AI Startup Impact</strong>.<br>
+                We respect your inbox and send only valuable content.
+              </p>
+              <p style="color:#94a3b8;font-size:12px;margin:0">
+                <a href="#" style="color:#667eea;text-decoration:underline">Unsubscribe</a>
+                &nbsp;•&nbsp;
+                <a href="#" style="color:#667eea;text-decoration:none">Visit Website</a>
+                &nbsp;•&nbsp;
+                <a href="#" style="color:#667eea;text-decoration:none">Contact Us</a>
+              </p>
+              <p style="color:#cbd5e1;font-size:11px;margin:12px 0 0">
+                © ${new Date().getFullYear()} AI Startup Impact. All rights reserved.<br>
+                Bengaluru, India
+              </p>
+            </td>
+          </tr>
+          
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
   };
 
   const load = useCallback(async () => {
@@ -230,13 +354,17 @@ export default function NewsletterAdminPage() {
       {/* Create/Edit Modal */}
       {modalOpen && editing && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-6xl shadow-2xl border border-gray-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-[95vw] shadow-2xl border border-gray-200 dark:border-gray-800 flex flex-col max-h-[95vh]">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
               <h2 className="font-sora font-bold text-lg text-navy dark:text-white">{editing.id ? 'Edit Campaign' : 'New Campaign'}</h2>
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => setShowPreview(!showPreview)}
-                  className="px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center gap-1.5"
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors ${
+                    showPreview 
+                      ? 'bg-brand text-white' 
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  }`}
                 >
                   <Eye className="w-3.5 h-3.5" />
                   {showPreview ? 'Hide Preview' : 'Show Preview'}
@@ -244,24 +372,29 @@ export default function NewsletterAdminPage() {
                 <button onClick={closeModal} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><X className="w-4 h-4 text-gray-400" /></button>
               </div>
             </div>
-            <div className="px-6 py-5 space-y-4 overflow-y-auto">
-              <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Subject *</label>
-                <input type="text" className="input-field text-sm" value={editing.subject} onChange={(e) => setEditing({ ...editing, subject: e.target.value })} placeholder="Weekly AI Pulse #..." />
+            <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Subject *</label>
+                  <input type="text" className="input-field text-sm" value={editing.subject} onChange={(e) => setEditing({ ...editing, subject: e.target.value })} placeholder="Weekly AI Pulse #..." />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Preview Text</label>
+                  <input type="text" className="input-field text-sm" value={editing.previewText} onChange={(e) => setEditing({ ...editing, previewText: e.target.value })} placeholder="Brief preview shown in inbox..." />
+                </div>
               </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Preview Text</label>
-                <input type="text" className="input-field text-sm" value={editing.previewText} onChange={(e) => setEditing({ ...editing, previewText: e.target.value })} placeholder="Brief preview shown in inbox..." />
-              </div>
+              
               <div>
                 <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Email Body (HTML)</label>
                 <div className={`grid ${showPreview ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
                   {/* Code Editor */}
                   <div className="flex flex-col">
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 font-jakarta">HTML Code</div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 font-jakarta font-medium">HTML Code</div>
+                    </div>
                     <textarea 
                       className="input-field text-sm font-mono resize-none" 
-                      rows={16} 
+                      rows={20} 
                       value={editing.body} 
                       onChange={(e) => setEditing({ ...editing, body: e.target.value })} 
                       placeholder="<p>Hello readers,</p><p>This week in Indian AI...</p>" 
@@ -269,24 +402,74 @@ export default function NewsletterAdminPage() {
                     <p className="text-xs text-gray-400 font-jakarta mt-2">Write HTML. It will be wrapped in the branded email template automatically.</p>
                   </div>
                   
-                  {/* Live Preview */}
+                  {/* Enhanced Live Preview */}
                   {showPreview && (
                     <div className="flex flex-col">
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 font-jakarta">Live Preview</div>
-                      <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-800/50">
-                        <div className="h-[400px] overflow-y-auto p-4">
-                          {editing.body ? (
-                            <div 
-                              className="prose prose-sm dark:prose-invert max-w-none"
-                              dangerouslySetInnerHTML={{ __html: editing.body }}
-                            />
-                          ) : (
-                            <div className="flex items-center justify-center h-full text-sm text-gray-400">
-                              Start typing HTML to see preview...
-                            </div>
-                          )}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 font-jakarta font-medium">Live Preview</div>
+                        <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                          <button
+                            onClick={() => setPreviewDevice('mobile')}
+                            className={`p-1.5 rounded transition-colors ${
+                              previewDevice === 'mobile' 
+                                ? 'bg-white dark:bg-gray-700 text-brand shadow-sm' 
+                                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                            }`}
+                            title="Mobile (375px)"
+                          >
+                            <Smartphone className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setPreviewDevice('tablet')}
+                            className={`p-1.5 rounded transition-colors ${
+                              previewDevice === 'tablet' 
+                                ? 'bg-white dark:bg-gray-700 text-brand shadow-sm' 
+                                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                            }`}
+                            title="Tablet (768px)"
+                          >
+                            <Tablet className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setPreviewDevice('desktop')}
+                            className={`p-1.5 rounded transition-colors ${
+                              previewDevice === 'desktop' 
+                                ? 'bg-white dark:bg-gray-700 text-brand shadow-sm' 
+                                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                            }`}
+                            title="Desktop (600px)"
+                          >
+                            <Monitor className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
+                      <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-800/50 flex items-center justify-center p-4">
+                        <div 
+                          className={`bg-white transition-all duration-300 ${
+                            previewDevice === 'mobile' ? 'w-[375px]' : 
+                            previewDevice === 'tablet' ? 'w-full max-w-[768px]' : 
+                            'w-full'
+                          }`}
+                          style={{ 
+                            height: '600px',
+                            overflow: 'auto',
+                            boxShadow: previewDevice !== 'desktop' ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
+                            borderRadius: previewDevice !== 'desktop' ? '8px' : '0'
+                          }}
+                        >
+                          <iframe
+                            srcDoc={generatePreviewHtml(editing.body, editing.subject)}
+                            className="w-full h-full border-0"
+                            title="Email Preview"
+                            sandbox="allow-same-origin"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-400 font-jakarta mt-2 text-center">
+                        {previewDevice === 'mobile' && '📱 Mobile view (375px) - How it looks on phones'}
+                        {previewDevice === 'tablet' && '📱 Tablet view (768px) - How it looks on tablets'}
+                        {previewDevice === 'desktop' && '💻 Desktop view (600px) - How it looks in email clients'}
+                      </p>
                     </div>
                   )}
                 </div>

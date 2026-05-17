@@ -77,6 +77,7 @@ export function AdminSidebar({ session }: { session: any }) {
   const userName = session?.user?.name || "Admin User";
   const userRole = session?.user?.role?.replace(/_/g, ' ') || "SUPER ADMIN";
   const userInitials = userName.substring(0, 2).toUpperCase();
+  const userAvatar = session?.user?.image || session?.user?.avatar;
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
@@ -124,8 +125,17 @@ export function AdminSidebar({ session }: { session: any }) {
 
         <div className="p-4 border-t border-white/10 dark:border-gray-800 flex items-center justify-between">
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-8 h-8 rounded-full bg-brand/20 flex shrink-0 items-center justify-center text-brand text-sm font-bold">
-              {userInitials}
+            <div className="w-8 h-8 rounded-full bg-brand/20 flex shrink-0 items-center justify-center text-brand text-sm font-bold overflow-hidden">
+              {userAvatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img 
+                  src={userAvatar} 
+                  alt={userName} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                userInitials
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{userName}</p>

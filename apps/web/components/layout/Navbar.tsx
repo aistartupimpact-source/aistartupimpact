@@ -168,8 +168,17 @@ export default function Navbar() {
                         className="p-1 rounded-full hover:ring-2 hover:ring-gray-200 dark:hover:ring-gray-700 transition-all duration-200"
                         aria-label="User menu"
                       >
-                        <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                          <UserCircle className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                        <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+                          {user.avatar ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img 
+                              src={user.avatar} 
+                              alt={user.name || 'User'} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <UserCircle className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                          )}
                         </div>
                       </button>
                       
@@ -270,8 +279,17 @@ export default function Navbar() {
               {user ? (
                 <>
                   <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-xl mb-3">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                      <UserCircle className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                      {user.avatar ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img 
+                          src={user.avatar} 
+                          alt={user.name || 'User'} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <UserCircle className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                      )}
                     </div>
                     <div>
                       <p className="font-bold text-sm text-gray-900 dark:text-white">{user.name}</p>

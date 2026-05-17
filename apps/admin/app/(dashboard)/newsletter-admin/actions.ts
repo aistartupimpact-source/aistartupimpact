@@ -6,8 +6,11 @@ import { prisma } from "@aistartupimpact/database";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "newsletter@aistartupimpact.com";
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "newsletter-noreply@aistartupimpact.com";
+const FROM_NAME = process.env.RESEND_FROM_NAME || "AI Startup Impact Weekly";
+const REPLY_TO = process.env.RESEND_REPLY_TO || "hello@aistartupimpact.com";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const LOGO_URL = "https://aistartupimpact.com/logo.png"; // Update with actual logo URL
 
 const ALLOWED = ["SUPER_ADMIN", "EDITOR_IN_CHIEF", "SENIOR_WRITER"];
 
@@ -179,28 +182,149 @@ export async function sendCampaignAction(id: string) {
     const buildHtml = (email: string, campaignId: string) => {
       const trackedBody = wrapLinksWithTracking(htmlBody, email, campaignId);
       const trackingPixel = `${SITE_URL}/api/newsletter/track-open?c=${encodeURIComponent(campaignId)}&e=${encodeURIComponent(email)}`;
+      const currentDate = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
       
       return `
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f6f9fc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
-  <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,0.05)">
-    <div style="background:#0a0a0a;padding:24px;text-align:center">
-      <span style="color:#fff;font-size:20px;font-weight:700">AIStartupImpact</span>
-    </div>
-    <div style="padding:32px 40px">
-      <h1 style="color:#1a1a1a;font-size:24px;font-weight:700;margin:0 0 24px">${campaign.subject}</h1>
-      ${trackedBody}
-    </div>
-    <div style="padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center">
-      <p style="color:#8898aa;font-size:12px;margin:0">
-        You're receiving this because you subscribed to AIStartupImpact.<br>
-        <a href="${SITE_URL}/unsubscribe?email=${encodeURIComponent(email)}&c=${encodeURIComponent(campaignId)}" style="color:#3b82f6;text-decoration:underline">Unsubscribe</a>
-      </p>
-    </div>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <title>${campaign.subject}</title>
+  <!--[if mso]>
+  <style type="text/css">
+    body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
+  </style>
+  <![endif]-->
+</head>
+<body style="margin:0;padding:0;background-color:#f4f7fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale">
+  <!-- Preview Text -->
+  <div style="display:none;font-size:1px;color:#f4f7fa;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden">
+    ${campaign.previewText || campaign.subject}
   </div>
-  <img src="${trackingPixel}" width="1" height="1" alt="" style="display:block;width:1px;height:1px" />
+  
+  <!-- Email Container -->
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f4f7fa;padding:20px 0">
+    <tr>
+      <td align="center" style="padding:0 15px">
+        <!-- Main Content Table -->
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08)">
+          
+          <!-- Header with Logo and Branding -->
+          <tr>
+            <td style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);padding:32px 40px;text-align:center">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <!-- Logo -->
+                    <img src="${LOGO_URL}" alt="AI Startup Impact" width="180" height="45" style="display:block;margin:0 auto 16px;max-width:180px;height:auto" />
+                    <!-- Tagline -->
+                    <div style="color:#ffffff;font-size:14px;font-weight:500;letter-spacing:0.5px;text-transform:uppercase;opacity:0.95">
+                      India's Premier AI Newsletter
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Edition Info Bar -->
+          <tr>
+            <td style="background-color:#f8f9fb;padding:12px 40px;border-bottom:1px solid #e2e8f0">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td style="color:#64748b;font-size:13px;font-weight:500">
+                    📬 Weekly Edition
+                  </td>
+                  <td align="right" style="color:#64748b;font-size:13px;font-weight:500">
+                    ${currentDate}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Main Content -->
+          <tr>
+            <td style="padding:40px 40px 32px">
+              <!-- Subject as H1 -->
+              <h1 style="color:#1e293b;font-size:28px;font-weight:700;line-height:1.3;margin:0 0 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+                ${campaign.subject}
+              </h1>
+              
+              <!-- Newsletter Content -->
+              <div style="color:#475569;font-size:16px;line-height:1.7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+                ${trackedBody}
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Divider -->
+          <tr>
+            <td style="padding:0 40px">
+              <div style="border-top:2px solid #e2e8f0"></div>
+            </td>
+          </tr>
+          
+          <!-- Social Links -->
+          <tr>
+            <td style="padding:32px 40px;text-align:center;background-color:#f8f9fb">
+              <p style="color:#64748b;font-size:14px;font-weight:600;margin:0 0 16px">
+                Follow us for daily updates
+              </p>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">
+                <tr>
+                  <td style="padding:0 8px">
+                    <a href="https://x.com/aistartupimapct" style="display:inline-block;width:36px;height:36px;background-color:#1da1f2;border-radius:50%;text-decoration:none" target="_blank">
+                      <img src="https://cdn-icons-png.flaticon.com/512/733/733579.png" alt="Twitter" width="20" height="20" style="display:block;margin:8px auto" />
+                    </a>
+                  </td>
+                  <td style="padding:0 8px">
+                    <a href="https://www.linkedin.com/company/ai-startup-imapact" style="display:inline-block;width:36px;height:36px;background-color:#0077b5;border-radius:50%;text-decoration:none" target="_blank">
+                      <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" alt="LinkedIn" width="20" height="20" style="display:block;margin:8px auto" />
+                    </a>
+                  </td>
+                  <td style="padding:0 8px">
+                    <a href="https://www.youtube.com/@aistartupimpact" style="display:inline-block;width:36px;height:36px;background-color:#ff0000;border-radius:50%;text-decoration:none" target="_blank">
+                      <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="YouTube" width="20" height="20" style="display:block;margin:8px auto" />
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding:24px 40px;text-align:center;background-color:#ffffff;border-top:1px solid #e2e8f0">
+              <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0 0 12px">
+                You're receiving this because you subscribed to <strong style="color:#64748b">AI Startup Impact</strong>.<br>
+                We respect your inbox and send only valuable content.
+              </p>
+              <p style="color:#94a3b8;font-size:12px;margin:0">
+                <a href="${SITE_URL}/unsubscribe?email=${encodeURIComponent(email)}&c=${encodeURIComponent(campaignId)}" style="color:#667eea;text-decoration:underline">Unsubscribe</a>
+                &nbsp;•&nbsp;
+                <a href="${SITE_URL}" style="color:#667eea;text-decoration:none">Visit Website</a>
+                &nbsp;•&nbsp;
+                <a href="${SITE_URL}/contact" style="color:#667eea;text-decoration:none">Contact Us</a>
+              </p>
+              <p style="color:#cbd5e1;font-size:11px;margin:12px 0 0">
+                © ${new Date().getFullYear()} AI Startup Impact. All rights reserved.<br>
+                Bengaluru, India
+              </p>
+            </td>
+          </tr>
+          
+        </table>
+        <!-- End Main Content Table -->
+      </td>
+    </tr>
+  </table>
+  
+  <!-- Tracking Pixel -->
+  <img src="${trackingPixel}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0" />
 </body>
 </html>`;
     };
@@ -211,7 +335,8 @@ export async function sendCampaignAction(id: string) {
     for (let i = 0; i < subscribers.length; i += CHUNK) {
       const chunk = subscribers.slice(i, i + CHUNK);
       const batch = chunk.map((sub: any) => ({
-        from: FROM_EMAIL,
+        from: `${FROM_NAME} <${FROM_EMAIL}>`,
+        replyTo: REPLY_TO,
         to: [sub.email],
         subject: campaign.subject,
         html: buildHtml(sub.email, id),
@@ -242,22 +367,176 @@ export async function sendTestEmailAction(id: string, testEmail: string) {
 
   try {
     const campaigns = await prisma.$queryRaw<any[]>`
-      SELECT subject, "contentJson" FROM "NewsletterCampaign" WHERE id = ${id}
+      SELECT subject, "previewText", "contentJson" FROM "NewsletterCampaign" WHERE id = ${id}
     `;
     if (!campaigns.length) return { success: false, error: "Campaign not found" };
 
     const campaign = campaigns[0];
     const htmlBody = (campaign.contentJson as any)?.html || "";
+    const currentDate = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+    // Build full branded template for test email
+    const fullHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <title>${campaign.subject}</title>
+  <!--[if mso]>
+  <style type="text/css">
+    body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
+  </style>
+  <![endif]-->
+</head>
+<body style="margin:0;padding:0;background-color:#f4f7fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale">
+  <!-- Preview Text -->
+  <div style="display:none;font-size:1px;color:#f4f7fa;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden">
+    ${campaign.previewText || campaign.subject}
+  </div>
+  
+  <!-- Email Container -->
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f4f7fa;padding:20px 0">
+    <tr>
+      <td align="center" style="padding:0 15px">
+        <!-- Main Content Table -->
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08)">
+          
+          <!-- TEST BANNER -->
+          <tr>
+            <td style="background:#fef3c7;padding:12px 20px;text-align:center;border-bottom:2px solid #fbbf24">
+              <p style="margin:0;color:#92400e;font-size:13px;font-weight:600">
+                ⚠️ <strong>TEST EMAIL</strong> - This is a preview. Only you can see this message.
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Header with Logo and Branding -->
+          <tr>
+            <td style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);padding:32px 40px;text-align:center">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <!-- Logo -->
+                    <img src="${LOGO_URL}" alt="AI Startup Impact" width="180" height="45" style="display:block;margin:0 auto 16px;max-width:180px;height:auto" />
+                    <!-- Tagline -->
+                    <div style="color:#ffffff;font-size:14px;font-weight:500;letter-spacing:0.5px;text-transform:uppercase;opacity:0.95">
+                      India's Premier AI Newsletter
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Edition Info Bar -->
+          <tr>
+            <td style="background-color:#f8f9fb;padding:12px 40px;border-bottom:1px solid #e2e8f0">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td style="color:#64748b;font-size:13px;font-weight:500">
+                    📬 Weekly Edition
+                  </td>
+                  <td align="right" style="color:#64748b;font-size:13px;font-weight:500">
+                    ${currentDate}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Main Content -->
+          <tr>
+            <td style="padding:40px 40px 32px">
+              <!-- Subject as H1 -->
+              <h1 style="color:#1e293b;font-size:28px;font-weight:700;line-height:1.3;margin:0 0 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+                ${campaign.subject}
+              </h1>
+              
+              <!-- Newsletter Content -->
+              <div style="color:#475569;font-size:16px;line-height:1.7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+                ${htmlBody}
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Divider -->
+          <tr>
+            <td style="padding:0 40px">
+              <div style="border-top:2px solid #e2e8f0"></div>
+            </td>
+          </tr>
+          
+          <!-- Social Links -->
+          <tr>
+            <td style="padding:32px 40px;text-align:center;background-color:#f8f9fb">
+              <p style="color:#64748b;font-size:14px;font-weight:600;margin:0 0 16px">
+                Follow us for daily updates
+              </p>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">
+                <tr>
+                  <td style="padding:0 8px">
+                    <a href="https://x.com/aistartupimapct" style="display:inline-block;width:36px;height:36px;background-color:#1da1f2;border-radius:50%;text-decoration:none" target="_blank">
+                      <img src="https://cdn-icons-png.flaticon.com/512/733/733579.png" alt="Twitter" width="20" height="20" style="display:block;margin:8px auto" />
+                    </a>
+                  </td>
+                  <td style="padding:0 8px">
+                    <a href="https://www.linkedin.com/company/ai-startup-imapact" style="display:inline-block;width:36px;height:36px;background-color:#0077b5;border-radius:50%;text-decoration:none" target="_blank">
+                      <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" alt="LinkedIn" width="20" height="20" style="display:block;margin:8px auto" />
+                    </a>
+                  </td>
+                  <td style="padding:0 8px">
+                    <a href="https://www.youtube.com/@aistartupimpact" style="display:inline-block;width:36px;height:36px;background-color:#ff0000;border-radius:50%;text-decoration:none" target="_blank">
+                      <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="YouTube" width="20" height="20" style="display:block;margin:8px auto" />
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding:24px 40px;text-align:center;background-color:#ffffff;border-top:1px solid #e2e8f0">
+              <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0 0 12px">
+                You're receiving this because you subscribed to <strong style="color:#64748b">AI Startup Impact</strong>.<br>
+                We respect your inbox and send only valuable content.
+              </p>
+              <p style="color:#94a3b8;font-size:12px;margin:0">
+                <a href="${SITE_URL}/unsubscribe?email=${encodeURIComponent(testEmail)}" style="color:#667eea;text-decoration:underline">Unsubscribe</a>
+                &nbsp;•&nbsp;
+                <a href="${SITE_URL}" style="color:#667eea;text-decoration:none">Visit Website</a>
+                &nbsp;•&nbsp;
+                <a href="${SITE_URL}/contact" style="color:#667eea;text-decoration:none">Contact Us</a>
+              </p>
+              <p style="color:#cbd5e1;font-size:11px;margin:12px 0 0">
+                © ${new Date().getFullYear()} AI Startup Impact. All rights reserved.<br>
+                Bengaluru, India
+              </p>
+            </td>
+          </tr>
+          
+        </table>
+        <!-- End Main Content Table -->
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 
     await resend.emails.send({
-      from: FROM_EMAIL,
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      replyTo: REPLY_TO,
       to: [testEmail],
       subject: `[TEST] ${campaign.subject}`,
-      html: `<div style="background:#fef3c7;padding:12px;text-align:center;font-family:sans-serif;font-size:13px;color:#92400e">⚠️ This is a test email</div>${htmlBody}`,
+      html: fullHtml,
     });
 
     return { success: true };
   } catch (e: any) {
+    console.error('Test email error:', e);
     return { success: false, error: e.message };
   }
 }
