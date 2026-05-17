@@ -23,13 +23,8 @@ export async function sendVerificationEmail(email: string, name: string, token: 
     return;
   }
   
-  console.log('📧 Attempting to send verification email...');
-  console.log('   From:', `${FROM_NAME} <${FROM_EMAIL}>`);
-  console.log('   To:', email);
-  console.log('   Subject: Verify your email - AI Startup Impact');
-  
   try {
-    const result = await client.emails.send({
+    await client.emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: email,
       subject: 'Verify your email - AI Startup Impact',
@@ -46,11 +41,8 @@ export async function sendVerificationEmail(email: string, name: string, token: 
         </div>
       `
     });
-    console.log('✅ Email sent successfully!', result);
-  } catch (error: any) {
-    console.error('❌ Failed to send verification email:');
-    console.error('   Error message:', error.message);
-    console.error('   Error details:', JSON.stringify(error, null, 2));
+  } catch (error) {
+    console.error('Failed to send verification email:', error);
     throw error;
   }
 }
