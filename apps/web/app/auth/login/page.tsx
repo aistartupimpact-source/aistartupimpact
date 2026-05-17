@@ -9,6 +9,7 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnTo = searchParams.get('returnTo');
+  const successMessage = searchParams.get('message');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -172,6 +173,12 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {successMessage && (
+              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 text-sm text-green-600 dark:text-green-400">
+                ✅ {successMessage}
+              </div>
+            )}
+
             {resendSuccess && (
               <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 text-sm text-green-600 dark:text-green-400">
                 ✅ Verification email sent! Please check your inbox.

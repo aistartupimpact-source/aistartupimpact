@@ -7,6 +7,7 @@ import CookieConsent from '@/components/CookieConsent';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import ClearConsentButton from '@/components/ClearConsentButton';
 import NewsletterPopup from '@/components/NewsletterPopup';
+import SignupSuccessPopup from '@/components/auth/SignupSuccessPopup';
 import { generateWebSiteSchema, generateOrganizationSchema } from '@/lib/seo';
 import './globals.css';
 
@@ -111,6 +112,7 @@ export default function RootLayout({
           <AnalyticsTracker />
           {children}
           <NewsletterPopup />
+          <SignupSuccessPopup />
           <CookieConsent />
           <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_ID || 'G-PVL3NC8DQ6'} />
           <ClearConsentButton />

@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation';
 import { 
   ArrowLeft, Mail, Building2, Phone, Calendar, CheckCircle, XCircle, 
   Clock, Globe, Linkedin, Twitter, User, Briefcase, Shield, Eye,
-  TrendingUp, Package, Wrench
+  TrendingUp, Package, Wrench, Trash2, Ban, CheckSquare
 } from 'lucide-react';
 import Link from 'next/link';
-import { getFounderByIdAction } from './actions';
+import { getFounderByIdAction, deleteFounderAction, updateFounderStatusAction } from './actions';
+import { useSession } from 'next-auth/react';
 
 interface FounderDetail {
   id: string;
@@ -52,9 +53,12 @@ interface FounderDetail {
 
 export default function FounderDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const { data: session } = useSession();
   const [founder, setFounder] = useState<FounderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const isSuperAdmin = (session as any)?.user?.role === 'SUPER_ADMIN';
 
   useEffect(() => {
     loadFounder();
@@ -70,6 +74,40 @@ export default function FounderDetailPage({ params }: { params: { id: string } }
       setError(result.error || 'Failed to load founder details');
     }
     setLoading(false);
+  };
+  
+  const handleDelete = async () => {
+    if (!confirm(`Are you sure you want to DELETE ${founder?.name}?\n\nThis will permanently delete:\n- The founder account\n- All their startups\n- All their tools\n\nThis action CANNOT be undone!`)) {
+      return;
+    }
+    
+    const result = await deleteFounderAction(params.id);
+    if (result.success) {
+      alert('Founder deleted successfully');
+      router.push('/founders');
+    } else {
+      alert(`Failed to delete: ${result.error}`);
+    }
+  };
+  
+  const handleStatusChange = async (newStatus: string) => {
+    const statusNames: Record<string, string> = {
+      'ACTIVE': 'activate',
+      'SUSPENDED': 'suspend',
+      'PENDING_VERIFICATION': 'set to pending verification'
+    };
+    
+    if (!confirm(`Are you sure you want to ${statusNames[newStatus]} ${founder?.name}?`)) {
+      return;
+    }
+    
+    const result = await updateFounderStatusAction(params.id, newStatus);
+    if (result.success) {
+      alert('Status updated successfully');
+      loadFounder();
+    } else {
+      alert(`Failed to update status: ${result.error}`);
+    }
   };
 
   if (loading) {
@@ -108,6 +146,39 @@ export default function FounderDetailPage({ params }: { params: { id: string } }
           <ArrowLeft className="w-4 h-4" />
           Back to Founders
         </button>
+        
+        {/* Super Admin Actions */}
+        {isSuperAdmin && founder && (
+          <div className="flex items-center gap-2">
+            {/* Status Actions */}
+            {founder.status === 'ACTIVE' ? (
+              <button
+                onClick={() => handleStatusChange('SUSPENDED')}
+                className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold rounded-lg transition-colors"
+              >
+                <Ban className="w-4 h-4" />
+                Suspend
+              </button>
+            ) : founder.status === 'SUSPENDED' ? (
+              <button
+                onClick={() => handleStatusChange('ACTIVE')}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors"
+              >
+                <CheckSquare className="w-4 h-4" />
+                Activate
+              </button>
+            ) : null}
+            
+            {/* Delete Button */}
+            <button
+              onClick={handleDelete}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Founder
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Founder Profile Card */}

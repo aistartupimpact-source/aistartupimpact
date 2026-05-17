@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { AdminSidebar } from './components/Sidebar';
 import { AdminHeader } from './components/Header';
+import { redirect } from 'next/navigation';
 
 export default async function AdminLayout({
   children,
@@ -9,6 +10,11 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const session = await getServerSession(authOptions);
+
+  // Redirect to login if not authenticated
+  if (!session?.user) {
+    redirect('/login');
+  }
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-950">

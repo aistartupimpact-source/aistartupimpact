@@ -6,8 +6,10 @@ import { prisma } from "@aistartupimpact/database";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "newsletter-noreply@aistartupimpact.com";
-const FROM_NAME = process.env.RESEND_FROM_NAME || "AI Startup Impact Weekly";
+
+// Newsletter-specific email configuration
+const FROM_EMAIL = process.env.RESEND_NEWSLETTER_EMAIL || "newsletter-noreply@aistartupimpact.com";
+const FROM_NAME = process.env.RESEND_NEWSLETTER_NAME || "AI Startup Impact Weekly";
 const REPLY_TO = process.env.RESEND_REPLY_TO || "hello@aistartupimpact.com";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 const LOGO_URL = "https://aistartupimpact.com/logo.png"; // Update with actual logo URL

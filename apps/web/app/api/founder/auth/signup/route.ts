@@ -44,14 +44,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
+    // Check if founder already exists
+    const existingFounder = await prisma.founderUser.findUnique({
       where: { email: email.toLowerCase() },
     });
 
-    if (existingUser) {
+    if (existingFounder) {
       return NextResponse.json(
-        { error: 'User with this email already exists' },
+        { error: 'Founder with this email already exists' },
         { status: 409 }
       );
     }
@@ -59,35 +59,48 @@ export async function POST(request: NextRequest) {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 12);
 
-    // Create founder user with FOUNDER role
-    const user = await prisma.user.create({
+    // Generate verification token
+    const verifyToken = randomBytes(32).toString('hex');
+
+    // Create founder user in FounderUser table
+    const founder = await prisma.founderUser.create({
       data: {
         id: generateId(),
         email: email.toLowerCase(),
         passwordHash,
         name,
-        slug: generateSlug(name),
-        role: 'FOUNDER', // Set role as FOUNDER
-        isActive: true,
+        status: 'PENDING_VERIFICATION', // Require email verification
+        emailVerified: false,
+        verifyToken,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
       select: {
         id: true,
         email: true,
         name: true,
-        slug: true,
-        role: true,
+        status: true,
       },
     });
 
+    // Send verification email
+    try {
+      const { sendVerificationEmail } = await import('@/lib/founder-email');
+      await sendVerificationEmail(founder.email, founder.name, verifyToken);
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      // Don't fail the signup if email fails, user can resend later
+    }
+
     return NextResponse.json({
       success: true,
-      message: 'Founder account created successfully',
+      message: 'Founder account created successfully. Please check your email to verify your account.',
+      emailVerified: false, // Email verification required
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        slug: user.slug,
-        role: user.role,
+        id: founder.id,
+        email: founder.email,
+        name: founder.name,
+        status: founder.status,
       },
     });
   } catch (error) {

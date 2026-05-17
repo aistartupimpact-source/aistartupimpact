@@ -21,7 +21,10 @@ const generateSlug = (name: string) => {
 
 export async function getUsers() {
   const session: any = await getServerSession(authOptions);
-  if (!session?.user) throw new Error("Unauthorized");
+  if (!session?.user) {
+    console.warn("getUsers called without session");
+    return [];
+  }
 
   try {
     // Use raw SQL to avoid Prisma DateTime serialization issues

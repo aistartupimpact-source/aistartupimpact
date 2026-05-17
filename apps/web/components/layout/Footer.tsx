@@ -41,8 +41,8 @@ const footerLinks = [
     links: [
       { label: 'Submit Startup', href: '/submit-startup' },
       { label: 'Submit AI Tool', href: '/submit-tool' },
-      { label: 'Founder Login', href: '/auth/founder-login' },
-      { label: 'User Login', href: '/auth/login' },
+      { label: 'Founder Login', href: '/auth/login' },
+      { label: 'Founder Signup', href: '/auth/signup' },
     ],
   },
   {

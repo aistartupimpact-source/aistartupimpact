@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { neon } from '@neondatabase/serverless';
 import { z } from 'zod';
+
+const sql = neon(process.env.DATABASE_URL!);
 
 const verifySchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -11,17 +13,22 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validated = verifySchema.parse(body);
     
-    // Find user with this verification token
-    const user = await prisma.founderUser.findUnique({
-      where: { verifyToken: validated.token }
-    });
+    // Find user with this verification token using raw SQL
+    const users = await sql`
+      SELECT id, email, name, "emailVerified", status
+      FROM "FounderUser"
+      WHERE "verifyToken" = ${validated.token}
+      LIMIT 1
+    `;
     
-    if (!user) {
+    if (users.length === 0) {
       return NextResponse.json(
         { error: 'Invalid or expired verification link' },
         { status: 400 }
       );
     }
+    
+    const user = users[0];
     
     // Check if already verified
     if (user.emailVerified) {
@@ -31,15 +38,15 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Update user - verify email and activate account
-    await prisma.founderUser.update({
-      where: { id: user.id },
-      data: {
-        emailVerified: true,
-        verifyToken: null, // Clear the token
-        status: 'ACTIVE', // Activate the account
-      }
-    });
+    // Update user - verify email and activate account using raw SQL
+    await sql`
+      UPDATE "FounderUser"
+      SET "emailVerified" = true,
+          "verifyToken" = NULL,
+          status = 'ACTIVE',
+          "updatedAt" = NOW()
+      WHERE id = ${user.id}
+    `;
     
     return NextResponse.json({
       success: true,

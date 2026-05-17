@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, Eye, EyeOff, Loader2, User, Star } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface SignInModalProps {
   isOpen: boolean;
@@ -21,6 +22,8 @@ export default function SignInModal({ isOpen, onClose }: SignInModalProps) {
     email: '',
     password: '',
     confirmPassword: '',
+    company: '',
+    agreeToTerms: false,
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -35,11 +38,24 @@ export default function SignInModal({ isOpen, onClose }: SignInModalProps) {
       email: '',
       password: '',
       confirmPassword: '',
+      company: '',
+      agreeToTerms: false,
     });
     setError('');
     setShowPassword(false);
     setShowConfirmPassword(false);
   };
+
+  // Password strength indicator
+  const getPasswordStrength = (password: string) => {
+    if (password.length === 0) return { strength: 0, label: '', color: '' };
+    if (password.length < 6) return { strength: 1, label: 'Weak', color: 'bg-red-500' };
+    if (password.length < 8) return { strength: 2, label: 'Fair', color: 'bg-orange-500' };
+    if (password.length < 12) return { strength: 3, label: 'Good', color: 'bg-yellow-500' };
+    return { strength: 4, label: 'Strong', color: 'bg-green-500' };
+  };
+
+  const passwordStrength = getPasswordStrength(formData.password);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +73,14 @@ export default function SignInModal({ isOpen, onClose }: SignInModalProps) {
         return;
       }
 
-      if (formData.password !== formData.confirmPassword) {
+      // For founders, require terms agreement
+      if (activeTab === 'founder' && !formData.agreeToTerms) {
+        setError('Please agree to the terms and conditions');
+        return;
+      }
+
+      // Only validate confirm password for users (founders don't have it)
+      if (activeTab === 'user' && formData.password !== formData.confirmPassword) {
         setError('Passwords do not match');
         return;
       }
@@ -72,7 +95,9 @@ export default function SignInModal({ isOpen, onClose }: SignInModalProps) {
 
       const payload = mode === 'signin'
         ? { email: formData.email, password: formData.password }
-        : { name: formData.name, email: formData.email, password: formData.password };
+        : activeTab === 'founder'
+          ? { name: formData.name, email: formData.email, password: formData.password, company: formData.company || undefined }
+          : { name: formData.name, email: formData.email, password: formData.password };
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -86,21 +111,40 @@ export default function SignInModal({ isOpen, onClose }: SignInModalProps) {
         throw new Error(data.error || `${mode === 'signin' ? 'Login' : 'Signup'} failed`);
       }
 
-      // For signup, automatically log in
+      // For signup, handle differently based on user type
       if (mode === 'signup') {
-        const loginEndpoint = activeTab === 'user' ? '/api/user/auth/login' : '/api/founder/auth/login';
-        const loginRes = await fetch(loginEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: formData.email, password: formData.password }),
-        });
+        if (activeTab === 'founder') {
+          // Founders need to verify email first - close modal and show success popup
+          onClose();
+          resetForm();
+          // Trigger success popup (will be handled by parent component)
+          window.dispatchEvent(new CustomEvent('founderSignupSuccess', { 
+            detail: { email: formData.email } 
+          }));
+          return;
+        } else {
+          // Users can auto-login
+          const loginEndpoint = '/api/user/auth/login';
+          const loginRes = await fetch(loginEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: formData.email, password: formData.password }),
+          });
 
-        if (!loginRes.ok) {
-          throw new Error('Account created but login failed. Please try logging in.');
+          if (!loginRes.ok) {
+            throw new Error('Account created but login failed. Please try logging in.');
+          }
+          
+          // Close modal and redirect to profile
+          onClose();
+          resetForm();
+          router.push('/profile');
+          router.refresh();
+          return;
         }
       }
 
-      // Close modal and redirect
+      // For signin, close modal and redirect
       onClose();
       resetForm();
       
@@ -226,7 +270,7 @@ export default function SignInModal({ isOpen, onClose }: SignInModalProps) {
             {mode === 'signup' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Full Name
+                  Full Name *
                 </label>
                 <input
                   type="text"
@@ -241,7 +285,10 @@ export default function SignInModal({ isOpen, onClose }: SignInModalProps) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Email Address
+                Email Address{mode === 'signup' && ' *'}
+                {mode === 'signup' && activeTab === 'founder' && (
+                  <span className="text-xs text-gray-500"> (Company email only)</span>
+                )}
               </label>
               <input
                 type="email"
@@ -249,13 +296,34 @@ export default function SignInModal({ isOpen, onClose }: SignInModalProps) {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                placeholder="your@email.com"
+                placeholder={mode === 'signup' && activeTab === 'founder' ? 'john@yourcompany.com' : 'your@email.com'}
               />
+              {mode === 'signup' && activeTab === 'founder' && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  ⚠️ Personal emails (Gmail, Yahoo, etc.) are not allowed
+                </p>
+              )}
             </div>
+
+            {/* Company field - only for founder signup */}
+            {mode === 'signup' && activeTab === 'founder' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Company Name (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.company}
+                  onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  placeholder="My Awesome Startup"
+                />
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Password
+                Password{mode === 'signup' && ' *'}
               </label>
               <div className="relative">
                 <input
@@ -274,15 +342,36 @@ export default function SignInModal({ isOpen, onClose }: SignInModalProps) {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              {mode === 'signup' && (
+              
+              {/* Password Strength Indicator - only for founder signup */}
+              {mode === 'signup' && activeTab === 'founder' && formData.password && (
+                <div className="mt-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all ${passwordStrength.color}`}
+                        style={{ width: `${(passwordStrength.strength / 4) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                      {passwordStrength.label}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Use at least 8 characters with a mix of letters, numbers & symbols
+                  </p>
+                </div>
+              )}
+              
+              {mode === 'signup' && activeTab === 'user' && (
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Must be at least 8 characters long
                 </p>
               )}
             </div>
 
-            {/* Confirm Password - only for signup */}
-            {mode === 'signup' && (
+            {/* Confirm Password - only for user signup */}
+            {mode === 'signup' && activeTab === 'user' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Confirm Password
@@ -307,9 +396,32 @@ export default function SignInModal({ isOpen, onClose }: SignInModalProps) {
               </div>
             )}
 
+            {/* Terms & Conditions - only for founder signup */}
+            {mode === 'signup' && activeTab === 'founder' && (
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={formData.agreeToTerms}
+                  onChange={(e) => setFormData({ ...formData, agreeToTerms: e.target.checked })}
+                  className="mt-1 w-4 h-4 text-brand border-gray-300 rounded focus:ring-brand"
+                />
+                <label htmlFor="terms" className="text-sm text-gray-600 dark:text-gray-400">
+                  I agree to the{' '}
+                  <Link href="/terms" className="text-brand hover:underline">
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link href="/privacy" className="text-brand hover:underline">
+                    Privacy Policy
+                  </Link>
+                </label>
+              </div>
+            )}
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || (mode === 'signup' && activeTab === 'founder' && !formData.agreeToTerms)}
               className="w-full bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-black font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (

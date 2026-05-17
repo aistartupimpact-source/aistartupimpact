@@ -1,6 +1,8 @@
 'use server';
 
 import { neon } from '@neondatabase/serverless';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -79,5 +81,47 @@ export async function getFounderByIdAction(founderId: string) {
   } catch (error: any) {
     console.error('Get founder by ID error:', error);
     return { success: false, error: error.message };
+  }
+}
+
+export async function deleteFounderAction(founderId: string) {
+  try {
+    const session: any = await getServerSession(authOptions);
+    
+    if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+      return { success: false, error: 'Only Super Admins can delete founders' };
+    }
+
+    // Delete founder (CASCADE will handle related records)
+    await sql`
+      DELETE FROM "FounderUser"
+      WHERE id = ${founderId}
+    `;
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Delete founder error:', error);
+    return { success: false, error: error.message || 'Failed to delete founder' };
+  }
+}
+
+export async function updateFounderStatusAction(founderId: string, newStatus: string) {
+  try {
+    const session: any = await getServerSession(authOptions);
+    
+    if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+      return { success: false, error: 'Only Super Admins can update founder status' };
+    }
+
+    await sql`
+      UPDATE "FounderUser"
+      SET status = ${newStatus}, "updatedAt" = NOW()
+      WHERE id = ${founderId}
+    `;
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Update founder status error:', error);
+    return { success: false, error: error.message || 'Failed to update status' };
   }
 }

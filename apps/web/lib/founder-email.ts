@@ -9,7 +9,9 @@ function getResend() {
   return resend;
 }
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@aistartupimpact.com';
+// Transactional emails (verification, password reset, notifications)
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'no-reply@aistartupimpact.com';
+const FROM_NAME = process.env.RESEND_FROM_NAME || 'AI Startup Impact';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
 export async function sendVerificationEmail(email: string, name: string, token: string) {
@@ -21,9 +23,14 @@ export async function sendVerificationEmail(email: string, name: string, token: 
     return;
   }
   
+  console.log('📧 Attempting to send verification email...');
+  console.log('   From:', `${FROM_NAME} <${FROM_EMAIL}>`);
+  console.log('   To:', email);
+  console.log('   Subject: Verify your email - AI Startup Impact');
+  
   try {
-    await client.emails.send({
-      from: FROM_EMAIL,
+    const result = await client.emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: email,
       subject: 'Verify your email - AI Startup Impact',
       html: `
@@ -39,8 +46,11 @@ export async function sendVerificationEmail(email: string, name: string, token: 
         </div>
       `
     });
-  } catch (error) {
-    console.error('Failed to send verification email:', error);
+    console.log('✅ Email sent successfully!', result);
+  } catch (error: any) {
+    console.error('❌ Failed to send verification email:');
+    console.error('   Error message:', error.message);
+    console.error('   Error details:', JSON.stringify(error, null, 2));
     throw error;
   }
 }
@@ -56,7 +66,7 @@ export async function sendPasswordResetEmail(email: string, name: string, token:
   
   try {
     await client.emails.send({
-      from: FROM_EMAIL,
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: email,
       subject: 'Reset your password - AI Startup Impact',
       html: `
@@ -93,7 +103,7 @@ export async function sendSubmissionReceivedEmail(
   
   try {
     await client.emails.send({
-      from: FROM_EMAIL,
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: email,
       subject: `We received your ${entityType} submission!`,
       html: `
@@ -132,7 +142,7 @@ export async function sendApprovalEmail(
   
   try {
     await client.emails.send({
-      from: FROM_EMAIL,
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: email,
       subject: `🎉 Your ${entityType} is now live!`,
       html: `

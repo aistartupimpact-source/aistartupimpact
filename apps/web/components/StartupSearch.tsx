@@ -336,7 +336,7 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
                       Raised
                     </div>
                     <div className="font-sora font-bold text-sm text-emerald-600 dark:text-emerald-400">
-                      {formatUsd(Number(s.totalUsd)) ? `$${formatUsd(Number(s.totalUsd))}` : 'Undisclosed'}
+                      {formatUsd(Number(s.totalUsd)) || 'Undisclosed'}
                     </div>
                   </div>
                 </div>

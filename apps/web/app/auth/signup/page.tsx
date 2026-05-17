@@ -67,6 +67,7 @@ export default function SignupPage() {
         throw new Error(data.error || 'Signup failed');
       }
 
+      // Show email verification message
       setSuccess(true);
     } catch (err: any) {
       setError(err.message);

@@ -162,7 +162,7 @@ model AiTool {
   searchVector        Unsupported("tsvector")?
   AffiliateClick      AffiliateClick[]
   ToolCategory        ToolCategory             @relation(fields: [categoryId], references: [id])
-  FounderUser         FounderUser?             @relation(fields: [ownerId], references: [id])
+  FounderUser         FounderUser?             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   Startup             Startup?                 @relation(fields: [startupId], references: [id])
   Article             Article[]
   ToolCon             ToolCon[]
@@ -1002,8 +1002,8 @@ model Startup {
   Job                                        Job[]
   StartupReview                              StartupReview[]
   SavedStartup                               SavedStartup[]
-  FounderUser_Startup_claimedByToFounderUser FounderUser?             @relation("Startup_claimedByToFounderUser", fields: [claimedBy], references: [id])
-  FounderUser_Startup_ownerIdToFounderUser   FounderUser?             @relation("Startup_ownerIdToFounderUser", fields: [ownerId], references: [id])
+  FounderUser_Startup_claimedByToFounderUser FounderUser?             @relation("Startup_claimedByToFounderUser", fields: [claimedBy], references: [id], onDelete: SetNull)
+  FounderUser_Startup_ownerIdToFounderUser   FounderUser?             @relation("Startup_ownerIdToFounderUser", fields: [ownerId], references: [id], onDelete: Cascade)
   StartupVerificationLog                     StartupVerificationLog[]
 
   @@index([category])
@@ -1482,5 +1482,4 @@ enum UserRole {
   WRITER
   AD_MANAGER
   CONTRIBUTOR
-  FOUNDER
 }
