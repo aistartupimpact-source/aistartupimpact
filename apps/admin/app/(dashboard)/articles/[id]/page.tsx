@@ -271,8 +271,8 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
 
       const json = await saveArticleAction(payload, params.id);
 
-      if (!json.success) {
-        throw new Error(json.error || 'Failed to save');
+      if (!json || !json.success) {
+        throw new Error(json?.error || 'Failed to save - no response from server');
       }
 
       const t = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });

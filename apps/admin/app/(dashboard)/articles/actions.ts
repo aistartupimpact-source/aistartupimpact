@@ -72,15 +72,20 @@ export async function uploadMediaAction(formData: FormData) {
 }
 
 export async function saveArticleAction(payload: any, articleId?: string | null) {
+  console.log('[saveArticleAction] Starting...', { articleId, hasPayload: !!payload });
+  
   const session: any = await getServerSession(authOptions);
 
   if (!session?.user || !["SUPER_ADMIN", "EDITOR_IN_CHIEF", "SENIOR_WRITER", "WRITER"].includes(session.user.role)) {
+    console.log('[saveArticleAction] Unauthorized:', session?.user?.role);
     return { success: false, error: "Unauthorized or insufficient permissions to save articles" };
   }
 
   try {
     const { title, subtitle, content, type, category, tags, coverImage, thumbnailImage, seoTitle, seoDescription, focusKeyword, slug, status, canonicalUrl, ogImage, noIndex } = payload;
     const authorId = session.user.id;
+
+    console.log('[saveArticleAction] Payload extracted:', { title, status, hasContent: !!content });
 
     let baseSlug = slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     let finalSlug = baseSlug;
@@ -101,6 +106,8 @@ export async function saveArticleAction(payload: any, articleId?: string | null)
         counter++;
       }
     }
+
+    console.log('[saveArticleAction] Final slug:', finalSlug);
 
     // The Prisma schema expects `content` to be a `Json` object (for TipTap), but we are storing HTML strings from the legacy editor.
     // Wrap the string in a JSON-compatible object so Neon's HTTP adapter doesn't crash from type mismatch.
@@ -124,6 +131,8 @@ export async function saveArticleAction(payload: any, articleId?: string | null)
       status: status || 'DRAFT',
     };
 
+    console.log('[saveArticleAction] Saving to database...', { articleId, status: data.status });
+
     let article;
     if (articleId) {
       article = await prisma.article.update({
@@ -139,13 +148,20 @@ export async function saveArticleAction(payload: any, articleId?: string | null)
       });
     }
 
+    console.log('[saveArticleAction] Article saved successfully:', article.id);
+
     // Refresh dashboard feeds
     revalidatePath("/articles");
     revalidatePath("/dashboard");
 
     return { success: true, data: article };
   } catch (error: any) {
-    console.error("Article Save Error:", error);
+    console.error("[saveArticleAction] Error:", {
+      message: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack,
+    });
     return { success: false, error: error.message || "Failed to save article" };
   }
 }

@@ -212,8 +212,8 @@ export default function NewArticlePage() {
 
       const json = await saveArticleAction(payload, articleId);
 
-      if (!json.success) {
-        throw new Error(json.error || 'Failed to save');
+      if (!json || !json.success) {
+        throw new Error(json?.error || 'Failed to save - no response from server');
       }
 
       if (!articleId && json.data?.id) {
