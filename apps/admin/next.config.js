@@ -1,13 +1,7 @@
 /** @type {import('next').NextConfig} */
-const path = require('path');
-
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  // Monorepo support: tell Next.js to trace files from repository root
-  experimental: {
-    outputFileTracingRoot: path.join(__dirname, '../../'),
-  },
   images: {
     remotePatterns: [
       {
