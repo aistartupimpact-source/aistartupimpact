@@ -1,6 +1,5 @@
 {
-  "buildCommand": "turbo run build --filter=@aistartupimpact/web",
-  "installCommand": "npm install",
-  "framework": null,
-  "outputDirectory": "apps/web/.next"
+  "buildCommand": "npm install && cd apps/web && npm run build",
+  "outputDirectory": "apps/web/.next",
+  "installCommand": "npm install --include=dev"
 }
