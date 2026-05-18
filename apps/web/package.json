@@ -12,6 +12,7 @@
     "@aistartupimpact/database": "*",
     "@aistartupimpact/types": "*",
     "@aistartupimpact/utils": "*",
+    "@aws-sdk/client-s3": "^3.1048.0",
     "@neondatabase/serverless": "^1.0.2",
     "@types/qrcode": "^1.5.6",
     "@types/sanitize-html": "^2.16.1",
