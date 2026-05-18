@@ -1,5 +1,5 @@
 {
-  "buildCommand": "turbo run build",
-  "installCommand": "npm install",
+  "buildCommand": "turbo run build --filter=@aistartupimpact/web",
+  "installCommand": "npm ci || npm install",
   "framework": null
 }
