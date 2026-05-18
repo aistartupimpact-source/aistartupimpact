@@ -33,36 +33,43 @@ All required files exist and are committed:
 - ✅ `apps/web/components/profile/SavedItems.tsx`
 - ✅ `apps/web/lib/categories.ts`
 
-## Next Steps
+## Root Cause: Missing Monorepo Configuration ✅ FIXED
 
-1. **Clear Vercel Build Cache**:
-   - Go to Vercel Dashboard → Web Project → Settings
-   - Scroll to "Build & Development Settings"
-   - Click "Clear Build Cache"
-   - Redeploy
+**Problem**: `next.config.js` was missing `experimental.outputFileTracingRoot` setting required for monorepo workspaces.
 
-2. **Verify Vercel Settings**:
-   - **Web Project**:
-     - Root Directory: `apps/web`
-     - Framework: Next.js
-     - Build Command: (default)
-     - Install Command: (default)
-   
-   - **Admin Project**:
-     - Root Directory: `apps/admin`
-     - Framework: Next.js
-     - Build Command: (default)
-     - Install Command: (default)
+In a monorepo with workspaces (`apps/*`, `packages/*`), Next.js needs to know about the repository root to properly:
+- Resolve workspace dependencies
+- Trace file imports across packages
+- Build the dependency graph correctly
 
-3. **Database Cleanup** (Important!):
-   - Run `fix-corrupt-articles.sql` in Neon database console
-   - This fixes corrupt date values that cause Prisma errors
+**Solution Applied**:
+```javascript
+// apps/web/next.config.js & apps/admin/next.config.js
+const path = require('path');
+
+const nextConfig = {
+  experimental: {
+    outputFileTracingRoot: path.join(__dirname, '../../'),
+  },
+  // ... rest of config
+}
+```
+
+This tells Next.js to trace files from the repository root (`../../` from `apps/web`), allowing it to properly resolve all imports including `@/components/*` and `@/lib/*`.
+
+**Verification**:
+- ✅ Local build test: **SUCCESS**
+- ✅ All 5 files resolved correctly
+- ✅ Committed and pushed to GitHub (commit 850a3f6)
+- ⏳ Vercel deployment: **In progress**
 
 ## Current Status
 
 - ✅ Local build: Working
-- ✅ Admin deployment: Working
-- ⏳ Web deployment: Waiting for cache clear + redeploy
+- ✅ Admin deployment: Working  
+- ✅ Files verified on GitHub: All present
+- ✅ Monorepo config: Fixed
+- ⏳ Web deployment: **Deploying with fix**
 
 ## Environment Variables Required
 
