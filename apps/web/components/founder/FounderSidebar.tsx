@@ -9,7 +9,6 @@ import {
   BarChart3,
   User,
   Settings,
-  Shield,
 } from 'lucide-react';
 
 const navigation = [
@@ -32,11 +31,6 @@ const navigation = [
     name: 'Analytics',
     href: '/founder/analytics',
     icon: BarChart3,
-  },
-  {
-    name: 'Admin Users',
-    href: '/founder/admin-users',
-    icon: Shield,
   },
 ];
 
