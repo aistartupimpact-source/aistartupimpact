@@ -113,39 +113,100 @@ export async function saveArticleAction(payload: any, articleId?: string | null)
     // Wrap the string in a JSON-compatible object so Neon's HTTP adapter doesn't crash from type mismatch.
     const contentJson = { html: content };
 
-    // Optional: look up categoryId properly later, but for MVP saving, we can use Prisma logic matching the schema
+    // Build data object, filtering out undefined values
     const data: any = {
       title,
       slug: finalSlug,
       excerpt: subtitle,
       content: contentJson,
       type: type || 'NEWS',
-      coverImage,
-      thumbnailImage,
-      seoTitle,
-      seoDescription,
-      focusKeyword,
-      canonicalUrl,
-      ogImage,
-      noIndex: noIndex || false,
       status: status || 'DRAFT',
+      noIndex: noIndex || false,
+      updatedAt: new Date(),
     };
+
+    // Only add optional fields if they have values
+    if (coverImage) data.coverImage = coverImage;
+    if (thumbnailImage) data.thumbnailImage = thumbnailImage;
+    if (seoTitle) data.seoTitle = seoTitle;
+    if (seoDescription) data.seoDescription = seoDescription;
+    if (focusKeyword) data.focusKeyword = focusKeyword;
+    if (canonicalUrl) data.canonicalUrl = canonicalUrl;
+    if (ogImage) data.ogImage = ogImage;
 
     console.log('[saveArticleAction] Saving to database...', { articleId, status: data.status });
 
     let article;
     if (articleId) {
-      article = await prisma.article.update({
-        where: { id: articleId },
-        data,
-      });
+      // Use raw SQL for update to avoid corrupt data issues
+      await prisma.$executeRaw`
+        UPDATE "Article"
+        SET
+          title = ${data.title},
+          slug = ${data.slug},
+          excerpt = ${data.excerpt || ''},
+          content = ${JSON.stringify(data.content)}::jsonb,
+          type = ${data.type}::"ArticleType",
+          status = ${data.status}::"ArticleStatus",
+          "noIndex" = ${data.noIndex},
+          "coverImage" = ${data.coverImage || null},
+          "thumbnailImage" = ${data.thumbnailImage || null},
+          "seoTitle" = ${data.seoTitle || null},
+          "seoDescription" = ${data.seoDescription || null},
+          "focusKeyword" = ${data.focusKeyword || null},
+          "canonicalUrl" = ${data.canonicalUrl || null},
+          "ogImage" = ${data.ogImage || null},
+          "updatedAt" = NOW()
+        WHERE id = ${articleId}
+      `;
+      
+      // Return the article data directly
+      article = {
+        id: articleId,
+        ...data,
+        updatedAt: new Date(),
+      };
     } else {
-      article = await prisma.article.create({
-        data: {
-          ...data,
-          authorId,
-        },
-      });
+      // Generate UUID for new article
+      const newArticleId = crypto.randomUUID();
+      
+      // Use raw SQL to avoid Neon HTTP adapter issues with corrupt data in other rows
+      await prisma.$executeRaw`
+        INSERT INTO "Article" (
+          id, title, slug, excerpt, content, type, status, "noIndex",
+          "coverImage", "thumbnailImage", "seoTitle", "seoDescription", 
+          "focusKeyword", "canonicalUrl", "ogImage",
+          "authorId", "createdAt", "updatedAt"
+        ) VALUES (
+          ${newArticleId},
+          ${data.title},
+          ${data.slug},
+          ${data.excerpt || ''},
+          ${JSON.stringify(data.content)}::jsonb,
+          ${data.type}::"ArticleType",
+          ${data.status}::"ArticleStatus",
+          ${data.noIndex},
+          ${data.coverImage || null},
+          ${data.thumbnailImage || null},
+          ${data.seoTitle || null},
+          ${data.seoDescription || null},
+          ${data.focusKeyword || null},
+          ${data.canonicalUrl || null},
+          ${data.ogImage || null},
+          ${authorId},
+          NOW(),
+          NOW()
+        )
+      `;
+      
+      // Return the article data directly without fetching (to avoid corrupt data issues)
+      article = {
+        id: newArticleId,
+        ...data,
+        authorId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
     }
 
     console.log('[saveArticleAction] Article saved successfully:', article.id);
