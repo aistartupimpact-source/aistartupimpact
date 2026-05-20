@@ -10,6 +10,9 @@ import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { getUserSession } from '@/lib/user-session';
 import FoundersSection from '@/components/FoundersSection';
 import BookmarkButton from '@/components/BookmarkButton';
+import { StartupSchema, FAQSchema } from '@/components/seo';
+import { generateStartupFAQs, formatUsd as formatUsdUtil } from '@/lib/seo-utils';
+import FAQSection from '@/components/FAQSection';
 
 export const revalidate = 0; // Disable cache for debugging
 export const dynamic = 'force-dynamic'; // Force dynamic rendering
@@ -183,10 +186,67 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const s = await getStartup(params.slug) as any;
   console.log('[generateMetadata] getStartup returned:', s ? `${s.name} (${s.id})` : 'null');
   if (!s) return { title: 'Startup Not Found' };
+  
+  const title = `${s.name} - ${s.tagline || 'AI Startup'} | AI Startup Impact`;
+  const description = (s.description || s.tagline || '').slice(0, 155);
+  const url = `https://aistartupimpact.com/startups/${s.slug}`;
+  
+  // Use dynamic OG image (auto-generated from opengraph-image.tsx)
+  const image = `${url}/opengraph-image`;
+
   return {
-    title: `${s.name} — ${s.tagline}`,
-    description: (s.description || s.tagline || '').slice(0, 160),
-    alternates: { canonical: `https://aistartupimpact.com/startups/${s.slug}` },
+    title,
+    description,
+    keywords: [
+      s.name,
+      s.tagline,
+      'AI startup India',
+      s.headquartersCity,
+      s.stage,
+      'artificial intelligence',
+      'machine learning',
+      'India AI Mission',
+      'startup funding'
+    ].filter(Boolean).join(', '),
+    authors: s.founders?.map((name: string) => ({ name })),
+    creator: s.name,
+    publisher: 'AI Startup Impact',
+    alternates: {
+      canonical: url,
+    },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: 'AI Startup Impact',
+      images: [{
+        url: image,
+        width: 1200,
+        height: 630,
+        alt: `${s.name} - ${s.tagline || 'AI Startup'}`
+      }],
+      locale: 'en_IN',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [image],
+      creator: '@aistartupimpact',
+      site: '@aistartupimpact',
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
   };
 }
 
@@ -209,9 +269,18 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
 
   const totalRaised = startup.fundingRounds.reduce((sum: number, r: any) => sum + Number(r.amountUsd || 0), 0);
   const industryTag = getIndustryTag(startup);
+  
+  // Generate FAQs with startup-specific data
+  const faqs = generateStartupFAQs(startup, totalRaised);
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+      {/* JSON-LD Schema: Single @graph with WebPage + Organization + BreadcrumbList */}
+      <StartupSchema startup={startup} />
+      
+      {/* FAQ Schema (separate) */}
+      <FAQSchema faqs={faqs} />
+
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-xs sm:text-sm font-jakarta text-gray-400 mb-6">
         <Link href="/" className="hover:text-brand">Home</Link>
@@ -506,6 +575,11 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
             <button className="btn-brand w-full text-xs">Subscribe</button>
           </div>
         </aside>
+      </div>
+
+      {/* FAQ Section */}
+      <div className="mt-12">
+        <FAQSection faqs={faqs} />
       </div>
 
       {/* Similar Startups Section */}

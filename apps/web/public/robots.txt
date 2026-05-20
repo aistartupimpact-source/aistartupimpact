@@ -1,0 +1,24 @@
+# robots.txt for AI Startup Impact
+# Issue #3 Fixed: Sitemap directives added
+
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://aistartupimpact.com/sitemap.xml
+Sitemap: https://aistartupimpact.com/startups/sitemap.xml
+Sitemap: https://aistartupimpact.com/tools/sitemap.xml
+
+# Disallow admin and API routes
+Disallow: /api/
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /founder/settings
+
+# Allow public routes
+Allow: /startups/
+Allow: /tools/
+Allow: /news/
+Allow: /about
+Allow: /contact

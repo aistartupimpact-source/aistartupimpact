@@ -9,27 +9,73 @@ import ScreenshotGallery from '@/components/ScreenshotGallery';
 import BookmarkButton from '@/components/BookmarkButton';
 import { getAiToolBySlugDirect } from '@/lib/db';
 import { notFound } from 'next/navigation';
+import { ToolSchema, FAQSchema } from '@/components/seo';
+import { generateToolFAQs } from '@/lib/seo-utils';
+import FAQSection from '@/components/FAQSection';
 
 export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const tool = await getAiToolBySlugDirect(params.slug) as any;
   if (!tool) return { title: 'Tool Not Found' };
+  
+  const title = `${tool.name} - ${tool.tagline} | AI Startup Impact`;
+  const description = (tool.description || tool.tagline || '').slice(0, 155);
+  const url = `https://aistartupimpact.com/tools/${tool.slug}`;
+  
+  // Use dynamic OG image (auto-generated from opengraph-image.tsx)
+  const image = `${url}/opengraph-image`;
+
   return {
-    title: `${tool.name} — ${tool.tagline}`,
-    description: (tool.description || '').slice(0, 160),
-    alternates: { canonical: `https://aistartupimpact.com/tools/${tool.slug}` },
+    title,
+    description,
+    keywords: [
+      tool.name,
+      tool.tagline,
+      'AI tool',
+      tool.categoryName || tool.category,
+      tool.pricingModel,
+      'artificial intelligence',
+      'machine learning',
+      'AI software'
+    ].filter(Boolean).join(', '),
+    creator: tool.name,
+    publisher: 'AI Startup Impact',
+    alternates: {
+      canonical: url,
+    },
     openGraph: {
-      title: `${tool.name} — ${tool.tagline}`,
-      description: (tool.description || '').slice(0, 160),
+      title,
+      description,
+      url,
+      siteName: 'AI Startup Impact',
+      images: [{
+        url: image,
+        width: 1200,
+        height: 630,
+        alt: `${tool.name} - ${tool.tagline}`
+      }],
+      locale: 'en_IN',
       type: 'website',
-      url: `https://aistartupimpact.com/tools/${tool.slug}`,
-      siteName: 'AIStartupImpact',
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${tool.name} — ${tool.tagline}`,
-      description: (tool.description || '').slice(0, 160),
+      title,
+      description,
+      images: [image],
+      creator: '@aistartupimpact',
+      site: '@aistartupimpact',
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
     },
   };
 }
@@ -41,6 +87,9 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
   const stories = tool.stories || [];
   const fundingRounds = tool.fundingRounds || [];
   const userReviews = tool.userReviews || [];
+  
+  // Generate FAQs with tool-specific data
+  const faqs = generateToolFAQs(tool);
 
   const formatAmount = (usd: number | null, inr: number | null) => {
     if (usd && Number(usd) > 0) {
@@ -69,6 +118,13 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+      {/* JSON-LD Schema: Single @graph with WebPage + SoftwareApplication + BreadcrumbList */}
+      <ToolSchema tool={tool} />
+      
+      {/* FAQ Schema (separate) */}
+      <FAQSchema faqs={faqs} />
+      
+      {/* Legacy schema for backward compatibility */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* Breadcrumb */}
@@ -263,6 +319,9 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
               )}
             </div>
           </div>
+
+          {/* FAQ Section */}
+          <FAQSection faqs={faqs} />
         </div>
 
         {/* Sidebar */}
