@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Upload, X, Loader2, Plus } from 'lucide-react';
 import { updateToolAction } from '@/app/founder/tools/actions';
+import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
 
 interface AiTool {
   id: string;
@@ -38,6 +39,7 @@ const PRICING_MODELS = [
 interface ToolEditFormProps {
   tool: AiTool & {
     useCases: Array<{ id: string; text: string }>;
+    faqs?: Array<{ id: string; question: string; answer: string; order: number }>;
   };
 }
 
@@ -87,6 +89,15 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
     useCases: existingUseCases,
     logoUrl: tool.logoUrl || '',
   });
+
+  const [faqs, setFaqs] = useState<FAQ[]>(
+    (tool.faqs || []).map((faq, index) => ({
+      id: faq.id,
+      question: faq.question,
+      answer: faq.answer,
+      order: faq.order ?? index,
+    }))
+  );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const value = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value;
@@ -277,6 +288,7 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
         useCases: useCasesArray,
         logoUrl: formData.logoUrl || undefined,
         screenshotUrls: screenshots,
+        faqs: faqs.length > 0 ? faqs : undefined,
       });
 
       if (!result.success) {
@@ -677,6 +689,11 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
             </label>
           )}
         </div>
+      </div>
+
+      {/* FAQs Section */}
+      <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
+        <FAQManager faqs={faqs} onChange={setFaqs} maxFaqs={10} />
       </div>
 
       {/* Submit Button */}

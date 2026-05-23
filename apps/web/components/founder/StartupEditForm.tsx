@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Upload, X, Loader2 } from 'lucide-react';
 import { updateStartupAction } from '@/app/founder/startups/actions';
+import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
 
 interface Startup {
   id: string;
@@ -72,13 +73,22 @@ const BUSINESS_TYPES = [
 
 interface StartupEditFormProps {
   startup: Startup;
+  existingFaqs?: any[];
 }
 
-export default function StartupEditForm({ startup }: StartupEditFormProps) {
+export default function StartupEditForm({ startup, existingFaqs = [] }: StartupEditFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [logoPreview, setLogoPreview] = useState(startup.logoUrl || '');
+  const [faqs, setFaqs] = useState<FAQ[]>(
+    existingFaqs.map((faq, index) => ({
+      id: faq.id,
+      question: faq.question,
+      answer: faq.answer,
+      order: faq.order ?? index,
+    }))
+  );
 
   const [formData, setFormData] = useState({
     name: startup.name,
@@ -191,6 +201,7 @@ export default function StartupEditForm({ startup }: StartupEditFormProps) {
         category: formData.category || undefined,
         businessType: formData.businessType || undefined,
         totalFundingInr: formData.totalFundingInr ? Math.round(parseFloat(formData.totalFundingInr) * 100) : undefined,
+        faqs: faqs.length > 0 ? faqs : undefined,
       });
 
       if (!result.success) {
@@ -583,6 +594,11 @@ export default function StartupEditForm({ startup }: StartupEditFormProps) {
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
           placeholder="Comma-separated names, e.g. John Doe, Jane Smith"
         />
+      </div>
+
+      {/* FAQs Section */}
+      <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
+        <FAQManager faqs={faqs} onChange={setFaqs} maxFaqs={10} />
       </div>
 
       {/* Submit Button */}

@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Metadata } from 'next';
-import { BookOpen } from 'lucide-react';
 import { getArticlesDirect } from '@/lib/db';
 import { generateCollectionPageSchema, generateItemListSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import StoriesListClient from '@/components/StoriesListClient';
@@ -75,14 +74,12 @@ export default async function StoriesPage() {
 
       {/* Header */}
       <div className="mb-6 sm:mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <BookOpen className="w-6 h-6 text-brand" />
-          <h1 className="font-sora font-extrabold text-2xl sm:text-3xl md:text-4xl text-navy dark:text-white">
-            Founder Stories
-          </h1>
-        </div>
-        <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm sm:text-base max-w-2xl">
-          Deep-dive interviews and profiles of the founders building India&apos;s AI future.
+        <h1 className="font-sora font-extrabold text-2xl sm:text-3xl md:text-4xl text-navy dark:text-white leading-tight tracking-tight">
+          Founder Stories.{' '}
+          <span className="text-brand">Unfiltered.</span>
+        </h1>
+        <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm max-w-2xl mt-2">
+          Deep-dive interviews and profiles of the founders building the AI future — their journeys, challenges, and hard-won insights.
         </p>
       </div>
 
@@ -152,15 +149,7 @@ export default async function StoriesPage() {
 
           {/* All Stories list */}
           {articles.length > 0 && (
-            <div>
-              <h2 className="font-sora font-bold text-lg text-navy dark:text-white mb-4">
-                All Stories
-                <span className="ml-2 text-sm font-normal text-gray-400 font-jakarta">
-                  {articles.length} stories
-                </span>
-              </h2>
-              <StoriesListClient stories={articles} />
-            </div>
+            <StoriesListClient stories={articles} />
           )}
         </div>
 

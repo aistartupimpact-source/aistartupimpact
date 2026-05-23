@@ -9,7 +9,7 @@ import {
   Plus, ImagePlus,
 } from 'lucide-react';
 
-import { uploadMediaAction, saveArticleAction, getArticleByIdAction } from '../actions';
+import { uploadMediaAction, saveArticleAction, getArticleByIdAction, getCategoriesAction } from '../actions';
 import MediaPicker from '../../../../components/MediaPicker';
 import SEOScorePanel from '../../../../components/SEOScorePanel';
 import ImageAltTextManager from '../../../../components/ImageAltTextManager';
@@ -21,6 +21,9 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
   const [activePanel, setActivePanel] = useState<string>('status');
   const editorRef = useRef<HTMLDivElement>(null);
   const editorWrapRef = useRef<HTMLDivElement>(null);
+
+  // Categories
+  const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string }>>([]);
 
   // Toolbar
   const [showToolbar, setShowToolbar] = useState(false);
@@ -151,6 +154,8 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       setStatus(a.status || 'DRAFT');
       setArticleType(a.type || 'NEWS');
       setCategory(a.categoryName || '');
+      setTags(a.tags || '');
+      setScheduleDate(a.scheduledAt || '');
       setSeoTitle(a.seoTitle || '');
       setMetaDesc(a.seoDescription || '');
       setFocusKeyword(a.focusKeyword || '');
@@ -173,6 +178,15 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       }
     });
   }, [params.id, updateStats]);
+
+  // Load categories
+  useEffect(() => {
+    getCategoriesAction().then((res) => {
+      if (res.success && res.data) {
+        setCategories(res.data);
+      }
+    });
+  }, []);
 
   // Track cursor for plus button
   const trackCursorLine = useCallback(() => {
@@ -266,7 +280,11 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         ogImage,
         noIndex,
         coverImage: coverImage,
-        thumbnailImage: thumbnailImage
+        thumbnailImage: thumbnailImage,
+        scheduledAt: scheduleDate || null,
+        isFeatured: featured,
+        isPinned: pinned,
+        isSponsored: sponsored
       };
 
       const json = await saveArticleAction(payload, params.id);
@@ -622,7 +640,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                         <div><label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Schedule For</label><input type="datetime-local" className="input-field text-sm" value={scheduleDate} onChange={(e) => { setScheduleDate(e.target.value); if (e.target.value) setStatus('SCHEDULED'); }} /></div>
                       </>)}
                       {panel.id === 'category' && (<>
-                        <div><label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Category</label><select className="input-field text-sm" value={category} onChange={(e) => setCategory(e.target.value)}><option value="">Select…</option>{['AI News', 'Deep Dive', 'Founder Stories', 'Tools & Reviews', 'Funding', 'Opinion'].map(c => <option key={c}>{c}</option>)}</select></div>
+                        <div><label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Category</label><select className="input-field text-sm" value={category} onChange={(e) => setCategory(e.target.value)}><option value="">Select…</option>{categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}</select></div>
                         <div><label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Tags</label><input type="text" className="input-field text-sm" placeholder="AI, LLM, India…" value={tags} onChange={(e) => setTags(e.target.value)} />{tags && <div className="flex flex-wrap gap-1 mt-2">{tags.split(',').filter(t => t.trim()).map(t => <span key={t} className="px-2 py-0.5 bg-brand/10 text-brand text-[10px] font-semibold rounded-full">{t.trim()}</span>)}</div>}</div>
                         <div><label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Type</label><select className="input-field text-sm" value={articleType} onChange={(e) => setArticleType(e.target.value)}>{['NEWS', 'STORY', 'OPINION', 'GUIDE', 'COMPARISON', 'REPORT', 'SPONSORED'].map(t => <option key={t} value={t}>{t.charAt(0) + t.slice(1).toLowerCase()}</option>)}</select></div>
                       </>)}

@@ -1,18 +1,17 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
-  Plus, Search, Building2, MapPin, X, Star, StarOff,
-  Edit3, Trash2, Save, Crown, Upload, Loader2,
+  Plus, Search, Building2, MapPin, Star, StarOff,
+  Edit3, Trash2, Crown,
 } from 'lucide-react';
 import {
   getStartupsAction,
-  createStartupAction,
-  updateStartupAction,
   deleteStartupAction,
   toggleFeaturedAction,
+  fixNullImpactScoresAction,
 } from './actions';
-import { uploadLogoAction } from '../media/actions';
 
 interface Startup {
   id: string;
@@ -21,6 +20,8 @@ interface Startup {
   description: string;
   logoUrl?: string;
   websiteUrl?: string;
+  linkedinUrl?: string;
+  twitterUrl?: string;
   stage: string;
   headquartersCity?: string;
   isFeatured: boolean;
@@ -32,24 +33,12 @@ interface Startup {
   updatedAt: string;
 }
 
-const stages = ['IDEA', 'PRE_SEED', 'SEED', 'SERIES_A', 'SERIES_B', 'SERIES_C', 'GROWTH', 'PUBLIC'];
-
-const emptyStartup: Omit<Startup, 'id' | 'createdAt' | 'updatedAt'> = {
-  name: '', tagline: '', description: '', logoUrl: '', websiteUrl: '',
-  stage: 'SEED', headquartersCity: '', isFeatured: false,
-  foundedYear: null, employeeCount: null, impactScore: null,
-};
-
 export default function StartupsDirPage() {
+  const router = useRouter();
   const [startups, setStartups] = useState<Startup[]>([]);
   const [search, setSearch] = useState('');
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<Startup | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [logoUploading, setLogoUploading] = useState(false);
-  const [logoPreviewError, setLogoPreviewError] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadStartups();
@@ -75,75 +64,11 @@ export default function StartupsDirPage() {
   const featuredCount = startups.filter(s => s.isFeatured).length;
 
   const openCreate = () => {
-    setEditing({ ...emptyStartup, id: '', createdAt: '', updatedAt: '' } as Startup);
-    setLogoPreviewError(false);
-    setModalOpen(true);
+    router.push('/startups-dir/new');
   };
 
   const openEdit = (startup: Startup) => {
-    setEditing({ ...startup });
-    setLogoPreviewError(false);
-    setModalOpen(true);
-  };
-
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !editing) return;
-    setLogoUploading(true);
-    setLogoPreviewError(false);
-    try {
-      const fd = new FormData();
-      fd.append('file', file);
-      const result = await uploadLogoAction(fd);
-      if (result.success && result.url) {
-        setEditing((prev) => prev ? { ...prev, logoUrl: result.url } : prev);
-      } else {
-        alert('Upload failed: ' + (result.error || 'Unknown error'));
-      }
-    } catch (err: any) {
-      alert('Upload error: ' + err.message);
-    } finally {
-      setLogoUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
-  const handleSave = async () => {
-    if (!editing) return;
-
-    try {
-      const data = {
-        name: editing.name,
-        tagline: editing.tagline,
-        description: editing.description,
-        logoUrl: editing.logoUrl,
-        websiteUrl: editing.websiteUrl,
-        stage: editing.stage,
-        headquartersCity: editing.headquartersCity,
-        isFeatured: editing.isFeatured,
-        foundedYear: editing.foundedYear,
-        employeeCount: editing.employeeCount,
-        impactScore: editing.impactScore,
-      };
-
-      if (editing.id && startups.find(s => s.id === editing.id)) {
-        // Update existing
-        const result = await updateStartupAction(editing.id, data);
-        if (result.success) {
-          await loadStartups();
-        }
-      } else {
-        // Create new
-        const result = await createStartupAction(data);
-        if (result.success) {
-          await loadStartups();
-        }
-      }
-      setModalOpen(false);
-      setEditing(null);
-    } catch (error) {
-      console.error('Error saving startup:', error);
-    }
+    router.push(`/startups-dir/${startup.id}/edit`);
   };
 
   const handleDelete = async (id: string) => {
@@ -169,6 +94,22 @@ export default function StartupsDirPage() {
     }
   };
 
+  const runImpactScoreFix = async () => {
+    if (!confirm('This will update all startups with null impactScore to 0. Continue?')) return;
+    try {
+      const result = await fixNullImpactScoresAction();
+      if (result.success) {
+        alert(result.message || 'Fixed successfully');
+        await loadStartups();
+      } else {
+        alert('Error: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Error running fix:', error);
+      alert('Error running fix');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -182,12 +123,17 @@ export default function StartupsDirPage() {
         <div>
           <h1 className="font-sora font-extrabold text-2xl text-navy dark:text-white">Startups Directory</h1>
           <p className="text-gray-400 dark:text-gray-500 text-sm font-jakarta mt-1">
-            Manage startup profiles • {featuredCount} featured as partners
+            Manage startup profiles • {featuredCount} featured at top
           </p>
         </div>
-        <button onClick={openCreate} className="btn-brand text-sm flex items-center gap-2">
-          <Plus className="w-4 h-4" /> Add Startup
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={runImpactScoreFix} className="px-3 py-2 text-xs font-medium border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300">
+            Fix Null Scores
+          </button>
+          <button onClick={openCreate} className="btn-brand text-sm flex items-center gap-2">
+            <Plus className="w-4 h-4" /> Add Startup
+          </button>
+        </div>
       </div>
 
       <div className="relative">
@@ -282,142 +228,7 @@ export default function StartupsDirPage() {
         </table>
       </div>
 
-      {/* ─── Create/Edit Modal ─── */}
-      {modalOpen && editing && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-lg shadow-2xl border border-gray-200 dark:border-gray-800">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
-              <h2 className="font-sora font-bold text-lg text-navy dark:text-white">
-                {editing.id && startups.find(s => s.id === editing.id) ? 'Edit Startup' : 'Add New Startup'}
-              </h2>
-              <button onClick={() => { setModalOpen(false); setEditing(null); setLogoPreviewError(false); }} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
-                <X className="w-4 h-4 text-gray-400" />
-              </button>
-            </div>
-            <div className="px-6 py-5 space-y-4 max-h-[60vh] overflow-y-auto">
-              <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Name *</label>
-                <input type="text" className="input-field text-sm" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} placeholder="e.g. Sarvam AI" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Tagline *</label>
-                <input type="text" className="input-field text-sm" value={editing.tagline} onChange={(e) => setEditing({ ...editing, tagline: e.target.value })} placeholder="e.g. India-first foundation models" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Stage</label>
-                  <select className="input-field text-sm" value={editing.stage} onChange={(e) => setEditing({ ...editing, stage: e.target.value })}>
-                    {stages.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Location</label>
-                  <input type="text" className="input-field text-sm" value={editing.headquartersCity || ''} onChange={(e) => setEditing({ ...editing, headquartersCity: e.target.value })} placeholder="e.g. Bengaluru" />
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Website URL</label>
-                <input type="url" className="input-field text-sm" value={editing.websiteUrl || ''} onChange={(e) => setEditing({ ...editing, websiteUrl: e.target.value })} placeholder="https://..." />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Logo</label>
-                <div className="flex gap-2 items-start">
-                  {/* Upload button */}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleLogoUpload}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={logoUploading}
-                    className="shrink-0 flex items-center gap-1.5 px-3 py-2 text-xs font-semibold border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 disabled:opacity-50"
-                  >
-                    {logoUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-                    {logoUploading ? 'Uploading…' : 'Upload'}
-                  </button>
-                  {/* URL input */}
-                  <input
-                    type="url"
-                    className="input-field text-sm flex-1"
-                    value={editing.logoUrl || ''}
-                    onChange={(e) => { setEditing({ ...editing, logoUrl: e.target.value }); setLogoPreviewError(false); }}
-                    placeholder="https://... or upload above"
-                  />
-                </div>
-                {/* Preview */}
-                {editing.logoUrl && !logoPreviewError && (
-                  <div className="mt-2 flex items-center gap-3">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={editing.logoUrl}
-                      alt="Logo preview"
-                      className="w-12 h-12 rounded-lg object-contain border border-gray-200 dark:border-gray-700 p-1 bg-white"
-                      onError={() => setLogoPreviewError(true)}
-                    />
-                    <span className="text-xs text-gray-400 font-jakarta">Preview</span>
-                  </div>
-                )}
-                {editing.logoUrl && logoPreviewError && (
-                  <p className="mt-1.5 text-xs text-red-400 font-jakarta">Could not load image — check the URL or re-upload.</p>
-                )}
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
-                  Description <span className="text-gray-400 normal-case font-normal">(max 500 words)</span>
-                </label>
-                <textarea className="input-field text-sm" rows={4} value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} placeholder="Brief description of the startup..." />
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Founded Year</label>
-                  <input type="number" className="input-field text-sm" value={editing.foundedYear ?? ''} placeholder="2023"
-                    onChange={e => setEditing({ ...editing, foundedYear: e.target.value ? parseInt(e.target.value) : null })} />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Employees</label>
-                  <input type="number" className="input-field text-sm" value={editing.employeeCount ?? ''} placeholder="50"
-                    onChange={e => setEditing({ ...editing, employeeCount: e.target.value ? parseInt(e.target.value) : null })} />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Impact Score</label>
-                  <input type="number" className="input-field text-sm" value={editing.impactScore ?? ''} placeholder="1-100" min={1} max={100}
-                    onChange={e => setEditing({ ...editing, impactScore: e.target.value ? parseInt(e.target.value) : null })} />
-                </div>
-              </div>
-              <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={editing.isFeatured}
-                    onChange={(e) => setEditing({ ...editing, isFeatured: e.target.checked })}
-                    className="w-4 h-4 text-brand bg-gray-100 border-gray-300 rounded focus:ring-brand dark:focus:ring-brand dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-navy dark:text-white font-jakarta flex items-center gap-2">
-                      <Crown className="w-4 h-4 text-yellow-500" />
-                      Feature as Partner
-                    </span>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-0.5">
-                      Featured startups appear in the "Featured Partner" section on the homepage
-                    </p>
-                  </div>
-                </label>
-              </div>
-            </div>
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 dark:border-gray-800">
-              <button onClick={() => { setModalOpen(false); setEditing(null); setLogoPreviewError(false); }} className="px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">Cancel</button>
-              <button onClick={handleSave} disabled={!editing.name || !editing.tagline} className="btn-brand text-sm flex items-center gap-2 disabled:opacity-50">
-                <Save className="w-4 h-4" /> Save Startup
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl border border-gray-200 dark:border-gray-800 p-6 text-center">

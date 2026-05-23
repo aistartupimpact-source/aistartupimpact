@@ -20,12 +20,19 @@ interface StartupSchemaProps {
     twitterUrl?: string;
     stage?: string;
     tagline?: string;
+    createdAt?: string;
+    updatedAt?: string;
   };
 }
 
 export function StartupSchema({ startup }: StartupSchemaProps) {
   const pageUrl = `https://aistartupimpact.com/startups/${startup.slug}`;
   const orgId = `${pageUrl}#organization`;
+  
+  // Use actual database timestamps for SEO integrity
+  // Fallback to current date only if timestamps are missing (should never happen in production)
+  const datePublished = startup.createdAt || new Date().toISOString();
+  const dateModified = startup.updatedAt || startup.createdAt || new Date().toISOString();
   
   const schema = {
     "@context": "https://schema.org",
@@ -45,8 +52,8 @@ export function StartupSchema({ startup }: StartupSchemaProps) {
         "primaryImageOfPage": startup.logoUrl ? {
           "@id": `${pageUrl}#primaryimage`
         } : undefined,
-        "datePublished": new Date().toISOString(),
-        "dateModified": new Date().toISOString(),
+        "datePublished": datePublished,
+        "dateModified": dateModified,
         "breadcrumb": {
           "@id": `${pageUrl}#breadcrumb`
         },

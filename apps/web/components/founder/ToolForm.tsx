@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Upload, X, Loader2, Plus } from 'lucide-react';
 import { submitToolAction } from '@/app/founder/tools/actions';
+import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
 
 const PRICING_MODELS = [
   'FREE',
@@ -19,6 +20,7 @@ export default function ToolForm() {
   const [error, setError] = useState('');
   const [logoPreview, setLogoPreview] = useState('');
   const [screenshots, setScreenshots] = useState<string[]>([]);
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -242,6 +244,7 @@ export default function ToolForm() {
         useCases: useCasesArray,
         logoUrl: formData.logoUrl || undefined,
         screenshotUrls: screenshots,
+        faqs: faqs.length > 0 ? faqs : undefined,
       });
 
       if (!result.success) {
@@ -644,6 +647,11 @@ export default function ToolForm() {
             </label>
           )}
         </div>
+      </div>
+
+      {/* FAQs Section */}
+      <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
+        <FAQManager faqs={faqs} onChange={setFaqs} maxFaqs={10} />
       </div>
 
       {/* Submit Button */}

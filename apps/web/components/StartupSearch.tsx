@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { Search, Building2, TrendingUp, MapPin, X, Loader2 } from 'lucide-react';
+import { Search, Building2, TrendingUp, MapPin, X, Loader2, ChevronDown } from 'lucide-react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { VerifiedBadge } from './VerifiedBadge';
 
@@ -27,41 +27,41 @@ const STAGES = [
 ];
 
 const CATEGORIES = [
-  { value: '', label: 'All Categories' },
+  { value: '', label: 'All' },
   { value: 'FinTech', label: 'FinTech' },
   { value: 'HealthTech', label: 'HealthTech' },
   { value: 'EdTech', label: 'EdTech' },
   { value: 'E-commerce', label: 'E-commerce' },
   { value: 'SaaS', label: 'SaaS' },
   { value: 'AI/ML', label: 'AI/ML' },
-  { value: 'Enterprise Software', label: 'Enterprise Software' },
-  { value: 'Consumer Tech', label: 'Consumer Tech' },
+  { value: 'Enterprise Software', label: 'Enterprise' },
+  { value: 'Consumer Tech', label: 'Consumer' },
   { value: 'DeepTech', label: 'DeepTech' },
   { value: 'CleanTech', label: 'CleanTech' },
   { value: 'AgriTech', label: 'AgriTech' },
-  { value: 'LogisticsTech', label: 'LogisticsTech' },
+  { value: 'LogisticsTech', label: 'Logistics' },
   { value: 'HRTech', label: 'HRTech' },
   { value: 'MarTech', label: 'MarTech' },
   { value: 'PropTech', label: 'PropTech' },
   { value: 'FoodTech', label: 'FoodTech' },
   { value: 'Mobility', label: 'Mobility' },
   { value: 'Gaming', label: 'Gaming' },
-  { value: 'Media & Entertainment', label: 'Media & Entertainment' },
+  { value: 'Media & Entertainment', label: 'Media' },
   { value: 'Other', label: 'Other' },
 ];
 
 const BUSINESS_TYPES = [
-  { value: '', label: 'All Business Models' },
+  { value: '', label: 'All Models' },
   { value: 'B2B', label: 'B2B' },
   { value: 'B2C', label: 'B2C' },
   { value: 'B2B2C', label: 'B2B2C' },
   { value: 'B2G', label: 'B2G' },
-  { value: 'C2C', label: 'C2C' },
   { value: 'D2C', label: 'D2C' },
-  { value: 'B2B2B', label: 'B2B2B' },
   { value: 'Marketplace', label: 'Marketplace' },
   { value: 'Platform', label: 'Platform' },
 ];
+
+const ITEMS_PER_PAGE = 24;
 
 function formatUsd(usd: number) {
   if (!usd || usd === 0) return null;
@@ -91,6 +91,7 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
   const [startups, setStartups] = useState<Startup[]>(initialStartups);
   const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const hasUserInteracted = useRef(false);
   const debounceRef = useRef<NodeJS.Timeout>();
 
@@ -102,10 +103,12 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
       if (s) params.set('stage', s);
       if (c) params.set('category', c);
       if (bt) params.set('businessType', bt);
+      params.set('limit', '500'); // Fetch all matching for client-side pagination
       const res = await fetch(`/api/startups/search?${params}`);
       const data = await res.json();
       setStartups(data.startups || []);
       setTotal(data.total || 0);
+      setVisibleCount(ITEMS_PER_PAGE);
     } catch {
       // keep existing results
     } finally {
@@ -113,17 +116,12 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
     }
   }, []);
 
-  // Debounced search — 300ms delay, handles rapid typing
+  // Debounced search
   useEffect(() => {
-    // Skip if user hasn't interacted yet (initial mount)
-    if (!hasUserInteracted.current) {
-      return;
-    }
-
+    if (!hasUserInteracted.current) return;
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       fetchStartups(query, stage, category, businessType);
-      // Update URL without navigation
       const params = new URLSearchParams();
       if (query) params.set('q', query);
       if (stage) params.set('stage', stage);
@@ -135,105 +133,117 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
     return () => clearTimeout(debounceRef.current);
   }, [query, stage, category, businessType, fetchStartups, pathname, router]);
 
-  const clearSearch = () => { 
+  const handleCategoryChange = (value: string) => {
     hasUserInteracted.current = true;
-    setQuery(''); 
-    setStage(''); 
-    setCategory(''); 
-    setBusinessType(''); 
+    setCategory(value);
+    setVisibleCount(ITEMS_PER_PAGE);
   };
 
+  const clearSearch = () => {
+    hasUserInteracted.current = true;
+    setQuery(''); setStage(''); setCategory(''); setBusinessType('');
+    setVisibleCount(ITEMS_PER_PAGE);
+  };
+
+  const visibleStartups = startups.slice(0, visibleCount);
+  const hasMore = visibleCount < startups.length;
+
   return (
-    <div className="space-y-6">
-      {/* Search + Filter bar */}
-      <div className="flex flex-col gap-3">
+    <div className="space-y-5">
+      {/* ── Sticky Category Pills ── */}
+      <div className="sticky top-0 z-30 bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-3 border-b border-gray-100 dark:border-gray-800">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+          <button
+            onClick={() => handleCategoryChange('')}
+            className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-bold font-jakarta transition-all ${
+              category === ''
+                ? 'bg-brand text-white shadow-sm'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+            }`}
+          >
+            All
+          </button>
+          {CATEGORIES.filter(c => c.value !== '').map(cat => (
+            <button
+              key={cat.value}
+              onClick={() => handleCategoryChange(cat.value)}
+              className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-bold font-jakarta transition-all ${
+                category === cat.value
+                  ? 'bg-brand text-white shadow-sm'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Search + Filters Row ── */}
+      <div className="space-y-3">
         {/* Search Input */}
-        <div className="relative flex-1">
+        <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
             value={query}
-            onChange={e => {
-              hasUserInteracted.current = true;
-              setQuery(e.target.value);
-            }}
+            onChange={e => { hasUserInteracted.current = true; setQuery(e.target.value); }}
             placeholder="Search startups by name, tagline, city..."
-            className="input-field pl-11 pr-10 w-full"
+            className="w-full pl-11 pr-10 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent text-sm font-jakarta"
           />
           {query && (
-            <button onClick={() => setQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
+            <button onClick={() => { hasUserInteracted.current = true; setQuery(''); }} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
               <X className="w-3.5 h-3.5 text-gray-400" />
             </button>
           )}
         </div>
 
-        {/* Filter Dropdowns */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {/* Stage Filter */}
-          <select
-            value={stage}
-            onChange={e => {
-              hasUserInteracted.current = true;
-              setStage(e.target.value);
-            }}
-            className="input-field text-sm"
-          >
-            {STAGES.map(s => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
-          </select>
+        {/* Filter Controls */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            {/* Stage Filter */}
+            <select
+              value={stage}
+              onChange={e => { hasUserInteracted.current = true; setStage(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
+              className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+            >
+              {STAGES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+            </select>
 
-          {/* Category Filter */}
-          <select
-            value={category}
-            onChange={e => {
-              hasUserInteracted.current = true;
-              setCategory(e.target.value);
-            }}
-            className="input-field text-sm"
-          >
-            {CATEGORIES.map(c => (
-              <option key={c.value} value={c.value}>{c.label}</option>
-            ))}
-          </select>
+            {/* Business Type Filter */}
+            <select
+              value={businessType}
+              onChange={e => { hasUserInteracted.current = true; setBusinessType(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
+              className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+            >
+              {BUSINESS_TYPES.map(bt => <option key={bt.value} value={bt.value}>{bt.label}</option>)}
+            </select>
 
-          {/* Business Type Filter */}
-          <select
-            value={businessType}
-            onChange={e => {
-              hasUserInteracted.current = true;
-              setBusinessType(e.target.value);
-            }}
-            className="input-field text-sm"
-          >
-            {BUSINESS_TYPES.map(bt => (
-              <option key={bt.value} value={bt.value}>{bt.label}</option>
-            ))}
-          </select>
+            {/* Clear Filters */}
+            {(query || stage || category || businessType) && (
+              <button onClick={clearSearch} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-brand hover:bg-brand/5 transition-colors font-jakarta">
+                Clear all
+              </button>
+            )}
+          </div>
+
+          {/* Results Count */}
+          <span className="text-xs text-gray-400 font-jakarta">
+            {loading ? (
+              <span className="flex items-center gap-1.5"><Loader2 className="w-3 h-3 animate-spin" /> Searching...</span>
+            ) : (
+              <span><span className="font-bold text-navy dark:text-white">{total}</span> startups</span>
+            )}
+          </span>
         </div>
       </div>
 
-      {/* Results count */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500 font-jakarta">
-          {loading ? (
-            <span className="flex items-center gap-2"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Searching...</span>
-          ) : (
-            <span><span className="font-bold text-navy dark:text-white">{total}</span> startup{total !== 1 ? 's' : ''} found{(query || stage || category || businessType) ? ' for your search' : ''}</span>
-          )}
-        </p>
-        {(query || stage || category || businessType) && (
-          <button onClick={clearSearch} className="text-xs text-brand hover:underline font-jakarta flex items-center gap-1">
-            <X className="w-3 h-3" /> Clear filters
-          </button>
-        )}
-      </div>
-
-      {/* Grid */}
+      {/* ── Grid ── */}
       {startups.length === 0 && !loading ? (
         <div className="text-center py-16">
           <Building2 className="w-12 h-12 text-gray-200 dark:text-gray-700 mx-auto mb-3" />
-          <p className="text-gray-500 font-jakarta text-sm">No startups found. Try a different search.</p>
+          <p className="text-gray-400 font-jakarta text-sm mb-2">No startups found matching your criteria.</p>
+          <button onClick={clearSearch} className="text-sm text-brand font-semibold hover:underline">Clear all filters</button>
         </div>
       ) : loading && startups.length === 0 ? (
         <div className="text-center py-16">
@@ -242,7 +252,7 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
         </div>
       ) : (
         <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 transition-opacity duration-200 ${loading ? 'opacity-50' : 'opacity-100'}`}>
-          {startups.map(s => (
+          {visibleStartups.map(s => (
             <Link key={s.slug} href={`/startups/${s.slug}`} className="group">
               <div className="relative bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 hover:shadow-xl hover:border-brand/30 dark:hover:border-brand/30 transition-all duration-300 h-full">
                 {/* Header Section */}
@@ -266,7 +276,7 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
                       </h3>
                       {s.isVerified && <VerifiedBadge size="sm" showText={false} />}
                     </div>
-                    
+
                     {/* Location & Founded */}
                     <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 font-jakarta flex-wrap">
                       {s.headquartersCity && (
@@ -282,7 +292,7 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
                         </div>
                       )}
                     </div>
-                    
+
                     {/* Founders */}
                     {(() => {
                       const foundersArray = Array.isArray(s.founders) ? s.founders : (s.founders ? [s.founders] : []);
@@ -321,7 +331,7 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 gap-3">
                   {/* Team Size */}
-                  <div className="bg-gray-900/5 dark:bg-gray-950/50 rounded-xl p-2.5 border border-gray-200/50 dark:border-gray-700/50">
+                  <div className="bg-gray-900/5 dark:bg-gray-950/50 rounded-xl p-2.5 pl-5 border border-gray-200/50 dark:border-gray-700/50">
                     <div className="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400 font-jakarta font-semibold mb-0.5">
                       Team
                     </div>
@@ -331,7 +341,7 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
                   </div>
 
                   {/* Funding Raised */}
-                  <div className="bg-gray-900/5 dark:bg-gray-950/50 rounded-xl p-2.5 border border-gray-200/50 dark:border-gray-700/50">
+                  <div className="bg-gray-900/5 dark:bg-gray-950/50 rounded-xl p-2.5 pl-5 border border-gray-200/50 dark:border-gray-700/50">
                     <div className="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400 font-jakarta font-semibold mb-0.5">
                       Raised
                     </div>
@@ -352,6 +362,19 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
               </div>
             </Link>
           ))}
+        </div>
+      )}
+
+      {/* ── Load More ── */}
+      {hasMore && !loading && (
+        <div className="mt-8 text-center">
+          <button
+            onClick={() => setVisibleCount(prev => prev + ITEMS_PER_PAGE)}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold font-jakarta text-gray-700 dark:text-gray-300 hover:border-brand hover:text-brand transition-colors shadow-sm"
+          >
+            <ChevronDown className="w-4 h-4" />
+            Show more startups ({startups.length - visibleCount} remaining)
+          </button>
         </div>
       )}
     </div>

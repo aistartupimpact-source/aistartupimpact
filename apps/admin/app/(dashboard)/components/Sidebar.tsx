@@ -67,6 +67,7 @@ const sidebarItems = [
   { label: 'Admin Users', href: '/users', icon: Shield },
   { label: 'Web Users', href: '/web-users', icon: Users },
   { label: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { label: 'Tool Analytics', href: '/tool-analytics', icon: Sparkles },
   { label: 'Consent Logs', href: '/consent-logs', icon: Shield },
   { label: 'Settings', href: '/settings', icon: Settings },
   { label: 'Dev Tools', href: '/dev-tools', icon: Wrench },

@@ -6,6 +6,7 @@ import {
   Sparkles, IndianRupee, Zap, Clock,
   ArrowUpRight,
 } from 'lucide-react';
+import { ToolCTAButton } from '@/components/tools/ToolCTAButton';
 
 // ISR: revalidate every 60s — much better than force-dynamic for production
 // Hero slots change infrequently; this gives CDN caching + fresh data
@@ -580,7 +581,7 @@ export default async function HomePage() {
                     !isDesktopRightEdge ? 'lg:border-r border-gray-200 dark:border-gray-700' : 'lg:border-r-0'
                   ].filter(Boolean).join(' ');
                   return (
-                    <Link key={tool.slug} href={`/tools/${tool.slug}`} className={`group ${borderClass}`}>
+                    <div key={tool.slug} className={`group ${borderClass}`}>
                       <div className="bg-gray-50 dark:bg-gray-800 p-5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 h-full flex flex-col">
                         {/* Top row: icon + rating */}
                         <div className="flex items-start justify-between mb-3">
@@ -600,22 +601,33 @@ export default async function HomePage() {
                           )}
                         </div>
                         {/* Name */}
-                        <p className="font-sora font-bold text-sm text-gray-900 dark:text-white leading-tight mb-1.5 group-hover:text-brand transition-colors">
-                          {tool.name}
-                        </p>
+                        <Link href={`/tools/${tool.slug}`}>
+                          <p className="font-sora font-bold text-sm text-gray-900 dark:text-white leading-tight mb-1.5 group-hover:text-brand transition-colors">
+                            {tool.name}
+                          </p>
+                        </Link>
                         {/* Tagline */}
-                        <p className="text-gray-500 dark:text-gray-400 text-xs font-jakarta leading-relaxed flex-1 line-clamp-2">
+                        <p className="text-gray-500 dark:text-gray-400 text-xs font-jakarta leading-relaxed flex-1 line-clamp-2 mb-3">
                           {tool.tagline}
                         </p>
-                        {/* Category */}
-                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-brand">{tool.category?.name || 'Tool'}</span>
-                          <span className="text-brand text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                            View <ArrowRight className="w-3 h-3" />
-                          </span>
+                        {/* Category & CTA */}
+                        <div className="mt-auto space-y-2">
+                          <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-brand">{tool.category?.name || 'Tool'}</span>
+                          </div>
+                          <ToolCTAButton
+                            toolId={tool.id}
+                            toolName={tool.name}
+                            source="HOMEPAGE"
+                            variant="secondary"
+                            className="w-full text-xs py-1.5"
+                            showIcon={false}
+                          >
+                            Visit Website
+                          </ToolCTAButton>
                         </div>
                       </div>
-                    </Link>
+                    </div>
                   );
                 })}
               </div>

@@ -49,11 +49,17 @@ export default async function StoryDetailPage({ params }: { params: { slug: stri
     title: story.title,
     excerpt: story.excerpt || '',
     author: { name: story.author?.name || 'ASI Editorial', slug: story.author?.slug || 'editorial' },
-    date: story.publishedAt || new Date().toISOString(),
+    date: story.publishedAt,
+    updatedAt: story.updatedAt,
     url: storyUrl,
     imageUrl: story.coverImage || undefined,
     category: 'Founder Story',
     isStory: true,
+    founderData: story.linkedStartup && story.linkedStartup.founders?.length > 0 ? {
+      name: story.linkedStartup.founders[0],
+      slug: story.linkedStartup.founders[0].toLowerCase().replace(/\s+/g, '-'),
+      startupSlug: story.linkedStartup.slug
+    } : undefined
   });
 
   const breadcrumbSchema = generateBreadcrumbSchema([

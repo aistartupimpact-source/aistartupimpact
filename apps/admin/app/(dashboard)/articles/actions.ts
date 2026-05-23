@@ -82,10 +82,14 @@ export async function saveArticleAction(payload: any, articleId?: string | null)
   }
 
   try {
-    const { title, subtitle, content, type, category, tags, coverImage, thumbnailImage, seoTitle, seoDescription, focusKeyword, slug, status, canonicalUrl, ogImage, noIndex } = payload;
+    const { 
+      title, subtitle, content, type, category, tags, coverImage, thumbnailImage, 
+      seoTitle, seoDescription, focusKeyword, slug, status, canonicalUrl, ogImage, noIndex,
+      scheduledAt, isFeatured, isPinned, isSponsored 
+    } = payload;
     const authorId = session.user.id;
 
-    console.log('[saveArticleAction] Payload extracted:', { title, status, hasContent: !!content });
+    console.log('[saveArticleAction] Payload extracted:', { title, status, category, tags, hasContent: !!content });
 
     let baseSlug = slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     let finalSlug = baseSlug;
@@ -109,6 +113,17 @@ export async function saveArticleAction(payload: any, articleId?: string | null)
 
     console.log('[saveArticleAction] Final slug:', finalSlug);
 
+    // Handle category - find or use null
+    let categoryId: string | null = null;
+    if (category && category.trim()) {
+      const categoryResult: any[] = await prisma.$queryRaw`
+        SELECT id FROM "Category" WHERE name = ${category.trim()} LIMIT 1
+      `;
+      if (categoryResult.length > 0) {
+        categoryId = categoryResult[0].id;
+      }
+    }
+
     // The Prisma schema expects `content` to be a `Json` object (for TipTap), but we are storing HTML strings from the legacy editor.
     // Wrap the string in a JSON-compatible object so Neon's HTTP adapter doesn't crash from type mismatch.
     const contentJson = { html: content };
@@ -122,6 +137,9 @@ export async function saveArticleAction(payload: any, articleId?: string | null)
       type: type || 'NEWS',
       status: status || 'DRAFT',
       noIndex: noIndex || false,
+      isFeatured: isFeatured || false,
+      isPinned: isPinned || false,
+      isSponsored: isSponsored || false,
       updatedAt: new Date(),
     };
 
@@ -133,8 +151,10 @@ export async function saveArticleAction(payload: any, articleId?: string | null)
     if (focusKeyword) data.focusKeyword = focusKeyword;
     if (canonicalUrl) data.canonicalUrl = canonicalUrl;
     if (ogImage) data.ogImage = ogImage;
+    if (categoryId) data.categoryId = categoryId;
+    if (scheduledAt) data.scheduledAt = scheduledAt;
 
-    console.log('[saveArticleAction] Saving to database...', { articleId, status: data.status });
+    console.log('[saveArticleAction] Saving to database...', { articleId, status: data.status, categoryId, isFeatured: data.isFeatured });
 
     let article;
     if (articleId) {
@@ -149,6 +169,11 @@ export async function saveArticleAction(payload: any, articleId?: string | null)
           type = ${data.type}::"ArticleType",
           status = ${data.status}::"ArticleStatus",
           "noIndex" = ${data.noIndex},
+          "isFeatured" = ${data.isFeatured},
+          "isPinned" = ${data.isPinned},
+          "isSponsored" = ${data.isSponsored},
+          "categoryId" = ${data.categoryId || null},
+          "scheduledAt" = ${data.scheduledAt ? new Date(data.scheduledAt) : null},
           "coverImage" = ${data.coverImage || null},
           "thumbnailImage" = ${data.thumbnailImage || null},
           "seoTitle" = ${data.seoTitle || null},
@@ -174,6 +199,7 @@ export async function saveArticleAction(payload: any, articleId?: string | null)
       await prisma.$executeRaw`
         INSERT INTO "Article" (
           id, title, slug, excerpt, content, type, status, "noIndex",
+          "isFeatured", "isPinned", "isSponsored", "categoryId", "scheduledAt",
           "coverImage", "thumbnailImage", "seoTitle", "seoDescription", 
           "focusKeyword", "canonicalUrl", "ogImage",
           "authorId", "createdAt", "updatedAt"
@@ -186,6 +212,11 @@ export async function saveArticleAction(payload: any, articleId?: string | null)
           ${data.type}::"ArticleType",
           ${data.status}::"ArticleStatus",
           ${data.noIndex},
+          ${data.isFeatured},
+          ${data.isPinned},
+          ${data.isSponsored},
+          ${data.categoryId || null},
+          ${data.scheduledAt ? new Date(data.scheduledAt) : null},
           ${data.coverImage || null},
           ${data.thumbnailImage || null},
           ${data.seoTitle || null},
@@ -207,6 +238,60 @@ export async function saveArticleAction(payload: any, articleId?: string | null)
         createdAt: new Date(),
         updatedAt: new Date(),
       };
+    }
+
+    // Handle tags - parse comma-separated string, create tags if needed, and link to article
+    if (tags && typeof tags === 'string' && tags.trim()) {
+      const tagNames = tags.split(',').map(t => t.trim()).filter(t => t.length > 0);
+      
+      if (tagNames.length > 0) {
+        // First, delete existing article tags if updating
+        if (articleId) {
+          await prisma.$executeRaw`DELETE FROM "ArticleTag" WHERE "articleId" = ${articleId}`;
+        }
+
+        // Process each tag
+        for (const tagName of tagNames) {
+          const tagSlug = tagName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+          
+          // Find or create tag
+          let tagId: string;
+          const existingTag: any[] = await prisma.$queryRaw`
+            SELECT id FROM "Tag" WHERE name = ${tagName} LIMIT 1
+          `;
+          
+          if (existingTag.length > 0) {
+            tagId = existingTag[0].id;
+          } else {
+            // Create new tag
+            tagId = crypto.randomUUID();
+            await prisma.$executeRaw`
+              INSERT INTO "Tag" (id, name, slug, "createdAt")
+              VALUES (${tagId}, ${tagName}, ${tagSlug}, NOW())
+              ON CONFLICT (slug) DO NOTHING
+            `;
+            
+            // If there was a conflict, fetch the existing tag
+            const conflictCheck: any[] = await prisma.$queryRaw`
+              SELECT id FROM "Tag" WHERE slug = ${tagSlug} LIMIT 1
+            `;
+            if (conflictCheck.length > 0) {
+              tagId = conflictCheck[0].id;
+            }
+          }
+          
+          // Link tag to article
+          const finalArticleId = articleId || article.id;
+          await prisma.$executeRaw`
+            INSERT INTO "ArticleTag" ("articleId", "tagId")
+            VALUES (${finalArticleId}, ${tagId})
+            ON CONFLICT ("articleId", "tagId") DO NOTHING
+          `;
+        }
+      }
+    } else if (articleId) {
+      // If tags is empty and we're updating, remove all tags
+      await prisma.$executeRaw`DELETE FROM "ArticleTag" WHERE "articleId" = ${articleId}`;
     }
 
     console.log('[saveArticleAction] Article saved successfully:', article.id);
@@ -250,7 +335,20 @@ export async function getArticleByIdAction(id: string) {
       LIMIT 1
     `;
     if (!rows.length) return { success: false, error: "Article not found" };
-    return { success: true, data: rows[0] };
+    
+    // Fetch tags for this article
+    const tagRows: any[] = await prisma.$queryRaw`
+      SELECT t.name
+      FROM "ArticleTag" at
+      JOIN "Tag" t ON t.id = at."tagId"
+      WHERE at."articleId" = ${id}
+      ORDER BY t.name ASC
+    `;
+    
+    const article = rows[0];
+    article.tags = tagRows.map(t => t.name).join(', ');
+    
+    return { success: true, data: article };
   } catch (error: any) {
     console.error("Get Article Error:", error);
     return { success: false, error: error.message || "Failed to fetch article" };
@@ -346,5 +444,17 @@ export async function deleteArticleAction(id: string) {
   } catch (error: any) {
     console.error("Delete Article Error:", error);
     return { success: false, error: error.message || "Failed to delete article" };
+  }
+}
+
+export async function getCategoriesAction() {
+  try {
+    const categories: any[] = await prisma.$queryRaw`
+      SELECT id, name, slug FROM "Category" ORDER BY name ASC
+    `;
+    return { success: true, data: categories };
+  } catch (error: any) {
+    console.error("Get Categories Error:", error);
+    return { success: false, error: error.message || "Failed to fetch categories", data: [] };
   }
 }

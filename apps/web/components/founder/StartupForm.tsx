@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Upload, X, Loader2 } from 'lucide-react';
 import { submitStartupAction } from '@/app/founder/startups/actions';
+import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
 
 const STARTUP_STAGES = [
   'IDEA',
@@ -36,6 +37,8 @@ export default function StartupForm() {
     founders: '',
     logoUrl: '',
   });
+
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData(prev => ({
@@ -116,6 +119,7 @@ export default function StartupForm() {
         employeeCount: formData.employeeCount ? parseInt(formData.employeeCount) : undefined,
         founders: foundersArray,
         logoUrl: formData.logoUrl || undefined,
+        faqs: faqs.length > 0 ? faqs : undefined,
       });
 
       if (!result.success) {
@@ -371,6 +375,11 @@ export default function StartupForm() {
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
           placeholder="Comma-separated names, e.g. John Doe, Jane Smith"
         />
+      </div>
+
+      {/* FAQs Section */}
+      <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
+        <FAQManager faqs={faqs} onChange={setFaqs} maxFaqs={10} />
       </div>
 
       {/* Submit Button */}

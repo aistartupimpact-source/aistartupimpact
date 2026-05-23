@@ -66,7 +66,7 @@ export default function WriteReviewClient({ toolSlug, toolName }: WriteReviewCli
         onClick={handleOpenClick}
         className="btn-brand text-sm shadow-md"
       >
-        {user ? 'Write a Review' : 'Sign In to Review'}
+        Write a Review
       </button>
 
       {isOpen && (

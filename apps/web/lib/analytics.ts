@@ -1,4 +1,4 @@
-import { headers } from 'next/headers';
+import { NextRequest } from 'next/server';
 import { prisma } from '@aistartupimpact/database';
 import crypto from 'crypto';
 
@@ -68,15 +68,30 @@ function createHash(value: string): string {
   return crypto.createHash('sha256').update(value).digest('hex').substring(0, 16);
 }
 
-// Track page view
-export async function trackPageView(pathname: string) {
+// Track page view - accepts NextRequest for API routes
+export async function trackPageView(pathname: string, request?: NextRequest) {
   try {
-    const headersList = headers();
-    const userAgent = headersList.get('user-agent') || '';
-    const referrer = headersList.get('referer') || headersList.get('referrer') || null;
-    const ip = headersList.get('x-forwarded-for')?.split(',')[0] || 
-               headersList.get('x-real-ip') || 
-               'unknown';
+    let userAgent = '';
+    let referrer: string | null = null;
+    let ip = 'unknown';
+
+    if (request) {
+      // Called from API route - use request headers
+      userAgent = request.headers.get('user-agent') || '';
+      referrer = request.headers.get('referer') || request.headers.get('referrer') || null;
+      ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 
+           request.headers.get('x-real-ip') || 
+           'unknown';
+    } else {
+      // Called from server component - use headers() function
+      const { headers } = await import('next/headers');
+      const headersList = headers();
+      userAgent = headersList.get('user-agent') || '';
+      referrer = headersList.get('referer') || headersList.get('referrer') || null;
+      ip = headersList.get('x-forwarded-for')?.split(',')[0] || 
+           headersList.get('x-real-ip') || 
+           'unknown';
+    }
     
     // Create session hash (IP + User Agent)
     const sessionHash = createHash(`${ip}-${userAgent}`);
@@ -87,19 +102,7 @@ export async function trackPageView(pathname: string) {
     const os = getOS(userAgent);
     const source = getTrafficSource(referrer);
     
-    // Check if this is a bounce (only one page view in session in last 30 minutes)
-    const recentViews = await prisma.pageView.count({
-      where: {
-        sessionHash,
-        createdAt: {
-          gte: new Date(Date.now() - 30 * 60 * 1000), // Last 30 minutes
-        },
-      },
-    });
-    
-    const bounced = recentViews === 0; // First page in session
-    
-    // Create page view record
+    // Create page view record (skip bounce detection to avoid Neon Date serialization issue)
     await prisma.pageView.create({
       data: {
         id: `pv_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
@@ -112,24 +115,9 @@ export async function trackPageView(pathname: string) {
         sessionHash,
         ipHash,
         userAgent,
-        bounced,
+        bounced: false,
       },
     });
-    
-    // Update previous page views in this session to mark as not bounced
-    if (recentViews > 0) {
-      await prisma.pageView.updateMany({
-        where: {
-          sessionHash,
-          createdAt: {
-            gte: new Date(Date.now() - 30 * 60 * 1000),
-          },
-        },
-        data: {
-          bounced: false,
-        },
-      });
-    }
   } catch (error) {
     // Silently fail - don't break the page if analytics fails
     console.error('Analytics tracking error:', error);

@@ -25,9 +25,11 @@ export async function getArticleBySlugDirect(slug: string) {
         a."coverImage", a."thumbnailImage", a."readTimeMinutes", a."viewCount", a."isFeatured",
         a."likeCount",
         a."publishedAt"::text AS "publishedAt",
+        a."createdAt"::text AS "createdAt",
+        a."updatedAt"::text AS "updatedAt",
         u.name AS "authorName", u.slug AS "authorSlug",
         c.name AS "categoryName", c.slug AS "categorySlug",
-        a."toolId"
+        a."toolId", a."startupId"
       FROM "Article" a
       LEFT JOIN "User" u ON u.id = a."authorId"
       LEFT JOIN "Category" c ON c.id = a."categoryId"
@@ -49,11 +51,31 @@ export async function getArticleBySlugDirect(slug: string) {
       if (toolRows.length) linkedTool = toolRows[0];
     }
 
+    // Cross-link: Fetch related startup if startupId is attached (for founder stories)
+    let linkedStartup = null;
+    if (a.startupId) {
+      const startupRows = await sql`
+        SELECT name, slug, founders
+        FROM "Startup"
+        WHERE id = ${a.startupId} AND "deletedAt" IS NULL
+        LIMIT 1
+      `;
+      if (startupRows.length) {
+        const startup = startupRows[0];
+        linkedStartup = {
+          name: startup.name,
+          slug: startup.slug,
+          founders: startup.founders || []
+        };
+      }
+    }
+
     return {
       ...a,
       author: { name: a.authorName, slug: a.authorSlug },
       category: { name: a.categoryName, slug: a.categorySlug },
-      linkedTool
+      linkedTool,
+      linkedStartup
     };
   } catch (e) {
     console.error('getArticleBySlugDirect error:', e);
@@ -69,6 +91,7 @@ export async function getAiToolBySlugDirect(slug: string) {
       SELECT 
         t.*,
         c.name AS "categoryName",
+        c.slug AS "categorySlug",
         s.id AS "startupId", s.name AS "startupName", s."totalFundingInr"
       FROM "AiTool" t
       LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
@@ -120,6 +143,39 @@ export async function getAiToolBySlugDirect(slug: string) {
   } catch (e) {
     console.error('getAiToolBySlugDirect error:', e);
     return null;
+  }
+}
+
+export async function getSimilarToolsDirect(categoryId: string, excludeSlug: string, limit = 6) {
+  try {
+    const rows = await sql`
+      SELECT
+        t.id, t.name, t.slug, t.tagline, t."logoUrl",
+        t."avgRating", t."pricingModel", t."websiteUrl",
+        c.name AS "categoryName"
+      FROM "AiTool" t
+      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+      WHERE t."categoryId" = ${categoryId}
+        AND t.slug != ${excludeSlug}
+        AND t.status = 'APPROVED'
+        AND t."deletedAt" IS NULL
+      ORDER BY t."avgRating" DESC NULLS LAST, t."isFeatured" DESC
+      LIMIT ${limit}
+    `;
+    return rows as Array<{
+      id: string;
+      name: string;
+      slug: string;
+      tagline: string;
+      logoUrl: string | null;
+      avgRating: string | null;
+      pricingModel: string;
+      websiteUrl: string;
+      categoryName: string;
+    }>;
+  } catch (e) {
+    console.error('getSimilarToolsDirect error:', e);
+    return [];
   }
 }
 
@@ -522,4 +578,28 @@ export async function getActiveSponsorsDirect() {
 export async function getActiveSponsorDirect() {
   const sponsors = await getActiveSponsorsDirect();
   return sponsors ? sponsors[0] : null;
+}
+
+// ── Funding Rounds ──────────────────────────────────────────────────────────────────
+
+export async function getFundingRoundBySlugDirect(slug: string) {
+  try {
+    const rows = await sql`
+      SELECT 
+        fr.id, fr.slug, fr."roundType", fr."amountInr", fr."amountUsd",
+        fr."announcedAt"::text AS "announcedAt", 
+        fr."leadInvestors", fr."allInvestors", fr."sourceUrl",
+        s.name AS "startupName", 
+        s.slug AS "startupSlug", 
+        s."headquartersCity"
+      FROM "FundingRound" fr
+      JOIN "Startup" s ON s.id = fr."startupId"
+      WHERE fr.slug = ${slug} AND s."deletedAt" IS NULL
+      LIMIT 1
+    `;
+    return rows.length ? rows[0] : null;
+  } catch (error) {
+    console.error('getFundingRoundBySlugDirect error:', error);
+    return null;
+  }
 }

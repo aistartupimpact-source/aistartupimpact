@@ -15,9 +15,25 @@ export async function getStartupsAction() {
       FROM "Startup"
       WHERE "deletedAt" IS NULL
       ORDER BY "isFeatured" DESC, "createdAt" DESC
-    `;    return startups;
+    `;
+    return startups;
   } catch (error) {
     console.error('Error fetching startups:', error);
+    return [];
+  }
+}
+
+export async function getStartupFAQsAction(startupId: string) {
+  try {
+    const faqs = await sql`
+      SELECT id, "startupId", question, answer, "order", "createdAt", "updatedAt"
+      FROM "StartupFAQ"
+      WHERE "startupId" = ${startupId}
+      ORDER BY "order" ASC
+    `;
+    return faqs;
+  } catch (error) {
+    console.error('Error fetching startup FAQs:', error);
     return [];
   }
 }
@@ -28,25 +44,45 @@ export async function createStartupAction(data: {
   description: string;
   logoUrl?: string;
   websiteUrl?: string;
+  linkedinUrl?: string;
+  twitterUrl?: string;
   stage: string;
   headquartersCity?: string;
   isFeatured?: boolean;
-  statValue?: string;
-  statLabel?: string;
+  foundedYear?: number | null;
+  employeeCount?: number | null;
+  impactScore?: number | null;
+  faqs?: Array<{ question: string; answer: string; order: number }>;
 }) {
   try {
     const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Math.random().toString(36).substring(2, 6);
-    await sql`
+    // Ensure impactScore is never null - default to 0 if not provided
+    const impactScore = data.impactScore ?? 0;
+    
+    const result = await sql`
       INSERT INTO "Startup" (
-        id, name, slug, tagline, description, "logoUrl", "websiteUrl", stage, "headquartersCity",
-        "isFeatured", "isIndian", "createdAt", "updatedAt"
+        id, name, slug, tagline, description, "logoUrl", "websiteUrl", "linkedinUrl", "twitterUrl", stage, "headquartersCity",
+        "isFeatured", "isIndian", "impactScore", "foundedYear", "employeeCount", "createdAt", "updatedAt"
       )
       VALUES (
         gen_random_uuid(), ${data.name}, ${slug}, ${data.tagline}, ${data.description},
-        ${data.logoUrl || null}, ${data.websiteUrl || null}, ${data.stage}::"StartupStage", ${data.headquartersCity || null},
-        ${data.isFeatured || false}, true, NOW(), NOW()
+        ${data.logoUrl || null}, ${data.websiteUrl || null}, ${data.linkedinUrl || null}, ${data.twitterUrl || null}, ${data.stage}::"StartupStage", ${data.headquartersCity || null},
+        ${data.isFeatured || false}, true, ${impactScore}, ${data.foundedYear || null}, ${data.employeeCount || null}, NOW(), NOW()
       )
+      RETURNING id
     `;
+
+    const startupId = result[0]?.id;
+
+    // Insert FAQs if provided
+    if (startupId && data.faqs && data.faqs.length > 0) {
+      for (const faq of data.faqs) {
+        await sql`
+          INSERT INTO "StartupFAQ" (id, "startupId", question, answer, "order", "createdAt", "updatedAt")
+          VALUES (gen_random_uuid(), ${startupId}, ${faq.question}, ${faq.answer}, ${faq.order}, NOW(), NOW())
+        `;
+      }
+    }
 
     revalidatePath('/startups-dir');
     return { success: true };
@@ -62,14 +98,20 @@ export async function updateStartupAction(id: string, data: {
   description: string;
   logoUrl?: string;
   websiteUrl?: string;
+  linkedinUrl?: string;
+  twitterUrl?: string;
   stage: string;
   headquartersCity?: string;
   isFeatured?: boolean;
   foundedYear?: number | null;
   employeeCount?: number | null;
   impactScore?: number | null;
+  faqs?: Array<{ question: string; answer: string; order: number }>;
 }) {
   try {
+    // Ensure impactScore is never null - default to 0 if not provided
+    const impactScore = data.impactScore ?? 0;
+    
     await sql`
       UPDATE "Startup"
       SET 
@@ -78,15 +120,33 @@ export async function updateStartupAction(id: string, data: {
         description = ${data.description},
         "logoUrl" = ${data.logoUrl || null},
         "websiteUrl" = ${data.websiteUrl || null},
+        "linkedinUrl" = ${data.linkedinUrl || null},
+        "twitterUrl" = ${data.twitterUrl || null},
         stage = ${data.stage}::"StartupStage",
         "headquartersCity" = ${data.headquartersCity || null},
         "isFeatured" = ${data.isFeatured || false},
         "foundedYear" = ${data.foundedYear || null},
         "employeeCount" = ${data.employeeCount || null},
-        "impactScore" = ${data.impactScore || null},
+        "impactScore" = ${impactScore},
         "updatedAt" = NOW()
       WHERE id = ${id}
     `;
+
+    // Update FAQs if provided
+    if (data.faqs !== undefined) {
+      // Delete existing FAQs
+      await sql`DELETE FROM "StartupFAQ" WHERE "startupId" = ${id}`;
+      
+      // Insert new FAQs
+      if (data.faqs.length > 0) {
+        for (const faq of data.faqs) {
+          await sql`
+            INSERT INTO "StartupFAQ" (id, "startupId", question, answer, "order", "createdAt", "updatedAt")
+            VALUES (gen_random_uuid(), ${id}, ${faq.question}, ${faq.answer}, ${faq.order}, NOW(), NOW())
+          `;
+        }
+      }
+    }
 
     revalidatePath('/startups-dir');
     return { success: true };
@@ -114,19 +174,48 @@ export async function deleteStartupAction(id: string) {
 
 export async function toggleFeaturedAction(id: string, isFeatured: boolean) {
   try {
-    await sql`
-      UPDATE "Startup"
-      SET 
-        "isFeatured" = ${isFeatured},
-        "featuredUntil" = ${isFeatured ? sql`NOW() + INTERVAL '30 days'` : null},
-        "updatedAt" = NOW()
-      WHERE id = ${id}
-    `;
+    if (isFeatured) {
+      // Set featured with expiry date
+      await sql`
+        UPDATE "Startup"
+        SET 
+          "isFeatured" = ${isFeatured},
+          "featuredUntil" = NOW() + INTERVAL '30 days',
+          "updatedAt" = NOW()
+        WHERE id = ${id}
+      `;
+    } else {
+      // Unset featured
+      await sql`
+        UPDATE "Startup"
+        SET 
+          "isFeatured" = ${isFeatured},
+          "featuredUntil" = NULL,
+          "updatedAt" = NOW()
+        WHERE id = ${id}
+      `;
+    }
 
     revalidatePath('/startups-dir');
     return { success: true };
   } catch (error) {
     console.error('Error toggling featured status:', error);
     return { success: false, error: 'Failed to update featured status' };
+  }
+}
+
+// One-time fix for null impactScore values
+export async function fixNullImpactScoresAction() {
+  try {
+    const result = await sql`
+      UPDATE "Startup"
+      SET "impactScore" = 0
+      WHERE "impactScore" IS NULL
+    `;
+    
+    return { success: true, message: `Fixed ${result.length} startups with null impactScore` };
+  } catch (error) {
+    console.error('Error fixing null impactScores:', error);
+    return { success: false, error: 'Failed to fix null impactScores' };
   }
 }

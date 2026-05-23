@@ -77,6 +77,11 @@ export function generateArticleSchema(data: {
   publisherName?: string;
   publisherLogoUrl?: string;
   isStory?: boolean;
+  founderData?: {
+    name: string;
+    slug: string;
+    startupSlug?: string;
+  };
 }) {
   const publishedDate = new Date(data.date).toISOString();
   const modifiedDate = data.updatedAt
@@ -121,7 +126,20 @@ export function generateArticleSchema(data: {
     isAccessibleForFree: true,
     speakable,
     // about — helps AI engines understand the topic
-    about: data.category
+    // For stories, link to the founder as the main entity
+    about: data.isStory && data.founderData
+      ? {
+          '@type': 'Person',
+          '@id': `${PROD_URL}/founder/${data.founderData.slug}#person`,
+          name: data.founderData.name,
+          ...(data.founderData.startupSlug ? {
+            worksFor: {
+              '@type': 'Organization',
+              '@id': `${PROD_URL}/startups/${data.founderData.startupSlug}#organization`
+            }
+          } : {})
+        }
+      : data.category
       ? { '@type': 'Thing', name: data.category }
       : undefined,
   };

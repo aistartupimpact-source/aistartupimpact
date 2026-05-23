@@ -36,7 +36,7 @@ export const revalidate = 60;
 
 export default async function NewsPage() {
   const [articles, inArticleAd] = await Promise.all([
-    getArticlesDirect({ limit: 100 }) as Promise<any[]>,
+    getArticlesDirect({ type: 'NEWS', limit: 500 }) as Promise<any[]>,
     getActiveCreativeForZone('A1_IN_ARTICLE'),
   ]);
   const allArticles = articles || [];
@@ -81,11 +81,12 @@ export default async function NewsPage() {
 
       {/* Header */}
       <div className="mb-6 sm:mb-8">
-        <h1 className="font-sora font-extrabold text-2xl sm:text-3xl md:text-4xl text-navy dark:text-white">
-          Latest News
+        <h1 className="font-sora font-extrabold text-2xl sm:text-3xl md:text-4xl text-navy dark:text-white leading-tight tracking-tight">
+          AI News.{' '}
+          <span className="text-brand">Updated daily.</span>
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 font-jakarta mt-2 text-sm sm:text-base">
-          Breaking AI news, startup updates, and ecosystem intelligence from India and the world.
+        <p className="text-gray-500 dark:text-gray-400 font-jakarta mt-2 text-sm max-w-2xl">
+          Breaking funding rounds, policy updates, and ecosystem intelligence from India and the world.
         </p>
       </div>
 
@@ -208,15 +209,26 @@ export default async function NewsPage() {
             <SubscribeForm source="sidebar" buttonText="Subscribe Free" />
           </div>
 
-          {/* Categories */}
+          {/* Categories — link to filtered view */}
           <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
-            <h3 className="font-sora font-bold text-sm text-navy dark:text-white mb-4">Browse by Topic</h3>
-            <div className="flex flex-wrap gap-2">
-              {['Funding', 'Policy', 'LLMs', 'HealthTech', 'EdTech', 'AgriTech', 'Deep Tech', 'Ecosystem', 'Startups', 'Research'].map((cat) => (
-                <span key={cat} className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-brand/10 hover:text-brand cursor-pointer transition-colors font-jakarta">
-                  {cat}
-                </span>
-              ))}
+            <h3 className="font-sora font-bold text-sm text-navy dark:text-white mb-4">Quick Links</h3>
+            <div className="space-y-2">
+              <Link href="/stories" className="flex items-center justify-between text-sm font-jakarta text-gray-600 dark:text-gray-300 hover:text-brand transition-colors">
+                <span>Founder Stories</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
+              <Link href="/funding" className="flex items-center justify-between text-sm font-jakarta text-gray-600 dark:text-gray-300 hover:text-brand transition-colors">
+                <span>Funding Tracker</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
+              <Link href="/tools" className="flex items-center justify-between text-sm font-jakarta text-gray-600 dark:text-gray-300 hover:text-brand transition-colors">
+                <span>AI Tools Directory</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
+              <Link href="/startups" className="flex items-center justify-between text-sm font-jakarta text-gray-600 dark:text-gray-300 hover:text-brand transition-colors">
+                <span>Startup Directory</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           </div>
 

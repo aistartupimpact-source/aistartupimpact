@@ -7,11 +7,13 @@ import WriteReviewClient from '@/components/WriteReviewClient';
 import ReviewHelpfulButton from '@/components/ReviewHelpfulButton';
 import ScreenshotGallery from '@/components/ScreenshotGallery';
 import BookmarkButton from '@/components/BookmarkButton';
-import { getAiToolBySlugDirect } from '@/lib/db';
+import { ToolCTAButton } from '@/components/tools/ToolCTAButton';
+import { getAiToolBySlugDirect, getSimilarToolsDirect } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import { ToolSchema, FAQSchema } from '@/components/seo';
 import { generateToolFAQs } from '@/lib/seo-utils';
 import FAQSection from '@/components/FAQSection';
+import SimilarTools from '@/components/tools/SimilarTools';
 
 export const revalidate = 60;
 
@@ -87,6 +89,11 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
   const stories = tool.stories || [];
   const fundingRounds = tool.fundingRounds || [];
   const userReviews = tool.userReviews || [];
+
+  // Fetch similar tools in same category (parallel with page render)
+  const similarTools = tool.categoryId
+    ? await getSimilarToolsDirect(tool.categoryId, tool.slug, 6)
+    : [];
   
   // Generate FAQs with tool-specific data
   const faqs = generateToolFAQs(tool);
@@ -175,9 +182,15 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
             )}
           </div>
           <div className="flex gap-3 mt-4">
-            <a href={tool.websiteUrl} target="_blank" rel="noopener noreferrer" className="btn-brand text-sm">
-              Visit Website <ExternalLink className="w-4 h-4 ml-1" />
-            </a>
+            <ToolCTAButton
+              toolId={tool.id}
+              toolName={tool.name}
+              source="TOOL_DETAIL"
+              variant="primary"
+              className="text-sm"
+            >
+              Visit Website
+            </ToolCTAButton>
             {tool.pricingUrl && (
               <a href={tool.pricingUrl} target="_blank" rel="noopener noreferrer" className="btn-outline text-sm">
                 Pricing <ExternalLink className="w-3.5 h-3.5 ml-1" />
@@ -327,6 +340,15 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
         {/* Sidebar */}
         <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-6">
           <EmbedBadge urlSlug={tool.slug} type="tools" />
+
+          {/* Similar Tools in Same Category */}
+          {similarTools.length > 0 && (
+            <SimilarTools
+              tools={similarTools}
+              categoryName={tool.categoryName || 'this category'}
+              categorySlug={tool.categorySlug}
+            />
+          )}
 
           {/* Founder Story */}
           {stories.length > 0 && (

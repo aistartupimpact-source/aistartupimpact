@@ -16,7 +16,7 @@ router.get('/',
 
       const [rounds, total] = await Promise.all([
         prisma.fundingRound.findMany({
-          include: { startup: { select: { name: true, slug: true, logoUrl: true } } },
+          include: { Startup: { select: { name: true, slug: true, logoUrl: true } } },
           orderBy: { announcedAt: 'desc' },
           skip,
           take: parseInt(limit as string),
@@ -51,7 +51,7 @@ router.post('/',
 
       const round = await prisma.fundingRound.create({
         data: {
-          startupId,
+          Startup: { connect: { id: startupId } },
           roundType,
           amountInr: BigInt(amountInr),
           amountUsd: amountUsd ? BigInt(amountUsd) : null,

@@ -29,7 +29,9 @@ async function getStartup(slug: string) {
                "logoUrl", "websiteUrl", "linkedinUrl", stage,
                "headquartersCity", "foundedYear", "employeeCount",
                "isFeatured", "impactScore", founders, "foundersData",
-               "isVerified", "verifiedAt", "claimedBy", category, "businessType"
+               "isVerified", "verifiedAt", "claimedBy", category, "businessType",
+               "createdAt"::text AS "createdAt",
+               "updatedAt"::text AS "updatedAt"
         FROM "Startup"
         WHERE slug = ${slug} AND "deletedAt" IS NULL
         LIMIT 1
@@ -44,7 +46,9 @@ async function getStartup(slug: string) {
                  "logoUrl", "websiteUrl", "linkedinUrl", stage,
                  "headquartersCity", "foundedYear", "employeeCount",
                  "isFeatured", "impactScore", founders, "foundersData",
-                 "isVerified", "verifiedAt", "claimedBy"
+                 "isVerified", "verifiedAt", "claimedBy",
+                 "createdAt"::text AS "createdAt",
+                 "updatedAt"::text AS "updatedAt"
           FROM "Startup"
           WHERE slug = ${slug} AND "deletedAt" IS NULL
           LIMIT 1
@@ -270,8 +274,31 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
   const totalRaised = startup.fundingRounds.reduce((sum: number, r: any) => sum + Number(r.amountUsd || 0), 0);
   const industryTag = getIndustryTag(startup);
   
-  // Generate FAQs with startup-specific data
-  const faqs = generateStartupFAQs(startup, totalRaised);
+  // Load FAQs from database first
+  let faqs: any[] = [];
+  try {
+    const dbFaqs = await sql`
+      SELECT id, question, answer, "order"
+      FROM "StartupFAQ"
+      WHERE "startupId" = ${startup.id}
+      ORDER BY "order" ASC
+    `;
+    
+    if (dbFaqs.length > 0) {
+      // Use database FAQs if they exist
+      faqs = dbFaqs.map((faq: any) => ({
+        question: faq.question,
+        answer: faq.answer
+      }));
+    } else {
+      // Fallback to generated FAQs if no database FAQs exist
+      faqs = generateStartupFAQs(startup, totalRaised);
+    }
+  } catch (error) {
+    console.error('Error loading FAQs:', error);
+    // Fallback to generated FAQs on error
+    faqs = generateStartupFAQs(startup, totalRaised);
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">

@@ -23,6 +23,7 @@ interface ToolSubmission {
   useCases: string[];
   logoUrl?: string;
   screenshotUrls: string[];
+  faqs?: Array<{ question: string; answer: string; order: number }>;
 }
 
 export async function submitToolAction(data: ToolSubmission) {
@@ -115,6 +116,16 @@ export async function submitToolAction(data: ToolSubmission) {
           text,
         })),
       });
+    }
+
+    // Create FAQs if provided
+    if (data.faqs && data.faqs.length > 0) {
+      for (const faq of data.faqs) {
+        await prisma.$queryRaw`
+          INSERT INTO "ToolFAQ" (id, "toolId", question, answer, "order", "createdAt", "updatedAt")
+          VALUES (gen_random_uuid()::text, ${toolId}, ${faq.question}, ${faq.answer}, ${faq.order}, NOW(), NOW())
+        `;
+      }
     }
 
     // TODO: Send notification to admin
@@ -234,6 +245,22 @@ export async function updateToolAction(id: string, data: ToolSubmission) {
           INSERT INTO "ToolUseCase" (id, "toolId", text)
           VALUES (gen_random_uuid(), ${id}, ${text})
         `;
+      }
+    }
+
+    // Update FAQs if provided
+    if (data.faqs !== undefined) {
+      // Delete existing FAQs
+      await prisma.$queryRaw`DELETE FROM "ToolFAQ" WHERE "toolId" = ${id}`;
+      
+      // Insert new FAQs
+      if (data.faqs.length > 0) {
+        for (const faq of data.faqs) {
+          await prisma.$queryRaw`
+            INSERT INTO "ToolFAQ" (id, "toolId", question, answer, "order", "createdAt", "updatedAt")
+            VALUES (gen_random_uuid()::text, ${id}, ${faq.question}, ${faq.answer}, ${faq.order}, NOW(), NOW())
+          `;
+        }
       }
     }
 

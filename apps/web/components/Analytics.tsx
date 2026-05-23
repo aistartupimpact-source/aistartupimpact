@@ -10,14 +10,20 @@ export default function Analytics() {
     // Track page view on mount and pathname change
     const trackView = async () => {
       try {
-        await fetch('/api/track', {
+        const response = await fetch('/api/track/pageview', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ pathname }),
         });
+
+        if (!response.ok) {
+          console.error('Analytics tracking failed:', response.status, response.statusText);
+        }
       } catch (error) {
-        // Silently fail
-        console.error('Analytics error:', error);
+        // Silently fail in production, but log in development
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Analytics error:', error);
+        }
       }
     };
 

@@ -44,6 +44,14 @@ export default async function EditToolPage({ params }: PageProps) {
     WHERE "toolId" = ${tool.id}
   `;
 
+  // Fetch FAQs separately
+  const faqs = await prisma.$queryRaw<any[]>`
+    SELECT id, question, answer, "order"
+    FROM "ToolFAQ"
+    WHERE "toolId" = ${tool.id}
+    ORDER BY "order" ASC
+  `;
+
   // Serialize the tool data for client component
   const serializedTool = {
     id: tool.id,
@@ -69,6 +77,12 @@ export default async function EditToolPage({ params }: PageProps) {
     useCases: useCases.map(uc => ({
       id: uc.id,
       text: uc.text,
+    })),
+    faqs: faqs.map(faq => ({
+      id: faq.id,
+      question: faq.question,
+      answer: faq.answer,
+      order: faq.order,
     })),
   };
 

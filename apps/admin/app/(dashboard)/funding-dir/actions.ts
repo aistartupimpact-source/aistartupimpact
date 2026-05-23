@@ -10,7 +10,7 @@ export async function getFundingDigestsAction() {
     console.log('getFundingDigestsAction: Fetching funding digests...');
     const digests = await sql`
       SELECT 
-        id, title, date, status, "dealsCount", "totalRaised", deals, "createdAt"
+        id, title, date::text AS date, status, "dealsCount", "totalRaised", deals, "createdAt"::text AS "createdAt"
       FROM "FundingDigest"
       ORDER BY date DESC
     `;
@@ -119,7 +119,7 @@ export async function getFundingRoundsDirectAction() {
       SELECT
         fr.id, fr."roundType", fr."amountUsd", fr."amountInr",
         fr."announcedAt"::text AS "announcedAt", fr."leadInvestors", fr."allInvestors",
-        fr."valuation", fr."sourceUrl", fr."createdAt",
+        fr."valuation", fr."sourceUrl", fr."createdAt"::text AS "createdAt",
         s.name AS "startupName", s.id AS "startupId"
       FROM "FundingRound" fr
       JOIN "Startup" s ON s.id = fr."startupId"

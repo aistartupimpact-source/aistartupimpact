@@ -19,6 +19,7 @@ import {
   DollarSign,
   Calendar
 } from 'lucide-react';
+import { ToolCTAButton } from '@/components/tools/ToolCTAButton';
 
 const tabs = [
   { label: 'All', value: 'all', icon: SearchIcon },
@@ -338,10 +339,8 @@ export default function SearchPage() {
               : `/startups/${result.slug}`;
 
             return (
-              <Link
+              <div
                 key={result.id}
-                href={href}
-                onClick={() => handleResultClick(result)}
                 className="block p-4 sm:p-5 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 bg-white dark:bg-gray-800 transition-all hover:shadow-lg group"
               >
                 <div className="flex gap-4">
@@ -375,9 +374,14 @@ export default function SearchPage() {
                     </div>
 
                     {/* Title */}
-                    <h3 className="font-sora font-bold text-lg text-navy dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
-                      {result.title}
-                    </h3>
+                    <Link
+                      href={href}
+                      onClick={() => handleResultClick(result)}
+                    >
+                      <h3 className="font-sora font-bold text-lg text-navy dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
+                        {result.title}
+                      </h3>
+                    </Link>
 
                     {/* Excerpt */}
                     {result.excerpt && (
@@ -387,7 +391,7 @@ export default function SearchPage() {
                     )}
 
                     {/* Metadata */}
-                    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
+                    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 flex-wrap mb-3">
                       {isArticle && result.readTimeMinutes && (
                         <span className="flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" />
@@ -418,9 +422,23 @@ export default function SearchPage() {
                         </span>
                       )}
                     </div>
+
+                    {/* CTA Button for Tools */}
+                    {isTool && (
+                      <ToolCTAButton
+                        toolId={result.id}
+                        toolName={result.title}
+                        source="SEARCH"
+                        variant="secondary"
+                        className="text-xs py-2"
+                        showIcon={true}
+                      >
+                        Visit Website
+                      </ToolCTAButton>
+                    )}
                   </div>
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>

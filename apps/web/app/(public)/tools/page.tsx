@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { Metadata } from 'next';
-import { Sparkles } from 'lucide-react';
 import { generateItemListSchema, generateCollectionPageSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import ToolsListWithComparison from '@/components/ToolsListWithComparison';
 
@@ -66,19 +65,17 @@ export default async function ToolsPage({ searchParams }: { searchParams: { cate
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       {/* Header */}
-      <div className="mb-8 sm:mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="mb-8 sm:mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 sm:gap-3 mb-2">
-            <Sparkles className="w-6 h-6 text-brand" />
-            <h1 className="font-sora font-extrabold text-2xl sm:text-3xl md:text-4xl text-navy dark:text-white">
-              Editor&apos;s Picks: AI Tools
-            </h1>
-          </div>
-          <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm sm:text-base max-w-2xl">
-            {picks.length} AI tools we actually use and recommend. Honest verdicts from our editorial team — no pay-to-play, no affiliate bias.
+          <h1 className="font-sora font-extrabold text-2xl sm:text-3xl md:text-4xl text-navy dark:text-white leading-tight tracking-tight">
+            Find the right AI tool.{' '}
+            <span className="text-brand">Not just the most popular one.</span>
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm max-w-2xl mt-2">
+            Browse, filter, and compare {picks.length}+ AI tools — tested by real users, ranked by what actually works.
           </p>
         </div>
-        <Link href="/submit-tool" className="bg-brand text-white px-5 py-2.5 rounded-xl font-bold font-jakarta text-sm hover:scale-105 transition-transform shadow-lg shadow-brand/20 whitespace-nowrap text-center">
+        <Link href="/submit-tool" className="bg-brand text-white px-5 py-2.5 rounded-xl font-bold font-jakarta text-sm hover:scale-105 transition-transform shadow-lg shadow-brand/20 whitespace-nowrap text-center shrink-0">
           + Submit Your Tool
         </Link>
       </div>

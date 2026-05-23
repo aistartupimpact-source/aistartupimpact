@@ -1,75 +1,50 @@
-# Deployment Status
+# Deployment Status - SOLUTION FOUND ✅
 
-## Issues Fixed
+## Root Cause: Monorepo Build Configuration
 
-### ✅ 1. Logo Upload (Production)
-- **Status**: FIXED
-- **Solution**: Added R2 cloud storage support with local fallback
-- **Files**: `apps/web/app/api/media/upload/route.ts`
+When Vercel Root Directory was set to `apps/web`, it only installed dependencies from that directory, missing workspace packages (`@aistartupimpact/database`, `@aistartupimpact/types`, `@aistartupimpact/utils`).
 
-### ✅ 2. Article Save/Publish (Admin)
-- **Status**: FIXED  
-- **Solution**: Used raw SQL to bypass corrupt data, added UUID generation
-- **Files**: `apps/admin/app/(dashboard)/articles/actions.ts`
+When changed to `.` (root), Turbo tried to build ALL packages (web, admin, api), causing SWC binary errors for admin.
 
-### ✅ 3. Tailwindcss Missing
-- **Status**: FIXED
-- **Solution**: Moved `tailwindcss`, `autoprefixer`, `postcss` to dependencies
-- **Files**: `apps/web/package.json`
+## Solution Applied ✅
 
-### ✅ 4. Vercel Configuration
-- **Status**: FIXED
-- **Solution**: Removed conflicting vercel.json files, using Root Directory approach
-- **Configuration**:
-  - Web: Root Directory = `apps/web`
-  - Admin: Root Directory = `apps/admin`
+Created `vercel.json` to:
+1. Install from repository root (gets all workspace packages)
+2. Build ONLY the web package using Turbo filter
+3. Output from correct directory
 
-## Files Verified in Repository
-
-All required files exist and are committed:
-- ✅ `apps/web/components/ThemeProvider.tsx`
-- ✅ `apps/web/components/Toast.tsx`
-- ✅ `apps/web/components/Toggle.tsx`
-- ✅ `apps/web/components/profile/SavedItems.tsx`
-- ✅ `apps/web/lib/categories.ts`
-
-## Root Cause: Missing Monorepo Configuration ✅ FIXED
-
-**Problem**: `next.config.js` was missing `experimental.outputFileTracingRoot` setting required for monorepo workspaces.
-
-In a monorepo with workspaces (`apps/*`, `packages/*`), Next.js needs to know about the repository root to properly:
-- Resolve workspace dependencies
-- Trace file imports across packages
-- Build the dependency graph correctly
-
-**Solution Applied**:
-```javascript
-// apps/web/next.config.js & apps/admin/next.config.js
-const path = require('path');
-
-const nextConfig = {
-  experimental: {
-    outputFileTracingRoot: path.join(__dirname, '../../'),
-  },
-  // ... rest of config
+```json
+{
+  "buildCommand": "turbo run build --filter=@aistartupimpact/web",
+  "installCommand": "npm install",
+  "outputDirectory": "apps/web/.next"
 }
 ```
 
-This tells Next.js to trace files from the repository root (`../../` from `apps/web`), allowing it to properly resolve all imports including `@/components/*` and `@/lib/*`.
+## Vercel Dashboard Settings Required
 
-**Verification**:
-- ✅ Local build test: **SUCCESS**
-- ✅ All 5 files resolved correctly
-- ✅ Committed and pushed to GitHub (commit 850a3f6)
-- ⏳ Vercel deployment: **In progress**
+### For Web Project (`aistartupimpact.com`):
+- ✅ **Root Directory**: `.` (repository root) - DONE
+- ✅ **Build Command**: Leave empty (uses vercel.json)
+- ✅ **Install Command**: Leave empty (uses vercel.json)
+- ✅ **Output Directory**: Leave empty (uses vercel.json)
+
+### For Admin Project (`admin.aistartupimpact.com`):
+- Keep **Root Directory**: `apps/admin` (working fine as-is)
+- No changes needed
+
+## Commits Applied
+
+- `850a3f6`: Added `experimental.outputFileTracingRoot` to next.config.js
+- `a769bb8`: Removed vercel.json (reverted)
+- `5d7ee02`: Added vercel.json with Turbo filter for web-only build
 
 ## Current Status
 
-- ✅ Local build: Working
-- ✅ Admin deployment: Working  
-- ✅ Files verified on GitHub: All present
-- ✅ Monorepo config: Fixed
-- ⏳ Web deployment: **Deploying with fix**
+- ✅ Root cause identified: Workspace dependencies + Turbo building all packages
+- ✅ Solution implemented: vercel.json with `--filter=@aistartupimpact/web`
+- ✅ Vercel Dashboard updated: Root Directory = `.`
+- ⏳ **Next deployment should succeed**
 
 ## Environment Variables Required
 
@@ -81,3 +56,7 @@ Ensure these are set in Vercel **web** project:
 - Google OAuth credentials
 
 (See `.env.production` for complete list)
+
+## Database Cleanup (Important!)
+
+After deployment succeeds, run `fix-corrupt-articles.sql` in Neon database console to fix corrupt date values that cause Prisma errors in article save/publish.

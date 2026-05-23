@@ -22,6 +22,8 @@ interface ToolSchemaProps {
     categoryName?: string;
     hasApi?: boolean;
     hasMobileApp?: boolean;
+    createdAt?: string;
+    updatedAt?: string;
   };
 }
 
@@ -31,6 +33,11 @@ export function ToolSchema({ tool }: ToolSchemaProps) {
   
   // CRITICAL: Only add rating if BOTH exist AND rating is not 0
   const hasRealReviews = tool.avgRating && tool.avgRating > 0 && tool.reviewCount && tool.reviewCount > 0;
+  
+  // Use actual database timestamps for SEO integrity
+  // Fallback to current date only if timestamps are missing (should never happen in production)
+  const datePublished = tool.createdAt || new Date().toISOString();
+  const dateModified = tool.updatedAt || tool.createdAt || new Date().toISOString();
   
   const schema = {
     "@context": "https://schema.org",
@@ -50,6 +57,8 @@ export function ToolSchema({ tool }: ToolSchemaProps) {
         "primaryImageOfPage": tool.logoUrl ? {
           "@id": `${pageUrl}#primaryimage`
         } : undefined,
+        "datePublished": datePublished,
+        "dateModified": dateModified,
         "breadcrumb": {
           "@id": `${pageUrl}#breadcrumb`
         },

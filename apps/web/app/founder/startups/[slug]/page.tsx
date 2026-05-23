@@ -71,6 +71,14 @@ export default async function EditStartupPage({ params }: PageProps) {
     ORDER BY "announcedAt" DESC
   `;
 
+  // Fetch FAQs
+  const faqs = await sql`
+    SELECT id, "startupId", question, answer, "order"
+    FROM "StartupFAQ"
+    WHERE "startupId" = ${startup.id}
+    ORDER BY "order" ASC
+  `;
+
   // Serialize the startup data for client component
   const serializedStartup = {
     id: startup.id,
@@ -130,7 +138,7 @@ export default async function EditStartupPage({ params }: PageProps) {
       )}
 
       {/* Form */}
-      <StartupEditForm startup={serializedStartup} />
+      <StartupEditForm startup={serializedStartup} existingFaqs={faqs} />
 
       {/* Funding Rounds Manager */}
       <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6">

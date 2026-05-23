@@ -20,6 +20,11 @@ interface StartupSubmission {
   category?: string;
   businessType?: string;
   totalFundingInr?: number;
+  faqs?: Array<{
+    question: string;
+    answer: string;
+    order: number;
+  }>;
 }
 
 export async function submitStartupAction(data: StartupSubmission) {
@@ -49,8 +54,9 @@ export async function submitStartupAction(data: StartupSubmission) {
 
     // Create startup using raw query
     // Try to include category and businessType if columns exist, otherwise skip them
+    let startupId: string | null = null;
     try {
-      await prisma.$executeRaw`
+      const result = await prisma.$queryRaw<any[]>`
         INSERT INTO "Startup" (
           id, name, slug, tagline, description, "websiteUrl", "linkedinUrl", "twitterUrl",
           "foundedYear", "headquartersCity", stage, "employeeCount", founders, "logoUrl",
@@ -79,12 +85,14 @@ export async function submitStartupAction(data: StartupSubmission) {
           NOW(),
           NOW()
         )
+        RETURNING id
       `;
+      startupId = result[0]?.id;
     } catch (error: any) {
       // If category or businessType column doesn't exist, insert without them
       if (error.message?.includes('category') || error.message?.includes('businessType') || error.message?.includes('column')) {
         console.log('[submitStartup] Category or businessType column not found, inserting without them');
-        await prisma.$executeRaw`
+        const result = await prisma.$queryRaw<any[]>`
           INSERT INTO "Startup" (
             id, name, slug, tagline, description, "websiteUrl", "linkedinUrl", "twitterUrl",
             "foundedYear", "headquartersCity", stage, "employeeCount", founders, "logoUrl",
@@ -111,9 +119,21 @@ export async function submitStartupAction(data: StartupSubmission) {
             NOW(),
             NOW()
           )
+          RETURNING id
         `;
+        startupId = result[0]?.id;
       } else {
         throw error;
+      }
+    }
+
+    // Insert FAQs if provided
+    if (startupId && data.faqs && data.faqs.length > 0) {
+      for (const faq of data.faqs) {
+        await prisma.$executeRaw`
+          INSERT INTO "StartupFAQ" (id, "startupId", question, answer, "order", "createdAt", "updatedAt")
+          VALUES (gen_random_uuid(), ${startupId}, ${faq.question}, ${faq.answer}, ${faq.order}, NOW(), NOW())
+        `;
       }
     }
 
@@ -236,6 +256,22 @@ export async function updateStartupAction(id: string, data: StartupSubmission) {
         `;
       } else {
         throw error;
+      }
+    }
+
+    // Update FAQs if provided
+    if (data.faqs) {
+      // Delete existing FAQs
+      await prisma.$executeRaw`
+        DELETE FROM "StartupFAQ" WHERE "startupId" = ${id}
+      `;
+      
+      // Insert new FAQs
+      for (const faq of data.faqs) {
+        await prisma.$executeRaw`
+          INSERT INTO "StartupFAQ" (id, "startupId", question, answer, "order", "createdAt", "updatedAt")
+          VALUES (gen_random_uuid(), ${id}, ${faq.question}, ${faq.answer}, ${faq.order}, NOW(), NOW())
+        `;
       }
     }
 

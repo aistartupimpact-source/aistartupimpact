@@ -57,7 +57,12 @@ export default function FundingDirPage() {
     ]);
     setDigests((d as any[]).map(x => ({
       ...x,
-      date: typeof x.date === 'string' ? x.date.split('T')[0] : x.date,
+      // Ensure date is always a plain string — Neon returns date columns as Date objects
+      date: x.date instanceof Date
+        ? x.date.toISOString().split('T')[0]
+        : typeof x.date === 'string'
+          ? x.date.split('T')[0]
+          : String(x.date ?? ''),
       deals: typeof x.deals === 'string' ? JSON.parse(x.deals) : x.deals || [],
     })));
     setRounds(r as Round[]);
@@ -79,7 +84,15 @@ export default function FundingDirPage() {
         await createFundingDigestAction(data);
       }
       const updated = await getFundingDigestsAction();
-      setDigests((updated as any[]).map(x => ({ ...x, date: typeof x.date === 'string' ? x.date.split('T')[0] : x.date, deals: typeof x.deals === 'string' ? JSON.parse(x.deals) : x.deals || [] })));
+      setDigests((updated as any[]).map(x => ({
+        ...x,
+        date: x.date instanceof Date
+          ? x.date.toISOString().split('T')[0]
+          : typeof x.date === 'string'
+            ? x.date.split('T')[0]
+            : String(x.date ?? ''),
+        deals: typeof x.deals === 'string' ? JSON.parse(x.deals) : x.deals || [],
+      })));
       setDigestModal(false); setEditDigest(null);
     });
   };
@@ -216,7 +229,7 @@ export default function FundingDirPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <button onClick={() => { startTransition(async () => { await toggleFundingDigestStatusAction(d.id); const u = await getFundingDigestsAction(); setDigests((u as any[]).map(x => ({ ...x, date: typeof x.date === 'string' ? x.date.split('T')[0] : x.date, deals: typeof x.deals === 'string' ? JSON.parse(x.deals) : x.deals || [] }))); }); }}
+                  <button onClick={() => { startTransition(async () => { await toggleFundingDigestStatusAction(d.id); const u = await getFundingDigestsAction(); setDigests((u as any[]).map(x => ({ ...x, date: x.date instanceof Date ? x.date.toISOString().split('T')[0] : typeof x.date === 'string' ? x.date.split('T')[0] : String(x.date ?? ''), deals: typeof x.deals === 'string' ? JSON.parse(x.deals) : x.deals || [] }))); }); }}
                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold cursor-pointer ${d.status === 'PUBLISHED' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}>
                     {d.status === 'PUBLISHED' ? <CheckCircle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}{d.status}
                   </button>

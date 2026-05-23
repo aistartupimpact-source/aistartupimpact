@@ -99,15 +99,22 @@ model AdImpression {
 }
 
 model AffiliateClick {
-  id          String   @id
+  id          String      @id @default(cuid())
   toolId      String
   sessionHash String
-  ipAddress   String?
+  ipHash      String?
   referrer    String?
-  createdAt   DateTime @default(now())
-  AiTool      AiTool   @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  sourcePage  ClickSource @default(OTHER)
+  device      String?
+  browser     String?
+  os          String?
+  country     String?
+  createdAt   DateTime    @default(now())
+  AiTool      AiTool      @relation(fields: [toolId], references: [id], onDelete: Cascade)
 
   @@index([toolId, createdAt])
+  @@index([createdAt])
+  @@index([ipHash, toolId, createdAt])
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -1394,6 +1401,16 @@ enum ClaimStatus {
   CLAIMED
   VERIFIED
   REJECTED
+}
+
+enum ClickSource {
+  TOOL_DETAIL
+  DIRECTORY
+  HOMEPAGE
+  SEARCH
+  RELATED
+  COMPARISON
+  OTHER
 }
 
 enum CommentStatus {

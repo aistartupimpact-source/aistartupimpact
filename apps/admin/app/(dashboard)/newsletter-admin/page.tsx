@@ -10,6 +10,7 @@ import {
   getNewsletterStatsAction, getCampaignsAction, saveCampaignAction,
   deleteCampaignAction, sendCampaignAction, sendTestEmailAction,
 } from './actions';
+import { NEWSLETTER_TEMPLATES, generateNewsletterHtml } from '@/lib/newsletter-templates';
 
 interface Campaign {
   id: string; subject: string; previewText: string; body: string;
@@ -46,132 +47,17 @@ export default function NewsletterAdminPage() {
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [showPreview, setShowPreview] = useState(true);
   const [previewDevice, setPreviewDevice] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
+  const [selectedTemplate, setSelectedTemplate] = useState('modern');
+  const [sendConfirm, setSendConfirm] = useState<{ type: 'send' | 'test'; id: string } | null>(null);
 
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok });
     setTimeout(() => setToast(null), 3500);
   };
 
-  // Generate preview HTML with actual email template
-  const generatePreviewHtml = (body: string, subject: string) => {
-    const LOGO_URL = "https://aistartupimpact.com/logo.png";
-    const currentDate = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    
-    return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${subject}</title>
-</head>
-<body style="margin:0;padding:0;background-color:#f4f7fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif">
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f4f7fa;padding:20px 0">
-    <tr>
-      <td align="center" style="padding:0 15px">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08)">
-          
-          <!-- Header with Logo and Branding -->
-          <tr>
-            <td style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);padding:32px 40px;text-align:center">
-              <img src="${LOGO_URL}" alt="AI Startup Impact" width="180" height="45" style="display:block;margin:0 auto 16px;max-width:180px;height:auto" />
-              <div style="color:#ffffff;font-size:14px;font-weight:500;letter-spacing:0.5px;text-transform:uppercase;opacity:0.95">
-                India's Premier AI Newsletter
-              </div>
-            </td>
-          </tr>
-          
-          <!-- Edition Info Bar -->
-          <tr>
-            <td style="background-color:#f8f9fb;padding:12px 40px;border-bottom:1px solid #e2e8f0">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-                <tr>
-                  <td style="color:#64748b;font-size:13px;font-weight:500">
-                    📬 Weekly Edition
-                  </td>
-                  <td align="right" style="color:#64748b;font-size:13px;font-weight:500">
-                    ${currentDate}
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          
-          <!-- Main Content -->
-          <tr>
-            <td style="padding:40px 40px 32px">
-              <h1 style="color:#1e293b;font-size:28px;font-weight:700;line-height:1.3;margin:0 0 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
-                ${subject}
-              </h1>
-              
-              <div style="color:#475569;font-size:16px;line-height:1.7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
-                ${body || '<p style="color:#94a3b8;font-style:italic">Start typing to see your content here...</p>'}
-              </div>
-            </td>
-          </tr>
-          
-          <!-- Divider -->
-          <tr>
-            <td style="padding:0 40px">
-              <div style="border-top:2px solid #e2e8f0"></div>
-            </td>
-          </tr>
-          
-          <!-- Social Links -->
-          <tr>
-            <td style="padding:32px 40px;text-align:center;background-color:#f8f9fb">
-              <p style="color:#64748b;font-size:14px;font-weight:600;margin:0 0 16px">
-                Follow us for daily updates
-              </p>
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">
-                <tr>
-                  <td style="padding:0 8px">
-                    <a href="https://x.com/aistartupimapct" style="display:inline-block;width:36px;height:36px;background-color:#1da1f2;border-radius:50%">
-                      <span style="color:#fff;font-size:18px;line-height:36px">𝕏</span>
-                    </a>
-                  </td>
-                  <td style="padding:0 8px">
-                    <a href="https://www.linkedin.com/company/ai-startup-imapact" style="display:inline-block;width:36px;height:36px;background-color:#0077b5;border-radius:50%">
-                      <span style="color:#fff;font-size:18px;line-height:36px">in</span>
-                    </a>
-                  </td>
-                  <td style="padding:0 8px">
-                    <a href="https://www.youtube.com/@aistartupimpact" style="display:inline-block;width:36px;height:36px;background-color:#ff0000;border-radius:50%">
-                      <span style="color:#fff;font-size:18px;line-height:36px">▶</span>
-                    </a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          
-          <!-- Footer -->
-          <tr>
-            <td style="padding:24px 40px;text-align:center;background-color:#ffffff;border-top:1px solid #e2e8f0">
-              <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0 0 12px">
-                You're receiving this because you subscribed to <strong style="color:#64748b">AI Startup Impact</strong>.<br>
-                We respect your inbox and send only valuable content.
-              </p>
-              <p style="color:#94a3b8;font-size:12px;margin:0">
-                <a href="#" style="color:#667eea;text-decoration:underline">Unsubscribe</a>
-                &nbsp;•&nbsp;
-                <a href="#" style="color:#667eea;text-decoration:none">Visit Website</a>
-                &nbsp;•&nbsp;
-                <a href="#" style="color:#667eea;text-decoration:none">Contact Us</a>
-              </p>
-              <p style="color:#cbd5e1;font-size:11px;margin:12px 0 0">
-                © ${new Date().getFullYear()} AI Startup Impact. All rights reserved.<br>
-                Bengaluru, India
-              </p>
-            </td>
-          </tr>
-          
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+  // Generate preview HTML using professional template system
+  const getPreviewHtml = (body: string, subject: string) => {
+    return generateNewsletterHtml(selectedTemplate, subject, body);
   };
 
   const load = useCallback(async () => {
@@ -203,6 +89,7 @@ export default function NewsletterAdminPage() {
       id: editing.id || undefined,
       subject: editing.subject, previewText: editing.previewText,
       body: editing.body, scheduledAt: editing.scheduledAt || undefined,
+      templateId: selectedTemplate,
     });
     setSaving(false);
     if (res.success) { showToast('Campaign saved'); closeModal(); load(); }
@@ -210,6 +97,7 @@ export default function NewsletterAdminPage() {
   };
 
   const handleSend = async (id: string) => {
+    setSendConfirm(null);
     setSending(id);
     const res = await sendCampaignAction(id);
     setSending(null);
@@ -227,6 +115,7 @@ export default function NewsletterAdminPage() {
 
   const handleSendTest = async () => {
     if (!testModalId || !testEmail) return;
+    setSendConfirm(null);
     const res = await sendTestEmailAction(testModalId, testEmail);
     setTestModalId(null); setTestEmail('');
     if (res.success) showToast('Test email sent');
@@ -331,7 +220,7 @@ export default function NewsletterAdminPage() {
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-1">
                     {(c.status === 'DRAFT' || c.status === 'SCHEDULED') && (
-                      <button onClick={() => handleSend(c.id)} disabled={sending === c.id}
+                      <button onClick={() => setSendConfirm({ type: 'send', id: c.id })} disabled={sending === c.id}
                         className="px-2.5 py-1 text-[11px] font-semibold bg-brand/10 text-brand rounded-lg hover:bg-brand/20 transition-colors disabled:opacity-50 flex items-center gap-1">
                         {sending === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />} Send
                       </button>
@@ -381,6 +270,28 @@ export default function NewsletterAdminPage() {
                 <div>
                   <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Preview Text</label>
                   <input type="text" className="input-field text-sm" value={editing.previewText} onChange={(e) => setEditing({ ...editing, previewText: e.target.value })} placeholder="Brief preview shown in inbox..." />
+                </div>
+              </div>
+
+              {/* Template Selector */}
+              <div>
+                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2 block font-jakarta">Email Template</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {NEWSLETTER_TEMPLATES.map(t => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setSelectedTemplate(t.id)}
+                      className={`p-3 rounded-xl border-2 text-left transition-all ${
+                        selectedTemplate === t.id
+                          ? 'border-brand bg-brand/5 dark:bg-brand/10'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                      }`}
+                    >
+                      <span className="font-sora font-bold text-xs text-navy dark:text-white block">{t.name}</span>
+                      <span className="text-[10px] text-gray-400 font-jakarta mt-0.5 block line-clamp-2">{t.description}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
               
@@ -458,7 +369,7 @@ export default function NewsletterAdminPage() {
                           }}
                         >
                           <iframe
-                            srcDoc={generatePreviewHtml(editing.body, editing.subject)}
+                            srcDoc={getPreviewHtml(editing.body, editing.subject)}
                             className="w-full h-full border-0"
                             title="Email Preview"
                             sandbox="allow-same-origin"
@@ -497,7 +408,7 @@ export default function NewsletterAdminPage() {
             <input type="email" className="input-field text-sm w-full" value={testEmail} onChange={(e) => setTestEmail(e.target.value)} placeholder="test@example.com" />
             <div className="flex gap-3 mt-4">
               <button onClick={() => { setTestModalId(null); setTestEmail(''); }} className="flex-1 btn-secondary text-sm">Cancel</button>
-              <button onClick={handleSendTest} disabled={!testEmail} className="flex-1 btn-brand text-sm disabled:opacity-50">Send Test</button>
+              <button onClick={() => setSendConfirm({ type: 'test', id: testModalId! })} disabled={!testEmail} className="flex-1 btn-brand text-sm disabled:opacity-50">Send Test</button>
             </div>
           </div>
         </div>
@@ -513,6 +424,35 @@ export default function NewsletterAdminPage() {
             <div className="flex gap-3 mt-5">
               <button onClick={() => setDeleteConfirm(null)} className="flex-1 px-4 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300">Cancel</button>
               <button onClick={handleDelete} className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-xl">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Send Confirm */}
+      {sendConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl border border-gray-200 dark:border-gray-800 p-6 text-center">
+            <Send className="w-10 h-10 text-brand mx-auto mb-3" />
+            <h3 className="font-sora font-bold text-lg text-navy dark:text-white">
+              {sendConfirm.type === 'send' ? 'Send to All Subscribers?' : 'Send Test Email?'}
+            </h3>
+            <p className="text-sm text-gray-500 font-jakarta mt-1">
+              {sendConfirm.type === 'send'
+                ? 'This will deliver the newsletter to all active subscribers. This cannot be undone.'
+                : `A test email will be sent to ${testEmail || 'the specified address'}.`}
+            </p>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setSendConfirm(null)} className="flex-1 px-4 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300">Cancel</button>
+              <button
+                onClick={() => {
+                  if (sendConfirm.type === 'send') handleSend(sendConfirm.id);
+                  else handleSendTest();
+                }}
+                className="flex-1 px-4 py-2.5 text-sm font-medium bg-brand hover:bg-brand/90 text-white rounded-xl"
+              >
+                {sendConfirm.type === 'send' ? 'Yes, Send Now' : 'Send Test'}
+              </button>
             </div>
           </div>
         </div>

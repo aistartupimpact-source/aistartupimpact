@@ -87,29 +87,59 @@ export async function createToolAction(data: {
   description: string;
   websiteUrl: string;
   logoUrl?: string;
+  affiliateUrl?: string;
   categoryId: string;
   pricingModel: string;
+  pricingUrl?: string;
+  startingPrice?: number | null;
+  hasApi?: boolean;
+  hasMobileApp?: boolean;
+  launchYear?: number;
+  founderNames?: string[];
+  headquartersCountry?: string;
   avgRating: number;
-  listingTier: string;
-  status: string;
+  listingTier?: string;
+  status?: string;
+  screenshotUrls?: string[];
+  faqs?: Array<{ question: string; answer: string; order: number }>;
 }) {
   try {
-    await sql`
+    const result = await sql`
       INSERT INTO "AiTool" (
-        id, name, slug, tagline, description, "websiteUrl", "logoUrl",
-        "categoryId", "pricingModel", "avgRating", "listingTier", status,
-        "founderNames", "screenshotUrls", "aiSuggestedEdits",
+        id, name, slug, tagline, description, "websiteUrl", "logoUrl", "affiliateUrl",
+        "categoryId", "pricingModel", "pricingUrl", "startingPrice",
+        "hasApi", "hasMobileApp", "launchYear", "founderNames", "headquartersCountry",
+        "avgRating", "listingTier", status, "screenshotUrls", "aiSuggestedEdits",
         "createdAt", "updatedAt"
       ) VALUES (
         gen_random_uuid(),
         ${data.name}, ${data.slug}, ${data.tagline}, ${data.description},
-        ${data.websiteUrl}, ${data.logoUrl || null}, ${data.categoryId},
-        ${data.pricingModel}::"PricingModel", ${data.avgRating},
-        ${data.listingTier}::"ListingTier", ${data.status}::"ToolApprovalStatus",
-        ARRAY[]::text[], ARRAY[]::text[], ARRAY[]::text[],
+        ${data.websiteUrl}, ${data.logoUrl || null}, ${data.affiliateUrl || null},
+        ${data.categoryId}, ${data.pricingModel}::"PricingModel",
+        ${data.pricingUrl || null}, ${data.startingPrice ? Math.round(data.startingPrice * 8300 * 100) : null},
+        ${data.hasApi ?? false}, ${data.hasMobileApp ?? false},
+        ${data.launchYear || new Date().getFullYear()},
+        ${data.founderNames || []}, ${data.headquartersCountry || null},
+        ${data.avgRating}, ${data.listingTier || 'STANDARD'}::"ListingTier",
+        ${data.status || 'APPROVED'}::"ToolApprovalStatus",
+        ${data.screenshotUrls || []}, ARRAY[]::text[],
         NOW(), NOW()
       )
+      RETURNING id
     `;
+    
+    const toolId = result[0].id;
+    
+    // Insert FAQs if provided
+    if (data.faqs && data.faqs.length > 0) {
+      for (const faq of data.faqs) {
+        await sql`
+          INSERT INTO "ToolFAQ" (id, "toolId", question, answer, "order", "createdAt", "updatedAt")
+          VALUES (gen_random_uuid()::text, ${toolId}, ${faq.question}, ${faq.answer}, ${faq.order}, NOW(), NOW())
+        `;
+      }
+    }
+    
     revalidatePath('/tools-dir');
     return { success: true };
   } catch (error: any) {
@@ -124,17 +154,21 @@ export async function updateToolAction(id: string, data: {
   description: string;
   websiteUrl: string;
   logoUrl?: string;
+  affiliateUrl?: string;
   categoryId: string;
   pricingModel: string;
   pricingUrl?: string;
   startingPrice?: number | null;
   hasApi?: boolean;
   hasMobileApp?: boolean;
+  launchYear?: number;
   founderNames?: string[];
   headquartersCountry?: string;
   avgRating: number;
   listingTier: string;
   status: string;
+  screenshotUrls?: string[];
+  faqs?: Array<{ id?: string; question: string; answer: string; order: number }>;
 }) {
   try {
     await sql`
@@ -145,20 +179,40 @@ export async function updateToolAction(id: string, data: {
         description = ${data.description},
         "websiteUrl" = ${data.websiteUrl},
         "logoUrl" = ${data.logoUrl || null},
+        "affiliateUrl" = ${data.affiliateUrl || null},
         "categoryId" = ${data.categoryId},
         "pricingModel" = ${data.pricingModel}::"PricingModel",
         "pricingUrl" = ${data.pricingUrl || null},
         "startingPrice" = ${data.startingPrice ? Math.round(data.startingPrice * 8300 * 100) : null},
         "hasApi" = ${data.hasApi ?? false},
         "hasMobileApp" = ${data.hasMobileApp ?? false},
+        "launchYear" = ${data.launchYear || new Date().getFullYear()},
         "founderNames" = ${data.founderNames || []},
         "headquartersCountry" = ${data.headquartersCountry || null},
         "avgRating" = ${data.avgRating},
         "listingTier" = ${data.listingTier}::"ListingTier",
         status = ${data.status}::"ToolApprovalStatus",
+        "screenshotUrls" = ${data.screenshotUrls || []},
         "updatedAt" = NOW()
       WHERE id = ${id}
     `;
+    
+    // Update FAQs if provided
+    if (data.faqs !== undefined) {
+      // Delete existing FAQs
+      await sql`DELETE FROM "ToolFAQ" WHERE "toolId" = ${id}`;
+      
+      // Insert new FAQs
+      if (data.faqs.length > 0) {
+        for (const faq of data.faqs) {
+          await sql`
+            INSERT INTO "ToolFAQ" (id, "toolId", question, answer, "order", "createdAt", "updatedAt")
+            VALUES (gen_random_uuid()::text, ${id}, ${faq.question}, ${faq.answer}, ${faq.order}, NOW(), NOW())
+          `;
+        }
+      }
+    }
+    
     revalidatePath('/tools-dir');
     return { success: true };
   } catch (error: any) {
@@ -190,5 +244,25 @@ export async function setListingTierAction(id: string, tier: string) {
   } catch (error: any) {
     console.error('setListingTierAction error:', error);
     return { success: false, error: error.message || 'Failed to update tier' };
+  }
+}
+
+export async function getToolFAQsAction(toolId: string) {
+  try {
+    const faqs = await sql`
+      SELECT id, question, answer, "order"
+      FROM "ToolFAQ"
+      WHERE "toolId" = ${toolId}
+      ORDER BY "order" ASC
+    `;
+    return faqs.map((faq: any) => ({
+      id: faq.id,
+      question: faq.question,
+      answer: faq.answer,
+      order: faq.order,
+    }));
+  } catch (error) {
+    console.error('getToolFAQsAction error:', error);
+    return [];
   }
 }
