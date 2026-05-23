@@ -263,6 +263,7 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
     }
 
     return rows.map((t: any) => ({
+      id: t.id,
       slug: t.slug,
       name: t.name,
       tagline: t.tagline,
@@ -603,3 +604,19 @@ export async function getFundingRoundBySlugDirect(slug: string) {
     return null;
   }
 }
+
+
+// ── db adapter for API routes that use db.query() pattern ─────────────────────
+export const db = {
+  async query(text: string, params?: any[]) {
+    const s = getSql();
+    // Convert $1, $2 style params to tagged template
+    if (params && params.length > 0) {
+      // Use Neon's sql function with raw query
+      const result = await s.call(s, [text] as any, ...params);
+      return { rows: result as any[] };
+    }
+    const result = await s.call(s, [text] as any);
+    return { rows: result as any[] };
+  }
+};
