@@ -390,37 +390,37 @@ export default function FundingDashboard({ data }: { data: FundingRound[] }) {
       </div>
 
       {/* Top Stats Cards - Redesigned with Trend Deltas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Total Capital Raised */}
-        <div className="card p-6 bg-gradient-to-br from-brand-50 to-white dark:from-brand-900/20 dark:to-gray-900">
-          <div className="text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-3">
+        <div className="card p-4 sm:p-6 bg-gradient-to-br from-brand-50 to-white dark:from-brand-900/20 dark:to-gray-900">
+          <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-2 sm:mb-3">
             Total Capital Raised
           </div>
-          <div className="font-sora font-extrabold text-4xl text-navy dark:text-white mb-2">
+          <div className="font-sora font-extrabold text-2xl sm:text-4xl text-navy dark:text-white mb-1 sm:mb-2">
             {totalDisplay}+
           </div>
           {yoyGrowth && (
-            <div className={`text-sm font-semibold ${Number(yoyGrowth) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`text-xs sm:text-sm font-semibold ${Number(yoyGrowth) > 0 ? 'text-green-600' : 'text-red-600'}`}>
               {Number(yoyGrowth) > 0 ? '↑' : '↓'} {Math.abs(Number(yoyGrowth))}% vs {new Date().getFullYear() - 1}
             </div>
           )}
         </div>
 
         {/* Total Deals */}
-        <div className="card p-6">
-          <div className="text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-3">
+        <div className="card p-4 sm:p-6">
+          <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-2 sm:mb-3">
             AI-only deals tracked
           </div>
-          <div className="font-sora font-extrabold text-4xl text-navy dark:text-white mb-2">
+          <div className="font-sora font-extrabold text-2xl sm:text-4xl text-navy dark:text-white mb-1 sm:mb-2">
             {data.length}
           </div>
           {dealCountGrowth && (
-            <div className={`text-sm font-semibold ${Number(dealCountGrowth) > 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {Number(dealCountGrowth) > 0 ? '↑' : '↓'} {Math.abs(Number(dealCountGrowth))}% YoY growth
+            <div className={`text-xs sm:text-sm font-semibold ${Number(dealCountGrowth) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {Number(dealCountGrowth) > 0 ? '↑' : '↓'} {Math.abs(Number(dealCountGrowth))}% YoY
             </div>
           )}
           {!dealCountGrowth && (
-            <div className="text-sm text-gray-500">
+            <div className="text-xs sm:text-sm text-gray-500">
               <a href="/submit-tool" className="text-brand hover:underline font-medium">Submit yours →</a>
             </div>
           )}
@@ -428,28 +428,28 @@ export default function FundingDashboard({ data }: { data: FundingRound[] }) {
 
         {/* Largest Single Round */}
         {largestRound && (
-          <div className="card p-6 bg-gradient-to-br from-green-50 to-white dark:from-green-900/20 dark:to-gray-900">
-            <div className="text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-3">
-              Largest Single Round
+          <div className="card p-4 sm:p-6 bg-gradient-to-br from-green-50 to-white dark:from-green-900/20 dark:to-gray-900">
+            <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-2 sm:mb-3">
+              Largest Round
             </div>
-            <div className="font-sora font-extrabold text-4xl text-navy dark:text-white mb-2">
+            <div className="font-sora font-extrabold text-2xl sm:text-4xl text-navy dark:text-white mb-1 sm:mb-2">
               {largestRound.amount}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-[10px] sm:text-sm text-gray-600 dark:text-gray-400 truncate">
               {largestRound.startup} · {largestRound.date}
             </div>
           </div>
         )}
 
         {/* YTD Period */}
-        <div className="card p-6">
-          <div className="text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-3">
-            {ytdPeriod.includes('–') ? 'Jan–Apr' : 'YTD Period'} {new Date().getFullYear()}
+        <div className="card p-4 sm:p-6">
+          <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-2 sm:mb-3">
+            {ytdPeriod.includes('–') ? 'Jan–Apr' : 'YTD'} {new Date().getFullYear()}
           </div>
-          <div className="font-sora font-extrabold text-4xl text-navy dark:text-white mb-2">
+          <div className="font-sora font-extrabold text-2xl sm:text-4xl text-navy dark:text-white mb-1 sm:mb-2">
             {ytdPeriod}
           </div>
-          <div className="text-sm text-gray-500">
+          <div className="text-xs sm:text-sm text-gray-500">
             Updated daily
           </div>
         </div>

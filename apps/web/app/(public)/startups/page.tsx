@@ -101,19 +101,19 @@ export default async function StartupsPage({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
-      <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div className="mb-5 sm:mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="font-sora font-extrabold text-2xl sm:text-3xl md:text-4xl text-navy dark:text-white leading-tight tracking-tight">
+          <h1 className="font-sora font-extrabold text-xl sm:text-3xl md:text-4xl text-navy dark:text-white leading-tight tracking-tight">
             Discover AI startups.{' '}
             <span className="text-brand">Before everyone else.</span>
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm max-w-2xl mt-2">
+          <p className="text-gray-500 dark:text-gray-400 font-jakarta text-xs sm:text-sm max-w-2xl mt-1.5 sm:mt-2">
             Browse {total}+ startups by sector, stage, and city — from bootstrapped to Series C, across the globe.
           </p>
         </div>
         <Link href="/startups/submit"
-          className="flex items-center gap-2 bg-brand text-white px-5 py-2.5 rounded-xl font-bold font-jakarta text-sm hover:scale-105 transition-transform shadow-lg shadow-brand/20 whitespace-nowrap shrink-0">
-          <Plus className="w-4 h-4" /> List Your Startup
+          className="flex items-center gap-2 bg-brand text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold font-jakarta text-xs sm:text-sm hover:scale-105 transition-transform shadow-lg shadow-brand/20 whitespace-nowrap shrink-0">
+          <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> List Your Startup
         </Link>
       </div>
 

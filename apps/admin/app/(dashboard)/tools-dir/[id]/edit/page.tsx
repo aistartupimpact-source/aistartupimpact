@@ -186,9 +186,11 @@ export default function EditToolPage() {
     setSaving(true);
     
     try {
-      const founderNamesArray = typeof formData.founderNames === 'string'
-        ? formData.founderNames.split(',').map(f => f.trim()).filter(Boolean)
-        : formData.founderNames || [];
+      const founderNamesArray = Array.isArray(formData.founderNames)
+        ? formData.founderNames
+        : typeof formData.founderNames === 'string'
+          ? (formData.founderNames as string).split(',').map(f => f.trim()).filter(Boolean)
+          : [];
 
       const result = await updateToolAction(toolId, {
         name: formData.name,

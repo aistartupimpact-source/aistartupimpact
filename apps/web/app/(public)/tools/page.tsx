@@ -65,17 +65,17 @@ export default async function ToolsPage({ searchParams }: { searchParams: { cate
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       {/* Header */}
-      <div className="mb-8 sm:mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="mb-5 sm:mb-8 flex flex-col md:flex-row md:items-end justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="font-sora font-extrabold text-2xl sm:text-3xl md:text-4xl text-navy dark:text-white leading-tight tracking-tight">
+          <h1 className="font-sora font-extrabold text-xl sm:text-2xl md:text-3xl lg:text-4xl text-navy dark:text-white leading-tight tracking-tight">
             Find the right AI tool.{' '}
             <span className="text-brand">Not just the most popular one.</span>
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm max-w-2xl mt-2">
+          <p className="text-gray-500 dark:text-gray-400 font-jakarta text-xs sm:text-sm max-w-2xl mt-1.5 sm:mt-2">
             Browse, filter, and compare {picks.length}+ AI tools — tested by real users, ranked by what actually works.
           </p>
         </div>
-        <Link href="/submit-tool" className="bg-brand text-white px-5 py-2.5 rounded-xl font-bold font-jakarta text-sm hover:scale-105 transition-transform shadow-lg shadow-brand/20 whitespace-nowrap text-center shrink-0">
+        <Link href="/submit-tool" className="bg-brand text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold font-jakarta text-xs sm:text-sm hover:scale-105 transition-transform shadow-lg shadow-brand/20 whitespace-nowrap text-center shrink-0">
           + Submit Your Tool
         </Link>
       </div>

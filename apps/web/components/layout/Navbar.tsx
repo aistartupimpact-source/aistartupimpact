@@ -22,9 +22,9 @@ const mainNav = [
 
 const mobileNav = [
   { label: 'Home', href: '/', icon: Home },
-  { label: 'News', href: '/news', icon: Newspaper },
   { label: 'Stories', href: '/stories', icon: BookOpen },
   { label: 'Tools', href: '/tools', icon: Wrench },
+  { label: 'Startups', href: '/startups', icon: Building2 },
   { label: 'Funding', href: '/funding', icon: TrendingUp },
 ];
 
@@ -246,94 +246,105 @@ export default function Navbar() {
 
       {/* ─── Mobile Full-Screen Nav ─────────────────── */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-[60] bg-white dark:bg-gray-950 lg:hidden animate-fade-in">
-          <div className="flex items-center justify-between px-4 h-14 border-b border-gray-100 dark:border-gray-800">
+        <div className="fixed inset-0 z-[60] bg-white dark:bg-gray-950 lg:hidden">
+          {/* Status Bar Accent */}
+          <div className="h-[3px] bg-brand w-full" />
+
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 h-14 border-b border-gray-100 dark:border-gray-800">
             <span className="font-sora font-extrabold text-lg">
               <span className="text-brand">AI</span>
-              <span className="text-navy dark:text-white">SI</span>
+              <span className="text-navy dark:text-white"> Startup Impact</span>
             </span>
             <button
               onClick={() => setMobileOpen(false)}
-              className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 active:scale-90 transition-transform"
             >
               <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </button>
           </div>
-          <nav className="px-4 py-6 space-y-1 overflow-y-auto max-h-[calc(100vh-56px)]">
-            {mainNav.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center px-4 py-3.5 rounded-xl text-base font-jakarta font-medium transition-colors ${pathname === item.href
-                  ? 'bg-brand/10 text-brand'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900'
-                  }`}
-              >
-                {item.label}
-              </Link>
-            ))}
 
-            {/* Mobile User Section */}
-            <div className="pt-4 px-4 space-y-2">
+          {/* Navigation Links */}
+          <nav className="px-4 pt-4 pb-6 overflow-y-auto max-h-[calc(100vh-56px)]">
+            <div className="space-y-1">
+              {mainNav.map((item) => {
+                const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={`flex items-center px-5 py-4 rounded-2xl text-[16px] font-jakarta font-semibold transition-all active:scale-[0.98] ${isActive
+                      ? 'bg-brand/10 text-brand'
+                      : 'text-gray-800 dark:text-gray-200 active:bg-gray-100 dark:active:bg-gray-800'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Divider */}
+            <div className="my-5 mx-5 border-t border-gray-100 dark:border-gray-800" />
+
+            {/* User Section */}
+            <div className="space-y-3 px-1">
               {user ? (
                 <>
-                  <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-xl mb-3">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                  {/* User Info Card */}
+                  <div className="flex items-center gap-3 px-5 py-4 bg-gray-50 dark:bg-gray-900 rounded-2xl">
+                    <div className="w-11 h-11 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden shrink-0">
                       {user.avatar ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img 
-                          src={user.avatar} 
-                          alt={user.name || 'User'} 
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={user.avatar} alt={user.name || 'User'} className="w-full h-full object-cover" />
                       ) : (
-                        <UserCircle className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                        <UserCircle className="w-7 h-7 text-gray-500" />
                       )}
                     </div>
-                    <div>
-                      <p className="font-bold text-sm text-gray-900 dark:text-white">{user.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
+                    <div className="min-w-0">
+                      <p className="font-bold text-[15px] text-gray-900 dark:text-white truncate">{user.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
                     </div>
                   </div>
+
+                  {/* Profile Button */}
                   <Link href="/profile" onClick={() => setMobileOpen(false)}
-                    className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-brand text-white font-bold text-sm font-jakarta transition-colors hover:bg-brand/90">
+                    className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl bg-brand text-white font-bold text-[15px] font-jakarta active:scale-[0.98] transition-transform">
                     <UserCircle className="w-5 h-5" />
                     My Profile
                   </Link>
+
+                  {/* Saved Items */}
+                  <Link href="/profile#saved" onClick={() => setMobileOpen(false)}
+                    className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-bold text-[15px] font-jakarta active:scale-[0.98] transition-transform">
+                    <Bookmark className="w-5 h-5" />
+                    Saved Items
+                  </Link>
+
+                  {/* Logout */}
                   <button
-                    onClick={() => {
-                      handleLogout();
-                      setMobileOpen(false);
-                    }}
-                    className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl border-2 border-red-600 text-red-600 font-bold text-sm font-jakarta hover:bg-red-600 hover:text-white transition-colors">
+                    onClick={() => { handleLogout(); setMobileOpen(false); }}
+                    className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl border-2 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 font-semibold text-[15px] font-jakarta active:scale-[0.98] transition-transform">
                     <LogOut className="w-5 h-5" />
-                    Logout
+                    Sign Out
                   </button>
                 </>
               ) : (
                 <>
+                  {/* Sign In - Black */}
                   <button
-                    onClick={() => {
-                      setMobileOpen(false);
-                      setSignInModalOpen(true);
-                    }}
-                    className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-brand text-white font-bold text-sm font-jakarta transition-colors hover:bg-brand/90">
+                    onClick={() => { setMobileOpen(false); setSignInModalOpen(true); }}
+                    className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold text-[15px] font-jakarta active:scale-[0.98] transition-transform">
                     Sign In
                   </button>
-                  <Link href="/submit-tool" onClick={() => setMobileOpen(false)}
-                    className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-sm font-jakarta transition-colors hover:bg-gray-800 dark:hover:bg-gray-100">
-                    Submit AI Tool
-                  </Link>
-                  <Link href="/submit-startup" onClick={() => setMobileOpen(false)}
-                    className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl border-2 border-black dark:border-white text-black dark:text-white font-bold text-sm font-jakarta hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors">
-                    List Your Startup
-                  </Link>
                 </>
               )}
+
+              {/* Subscribe - Red */}
               <Link href="/newsletter" onClick={() => setMobileOpen(false)}
-                className="btn-brand w-full text-center">
-                Subscribe
+                className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl bg-brand text-white font-bold text-[15px] font-jakarta active:scale-[0.98] transition-transform">
+                Subscribe to Newsletter
               </Link>
             </div>
           </nav>
@@ -341,21 +352,24 @@ export default function Navbar() {
       )}
 
       {/* ─── Mobile Bottom Tab Bar ──────────────────── */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-950 border-t border-gray-100 dark:border-gray-800 lg:hidden safe-area-bottom">
-        <div className="flex items-center justify-around h-14">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-950/95 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 lg:hidden pb-[env(safe-area-inset-bottom)]">
+        <div className="flex items-stretch justify-around h-16">
           {mobileNav.map((item) => {
             const isActive = item.href === '/' ? pathname === '/' : pathname?.startsWith(item.href);
             return (
               <Link
                 key={item.label}
                 href={item.href}
-                className={`flex flex-col items-center justify-center gap-0.5 py-1.5 px-3 min-w-[56px] ${isActive
+                className={`relative flex flex-col items-center justify-center gap-1 px-4 min-w-[60px] active:scale-90 transition-transform ${isActive
                   ? 'text-brand'
                   : 'text-gray-400 dark:text-gray-500'
-                  }`}
+                }`}
               >
-                <item.icon className="w-5 h-5" />
-                <span className="text-[10px] font-medium font-jakarta">{item.label}</span>
+                {isActive && (
+                  <span className="absolute top-0 left-0 right-0 h-[4px] bg-brand rounded-b-sm" />
+                )}
+                <item.icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5]' : ''}`} />
+                <span className="text-[10px] font-semibold font-jakarta">{item.label}</span>
               </Link>
             );
           })}

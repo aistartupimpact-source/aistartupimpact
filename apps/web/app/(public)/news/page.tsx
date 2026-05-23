@@ -1,7 +1,6 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { Metadata } from 'next';
-import { TrendingUp, ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { getArticlesDirect, getActiveCreativeForZone } from '@/lib/db';
 import { generateCollectionPageSchema, generateItemListSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import ArticlesListClient from '@/components/ArticlesListClient';
@@ -80,12 +79,12 @@ export default async function NewsPage() {
       )}
 
       {/* Header */}
-      <div className="mb-6 sm:mb-8">
-        <h1 className="font-sora font-extrabold text-2xl sm:text-3xl md:text-4xl text-navy dark:text-white leading-tight tracking-tight">
+      <div className="mb-4 sm:mb-8">
+        <h1 className="font-sora font-extrabold text-xl sm:text-3xl md:text-4xl text-navy dark:text-white leading-tight tracking-tight">
           AI News.{' '}
           <span className="text-brand">Updated daily.</span>
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 font-jakarta mt-2 text-sm max-w-2xl">
+        <p className="text-gray-500 dark:text-gray-400 font-jakarta mt-1.5 sm:mt-2 text-xs sm:text-sm max-w-2xl">
           Breaking funding rounds, policy updates, and ecosystem intelligence from India and the world.
         </p>
       </div>
@@ -94,104 +93,12 @@ export default async function NewsPage() {
         <p className="text-gray-400 font-jakarta text-center py-20">No articles published yet.</p>
       )}
 
-      <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
+      <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 lg:gap-10">
         {/* ── Main column ── */}
         <div className="flex-1 min-w-0">
-          {/* Featured — 2-col cards */}
-          {featured.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-              {featured.map((article) => (
-                <Link key={article.slug} href={`/news/${article.slug}`} className="group">
-                  <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-brand/40 transition-colors h-full flex flex-col">
-                    <div className="aspect-[16/9] bg-gradient-to-br from-brand/10 to-gray-100 dark:from-brand/20 dark:to-gray-800 relative overflow-hidden">
-                      {(article.thumbnailImage || article.coverImage) && (
-                        <Image
-                          src={article.thumbnailImage || article.coverImage}
-                          alt={article.title}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                      <span className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wider text-white bg-brand px-2 py-0.5 rounded-sm z-10">
-                        {article.category?.name || 'News'}
-                      </span>
-                      <span className="absolute top-3 right-3 flex items-center gap-1 text-[10px] font-bold bg-yellow-400 text-black px-2 py-0.5 rounded-sm z-10">
-                        <TrendingUp className="w-2.5 h-2.5" /> Featured
-                      </span>
-                    </div>
-                    <div className="p-4 sm:p-5 flex flex-col flex-1">
-                      <h2 className="font-sora font-bold text-base sm:text-lg text-navy dark:text-white group-hover:text-brand transition-colors leading-snug line-clamp-2 flex-1">
-                        {article.title}
-                      </h2>
-                      {article.excerpt && (
-                        <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-jakarta mt-2 line-clamp-2">
-                          {article.excerpt}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400 font-jakarta">
-                        <div className="w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center text-[9px] font-bold text-brand shrink-0">
-                          {article.author?.name?.charAt(0) || 'A'}
-                        </div>
-                        <span className="font-medium text-gray-500 dark:text-gray-400">{article.author?.name}</span>
-                        {article.publishedAt && (
-                          <>
-                            <span className="text-gray-300 dark:text-gray-600">·</span>
-                            <span>{formatDate(article.publishedAt)}</span>
-                          </>
-                        )}
-                        {article.readTimeMinutes && (
-                          <>
-                            <span className="text-gray-300 dark:text-gray-600">·</span>
-                            <span>{article.readTimeMinutes} min</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-
-          {/* Sponsored strip */}
-          {inArticleAd && (
-            <a
-              href={inArticleAd.ctaUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-between gap-4 bg-brand/5 dark:bg-brand/10 border border-brand/20 rounded-xl px-5 py-4 mb-8 group hover:border-brand/40 transition-colors"
-            >
-              <div>
-                <span className="text-[10px] font-bold text-brand uppercase tracking-wider">
-                  Sponsored · {inArticleAd.companyName}
-                </span>
-                <p className="font-sora font-bold text-sm text-navy dark:text-white mt-0.5">
-                  {inArticleAd.headline}
-                </p>
-                {inArticleAd.bodyText && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-0.5 line-clamp-1">
-                    {inArticleAd.bodyText}
-                  </p>
-                )}
-              </div>
-              <span className="shrink-0 flex items-center gap-1 text-xs font-semibold text-brand group-hover:underline">
-                {inArticleAd.ctaText || 'Learn More'} <ArrowUpRight className="w-3.5 h-3.5" />
-              </span>
-            </a>
-          )}
-
-          {/* All Articles list */}
+          {/* All Articles with filters at top */}
           {allArticles.length > 0 && (
-            <div>
-              <h2 className="font-sora font-bold text-lg text-navy dark:text-white mb-4">
-                All Articles
-                <span className="ml-2 text-sm font-normal text-gray-400 font-jakarta">
-                  {allArticles.length} articles
-                </span>
-              </h2>
-              <ArticlesListClient articles={allArticles} />
-            </div>
+            <ArticlesListClient articles={allArticles} />
           )}
         </div>
 

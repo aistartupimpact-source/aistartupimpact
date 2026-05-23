@@ -64,19 +64,19 @@ export default async function FundingPage() {
       
       {/* Header */}
       <div className="mb-6 sm:mb-10 text-center">
-        <div className="flex items-center justify-center gap-3 mb-2">
-          <IndianRupee className="w-8 h-8 text-brand" />
-          <h1 className="font-sora font-extrabold text-3xl sm:text-4xl md:text-5xl text-navy dark:text-white tracking-tight">
+        <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
+          <IndianRupee className="w-6 h-6 sm:w-8 sm:h-8 text-brand" />
+          <h1 className="font-sora font-extrabold text-2xl sm:text-4xl md:text-5xl text-navy dark:text-white tracking-tight">
             AI Startups <span className="text-brand">Funding Tracker</span>
           </h1>
         </div>
-        <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm sm:text-base max-w-2xl mx-auto mt-4">
-          The most comprehensive, continuously-updated dashboard of capital raised by Artificial Intelligence startups. Filter by stage, year, or search for investors.
+        <p className="text-gray-500 dark:text-gray-400 font-jakarta text-xs sm:text-sm max-w-2xl mx-auto mt-3 sm:mt-4 px-2 sm:px-0">
+          The most comprehensive, continuously-updated dashboard of capital raised by Artificial Intelligence startups.
         </p>
         
-        {/* Stats Bar - Visible to users AND Google */}
-        <div className="mt-6 mb-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400 font-jakarta">
+        {/* Stats Bar */}
+        <div className="mt-4 sm:mt-6 mb-3 sm:mb-4">
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-jakarta">
             <strong className="text-brand font-bold">{stats.totalRaisedDisplay}</strong> raised across{' '}
             <strong className="text-brand font-bold">{stats.totalDeals}</strong> deals • Updated{' '}
             <span className="text-gray-500">
@@ -85,14 +85,14 @@ export default async function FundingPage() {
           </p>
         </div>
         
-        <div className="mt-8 flex flex-wrap justify-center gap-4">
-          <Link href="/advertise" className="group flex items-center gap-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-brand/30 rounded-xl px-5 py-3 shadow-sm hover:shadow-md transition-all">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-brand/10 text-brand group-hover:bg-brand group-hover:text-white transition-colors">
-              <Megaphone className="w-4 h-4" />
+        <div className="mt-6 sm:mt-8 flex flex-wrap justify-center gap-3 sm:gap-4">
+          <Link href="/advertise" className="group flex items-center gap-2 sm:gap-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-brand/30 rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 shadow-sm hover:shadow-md transition-all">
+            <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-brand/10 text-brand group-hover:bg-brand group-hover:text-white transition-colors">
+              <Megaphone className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
             <div className="flex flex-col text-left">
-              <span className="text-sm font-sora font-bold text-navy dark:text-white leading-none">Announce your round</span>
-              <span className="text-xs text-brand font-semibold mt-1 leading-none">Premium PR Service <ArrowRight className="inline w-3 h-3 ml-0.5" /></span>
+              <span className="text-xs sm:text-sm font-sora font-bold text-navy dark:text-white leading-none">Announce your round</span>
+              <span className="text-[10px] sm:text-xs text-brand font-semibold mt-0.5 sm:mt-1 leading-none">Premium PR Service <ArrowRight className="inline w-3 h-3 ml-0.5" /></span>
             </div>
           </Link>
         </div>

@@ -125,11 +125,11 @@ export default function ToolsListWithComparison({ picks }: { picks: ToolPick[] }
   return (
     <div className="relative">
       {/* ── Sticky Category Pills ── */}
-      <div className="sticky top-0 z-30 bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-3 border-b border-gray-100 dark:border-gray-800">
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+      <div className="sticky top-0 z-30 bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-2.5 sm:py-3 border-b border-gray-100 dark:border-gray-800">
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide pb-1">
           <button
             onClick={() => handleCategoryChange('all')}
-            className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-bold font-jakarta transition-all ${
+            className={`shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold font-jakarta transition-all ${
               selectedCategory === 'all'
                 ? 'bg-brand text-white shadow-sm'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -141,7 +141,7 @@ export default function ToolsListWithComparison({ picks }: { picks: ToolPick[] }
             <button
               key={cat.slug}
               onClick={() => handleCategoryChange(cat.slug)}
-              className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-bold font-jakarta transition-all ${
+              className={`shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold font-jakarta transition-all ${
                 selectedCategory === cat.slug
                   ? 'bg-brand text-white shadow-sm'
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -154,27 +154,27 @@ export default function ToolsListWithComparison({ picks }: { picks: ToolPick[] }
       </div>
 
       {/* ── Search + Filters + Sort + View Toggle ── */}
-      <div className="mt-5 mb-6 space-y-3">
+      <div className="mt-4 sm:mt-5 mb-4 sm:mb-6 space-y-2.5 sm:space-y-3">
         {/* Search Bar */}
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search tools by name or description..."
+            placeholder="Search tools..."
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent text-sm font-jakarta"
+            className="w-full pl-9 sm:pl-11 pr-4 py-2 sm:py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent text-sm font-jakarta"
           />
         </div>
 
-        {/* Controls Row: Pricing Filter + Sort + View Toggle + Results Count */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
+        {/* Controls Row */}
+        <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Pricing Filter */}
             <select
               value={selectedPricing}
               onChange={(e) => { setSelectedPricing(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
-              className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-[11px] sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
             >
               <option value="all">All Pricing</option>
               {pricingModels.map((pricing) => (
@@ -186,7 +186,7 @@ export default function ToolsListWithComparison({ picks }: { picks: ToolPick[] }
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-[11px] sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
             >
               <option value="rating">Top Rated</option>
               <option value="newest">Newest First</option>
@@ -233,7 +233,7 @@ export default function ToolsListWithComparison({ picks }: { picks: ToolPick[] }
 
       {/* ── GRID VIEW ── */}
       {viewMode === 'grid' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
           {visibleTools.map((tool, i) => {
             const isSelected = !!selectedTools.find((t) => t.slug === tool.slug);
             const iconUrl = tool.logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(tool.name)}&background=random&color=fff&size=150`;
@@ -244,7 +244,7 @@ export default function ToolsListWithComparison({ picks }: { picks: ToolPick[] }
                 href={`/tools/${tool.slug}`}
                 className={`group block rounded-2xl transition-all h-full ${isSelected ? 'ring-2 ring-brand ring-offset-2 dark:ring-offset-gray-950' : 'hover:shadow-lg hover:shadow-brand/5'}`}
               >
-                <div className="card p-5 flex flex-col gap-3 relative h-full bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+                <div className="card p-4 sm:p-5 flex flex-col gap-2.5 sm:gap-3 relative h-full bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
 
                   {/* Top Action Icons */}
                   <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
@@ -259,10 +259,10 @@ export default function ToolsListWithComparison({ picks }: { picks: ToolPick[] }
                   </div>
 
                   {/* Logo & Title */}
-                  <div className="flex items-start gap-3 pr-14">
-                    <div className="w-10 h-10 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700/50">
+                  <div className="flex items-start gap-2.5 sm:gap-3 pr-12 sm:pr-14">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700/50">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={iconUrl} alt={tool.name} className="w-8 h-8 object-contain" />
+                      <img src={iconUrl} alt={tool.name} className="w-7 h-7 sm:w-8 sm:h-8 object-contain" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h2 className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand transition-colors line-clamp-1">

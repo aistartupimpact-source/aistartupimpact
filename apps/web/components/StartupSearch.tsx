@@ -151,11 +151,11 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
   return (
     <div className="space-y-5">
       {/* ── Sticky Category Pills ── */}
-      <div className="sticky top-0 z-30 bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-3 border-b border-gray-100 dark:border-gray-800">
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+      <div className="sticky top-0 z-30 bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-2.5 sm:py-3 border-b border-gray-100 dark:border-gray-800">
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide pb-1">
           <button
             onClick={() => handleCategoryChange('')}
-            className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-bold font-jakarta transition-all ${
+            className={`shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold font-jakarta transition-all ${
               category === ''
                 ? 'bg-brand text-white shadow-sm'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -167,7 +167,7 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
             <button
               key={cat.value}
               onClick={() => handleCategoryChange(cat.value)}
-              className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-bold font-jakarta transition-all ${
+              className={`shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold font-jakarta transition-all ${
                 category === cat.value
                   ? 'bg-brand text-white shadow-sm'
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -180,16 +180,16 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
       </div>
 
       {/* ── Search + Filters Row ── */}
-      <div className="space-y-3">
+      <div className="space-y-2.5 sm:space-y-3">
         {/* Search Input */}
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
             value={query}
             onChange={e => { hasUserInteracted.current = true; setQuery(e.target.value); }}
-            placeholder="Search startups by name, tagline, city..."
-            className="w-full pl-11 pr-10 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent text-sm font-jakarta"
+            placeholder="Search startups..."
+            className="w-full pl-9 sm:pl-11 pr-9 sm:pr-10 py-2 sm:py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent text-sm font-jakarta"
           />
           {query && (
             <button onClick={() => { hasUserInteracted.current = true; setQuery(''); }} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
@@ -199,13 +199,13 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
         </div>
 
         {/* Filter Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Stage Filter */}
             <select
               value={stage}
               onChange={e => { hasUserInteracted.current = true; setStage(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
-              className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-[11px] sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
             >
               {STAGES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
@@ -214,7 +214,7 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
             <select
               value={businessType}
               onChange={e => { hasUserInteracted.current = true; setBusinessType(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
-              className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-[11px] sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
             >
               {BUSINESS_TYPES.map(bt => <option key={bt.value} value={bt.value}>{bt.label}</option>)}
             </select>
@@ -251,27 +251,27 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
           <p className="text-gray-500 font-jakarta text-sm">Loading startups...</p>
         </div>
       ) : (
-        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 transition-opacity duration-200 ${loading ? 'opacity-50' : 'opacity-100'}`}>
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 transition-opacity duration-200 ${loading ? 'opacity-50' : 'opacity-100'}`}>
           {visibleStartups.map(s => (
             <Link key={s.slug} href={`/startups/${s.slug}`} className="group">
-              <div className="relative bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 hover:shadow-xl hover:border-brand/30 dark:hover:border-brand/30 transition-all duration-300 h-full">
+              <div className="relative bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:border-brand/30 dark:hover:border-brand/30 transition-all duration-300 h-full">
                 {/* Header Section */}
-                <div className="flex items-start gap-3 mb-4">
+                <div className="flex items-start gap-2.5 sm:gap-3 mb-3 sm:mb-4">
                   {/* Logo */}
-                  <div className="relative w-14 h-14 rounded-xl bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
+                  <div className="relative w-11 h-11 sm:w-14 sm:h-14 rounded-xl bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
                     {s.logoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={s.logoUrl} alt={s.name} className="w-11 h-11 object-contain" />
+                      <img src={s.logoUrl} alt={s.name} className="w-8 h-8 sm:w-11 sm:h-11 object-contain" />
                     ) : (
-                      <Building2 className="w-7 h-7 text-brand" />
+                      <Building2 className="w-5 h-5 sm:w-7 sm:h-7 text-brand" />
                     )}
                     {s.isVerified && <VerifiedBadge onLogo size="sm" />}
                   </div>
 
                   {/* Title & Meta */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-sora font-extrabold text-lg text-navy dark:text-white group-hover:text-brand transition-colors truncate">
+                    <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
+                      <h3 className="font-sora font-extrabold text-base sm:text-lg text-navy dark:text-white group-hover:text-brand transition-colors truncate">
                         {s.name}
                       </h3>
                       {s.isVerified && <VerifiedBadge size="sm" showText={false} />}
@@ -307,12 +307,12 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
                 </div>
 
                 {/* Description */}
-                <p className="text-gray-600 dark:text-gray-300 text-sm font-jakarta leading-relaxed mb-4 line-clamp-2">
+                <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm font-jakarta leading-relaxed mb-3 sm:mb-4 line-clamp-2">
                   {s.tagline}
                 </p>
 
                 {/* Tags Row */}
-                <div className="flex flex-wrap items-center gap-2 mb-4">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-3 sm:mb-4">
                   {s.category && (
                     <span className="text-xs font-semibold bg-brand/10 dark:bg-brand/20 text-brand px-2.5 py-1 rounded-full">
                       {s.category}
