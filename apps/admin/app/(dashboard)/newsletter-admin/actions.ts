@@ -12,7 +12,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM_EMAIL = process.env.RESEND_NEWSLETTER_EMAIL || "newsletter-noreply@aistartupimpact.com";
 const FROM_NAME = process.env.RESEND_NEWSLETTER_NAME || "AI Startup Impact Weekly";
 const REPLY_TO = process.env.RESEND_REPLY_TO || "hello@aistartupimpact.com";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.WEB_URL || "https://aistartupimpact.com";
 
 const ALLOWED = ["SUPER_ADMIN", "EDITOR_IN_CHIEF", "SENIOR_WRITER"];
 
