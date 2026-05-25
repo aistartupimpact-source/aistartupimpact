@@ -1,15 +1,21 @@
 import { sql } from '@/lib/db';
 
-/**
- * Funding Sitemap Route Handler
- * Generates XML sitemap for funding dashboard and individual round pages
- */
+export const revalidate = 86400;
 
-export const revalidate = 86400; // Regenerate daily
+function toSitemapDate(dateVal: any): string {
+  if (!dateVal) return new Date().toISOString().split('T')[0];
+  // Handle Date objects, ISO strings, and date-only strings
+  try {
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return new Date().toISOString().split('T')[0];
+    return d.toISOString().split('T')[0]; // Returns YYYY-MM-DD
+  } catch {
+    return new Date().toISOString().split('T')[0];
+  }
+}
 
 export async function GET() {
   try {
-    // Fetch all funding rounds with slugs
     const rounds = await sql`
       SELECT fr.slug, fr."announcedAt"::text AS "announcedAt"
       FROM "FundingRound" fr
@@ -18,21 +24,19 @@ export async function GET() {
       ORDER BY fr."announcedAt" DESC
     `;
 
-    // Get the most recent funding round date for the main dashboard page
-    const latestRoundDate = rounds[0]?.announcedAt || new Date().toISOString();
+    const latestDate = toSitemapDate(rounds[0]?.announcedAt);
 
-    // Generate standard sitemap XML
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://aistartupimpact.com/funding</loc>
-    <lastmod>${latestRoundDate}</lastmod>
+    <lastmod>${latestDate}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 ${rounds.map(r => `  <url>
     <loc>https://aistartupimpact.com/funding/${r.slug}</loc>
-    <lastmod>${r.announcedAt}</lastmod>
+    <lastmod>${toSitemapDate(r.announcedAt)}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>`).join('\n')}
@@ -45,24 +49,18 @@ ${rounds.map(r => `  <url>
       },
     });
   } catch (error) {
-    console.error('Funding sitemap generation error:', error);
-    
-    // Return empty but valid sitemap on error
-    const emptySitemap = `<?xml version="1.0" encoding="UTF-8"?>
+    console.error('Funding sitemap error:', error);
+    const fallback = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://aistartupimpact.com/funding</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 </urlset>`;
-
-    return new Response(emptySitemap, {
-      headers: {
-        'Content-Type': 'application/xml',
-        'Cache-Control': 'public, max-age=300',
-      },
+    return new Response(fallback, {
+      headers: { 'Content-Type': 'application/xml' },
     });
   }
 }
