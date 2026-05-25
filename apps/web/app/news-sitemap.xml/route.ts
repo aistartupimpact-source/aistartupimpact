@@ -1,12 +1,5 @@
 import { sql } from '@/lib/db';
 
-/**
- * Google News Sitemap Route Handler
- * Generates XML sitemap in Google News format with news:news namespace
- * Only includes articles published in the last 2 days (Google News requirement)
- */
-
-// Helper function to escape XML special characters
 function escapeXml(unsafe: string): string {
   return unsafe
     .replace(/&/g, '&amp;')
@@ -16,38 +9,57 @@ function escapeXml(unsafe: string): string {
     .replace(/'/g, '&apos;');
 }
 
-export const revalidate = 3600; // Regenerate every hour
+function toISODate(val: any): string {
+  if (!val) return new Date().toISOString();
+  try {
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+  } catch {
+    return new Date().toISOString();
+  }
+}
+
+export const revalidate = 3600;
 
 export async function GET() {
   try {
-    // Fetch news articles published in the last 48 hours
-    // Use UPPER() for case-insensitive comparison
+    // Fetch news articles published in the last 7 days (extended from 2 to ensure results)
     const articles = await sql`
-      SELECT slug, title, "publishedAt"
+      SELECT slug, title, "publishedAt"::text AS "publishedAt"
       FROM "Article"
-      WHERE status = 'PUBLISHED' 
+      WHERE status = 'PUBLISHED'
         AND "deletedAt" IS NULL
         AND UPPER(type) = 'NEWS'
-        AND "publishedAt" > NOW() - INTERVAL '2 days'
+        AND "publishedAt" > NOW() - INTERVAL '7 days'
       ORDER BY "publishedAt" DESC
       LIMIT 1000
     `;
 
-    // Generate Google News sitemap XML
-    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
-${articles.map(a => `  <url>
+    // Always include the main news page as fallback
+    const newsPageUrl = `  <url>
+    <loc>https://aistartupimpact.com/news</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>`;
+
+    const articleUrls = articles.map(a => `  <url>
     <loc>https://aistartupimpact.com/news/${a.slug}</loc>
     <news:news>
       <news:publication>
         <news:name>AI Startup Impact</news:name>
         <news:language>en</news:language>
       </news:publication>
-      <news:publication_date>${new Date(a.publishedAt).toISOString()}</news:publication_date>
+      <news:publication_date>${toISODate(a.publishedAt)}</news:publication_date>
       <news:title>${escapeXml(a.title)}</news:title>
     </news:news>
-  </url>`).join('\n')}
+  </url>`).join('\n');
+
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
+${newsPageUrl}
+${articleUrls}
 </urlset>`;
 
     return new Response(sitemap, {
@@ -57,19 +69,19 @@ ${articles.map(a => `  <url>
       },
     });
   } catch (error) {
-    console.error('Google News sitemap generation error:', error);
-    
-    // Return empty but valid sitemap on error
-    const emptySitemap = `<?xml version="1.0" encoding="UTF-8"?>
+    console.error('News sitemap error:', error);
+    const fallback = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
+  <url>
+    <loc>https://aistartupimpact.com/news</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
 </urlset>`;
-
-    return new Response(emptySitemap, {
-      headers: {
-        'Content-Type': 'application/xml',
-        'Cache-Control': 'public, max-age=300',
-      },
+    return new Response(fallback, {
+      headers: { 'Content-Type': 'application/xml' },
     });
   }
 }

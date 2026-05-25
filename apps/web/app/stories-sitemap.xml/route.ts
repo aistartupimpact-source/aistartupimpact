@@ -1,35 +1,48 @@
 import { sql } from '@/lib/db';
 
-/**
- * Stories Sitemap Route Handler
- * Generates XML sitemap for founder stories with weekly change frequency
- */
+function toISODate(val: any): string {
+  if (!val) return new Date().toISOString();
+  try {
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+  } catch {
+    return new Date().toISOString();
+  }
+}
 
-export const revalidate = 86400; // Regenerate daily
+export const revalidate = 86400;
 
 export async function GET() {
   try {
-    // Fetch published stories
-    // Use UPPER() for case-insensitive comparison
     const stories = await sql`
-      SELECT slug, "updatedAt", "publishedAt", "createdAt"
+      SELECT slug, "updatedAt"::text AS "updatedAt", "publishedAt"::text AS "publishedAt", "createdAt"::text AS "createdAt"
       FROM "Article"
-      WHERE status = 'PUBLISHED' 
+      WHERE status = 'PUBLISHED'
         AND "deletedAt" IS NULL
         AND UPPER(type) = 'STORY'
       ORDER BY "publishedAt" DESC
       LIMIT 1000
     `;
 
-    // Generate standard sitemap XML
-    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${stories.map(s => `  <url>
+    // Always include the main stories page
+    const storiesPageUrl = `  <url>
+    <loc>https://aistartupimpact.com/stories</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>`;
+
+    const storyUrls = stories.map(s => `  <url>
     <loc>https://aistartupimpact.com/stories/${s.slug}</loc>
-    <lastmod>${new Date(s.updatedAt || s.publishedAt || s.createdAt).toISOString()}</lastmod>
+    <lastmod>${toISODate(s.updatedAt || s.publishedAt || s.createdAt).split('T')[0]}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-  </url>`).join('\n')}
+  </url>`).join('\n');
+
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${storiesPageUrl}
+${storyUrls}
 </urlset>`;
 
     return new Response(sitemap, {
@@ -39,18 +52,18 @@ ${stories.map(s => `  <url>
       },
     });
   } catch (error) {
-    console.error('Stories sitemap generation error:', error);
-    
-    // Return empty but valid sitemap on error
-    const emptySitemap = `<?xml version="1.0" encoding="UTF-8"?>
+    console.error('Stories sitemap error:', error);
+    const fallback = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://aistartupimpact.com/stories</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>`;
-
-    return new Response(emptySitemap, {
-      headers: {
-        'Content-Type': 'application/xml',
-        'Cache-Control': 'public, max-age=300',
-      },
+    return new Response(fallback, {
+      headers: { 'Content-Type': 'application/xml' },
     });
   }
 }
