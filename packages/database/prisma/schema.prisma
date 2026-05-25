@@ -723,6 +723,20 @@ model Job {
   @@index([startupId])
 }
 
+model JobApplication {
+  id         String   @id @default(cuid())
+  role       String
+  fullName   String
+  email      String
+  mobile     String?
+  resumeLink String
+  status     String   @default("NEW")
+  createdAt  DateTime @default(now())
+
+  @@index([email, role])
+  @@index([createdAt])
+}
+
 model LiveTicker {
   id        String   @id
   text      String
