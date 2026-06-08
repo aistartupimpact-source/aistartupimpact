@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import Script from 'next/script';
 import ConsentManager from '@/lib/consent-manager';
 
@@ -9,6 +10,8 @@ interface GoogleAnalyticsProps {
 }
 
 export default function GoogleAnalytics({ measurementId }: GoogleAnalyticsProps) {
+  const pathname = usePathname();
+
   useEffect(() => {
     // Initialize Google Consent Mode v2 with default deny
     if (typeof window !== 'undefined') {
@@ -54,6 +57,15 @@ export default function GoogleAnalytics({ measurementId }: GoogleAnalyticsProps)
       };
     }
   }, [measurementId]);
+
+  // Track page views on route changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).gtag && measurementId && measurementId !== 'G-XXXXXXXXXX') {
+      (window as any).gtag('config', measurementId, {
+        page_path: pathname,
+      });
+    }
+  }, [pathname, measurementId]);
 
   if (!measurementId || measurementId === 'G-XXXXXXXXXX') {
     return null;
