@@ -11,7 +11,7 @@ router.get('/', async (req: Request, res: Response) => {
 
     const [rounds, total] = await Promise.all([
       prisma.fundingRound.findMany({
-        include: { startup: { select: { name: true, slug: true, logoUrl: true } } },
+        include: { Startup: { select: { name: true, slug: true, logoUrl: true } } },
         orderBy: { announcedAt: 'desc' },
         skip,
         take: parseInt(limit as string),
@@ -49,7 +49,7 @@ router.get('/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
     const round = await prisma.fundingRound.findUnique({
       where: { id },
-      include: { startup: { select: { name: true, slug: true, logoUrl: true, description: true } } },
+      include: { Startup: { select: { name: true, slug: true, logoUrl: true, description: true } } },
     });
 
     if (!round) {

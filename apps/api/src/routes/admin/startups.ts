@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { authenticateToken, AuthRequest } from '../../middleware/auth';
 import { requireRole } from '../../middleware/roles';
 import { prisma } from '@aistartupimpact/database';
+import crypto from 'crypto';
 
 const router = Router();
 router.use(authenticateToken as any);
@@ -55,6 +56,7 @@ router.post('/',
 
       const startup = await prisma.startup.create({
         data: {
+          id: crypto.randomUUID(),
           name,
           slug: slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
           tagline: sector || 'AI Startup',
@@ -64,6 +66,7 @@ router.post('/',
           description: description || 'No description provided.',
           logoUrl: logo || null,
           websiteUrl: websiteUrl || null,
+          updatedAt: new Date(),
         },
       });
 

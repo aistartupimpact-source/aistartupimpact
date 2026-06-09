@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '@aistartupimpact/database';
+import crypto from 'crypto';
 
 const router = Router();
 
@@ -19,6 +20,7 @@ router.post('/subscribe', async (req: Request, res: Response) => {
         source: source
       },
       create: {
+        id: crypto.randomUUID(),
         email: email.toLowerCase(),
         name,
         source

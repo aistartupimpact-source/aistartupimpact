@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { authenticateToken, AuthRequest } from '../../middleware/auth';
 import { requireRole } from '../../middleware/roles';
 import { prisma } from '@aistartupimpact/database';
+import crypto from 'crypto';
 
 const router = Router();
 router.use(authenticateToken as any);
@@ -51,7 +52,8 @@ router.post('/',
 
       const round = await prisma.fundingRound.create({
         data: {
-          Startup: { connect: { id: startupId } },
+          id: crypto.randomUUID(),
+          startupId,
           roundType,
           amountInr: BigInt(amountInr),
           amountUsd: amountUsd ? BigInt(amountUsd) : null,

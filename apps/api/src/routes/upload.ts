@@ -30,7 +30,7 @@ router.post('/presign', async (req: Request, res: Response) => {
     });
 
     // The URL expires in 5 minutes
-    const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 });
+    const presignedUrl = await getSignedUrl(s3Client as any, command, { expiresIn: 300 });
 
     const accountId = process.env.R2_ACCOUNT_ID;
     const publicUrlBase = process.env.R2_PUBLIC_URL || `https://pub-${accountId}.r2.dev`;

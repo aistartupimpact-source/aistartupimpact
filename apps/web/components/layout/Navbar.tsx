@@ -12,19 +12,19 @@ import SearchOverlay from './SearchOverlay';
 import SignInModal from '@/components/auth/SignInModal';
 
 const mainNav = [
-  { label: 'News', href: '/news' },
-  { label: 'Stories', href: '/stories' },
-  { label: 'Tools', href: '/tools' },
-  { label: 'Startups', href: '/startups' },
+  // { label: 'News', href: '/news' }, // temporarily hidden
+  { label: 'Founder Stories', href: '/stories' },
+  { label: 'AI Tools', href: '/tools' },
+  { label: 'AI Startups', href: '/startups' },
   { label: 'Funding', href: '/funding' },
   { label: 'India AI', href: '/india-ai' },
 ];
 
 const mobileNav = [
   { label: 'Home', href: '/', icon: Home },
-  { label: 'Stories', href: '/stories', icon: BookOpen },
-  { label: 'Tools', href: '/tools', icon: Wrench },
-  { label: 'Startups', href: '/startups', icon: Building2 },
+  { label: 'Founder Stories', href: '/stories', icon: BookOpen },
+  { label: 'AI Tools', href: '/tools', icon: Wrench },
+  { label: 'AI Startups', href: '/startups', icon: Building2 },
   { label: 'Funding', href: '/funding', icon: TrendingUp },
 ];
 

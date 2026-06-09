@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { authenticateToken, AuthRequest } from '../../middleware/auth';
 import { requireRole } from '../../middleware/roles';
 import { prisma } from '@aistartupimpact/database';
+import crypto from 'crypto';
 
 const router = Router();
 router.use(authenticateToken as any);
@@ -21,7 +22,7 @@ router.get('/',
       const [tools, total] = await Promise.all([
         prisma.aiTool.findMany({
           where,
-          include: { category: true },
+          include: { ToolCategory: true },
           orderBy: { createdAt: 'desc' },
           skip,
           take: parseInt(limit as string),
@@ -56,6 +57,7 @@ router.post('/',
 
       const tool = await prisma.aiTool.create({
         data: {
+          id: crypto.randomUUID(),
           name,
           slug: slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
           tagline,
@@ -65,6 +67,7 @@ router.post('/',
           pricingModel: pricingModel || 'FREEMIUM',
           status: 'PENDING',
           submittedBy: req.user!.id,
+          updatedAt: new Date(),
         },
       });
 

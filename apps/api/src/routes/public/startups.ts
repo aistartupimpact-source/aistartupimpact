@@ -55,8 +55,8 @@ router.get('/:slug', async (req: Request, res: Response) => {
     const startup = await prisma.startup.findUnique({
       where: { slug },
       include: {
-        fundingRounds: { orderBy: { announcedAt: 'desc' } },
-        jobs: { where: { isActive: true }, orderBy: { createdAt: 'desc' } }
+        FundingRound: { orderBy: { announcedAt: 'desc' } },
+        Job: { where: { isActive: true }, orderBy: { createdAt: 'desc' } }
       }
     });
 
@@ -67,7 +67,7 @@ router.get('/:slug', async (req: Request, res: Response) => {
     const serializedStartup = {
       ...startup,
       totalFundingInr: startup.totalFundingInr.toString(),
-      fundingRounds: startup.fundingRounds.map((r: any) => ({
+      fundingRounds: startup.FundingRound.map((r: any) => ({
         ...r,
         amountInr: r.amountInr.toString(),
         amountUsd: r.amountUsd?.toString(),
