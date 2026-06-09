@@ -75,12 +75,14 @@ router.post('/upload',
       // Save to Database
       const newAsset = await prisma.mediaAsset.create({
         data: {
+          id: crypto.randomUUID(),
           url,
           fileHash,
           fileName: cleanFilename,
           mimeType: req.file.mimetype,
           sizeBytes: req.file.size,
-          uploadedBy: req.user?.id, // Assumes req.user is populated by authenticateToken
+          uploadedBy: req.user?.id ?? null,
+          updatedAt: new Date(),
         }
       });
 

@@ -23,7 +23,7 @@ router.get('/',
       const [articles, total] = await Promise.all([
         prisma.article.findMany({
           where,
-          include: { author: { select: { name: true, slug: true } }, category: true },
+          include: { User: { select: { name: true, slug: true } }, Category: true },
           orderBy: { createdAt: 'desc' },
           skip,
           take: parseInt(limit as string),

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '@aistartupimpact/database';
 import { authenticateToken, AuthRequest } from '../../middleware/auth';
+import crypto from 'crypto';
 
 const router = Router();
 
@@ -15,7 +16,7 @@ router.get('/', async (req: Request, res: Response) => {
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
 
     const where: any = { status: 'APPROVED' };
-    if (category) where.category = { slug: category };
+    if (category) where.ToolCategory = { slug: category };
     if (pricingModel) where.pricingModel = pricingModel;
     if (hasApi === 'true') where.hasApi = true;
     if (minRating) where.avgRating = { gte: parseFloat(minRating as string) };
@@ -24,7 +25,7 @@ router.get('/', async (req: Request, res: Response) => {
     const [tools, total] = await Promise.all([
       prisma.aiTool.findMany({
         where,
-        include: { category: { select: { name: true, slug: true } } },
+        include: { ToolCategory: { select: { name: true, slug: true } } },
         orderBy: sort === 'rating' ? { avgRating: 'desc' } : { createdAt: 'desc' },
         skip,
         take: parseInt(limit as string),
@@ -57,10 +58,10 @@ router.get('/:slug', async (req: Request, res: Response) => {
     const tool = await prisma.aiTool.findUnique({
       where: { slug, status: 'APPROVED' },
       include: {
-        category: { select: { name: true, slug: true } },
-        pros: { select: { text: true } },
-        cons: { select: { text: true } },
-        useCases: { select: { text: true } }
+        ToolCategory: { select: { name: true, slug: true } },
+        ToolPro: { select: { text: true } },
+        ToolCon: { select: { text: true } },
+        ToolUseCase: { select: { text: true } }
       }
     });
 
@@ -82,9 +83,9 @@ router.get('/compare/:toolIds', async (req: Request, res: Response) => {
     const tools = await prisma.aiTool.findMany({
       where: { id: { in: toolIds }, status: 'APPROVED' },
       include: {
-        category: { select: { name: true, slug: true } },
-        pros: { select: { text: true } },
-        cons: { select: { text: true } },
+        ToolCategory: { select: { name: true, slug: true } },
+        ToolPro: { select: { text: true } },
+        ToolCon: { select: { text: true } },
       }
     });
     res.json({ success: true, data: { toolIds, comparison: tools } });
@@ -125,6 +126,7 @@ router.post('/:slug/reviews', authenticateToken, async (req: AuthRequest, res: R
     // 3. Create the robust PENDING review
     const review = await prisma.toolReview.create({
       data: {
+        id: crypto.randomUUID(),
         toolId: tool.id,
         userId: userId,
         rating: Math.max(1, Math.min(5, Number(rating))),
@@ -133,7 +135,7 @@ router.post('/:slug/reviews', authenticateToken, async (req: AuthRequest, res: R
         isVerifiedPurchase: !!isVerifiedPurchase,
         proofImageUrl: proofImageUrl || null,
         status: 'PENDING',
-        aiSpamScore: 0 // Mocked score, to be flagged by workers later
+        aiSpamScore: 0
       }
     });
 
