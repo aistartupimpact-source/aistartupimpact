@@ -22,10 +22,19 @@ const mainNav = [
 
 const mobileNav = [
   { label: 'Home', href: '/', icon: Home },
-  { label: 'Founder Stories', href: '/stories', icon: BookOpen },
-  { label: 'AI Tools', href: '/tools', icon: Wrench },
-  { label: 'AI Startups', href: '/startups', icon: Building2 },
+  { label: 'Stories', href: '/stories', icon: BookOpen },
+  { label: 'Tools', href: '/tools', icon: Wrench },
+  { label: 'Startups', href: '/startups', icon: Building2 },
   { label: 'Funding', href: '/funding', icon: TrendingUp },
+];
+
+const mobileMenuNav = [
+  { label: 'Stories', href: '/stories' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Startups', href: '/startups' },
+  { label: 'Funding', href: '/funding' },
+  { label: 'India AI', href: '/india-ai' },
+  { label: 'About Us', href: '/about' },
 ];
 
 export default function Navbar() {
@@ -267,7 +276,7 @@ export default function Navbar() {
           {/* Navigation Links */}
           <nav className="px-4 pt-4 pb-6 overflow-y-auto max-h-[calc(100vh-56px)]">
             <div className="space-y-1">
-              {mainNav.map((item) => {
+              {mobileMenuNav.map((item) => {
                 const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
                 return (
                   <Link
