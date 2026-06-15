@@ -100,10 +100,13 @@ export default async function HomePage() {
   // Use fetched data, but provide elegant fallbacks if DB is empty or backend is unreachable
   const heroArticle = fetchedHeroArticle || defaultHeroArticle;
   const trendingItems = fetchedLiveTickers?.length > 0 ? fetchedLiveTickers : (fetchedTrending?.length > 0 ? fetchedTrending : defaultTrendingItems);
-  const latestStories = fetchedLatest?.length > 0 ? fetchedLatest : defaultLatestStories;
-  const founderSpotlights = (fetchedSpotlights && fetchedSpotlights.length > 0) ? fetchedSpotlights : defaultFounderSpotlights;
+  const latestStories = fetchedLatest?.length > 0 
+    ? fetchedLatest 
+    : ((fetchedSpotlights && fetchedSpotlights.length > 0) ? fetchedSpotlights : []);
+  const founderSpotlights = (fetchedSpotlights && fetchedSpotlights.length > 0) ? fetchedSpotlights : [];
   const toolPicks = fetchedPriorityTools?.length > 0 ? fetchedPriorityTools : defaultToolPicks;
-  const fundingDigests = fetchedFundingDigests?.length > 0 ? fetchedFundingDigests : defaultFundingDigests;
+  const hasFunding = fetchedFundingDigests && fetchedFundingDigests.length > 0;
+  const fundingDigests = hasFunding ? fetchedFundingDigests : [];
 
   // Featured partner rotator — only FEATURED tier AiTools, no startup merging
   const featuredPartnersList = fetchedFeaturedTools?.length > 0
@@ -379,16 +382,29 @@ export default async function HomePage() {
       {/* Tool Picks moved — see below India AI Ecosystem */}
 
       {/* ╔════════════════════════════════════════════╗
-          ║  7. FUNDING DIGESTS — 3 Column Grid         ║
+          ║  7. FUNDING DIGESTS / FOUNDER STORIES       ║
           ╚════════════════════════════════════════════╝ */}
+      {(hasFunding || founderSpotlights.length > 0) && (
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 cv-auto">
         <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3">
-            <IndianRupee className="w-5 h-5 sm:w-6 sm:h-6 text-brand" />
-            <h2 className="section-title">Funding Digests</h2>
+            {hasFunding ? (
+              <>
+                <IndianRupee className="w-5 h-5 sm:w-6 sm:h-6 text-brand" />
+                <h2 className="section-title">Funding Digests</h2>
+              </>
+            ) : (
+              <>
+                <Users className="w-5 h-5 sm:w-6 sm:h-6 text-brand" />
+                <h2 className="section-title">Latest Founder Stories</h2>
+              </>
+            )}
           </div>
-          <Link href="/funding" className="text-brand font-semibold text-sm hover:underline flex items-center gap-1 font-jakarta">
-            All Digests <ChevronRight className="w-4 h-4" />
+          <Link 
+            href={hasFunding ? "/funding" : "/stories"} 
+            className="text-brand font-semibold text-sm hover:underline flex items-center gap-1 font-jakarta"
+          >
+            {hasFunding ? "All Digests" : "All Stories"} <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
 
@@ -398,66 +414,115 @@ export default async function HomePage() {
           <div className="bg-gray-900 dark:bg-gray-800 px-4 sm:px-6 py-4 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-brand shrink-0" />
-              <span className="text-white font-bold text-xs sm:text-sm uppercase tracking-wider">Weekly Funding Rounds</span>
+              <span className="text-white font-bold text-xs sm:text-sm uppercase tracking-wider">
+                {hasFunding ? "Weekly Funding Rounds" : "Ecosystem Spotlights"}
+              </span>
             </div>
             <div className="bg-gray-800 dark:bg-gray-700 px-2 sm:px-3 py-1 rounded-full shrink-0">
-              <span className="text-gray-300 text-[10px] sm:text-xs font-medium uppercase tracking-wider">India AI</span>
+              <span className="text-gray-300 text-[10px] sm:text-xs font-medium uppercase tracking-wider">
+                {hasFunding ? "India AI" : "Founders"}
+              </span>
             </div>
           </div>
 
           {/* 3-col seamless grid */}
           <div className="p-0 bg-gray-50 dark:bg-gray-800">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-              {fundingDigests.slice(0, 3).map((digest: any, idx: number) => {
-                const borderClass = [
-                  'border-b sm:border-r border-gray-200 dark:border-gray-700',
-                  'border-b sm:border-b-0 sm:border-r lg:border-r border-gray-200 dark:border-gray-700',
-                  '',
-                ][idx] || '';
-                return (
-                  <Link key={digest.slug} href="/funding" className={`group ${borderClass}`}>
-                    <div className="bg-gray-50 dark:bg-gray-800 p-5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 h-full flex flex-col gap-3">
-                      {/* Date + badge */}
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 font-jakarta">
-                          {formatDate(digest.date)}
-                        </span>
-                        <span className="inline-flex items-center gap-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
-                          <TrendingUp className="w-2.5 h-2.5" />
-                          Weekly
-                        </span>
+              {hasFunding ? (
+                fundingDigests.slice(0, 3).map((digest: any, idx: number) => {
+                  const borderClass = [
+                    'border-b sm:border-r border-gray-200 dark:border-gray-700',
+                    'border-b sm:border-b-0 sm:border-r lg:border-r border-gray-200 dark:border-gray-700',
+                    '',
+                  ][idx] || '';
+                  return (
+                    <Link key={digest.slug} href="/funding" className={`group ${borderClass}`}>
+                      <div className="bg-gray-50 dark:bg-gray-800 p-5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 h-full flex flex-col gap-3">
+                        {/* Date + badge */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 font-jakarta">
+                            {formatDate(digest.date)}
+                          </span>
+                          <span className="inline-flex items-center gap-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
+                            <TrendingUp className="w-2.5 h-2.5" />
+                            Weekly
+                          </span>
+                        </div>
+
+                        {/* Total raised — hero number */}
+                        <div>
+                          <div className="font-sora font-extrabold text-2xl text-brand leading-none">
+                            {digest.totalRaised}
+                          </div>
+                          <div className="text-xs text-gray-400 font-jakarta mt-0.5">
+                            raised across {digest.dealsCount} {digest.dealsCount === 1 ? 'deal' : 'deals'}
+                          </div>
+                        </div>
+
+                        {/* Title — cleaned up, no "Week X:" prefix */}
+                        <p className="font-sora font-semibold text-sm text-gray-900 dark:text-white leading-snug group-hover:text-brand transition-colors line-clamp-2 flex-1">
+                          {digest.title.replace(/^Week\s+\d+:\s*/i, '')}
+                        </p>
+
+                        {/* Top deals preview */}
+                        {digest.deals?.slice(0, 2).map((deal: any, i: number) => (
+                          <div key={i} className="flex items-center justify-between text-xs font-jakarta border-t border-gray-200 dark:border-gray-700 pt-2">
+                            <span className="text-gray-600 dark:text-gray-300 font-medium truncate">{deal.startup}</span>
+                            <span className="text-brand font-bold shrink-0 ml-2">{deal.amount}</span>
+                          </div>
+                        ))}
                       </div>
-
-                      {/* Total raised — hero number */}
-                      <div>
-                        <div className="font-sora font-extrabold text-2xl text-brand leading-none">
-                          {digest.totalRaised}
+                    </Link>
+                  );
+                })
+              ) : (
+                founderSpotlights.slice(0, 3).map((story: any, idx: number) => {
+                  const borderClass = [
+                    'border-b sm:border-r border-gray-200 dark:border-gray-700',
+                    'border-b sm:border-b-0 sm:border-r lg:border-r border-gray-200 dark:border-gray-700',
+                    '',
+                  ][idx] || '';
+                  return (
+                    <Link key={story.slug} href={`/stories/${story.slug}`} className={`group ${borderClass}`}>
+                      <div className="bg-gray-50 dark:bg-gray-800 p-5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 h-full flex flex-col gap-3">
+                        {/* Date + badge */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 font-jakarta">
+                            {formatDate(story.publishedAt)}
+                          </span>
+                          <span className="inline-flex items-center gap-1 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
+                            Story
+                          </span>
                         </div>
-                        <div className="text-xs text-gray-400 font-jakarta mt-0.5">
-                          raised across {digest.dealsCount} {digest.dealsCount === 1 ? 'deal' : 'deals'}
+                        {/* Title */}
+                        <p className="font-sora font-semibold text-sm text-gray-900 dark:text-white leading-snug group-hover:text-brand transition-colors line-clamp-2 flex-1">
+                          {story.title}
+                        </p>
+                        {/* Excerpt */}
+                        {story.excerpt && (
+                          <p className="text-gray-600 dark:text-gray-400 font-jakarta text-xs leading-relaxed line-clamp-3 mb-2">
+                            {story.excerpt}
+                          </p>
+                        )}
+                        {/* Author */}
+                        <div className="flex items-center gap-2 pt-2 border-t border-gray-200 dark:border-gray-700 mt-auto">
+                          <div className="w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center text-[9px] text-brand font-bold shrink-0">
+                            {story.author?.name?.charAt(0) || 'A'}
+                          </div>
+                          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 font-jakarta">
+                            {story.author?.name || 'Editorial'}
+                          </span>
                         </div>
                       </div>
-
-                      {/* Title — cleaned up, no "Week X:" prefix */}
-                      <p className="font-sora font-semibold text-sm text-gray-900 dark:text-white leading-snug group-hover:text-brand transition-colors line-clamp-2 flex-1">
-                        {digest.title.replace(/^Week\s+\d+:\s*/i, '')}
-                      </p>
-
-                      {/* Top deals preview */}
-                      {digest.deals?.slice(0, 2).map((deal: any, i: number) => (
-                        <div key={i} className="flex items-center justify-between text-xs font-jakarta border-t border-gray-200 dark:border-gray-700 pt-2">
-                          <span className="text-gray-600 dark:text-gray-300 font-medium truncate">{deal.startup}</span>
-                          <span className="text-brand font-bold shrink-0 ml-2">{deal.amount}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </Link>
-                );
-              })}
+                    </Link>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>
       </section>
+      )}
 
       {/* ╔════════════════════════════════════════════╗
           ║  8. PREMIUM FEATURED PARTNER ROTATOR        ║
