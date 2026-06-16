@@ -10,6 +10,7 @@ import {
 import { useTheme } from '@/components/ThemeProvider';
 import SearchOverlay from './SearchOverlay';
 import SignInModal from '@/components/auth/SignInModal';
+import Logo from '@/components/Logo';
 
 const mainNav = [
   // { label: 'News', href: '/news' }, // temporarily hidden
@@ -117,11 +118,8 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-1 shrink-0">
-              <span className="font-sora font-extrabold text-lg sm:text-xl">
-                <span className="text-brand">AI </span>
-                <span className="text-navy dark:text-white">Startup Impact</span>
-              </span>
+            <Link href="/" className="flex items-center shrink-0">
+              <Logo height={72} priority />
             </Link>
 
             {/* Desktop Nav — hidden on mobile */}
@@ -261,10 +259,7 @@ export default function Navbar() {
 
           {/* Header */}
           <div className="flex items-center justify-between px-5 h-14 border-b border-gray-100 dark:border-gray-800">
-            <span className="font-sora font-extrabold text-lg">
-              <span className="text-brand">AI</span>
-              <span className="text-navy dark:text-white"> Startup Impact</span>
-            </span>
+            <Logo height={28} />
             <button
               onClick={() => setMobileOpen(false)}
               className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 active:scale-90 transition-transform"
