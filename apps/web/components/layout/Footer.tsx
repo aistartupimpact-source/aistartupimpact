@@ -302,7 +302,7 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="col-span-2 sm:col-span-3 lg:col-span-1 mb-4 lg:mb-0">
             <Link href="/" className="inline-block">
-              <Logo height={76} />
+              <Logo height={76} forceLight />
             </Link>
             <p className="text-gray-400 text-sm font-jakarta mt-3 leading-relaxed max-w-xs">
               India&apos;s definitive source for AI startup news, tools, funding data,
