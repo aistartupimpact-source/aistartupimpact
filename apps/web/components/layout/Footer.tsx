@@ -6,6 +6,7 @@ import { Mail, Twitter, Linkedin, Instagram, Facebook, Youtube, CheckCircle2 } f
 import SubscribeForm from '@/components/SubscribeForm';
 import { CookieSettingsLink } from '@/components/CookieConsent';
 import { useState } from 'react';
+import Logo from '@/components/Logo';
 
 const footerLinks = [
   {
@@ -301,10 +302,7 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="col-span-2 sm:col-span-3 lg:col-span-1 mb-4 lg:mb-0">
             <Link href="/" className="inline-block">
-              <span className="font-sora font-extrabold text-xl">
-                <span className="text-brand">AI </span>
-                <span className="text-white">Startup Impact</span>
-              </span>
+              <Logo height={76} />
             </Link>
             <p className="text-gray-400 text-sm font-jakarta mt-3 leading-relaxed max-w-xs">
               India&apos;s definitive source for AI startup news, tools, funding data,
