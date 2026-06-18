@@ -1,5 +1,5 @@
 import dynamic from 'next/dynamic';
-import BreakingTicker from '@/components/layout/BreakingTicker';
+// import BreakingTicker from '@/components/layout/BreakingTicker'; // temporarily hidden
 import { AuthContext } from '@/components/AuthContext';
 
 // Navbar is above-fold — keep SSR. Footer is below-fold — lazy load.
@@ -15,7 +15,7 @@ export default function PublicLayout({
     <AuthContext>
       <Navbar />
       <div className="pt-14 sm:pt-16 min-h-screen flex flex-col">
-        <BreakingTicker />
+        {/* <BreakingTicker /> */}{/* temporarily hidden */}
         <main className="flex-1 pb-16 lg:pb-0 pb-safe">
           {children}
         </main>
