@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     siteName: "AI Startup Impact",
     type: "website",
     locale: 'en_IN',
-    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: "AI Startup Impact – AI Startup India News & Funding" }],
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: "AI Startup Impact – AI Startup India News & Funding" }],
   },
   twitter: {
     card: 'summary_large_image',

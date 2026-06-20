@@ -7,7 +7,7 @@ const SITE_URL =
 
 const PROD_URL = 'https://aistartupimpact.com'; // always canonical production
 const SITE_NAME = 'AIStartupImpact';
-const SITE_LOGO = `${PROD_URL}/og-default.png`;
+const SITE_LOGO = `${PROD_URL}/og-image.png`;
 const TWITTER_HANDLE = '@aikitstartup';
 
 // ─── Site-level schemas (injected once in root layout) ───────────────────────
@@ -292,7 +292,7 @@ export function buildArticleMetadata(article: {
   const description = article.excerpt || '';
   const images = article.coverImage
     ? [{ url: article.coverImage, width: 1200, height: 630, alt: article.title }]
-    : [{ url: `${PROD_URL}/og-default.png`, width: 1200, height: 630 }];
+    : [{ url: `${PROD_URL}/og-image.png`, width: 1200, height: 630 }];
 
   return {
     title: article.title,
