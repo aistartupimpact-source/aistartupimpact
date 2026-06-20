@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://aistartupimpact.com/funding',
     siteName: 'AIStartupImpact',
-    images: [{ url: 'https://aistartupimpact.com/og-default.png', width: 1200, height: 630 }],
+    images: [{ url: 'https://aistartupimpact.com/og-image.png', width: 1200, height: 630 }],
   },
 };
 

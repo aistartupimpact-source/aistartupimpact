@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       siteName: 'AI Startup Impact',
       publishedTime: round.announcedAt,
       images: [{
-        url: 'https://aistartupimpact.com/og-default.png',
+        url: 'https://aistartupimpact.com/og-image.png',
         width: 1200,
         height: 630,
       }],

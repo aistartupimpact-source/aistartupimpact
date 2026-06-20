@@ -51,7 +51,7 @@ export function generateArticleSchema(data: ArticleData) {
       "name": data.publisherName || "AIStartupImpact",
       "logo": {
         "@type": "ImageObject",
-        "url": data.publisherLogoUrl || "https://aistartupimpact.com/og-default.png"
+        "url": data.publisherLogoUrl || "https://aistartupimpact.com/og-image.png"
       }
     },
     "keywords": data.tags ? data.tags.join(', ') : "",
