@@ -31,11 +31,14 @@ export const generateOrganizationSchema = () => ({
   "@type": "Organization",
   name: "AIStartupImpact",
   alternateName: "AI Startup India",
-  description: "The premier platform for AI startup impact, news, funding, and ecosystem insights for Startups in India.",
+  description: "AI Startup Impact is India's leading platform for AI startup news, funding updates, founder stories, curated AI tools, ecosystem insights, and emerging innovation.",
   url: "https://aistartupimpact.com",
   logo: "https://aistartupimpact.com/logo.png",
   sameAs: [
-    "https://www.linkedin.com/company/yourpage"
+    "https://x.com/aistartupimapct",
+    "https://www.linkedin.com/company/ai-startup-impact/",
+    "https://www.youtube.com/@aistartupimpact",
+    "https://www.instagram.com/aistartupimpact/"
   ],
   contactPoint: {
     "@type": "ContactPoint",
