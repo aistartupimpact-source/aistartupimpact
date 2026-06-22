@@ -109,7 +109,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-navy dark:bg-gray-950 border-t border-gray-800 dark:border-gray-800">
+    <footer className={`${pathname === '/newsletter' ? 'hidden md:block' : ''} bg-navy dark:bg-gray-950 border-t border-gray-800 dark:border-gray-800`}>
       {/* Newsletter CTA Section - Redesigned to match image */}
       {pathname !== '/newsletter' && (
       <div className="border-b border-white/10">
