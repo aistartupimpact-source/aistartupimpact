@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Mail, Sparkles, TrendingUp, Zap, Target, MessageSquare, CheckCircle2, X } from 'lucide-react';
+import { Check, Mail, Sparkles, TrendingUp, Zap, Target, MessageSquare, CheckCircle2, X, Wrench } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 const signals = [
@@ -26,11 +26,11 @@ const signals = [
     desc: 'Be the first to know when new AI tools launch so you can stay up to date.' 
   },
   { 
-    icon: MessageSquare, 
+    icon: Wrench, 
     iconColor: 'text-purple-500',
     bgColor: 'bg-purple-50 dark:bg-purple-500/10',
-    title: 'Policy briefs', 
-    desc: 'Get clear, actionable insights on AI policy and regulation.' 
+    title: 'New AI tools', 
+    desc: 'Discover the latest AI tools and releases curated for Indian builders.' 
   },
 ];
 
@@ -78,6 +78,19 @@ export default function NewsletterPage() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [highlights, setHighlights] = useState<Highlight[]>([]);
   const [currentTestimonialIndex, setCurrentTestimonialIndex] = useState(0);
+  const [isTouched, setIsTouched] = useState(false);
+  const [isValid, setIsValid] = useState(false);
+
+  const validateEmail = (val: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(val);
+  };
+
+  const handleEmailChange = (val: string) => {
+    setEmail(val);
+    if (!isTouched) setIsTouched(true);
+    setIsValid(validateEmail(val));
+  };
   
   // Modal state for highlight subscription
   const [showHighlightModal, setShowHighlightModal] = useState(false);
@@ -88,6 +101,28 @@ export default function NewsletterPage() {
   useEffect(() => {
     fetchTestimonials();
     fetchHighlights();
+  }, []);
+
+  // Lock scroll on mobile
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+      }
+    };
+    
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   // Auto-rotate testimonials every 5 seconds
@@ -215,8 +250,154 @@ export default function NewsletterPage() {
 
   return (
     <div className="bg-white dark:bg-gray-950">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#0a1628] via-[#0f1f3a] to-[#1a2942] border-b border-white/10">
+      <div className="md:hidden fixed top-14 bottom-0 left-0 right-0 z-[20] flex flex-col justify-between p-3.5 bg-gradient-to-br from-[#0a1628] via-[#0f1f3a] to-[#1a2942] text-white overflow-hidden pb-4 sm:pb-5">
+        {/* Glowing background orbs */}
+        <div className="absolute -top-12 -right-12 w-64 h-64 bg-brand/15 rounded-full blur-[80px] animate-pulse" />
+        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-blue-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1.5s' }} />
+
+        {/* Brand Header */}
+        <div className="relative flex items-center justify-between z-10 mb-2 flex-shrink-0">
+          <span className="font-sora font-extrabold text-base tracking-tight text-white">
+            AI Startup <span className="text-brand">Impact</span>
+          </span>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-brand/10 border border-brand/20 rounded-full">
+            <span className="w-1.5 h-1.5 bg-brand rounded-full animate-ping" />
+            <span className="text-[9px] font-bold text-brand uppercase tracking-wider">
+              Free Every Friday
+            </span>
+          </div>
+        </div>
+
+        {/* Content Body */}
+        <div className="relative flex-1 flex flex-col justify-center items-center text-center z-10 max-w-sm mx-auto w-full">
+          {/* Tag */}
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-white/5 border border-white/10 rounded-full mb-2">
+            <Sparkles className="w-3 h-3 text-brand" />
+            <span className="text-[9px] font-bold text-gray-200 uppercase tracking-wider">
+              Join 5000+ AI Founders, Builders & Enthusiasts
+            </span>
+          </div>
+
+          {/* Heading */}
+          <h1 className="font-sora font-extrabold text-xl sm:text-2xl text-white leading-tight mb-1 tracking-tight">
+            Don't miss the <span className="text-brand">AI signal</span> in the noise.
+          </h1>
+          
+          {/* Subtitle */}
+          <p className="text-gray-300 text-[11px] leading-relaxed mb-2 font-jakarta">
+            Get founder stories, AI startup news, fundings, launches, new AI tools, and AI innovations. Sent every Friday in your inbox.
+          </p>
+
+          {/* Compact 2x2 grid of signals to show content value */}
+          <div className="grid grid-cols-2 gap-2 w-full mb-3 text-left">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 border border-white/10 rounded-lg">
+              <div className="w-5.5 h-5.5 bg-red-500/20 rounded flex items-center justify-center flex-shrink-0">
+                <TrendingUp className="w-3 h-3 text-red-400" />
+              </div>
+              <span className="text-[10px] font-semibold text-gray-300">Funding Alerts</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 border border-white/10 rounded-lg">
+              <div className="w-5.5 h-5.5 bg-amber-500/20 rounded flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-3 h-3 text-amber-400" />
+              </div>
+              <span className="text-[10px] font-semibold text-gray-300">Founder Stories</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 border border-white/10 rounded-lg">
+              <div className="w-5.5 h-5.5 bg-blue-500/20 rounded flex items-center justify-center flex-shrink-0">
+                <Target className="w-3 h-3 text-blue-400" />
+              </div>
+              <span className="text-[10px] font-semibold text-gray-300">Tool Launches</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 border border-white/10 rounded-lg">
+              <div className="w-5.5 h-5.5 bg-purple-500/20 rounded flex items-center justify-center flex-shrink-0">
+                <Wrench className="w-3 h-3 text-purple-400" />
+              </div>
+              <span className="text-[10px] font-semibold text-gray-300">New AI Tools</span>
+            </div>
+          </div>
+
+          {/* Subscription Form */}
+          {!showSuccess ? (
+            <form onSubmit={handleSubmit} className="w-full space-y-2.5">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-3.5 w-3.5 text-brand" />
+                </div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => handleEmailChange(e.target.value)}
+                  placeholder="Enter your email address"
+                  required
+                  disabled={isSubmitting}
+                  className={`w-full pl-9 pr-4 py-3 bg-white/10 backdrop-blur-sm border rounded-xl text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 font-jakarta text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md ${
+                    isTouched && !isValid && email.length > 0
+                      ? 'border-red-400 focus:ring-red-500'
+                      : 'border-white/20 focus:ring-brand/50 focus:border-brand'
+                  }`}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting || (email.length > 0 && !isValid)}
+                className="w-full px-5 py-3 bg-brand hover:bg-brand/90 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 text-xs disabled:cursor-not-allowed shadow-lg shadow-brand/30 active:scale-[0.98]"
+              >
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Subscribing...
+                  </>
+                ) : (
+                  <>
+                    <span>Join 5,000+ Readers</span>
+                    <Zap className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300" />
+                  </>
+                )}
+              </button>
+
+              {/* Trust Bar just below CTA button */}
+              <div className="pt-2 text-center w-full">
+                <p className="text-[9px] text-gray-400 uppercase tracking-widest font-bold mb-0.5">
+                  Read by teams at
+                </p>
+                <p className="text-[10px] font-bold text-gray-200 tracking-tight mb-1">
+                  Google, Microsoft, TCS, Flipkart & Amazon
+                </p>
+                <p className="text-[8px] text-gray-500 leading-none">
+                  No credit card required · Unsubscribe anytime
+                </p>
+              </div>
+            </form>
+          ) : (
+            <div className="text-center py-4 bg-white/5 border border-white/10 rounded-2xl px-5 w-full">
+              <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+              </div>
+              <h4 className="font-sora font-bold text-lg text-white mb-1.5">
+                Successfully Subscribed!
+              </h4>
+              <p className="text-gray-300 text-xs font-jakarta mb-4">
+                Confirmation email sent. Your first AI digest arrives this Friday!
+              </p>
+              <button
+                onClick={() => setShowSuccess(false)}
+                className="text-brand hover:text-brand/80 font-bold text-xs font-jakarta"
+              >
+                Subscribe another email →
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Desktop view: original scrollable content */}
+      <div className="hidden md:block">
+        {/* Hero Section */}
+        <section className="relative overflow-hidden bg-gradient-to-br from-[#0a1628] via-[#0f1f3a] to-[#1a2942] border-b border-white/10">
         {/* Animated gradient orbs */}
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand/10 rounded-full blur-[150px] animate-pulse" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
@@ -262,7 +443,7 @@ export default function NewsletterPage() {
                 </div>
                 <div className="flex items-center gap-3 text-gray-300 font-jakarta text-sm sm:text-base">
                   <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-brand flex-shrink-0" />
-                  <span>Policy analysis for builders</span>
+                  <span>Curated new AI tools</span>
                 </div>
               </div>
 
@@ -697,6 +878,7 @@ export default function NewsletterPage() {
           </p>
         </div>
       </section>
+      </div> {/* End of Desktop view hidden md:block */}
     </div>
   );
 }
