@@ -146,23 +146,48 @@ export async function getAiToolBySlugDirect(slug: string) {
   }
 }
 
-export async function getSimilarToolsDirect(categoryId: string, excludeSlug: string, limit = 6) {
+export async function getSimilarToolsDirect(categoryId: string, excludeSlug: string, limit = 8) {
   try {
-    const rows = await sql`
+    // Priority 1: same category, sorted by rating
+    const sameCategory = await sql`
       SELECT
         t.id, t.name, t.slug, t.tagline, t."logoUrl",
         t."avgRating", t."pricingModel", t."websiteUrl",
-        c.name AS "categoryName"
+        c.name AS "categoryName", c.slug AS "categorySlug",
+        'same-category' AS "matchType"
       FROM "AiTool" t
       LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
       WHERE t."categoryId" = ${categoryId}
         AND t.slug != ${excludeSlug}
         AND t.status = 'APPROVED'
         AND t."deletedAt" IS NULL
-      ORDER BY t."avgRating" DESC NULLS LAST, t."isFeatured" DESC
+      ORDER BY t."avgRating" DESC NULLS LAST, t."listingTier" DESC
       LIMIT ${limit}
     `;
-    return rows as Array<{
+
+    // If we have enough from same category, return early
+    if (sameCategory.length >= limit) {
+      return sameCategory as any[];
+    }
+
+    // Priority 2: top-rated approved tools as fallback filler
+    const slugsAlready = sameCategory.map((r: any) => r.slug).concat([excludeSlug]);
+    const needed = limit - sameCategory.length;
+    const filler = await sql`
+      SELECT
+        t.id, t.name, t.slug, t.tagline, t."logoUrl",
+        t."avgRating", t."pricingModel", t."websiteUrl",
+        c.name AS "categoryName", c.slug AS "categorySlug",
+        'top-rated' AS "matchType"
+      FROM "AiTool" t
+      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+      WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
+        AND t.slug != ALL(${slugsAlready}::text[])
+      ORDER BY t."avgRating" DESC NULLS LAST, t."listingTier" DESC
+      LIMIT ${needed}
+    `;
+
+    return [...sameCategory, ...filler] as Array<{
       id: string;
       name: string;
       slug: string;
@@ -172,6 +197,8 @@ export async function getSimilarToolsDirect(categoryId: string, excludeSlug: str
       pricingModel: string;
       websiteUrl: string;
       categoryName: string;
+      categorySlug?: string;
+      matchType?: string;
     }>;
   } catch (e) {
     console.error('getSimilarToolsDirect error:', e);
@@ -236,12 +263,18 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
       rows = await sql`
         SELECT t.id, t.name, t.slug, t.tagline, t.description, t."pricingModel", t."logoUrl", t."avgRating", 
                t."hasApi", t."hasMobileApp", t."launchYear", t."headquartersCountry", t."founderNames",
-               c.name AS "categoryName", c.slug AS "categorySlug"
+               c.name AS "categoryName", c.slug AS "categorySlug",
+               tfc.tier AS "campaignTier"
         FROM "AiTool" t
         LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+        LEFT JOIN "ToolFeaturedCampaign" tfc ON tfc."toolId" = t.id
+          AND tfc."cancelledAt" IS NULL
+          AND tfc."startDate" <= NOW() AND tfc."endDate" >= NOW()
         WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL AND c.slug = ${categorySlug}
         ORDER BY 
-          CASE WHEN t."listingTier" = 'FEATURED' THEN 1
+          CASE WHEN tfc.tier = 'FEATURED' THEN 1
+               WHEN tfc.tier = 'PRIORITY' THEN 2
+               WHEN t."listingTier" = 'FEATURED' THEN 1
                WHEN t."listingTier" = 'PRIORITY' THEN 2
                ELSE 3 END ASC,
           t."createdAt" DESC
@@ -250,12 +283,18 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
       rows = await sql`
         SELECT t.id, t.name, t.slug, t.tagline, t.description, t."pricingModel", t."logoUrl", t."avgRating",
                t."hasApi", t."hasMobileApp", t."launchYear", t."headquartersCountry", t."founderNames",
-               c.name AS "categoryName", c.slug AS "categorySlug"
+               c.name AS "categoryName", c.slug AS "categorySlug",
+               tfc.tier AS "campaignTier"
         FROM "AiTool" t
         LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+        LEFT JOIN "ToolFeaturedCampaign" tfc ON tfc."toolId" = t.id
+          AND tfc."cancelledAt" IS NULL
+          AND tfc."startDate" <= NOW() AND tfc."endDate" >= NOW()
         WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
         ORDER BY 
-          CASE WHEN t."listingTier" = 'FEATURED' THEN 1
+          CASE WHEN tfc.tier = 'FEATURED' THEN 1
+               WHEN tfc.tier = 'PRIORITY' THEN 2
+               WHEN t."listingTier" = 'FEATURED' THEN 1
                WHEN t."listingTier" = 'PRIORITY' THEN 2
                ELSE 3 END ASC,
           t."createdAt" DESC

@@ -83,12 +83,7 @@ export default async function ToolsPage({ searchParams }: { searchParams: { cate
       {/* Tools List Component with State */}
       <ToolsListWithComparison picks={picks} />
 
-      {/* CTA */}
-      <div className="card p-6 mt-8 text-center bg-gradient-to-r from-brand-50 to-white dark:from-brand-900/15 dark:to-gray-900">
-        <p className="text-sm text-gray-500 dark:text-gray-400 font-jakarta">
-          Know a tool we should review? <a href="mailto:tools@aistartupimpact.com" className="text-brand font-semibold hover:underline">Submit it here →</a>
-        </p>
-      </div>
+
     </div>
   );
 }

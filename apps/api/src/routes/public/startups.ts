@@ -9,7 +9,7 @@ router.get('/', async (req: Request, res: Response) => {
     const { stage, isIndian, isFeatured, minImpactScore, page = '1', limit = '12' } = req.query;
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
 
-    const where: any = {};
+    const where: any = { isApproved: true };
     if (stage) where.stage = stage;
     if (isIndian !== undefined) where.isIndian = isIndian === 'true';
     if (isFeatured !== undefined) where.isFeatured = isFeatured === 'true';

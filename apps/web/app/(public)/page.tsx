@@ -185,17 +185,17 @@ export default async function HomePage() {
               <span className="text-brand text-[9px] sm:text-[10px] font-bold uppercase tracking-wider font-sora">Live</span>
             </div>
             <div className="overflow-hidden flex-1">
-              <div className="animate-ticker whitespace-nowrap flex gap-8 sm:gap-12">
+              <div className="animate-ticker whitespace-nowrap flex gap-6 sm:gap-12">
                 {tickerAd && (
                   <a href={tickerAd.ctaUrl} target="_blank" rel="noopener noreferrer"
-                    className="text-brand text-xs sm:text-sm font-jakarta font-semibold inline-flex items-center gap-2 sm:gap-3 hover:underline">
+                    className="text-brand text-[13px] sm:text-sm font-jakarta font-semibold inline-flex items-center gap-2 sm:gap-3 hover:underline">
                     <span className="text-yellow-400 font-bold">★ Sponsored</span>
                     {tickerAd.headline}
                   </a>
                 )}
                 {/* Duplicate items for seamless infinite loop */}
                 {[...trendingItems, ...trendingItems].map((item: any, i: number) => (
-                  <span key={i} className="text-gray-300 text-xs sm:text-sm font-jakarta inline-flex items-center gap-2 sm:gap-3 shrink-0">
+                  <span key={i} className="text-gray-200 text-[13px] sm:text-sm font-jakarta font-medium inline-flex items-center gap-2 sm:gap-3 shrink-0">
                     <span className="text-brand font-bold">•</span>
                     {item}
                   </span>

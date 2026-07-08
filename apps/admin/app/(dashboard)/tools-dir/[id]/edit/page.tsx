@@ -583,16 +583,9 @@ export default function EditToolPage() {
               <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
                 Listing Tier
               </label>
-              <select
-                name="listingTier"
-                value={formData.listingTier}
-                onChange={handleChange}
-                className="input-field text-sm"
-              >
-                {listingTiers.map(t => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+              <div className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 text-sm font-jakarta text-gray-600 dark:text-gray-400">
+                {formData.listingTier} <span className="text-xs text-gray-400">(managed via Schedule button on tools list)</span>
+              </div>
             </div>
             <div>
               <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">

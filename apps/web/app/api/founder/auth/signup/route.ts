@@ -18,7 +18,7 @@ function generateSlug(name: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, name } = await request.json();
+    const { email, password, name, subscribeNewsletter } = await request.json();
 
     if (!email || !password || !name) {
       return NextResponse.json(
@@ -90,6 +90,20 @@ export async function POST(request: NextRequest) {
     } catch (emailError) {
       console.error('Failed to send verification email:', emailError);
       // Don't fail the signup if email fails, user can resend later
+    }
+
+    // Add to newsletter subscribers if consent given
+    if (subscribeNewsletter) {
+      try {
+        await prisma.$executeRaw`
+          INSERT INTO "NewsletterSubscriber" (id, email, name, source, "isActive", "subscribedAt", tags)
+          VALUES (${generateId()}, ${email.toLowerCase()}, ${name}, 'founder_signup', true, NOW(), '{"founder"}')
+          ON CONFLICT (email) DO UPDATE SET "isActive" = true, source = COALESCE("NewsletterSubscriber".source, 'founder_signup')
+        `;
+      } catch (subError) {
+        console.error('Failed to add newsletter subscriber:', subError);
+        // Don't fail signup if subscriber insert fails
+      }
     }
 
     return NextResponse.json({

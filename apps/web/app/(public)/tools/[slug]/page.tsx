@@ -14,6 +14,7 @@ import { ToolSchema, FAQSchema } from '@/components/seo';
 import { generateToolFAQs } from '@/lib/seo-utils';
 import FAQSection from '@/components/FAQSection';
 import SimilarTools from '@/components/tools/SimilarTools';
+import SimilarToolsCarousel from '@/components/tools/SimilarToolsCarousel';
 
 export const revalidate = 60;
 
@@ -92,7 +93,7 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
 
   // Fetch similar tools in same category (parallel with page render)
   const similarTools = tool.categoryId
-    ? await getSimilarToolsDirect(tool.categoryId, tool.slug, 6)
+    ? await getSimilarToolsDirect(tool.categoryId, tool.slug, 8)
     : [];
   
   // Generate FAQs with tool-specific data
@@ -392,6 +393,13 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
           )}
         </aside>
       </div>
+
+      {/* Similar Tools Carousel — full width below main content */}
+      <SimilarToolsCarousel
+        tools={similarTools as any[]}
+        categoryName={tool.categoryName || undefined}
+        categorySlug={tool.categorySlug || undefined}
+      />
     </div>
   );
 }

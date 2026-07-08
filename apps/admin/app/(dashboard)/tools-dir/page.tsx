@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Plus, Search, Wrench, Edit3, Trash2, Crown, CheckCircle, XCircle,
+  Plus, Search, Wrench, Edit3, Trash2, Crown, CheckCircle, XCircle, Calendar, X,
 } from 'lucide-react';
 import {
   getToolsAction,
@@ -12,6 +12,8 @@ import {
   approveToolAction,
   rejectToolAction,
   setListingTierAction,
+  scheduleToolFeaturedCampaignAction,
+  cancelToolFeaturedCampaignAction,
 } from './actions';
 
 interface Tool {
@@ -56,6 +58,14 @@ export default function ToolsDirPage() {
   const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [featureModal, setFeatureModal] = useState<Tool | null>(null);
+  const [featureTier, setFeatureTier] = useState<'FEATURED' | 'PRIORITY' | 'FREE'>('PRIORITY');
+  const [featureStart, setFeatureStart] = useState('');
+  const [featureEnd, setFeatureEnd] = useState('');
+  const [featureNotes, setFeatureNotes] = useState('');
+  const [featurePrice, setFeaturePrice] = useState('');
+  const [featureError, setFeatureError] = useState('');
+  const [featureSubmitting, setFeatureSubmitting] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -136,6 +146,48 @@ export default function ToolsDirPage() {
       }
     } catch (error) {
       console.error('Error changing tier:', error);
+    }
+  };
+
+  const openFeatureModal = (tool: Tool) => {
+    const today = new Date().toISOString().split('T')[0];
+    const thirtyDaysLater = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    setFeatureModal(tool);
+    setFeatureTier('PRIORITY');
+    setFeatureStart(today);
+    setFeatureEnd(thirtyDaysLater);
+    setFeatureNotes('');
+    setFeaturePrice('');
+    setFeatureError('');
+  };
+
+  const handleScheduleFeatured = async () => {
+    if (!featureModal) return;
+    setFeatureSubmitting(true);
+    setFeatureError('');
+    try {
+      const result = await scheduleToolFeaturedCampaignAction({
+        toolId: featureModal.id,
+        tier: featureTier,
+        startDate: featureStart,
+        endDate: featureEnd,
+        notes: featureNotes || undefined,
+        pricePaid: featurePrice ? parseInt(featurePrice) : undefined,
+      });
+      if (result.success) {
+        setFeatureModal(null);
+        await loadData();
+      } else {
+        let errMsg = result.error || 'Failed to schedule';
+        if ((result as any).nextAvailableDate) {
+          errMsg += ` Next available: ${(result as any).nextAvailableDate}`;
+        }
+        setFeatureError(errMsg);
+      }
+    } catch (error) {
+      setFeatureError('Unexpected error');
+    } finally {
+      setFeatureSubmitting(false);
     }
   };
 
@@ -234,15 +286,24 @@ export default function ToolsDirPage() {
                   )}
                 </td>
                 <td className="px-6 py-4">
-                  <select
-                    value={tool.listingTier}
-                    onChange={(e) => handleTierChange(tool.id, e.target.value)}
-                    className="text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                  <button
+                    onClick={() => openFeatureModal(tool)}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold cursor-pointer transition-colors ${
+                      tool.listingTier === 'FEATURED'
+                        ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
+                        : tool.listingTier === 'PRIORITY'
+                        ? 'bg-brand/10 dark:bg-brand/20 text-brand'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
+                    }`}
                   >
-                    {listingTiers.map(tier => (
-                      <option key={tier} value={tier}>{tier}</option>
-                    ))}
-                  </select>
+                    {tool.listingTier === 'FEATURED' ? (
+                      <><Crown className="w-3 h-3 fill-current" /> Featured</>
+                    ) : tool.listingTier === 'PRIORITY' ? (
+                      <><Crown className="w-3 h-3" /> Priority</>
+                    ) : (
+                      <><Calendar className="w-3 h-3" /> Schedule</>
+                    )}
+                  </button>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-1">
@@ -273,6 +334,142 @@ export default function ToolsDirPage() {
             <div className="flex gap-3 mt-5">
               <button onClick={() => setDeleteConfirm(null)} className="flex-1 px-4 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300">Cancel</button>
               <button onClick={() => handleDelete(deleteConfirm)} className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-xl">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tool Featured Campaign Scheduling Modal */}
+      {featureModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-md shadow-2xl border border-gray-200 dark:border-gray-800 p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="font-sora font-bold text-lg text-navy dark:text-white">Schedule Featured</h3>
+                <p className="text-xs text-gray-500 font-jakarta mt-0.5">{featureModal.name}</p>
+              </div>
+              <button onClick={() => setFeatureModal(null)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Tier Selection */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 font-jakarta mb-1.5">
+                  Tier <span className="text-gray-400 font-normal">(UTC dates)</span>
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['FEATURED', 'PRIORITY', 'FREE'] as const).map(tier => (
+                    <button
+                      key={tier}
+                      onClick={() => setFeatureTier(tier)}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold font-jakarta transition-all border ${
+                        featureTier === tier
+                          ? tier === 'FEATURED'
+                            ? 'bg-yellow-50 border-yellow-300 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-600 dark:text-yellow-300'
+                            : tier === 'PRIORITY'
+                            ? 'bg-brand/10 border-brand/30 text-brand'
+                            : 'bg-gray-100 border-gray-300 text-gray-700 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300'
+                          : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:border-gray-300'
+                      }`}
+                    >
+                      <div>{tier}</div>
+                      <div className="text-[10px] font-normal mt-0.5 opacity-70">
+                        {tier === 'FEATURED' ? '1 slot' : tier === 'PRIORITY' ? '4 slots' : '6 slots'}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Date Range */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 font-jakarta mb-1.5">Start Date (UTC)</label>
+                  <input
+                    type="date"
+                    value={featureStart}
+                    onChange={e => setFeatureStart(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-jakarta text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-brand focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 font-jakarta mb-1.5">End Date (UTC)</label>
+                  <input
+                    type="date"
+                    value={featureEnd}
+                    onChange={e => setFeatureEnd(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-jakarta text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-brand focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* Quick presets */}
+              <div className="flex gap-2">
+                {[7, 14, 30, 60].map(days => (
+                  <button
+                    key={days}
+                    onClick={() => {
+                      const today = new Date().toISOString().split('T')[0];
+                      const end = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                      setFeatureStart(today);
+                      setFeatureEnd(end);
+                    }}
+                    className="px-2.5 py-1 rounded-md text-[10px] font-semibold font-jakarta bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-brand/10 hover:text-brand transition-colors"
+                  >
+                    {days}d
+                  </button>
+                ))}
+              </div>
+
+              {/* Optional Fields */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 font-jakarta mb-1.5">Price Paid (INR)</label>
+                  <input
+                    type="number"
+                    value={featurePrice}
+                    onChange={e => setFeaturePrice(e.target.value)}
+                    placeholder="Optional"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-jakarta text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:ring-2 focus:ring-brand focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 font-jakarta mb-1.5">Notes</label>
+                  <input
+                    type="text"
+                    value={featureNotes}
+                    onChange={e => setFeatureNotes(e.target.value)}
+                    placeholder="Optional"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-jakarta text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:ring-2 focus:ring-brand focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* Error */}
+              {featureError && (
+                <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                  <p className="text-xs text-red-700 dark:text-red-300 font-jakarta">{featureError}</p>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setFeatureModal(null)}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleScheduleFeatured}
+                  disabled={featureSubmitting || !featureStart || !featureEnd}
+                  className="flex-1 px-4 py-2.5 text-sm font-bold bg-brand hover:bg-brand/90 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {featureSubmitting ? 'Scheduling...' : 'Schedule Campaign'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

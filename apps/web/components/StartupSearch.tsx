@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { Search, Building2, TrendingUp, MapPin, X, Loader2, ChevronDown } from 'lucide-react';
+import { Search, Building2, TrendingUp, MapPin, X, Loader2 } from 'lucide-react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { VerifiedBadge } from './VerifiedBadge';
 
@@ -30,23 +30,38 @@ const CATEGORIES = [
   { value: '', label: 'All' },
   { value: 'FinTech', label: 'FinTech' },
   { value: 'HealthTech', label: 'HealthTech' },
+  { value: 'BioTech & Life Sciences', label: 'BioTech' },
   { value: 'EdTech', label: 'EdTech' },
-  { value: 'E-commerce', label: 'E-commerce' },
+  { value: 'E-Commerce & Retail', label: 'E-Commerce' },
   { value: 'SaaS', label: 'SaaS' },
   { value: 'AI/ML', label: 'AI/ML' },
-  { value: 'Enterprise Software', label: 'Enterprise' },
-  { value: 'Consumer Tech', label: 'Consumer' },
-  { value: 'DeepTech', label: 'DeepTech' },
-  { value: 'CleanTech', label: 'CleanTech' },
+  { value: 'Enterprise & B2B Software', label: 'Enterprise' },
+  { value: 'Developer Tools', label: 'Dev Tools' },
+  { value: 'Cybersecurity', label: 'Cybersecurity' },
+  { value: 'Consumer Apps & Social', label: 'Consumer' },
+  { value: 'DeepTech & Hardware', label: 'DeepTech' },
+  { value: 'CleanTech & Energy', label: 'CleanTech' },
   { value: 'AgriTech', label: 'AgriTech' },
-  { value: 'LogisticsTech', label: 'Logistics' },
+  { value: 'Logistics & Supply Chain', label: 'Logistics' },
   { value: 'HRTech', label: 'HRTech' },
-  { value: 'MarTech', label: 'MarTech' },
+  { value: 'MarTech & AdTech', label: 'MarTech' },
   { value: 'PropTech', label: 'PropTech' },
-  { value: 'FoodTech', label: 'FoodTech' },
-  { value: 'Mobility', label: 'Mobility' },
-  { value: 'Gaming', label: 'Gaming' },
+  { value: 'FoodTech & Restaurant', label: 'FoodTech' },
+  { value: 'Mobility & Transportation', label: 'Mobility' },
+  { value: 'Gaming & eSports', label: 'Gaming' },
   { value: 'Media & Entertainment', label: 'Media' },
+  { value: 'Creator Economy', label: 'Creator' },
+  { value: 'Web3 & Blockchain', label: 'Web3' },
+  { value: 'InsurTech', label: 'InsurTech' },
+  { value: 'LegalTech', label: 'LegalTech' },
+  { value: 'Robotics & Drones', label: 'Robotics' },
+  { value: 'SpaceTech & Aerospace', label: 'SpaceTech' },
+  { value: 'Defense & GovTech', label: 'GovTech' },
+  { value: 'Travel & Hospitality', label: 'Travel' },
+  { value: 'Construction & InfraTech', label: 'InfraTech' },
+  { value: 'Telecom & Connectivity', label: 'Telecom' },
+  { value: 'Fashion & Beauty', label: 'Fashion' },
+  { value: 'Sports & Fitness', label: 'Sports' },
   { value: 'Other', label: 'Other' },
 ];
 
@@ -365,18 +380,39 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
         </div>
       )}
 
-      {/* ── Load More ── */}
+      {/* ── Infinite Scroll Sentinel ── */}
       {hasMore && !loading && (
-        <div className="mt-8 text-center">
-          <button
-            onClick={() => setVisibleCount(prev => prev + ITEMS_PER_PAGE)}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold font-jakarta text-gray-700 dark:text-gray-300 hover:border-brand hover:text-brand transition-colors shadow-sm"
-          >
-            <ChevronDown className="w-4 h-4" />
-            Show more startups ({startups.length - visibleCount} remaining)
-          </button>
-        </div>
+        <InfiniteScrollTrigger onIntersect={() => setVisibleCount(prev => prev + ITEMS_PER_PAGE)} />
       )}
+    </div>
+  );
+}
+
+function InfiniteScrollTrigger({ onIntersect }: { onIntersect: () => void }) {
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const onIntersectRef = useRef(onIntersect);
+  onIntersectRef.current = onIntersect;
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          onIntersectRef.current();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={sentinelRef} className="flex items-center justify-center py-6">
+      <Loader2 className="w-5 h-5 text-brand animate-spin" />
     </div>
   );
 }

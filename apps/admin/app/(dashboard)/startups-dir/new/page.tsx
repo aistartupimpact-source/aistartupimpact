@@ -6,8 +6,24 @@ import { ArrowLeft, Upload, Loader2, Save, Crown } from 'lucide-react';
 import { createStartupAction } from '../actions';
 import { uploadLogoAction } from '../../media/actions';
 import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
+import FundingRoundsManager, { FundingRound, convertToSaveFormat } from '@/components/shared/FundingRoundsManager';
+import FoundersDetailsManager, { FounderDetail } from '@/components/shared/FoundersDetailsManager';
 
 const stages = ['IDEA', 'PRE_SEED', 'SEED', 'SERIES_A', 'SERIES_B', 'SERIES_C', 'GROWTH', 'PUBLIC'];
+
+const STARTUP_CATEGORIES = [
+  'FinTech', 'HealthTech', 'BioTech & Life Sciences', 'EdTech', 'E-Commerce & Retail',
+  'SaaS', 'AI/ML', 'Enterprise & B2B Software', 'Developer Tools', 'Cybersecurity',
+  'Consumer Apps & Social', 'DeepTech & Hardware', 'CleanTech & Energy', 'AgriTech',
+  'Logistics & Supply Chain', 'HRTech', 'MarTech & AdTech', 'PropTech',
+  'FoodTech & Restaurant', 'Mobility & Transportation', 'Gaming & eSports',
+  'Media & Entertainment', 'Creator Economy', 'Web3 & Blockchain', 'InsurTech',
+  'LegalTech', 'Robotics & Drones', 'SpaceTech & Aerospace', 'Defense & GovTech',
+  'Travel & Hospitality', 'Construction & InfraTech', 'Telecom & Connectivity',
+  'Fashion & Beauty', 'Sports & Fitness', 'Other',
+];
+
+const BUSINESS_TYPES = ['B2B', 'B2C', 'B2B2C', 'B2G', 'D2C', 'Marketplace', 'Platform'];
 
 export default function NewStartupPage() {
   const router = useRouter();
@@ -17,6 +33,8 @@ export default function NewStartupPage() {
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoPreviewError, setLogoPreviewError] = useState(false);
   const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [fundingRounds, setFundingRounds] = useState<FundingRound[]>([]);
+  const [foundersDetails, setFoundersDetails] = useState<FounderDetail[]>([]);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -30,8 +48,9 @@ export default function NewStartupPage() {
     headquartersCity: '',
     foundedYear: null as number | null,
     employeeCount: null as number | null,
-    impactScore: null as number | null,
     isFeatured: false,
+    category: '',
+    businessType: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -39,7 +58,7 @@ export default function NewStartupPage() {
     
     if (type === 'checkbox') {
       setFormData(prev => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
-    } else if (name === 'foundedYear' || name === 'employeeCount' || name === 'impactScore') {
+    } else if (name === 'foundedYear' || name === 'employeeCount') {
       setFormData(prev => ({ ...prev, [name]: value ? parseInt(value) : null }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -85,6 +104,10 @@ export default function NewStartupPage() {
       const result = await createStartupAction({
         ...formData,
         faqs: faqs.length > 0 ? faqs : undefined,
+        fundingRounds: fundingRounds.length > 0 ? convertToSaveFormat(fundingRounds) : undefined,
+        foundersData: foundersDetails.filter(f => f.name.trim()).length > 0
+          ? foundersDetails.filter(f => f.name.trim())
+          : undefined,
       });
       
       if (result.success) {
@@ -183,6 +206,42 @@ export default function NewStartupPage() {
                 className="input-field text-sm"
                 placeholder="e.g. Bengaluru"
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
+                Category
+              </label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                className="input-field text-sm"
+              >
+                <option value="">Select category</option>
+                {STARTUP_CATEGORIES.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
+                Business Type
+              </label>
+              <select
+                name="businessType"
+                value={formData.businessType}
+                onChange={handleChange}
+                className="input-field text-sm"
+              >
+                <option value="">Select business type</option>
+                {BUSINESS_TYPES.map(bt => (
+                  <option key={bt} value={bt}>{bt}</option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -324,43 +383,31 @@ export default function NewStartupPage() {
                 placeholder="50"
               />
             </div>
-            <div>
-              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
-                Impact Score
-              </label>
-              <input
-                type="number"
-                name="impactScore"
-                value={formData.impactScore ?? ''}
-                onChange={handleChange}
-                min={1}
-                max={100}
-                className="input-field text-sm"
-                placeholder="1-100"
-              />
-            </div>
           </div>
 
           <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                name="isFeatured"
-                checked={formData.isFeatured}
-                onChange={handleChange}
-                className="w-4 h-4 text-brand bg-gray-100 border-gray-300 rounded focus:ring-brand dark:focus:ring-brand dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-              />
+            <div className="flex items-center gap-3">
               <div>
                 <span className="text-sm font-medium text-navy dark:text-white font-jakarta flex items-center gap-2">
                   <Crown className="w-4 h-4 text-yellow-500" />
-                  Feature at Top
+                  Featured Placement
                 </span>
                 <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-0.5">
-                  Featured startups appear at the top of the startup directory page
+                  To feature this startup, use the &quot;Schedule&quot; button from the startups list after creation.
                 </p>
               </div>
-            </label>
+            </div>
           </div>
+        </div>
+
+        {/* Founders Details */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6">
+          <FoundersDetailsManager founders={foundersDetails} onChange={setFoundersDetails} maxFounders={5} />
+        </div>
+
+        {/* Funding Rounds */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6">
+          <FundingRoundsManager rounds={fundingRounds} onChange={setFundingRounds} maxRounds={10} />
         </div>
 
         {/* FAQs */}

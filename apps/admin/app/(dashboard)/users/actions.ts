@@ -88,16 +88,41 @@ export async function inviteUser(data: { name: string; email: string; role: stri
     });
 
     if (resend && process.env.RESEND_FROM_EMAIL) {
+      // Use production URL, never localhost in emails
+      const adminUrl = process.env.NODE_ENV === 'production'
+        ? (process.env.ADMIN_NEXTAUTH_URL || 'https://admin.aistartupimpact.com')
+        : (process.env.ADMIN_NEXTAUTH_URL || 'http://localhost:3001');
+
       const { data: resendData, error: resendError } = await resend.emails.send({
         from: `AI Startup Impact <${process.env.RESEND_FROM_EMAIL}>`,
         to: data.email,
         subject: "You've been invited to AI Startup Impact",
         html: `
-          <div style="font-family: sans-serif; max-w-md; margin: auto; padding: 20px;">
-            <h2>Welcome to AI Startup Impact!</h2>
-            <p>You have been invited to join the editorial team as a <strong>${data.role.replace(/_/g, " ")}</strong>.</p>
-            <p>You can now log in securely using your Google account.</p>
-            <a href="${process.env.ADMIN_NEXTAUTH_URL || "http://localhost:3001"}/login" style="display: inline-block; padding: 10px 20px; background-color: #000; color: #fff; text-decoration: none; border-radius: 5px; margin-top: 15px;">Login to Dashboard</a>
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+            <div style="border-bottom: 3px solid #6366f1; padding-bottom: 20px; margin-bottom: 30px;">
+              <h1 style="color: #111827; font-size: 20px; font-weight: 700; margin: 0;">AI Startup Impact</h1>
+            </div>
+            
+            <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 8px;">Hi ${data.name},</p>
+            
+            <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+              You have been invited to join the AI Startup Impact editorial team as <strong>${data.role.replace(/_/g, " ")}</strong>.
+            </p>
+
+            <p style="color: #374151; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+              Sign in with the Google account associated with this email address to access the admin dashboard.
+            </p>
+
+            <div style="margin: 32px 0;">
+              <a href="${adminUrl}/login" style="background: #111827; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-size: 14px; font-weight: 600;">Sign In to Dashboard</a>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
+            
+            <p style="color: #6b7280; font-size: 13px; line-height: 1.5; margin: 0;">
+              Best regards,<br/>
+              The AI Startup Impact Team
+            </p>
           </div>
         `
       });

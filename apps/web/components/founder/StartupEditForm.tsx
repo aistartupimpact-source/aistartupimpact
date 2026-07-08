@@ -37,26 +37,15 @@ const STARTUP_STAGES = [
 ];
 
 const STARTUP_CATEGORIES = [
-  'FinTech',
-  'HealthTech',
-  'EdTech',
-  'E-commerce',
-  'SaaS',
-  'AI/ML',
-  'Enterprise Software',
-  'Consumer Tech',
-  'DeepTech',
-  'CleanTech',
-  'AgriTech',
-  'LogisticsTech',
-  'HRTech',
-  'MarTech',
-  'PropTech',
-  'FoodTech',
-  'Mobility',
-  'Gaming',
-  'Media & Entertainment',
-  'Other',
+  'FinTech', 'HealthTech', 'BioTech & Life Sciences', 'EdTech', 'E-Commerce & Retail',
+  'SaaS', 'AI/ML', 'Enterprise & B2B Software', 'Developer Tools', 'Cybersecurity',
+  'Consumer Apps & Social', 'DeepTech & Hardware', 'CleanTech & Energy', 'AgriTech',
+  'Logistics & Supply Chain', 'HRTech', 'MarTech & AdTech', 'PropTech',
+  'FoodTech & Restaurant', 'Mobility & Transportation', 'Gaming & eSports',
+  'Media & Entertainment', 'Creator Economy', 'Web3 & Blockchain', 'InsurTech',
+  'LegalTech', 'Robotics & Drones', 'SpaceTech & Aerospace', 'Defense & GovTech',
+  'Travel & Hospitality', 'Construction & InfraTech', 'Telecom & Connectivity',
+  'Fashion & Beauty', 'Sports & Fitness', 'Other',
 ];
 
 const BUSINESS_TYPES = [
@@ -64,9 +53,7 @@ const BUSINESS_TYPES = [
   'B2C',
   'B2B2C',
   'B2G',
-  'C2C',
   'D2C',
-  'B2B2B',
   'Marketplace',
   'Platform',
 ];

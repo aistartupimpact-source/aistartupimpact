@@ -36,15 +36,31 @@ export async function submitToolAction(data: ToolSubmission) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
 
-    // Check if slug already exists using raw SQL
+    // Check if tool with same name already exists for this founder
+    const existingByName = await prisma.$queryRaw<any[]>`
+      SELECT id FROM "AiTool"
+      WHERE LOWER(name) = LOWER(${data.name})
+        AND "ownerId" = ${session.userId}
+        AND "deletedAt" IS NULL
+      LIMIT 1
+    `;
+
+    if (existingByName.length > 0) {
+      return {
+        success: false,
+        error: 'You have already submitted a tool with this name. View it in your dashboard.',
+      };
+    }
+
+    // Check if slug already exists globally
     const existing = await prisma.$queryRaw<any[]>`
-      SELECT id FROM "AiTool" WHERE slug = ${slug} LIMIT 1
+      SELECT id FROM "AiTool" WHERE slug = ${slug} AND "deletedAt" IS NULL LIMIT 1
     `;
 
     if (existing.length > 0) {
       return {
         success: false,
-        error: 'A tool with this name already exists',
+        error: 'A tool with this name already exists on the platform',
       };
     }
 

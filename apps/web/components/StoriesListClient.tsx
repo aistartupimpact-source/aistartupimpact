@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Clock, ArrowRight, Search, X, ChevronDown } from 'lucide-react';
+import { Clock, ArrowRight, Search, X, Loader2 } from 'lucide-react';
 
 const PAGE_SIZE = 12;
 
@@ -142,33 +142,27 @@ export default function StoriesListClient({ stories }: { stories: Story[] }) {
           </button>
         </div>
       ) : (
-        <div className="divide-y divide-gray-100 dark:divide-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
-          {shown.map((story, idx) => (
-            <Link key={story.slug} href={`/stories/${story.slug}`} className="group block">
-              <div className="flex gap-4 sm:gap-5 p-4 sm:p-5 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 relative">
-                {/* Left accent on hover */}
-                <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-brand scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-top" />
-
-                {/* Thumbnail */}
-                <div className="shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-gradient-to-br from-brand/10 to-gray-100 dark:from-brand/20 dark:to-gray-800 relative">
-                  {(story.thumbnailImage || story.coverImage) ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={story.thumbnailImage || story.coverImage}
-                      alt={story.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xl font-bold text-brand/30 font-sora">
-                      {idx + 1}
-                    </div>
-                  )}
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0 flex flex-col justify-between gap-1.5">
-                  <div>
-                    {/* Category + read time */}
+        <>
+          {/* Mobile: Vertical card grid (like featured) */}
+          <div className="grid grid-cols-1 gap-4 sm:hidden">
+            {shown.map((story) => (
+              <Link key={story.slug} href={`/stories/${story.slug}`} className="group">
+                <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-brand/40 transition-colors">
+                  <div className="aspect-[16/9] bg-gradient-to-br from-brand/10 to-gray-100 dark:from-brand/20 dark:to-gray-800 relative overflow-hidden">
+                    {(story.thumbnailImage || story.coverImage) ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={story.thumbnailImage || story.coverImage}
+                        alt={story.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <span className="text-4xl font-bold text-brand/20 font-sora">{story.title.charAt(0)}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4">
                     <div className="flex items-center gap-2 mb-1.5">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-brand">
                         {story.category?.name || 'Founder Story'}
@@ -176,72 +170,153 @@ export default function StoriesListClient({ stories }: { stories: Story[] }) {
                       {story.readTimeMinutes && (
                         <>
                           <span className="text-gray-300 dark:text-gray-600">·</span>
-                          <span className="flex items-center gap-1 text-[10px] text-gray-400 font-jakarta">
-                            <Clock className="w-2.5 h-2.5" />
-                            {story.readTimeMinutes} min read
-                          </span>
+                          <span className="text-[10px] text-gray-400 font-jakarta">{story.readTimeMinutes} min</span>
                         </>
                       )}
                     </div>
-
-                    {/* Title */}
-                    <h3 className="font-sora font-bold text-sm sm:text-[15px] text-navy dark:text-white group-hover:text-brand transition-colors leading-snug line-clamp-2">
+                    <h3 className="font-sora font-bold text-[15px] text-navy dark:text-white group-hover:text-brand transition-colors leading-snug line-clamp-2">
                       {story.title}
                     </h3>
-
-                    {/* Excerpt */}
                     {story.excerpt && (
-                      <p className="hidden sm:block text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-1 line-clamp-1 leading-relaxed">
+                      <p className="text-gray-500 dark:text-gray-400 text-xs font-jakarta mt-1.5 line-clamp-2">
                         {story.excerpt}
                       </p>
                     )}
-                  </div>
-
-                  {/* Author + date + arrow */}
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5 text-xs text-gray-400 font-jakarta">
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400 font-jakarta">
                       {story.author?.name && (
                         <>
-                          <div className="w-4 h-4 rounded-full bg-brand/10 flex items-center justify-center text-[8px] font-bold text-brand shrink-0">
+                          <div className="w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center text-[9px] font-bold text-brand shrink-0">
                             {story.author.name.charAt(0)}
                           </div>
                           <span className="font-medium text-gray-500 dark:text-gray-400">{story.author.name}</span>
-                          {story.publishedAt && (
-                            <>
-                              <span className="text-gray-300 dark:text-gray-600">·</span>
-                              <span>{formatDate(story.publishedAt)}</span>
-                            </>
-                          )}
+                        </>
+                      )}
+                      {story.publishedAt && (
+                        <>
+                          <span className="text-gray-300 dark:text-gray-600">·</span>
+                          <span>{formatDate(story.publishedAt)}</span>
                         </>
                       )}
                     </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-brand opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Desktop: List row layout */}
+          <div className="hidden sm:block divide-y divide-gray-100 dark:divide-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
+            {shown.map((story, idx) => (
+              <Link key={story.slug} href={`/stories/${story.slug}`} className="group block">
+                <div className="flex gap-4 sm:gap-5 p-4 sm:p-5 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 relative">
+                  {/* Left accent on hover */}
+                  <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-brand scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-top" />
+
+                  {/* Thumbnail */}
+                  <div className="shrink-0 w-24 h-24 rounded-xl overflow-hidden bg-gradient-to-br from-brand/10 to-gray-100 dark:from-brand/20 dark:to-gray-800 relative">
+                    {(story.thumbnailImage || story.coverImage) ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={story.thumbnailImage || story.coverImage}
+                        alt={story.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-xl font-bold text-brand/30 font-sora">
+                        {idx + 1}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0 flex flex-col justify-between gap-1.5">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-brand">
+                          {story.category?.name || 'Founder Story'}
+                        </span>
+                        {story.readTimeMinutes && (
+                          <>
+                            <span className="text-gray-300 dark:text-gray-600">·</span>
+                            <span className="flex items-center gap-1 text-[10px] text-gray-400 font-jakarta">
+                              <Clock className="w-2.5 h-2.5" />
+                              {story.readTimeMinutes} min read
+                            </span>
+                          </>
+                        )}
+                      </div>
+
+                      <h3 className="font-sora font-bold text-[15px] text-navy dark:text-white group-hover:text-brand transition-colors leading-snug line-clamp-2">
+                        {story.title}
+                      </h3>
+
+                      {story.excerpt && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-1 line-clamp-1 leading-relaxed">
+                          {story.excerpt}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-400 font-jakarta">
+                        {story.author?.name && (
+                          <>
+                            <div className="w-4 h-4 rounded-full bg-brand/10 flex items-center justify-center text-[8px] font-bold text-brand shrink-0">
+                              {story.author.name.charAt(0)}
+                            </div>
+                            <span className="font-medium text-gray-500 dark:text-gray-400">{story.author.name}</span>
+                            {story.publishedAt && (
+                              <>
+                                <span className="text-gray-300 dark:text-gray-600">·</span>
+                                <span>{formatDate(story.publishedAt)}</span>
+                              </>
+                            )}
+                          </>
+                        )}
+                      </div>
+                      <ArrowRight className="w-3.5 h-3.5 text-brand opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </>
       )}
 
-      {/* ── Load More ── */}
+      {/* ── Infinite Scroll ── */}
       {hasMore && (
-        <div className="flex justify-center mt-8">
-          <button
-            onClick={() => setVisible(v => v + PAGE_SIZE)}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold font-jakarta text-gray-700 dark:text-gray-300 hover:border-brand hover:text-brand transition-colors shadow-sm"
-          >
-            <ChevronDown className="w-4 h-4" />
-            Load more stories ({filteredStories.length - visible} remaining)
-          </button>
-        </div>
+        <StoriesInfiniteScrollTrigger onIntersect={() => setVisible(v => v + PAGE_SIZE)} />
       )}
+    </div>
+  );
+}
 
-      {!hasMore && filteredStories.length > PAGE_SIZE && (
-        <p className="text-center text-xs text-gray-400 font-jakarta mt-6">
-          All {filteredStories.length} stories loaded
-        </p>
-      )}
+function StoriesInfiniteScrollTrigger({ onIntersect }: { onIntersect: () => void }) {
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const onIntersectRef = useRef(onIntersect);
+  onIntersectRef.current = onIntersect;
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          onIntersectRef.current();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={sentinelRef} className="flex items-center justify-center py-6">
+      <Loader2 className="w-5 h-5 text-brand animate-spin" />
     </div>
   );
 }

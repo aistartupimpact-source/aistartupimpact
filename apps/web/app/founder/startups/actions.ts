@@ -25,41 +25,71 @@ interface StartupSubmission {
     answer: string;
     order: number;
   }>;
+  fundingRounds?: Array<{
+    roundType: string;
+    amountUsd: number;
+    amountInr: number;
+    announcedAt: string;
+    leadInvestors: string[];
+    allInvestors: string[];
+  }>;
+  foundersData?: Array<{
+    name: string;
+    role: string;
+    prev: string;
+    bio: string;
+    avatar: string;
+    linkedin: string;
+  }>;
 }
 
 export async function submitStartupAction(data: StartupSubmission) {
   try {
     const session = await requireFounderAuth();
 
-    // Generate slug from name
-    const slug = data.name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
+    // Generate clean SEO-friendly slug (no random hash)
+    const { slugify } = await import('@/lib/slug-utils');
+    const baseSlug = slugify(data.name);
+    let slug = baseSlug;
+    let counter = 1;
+    while (true) {
+      const taken = await prisma.$queryRaw<any[]>`
+        SELECT id FROM "Startup" WHERE slug = ${slug} LIMIT 1
+      `;
+      if (taken.length === 0) break;
+      counter++;
+      slug = `${baseSlug}-${counter}`;
+    }
 
-    // Check if slug already exists using raw query
-    const existing = await prisma.$queryRaw<any[]>`
+    // Check if startup with same name already exists for this founder
+    const existingByName = await prisma.$queryRaw<any[]>`
       SELECT id
       FROM "Startup"
-      WHERE slug = ${slug}
+      WHERE LOWER(name) = LOWER(${data.name})
+        AND "ownerId" = ${session.userId}
+        AND "deletedAt" IS NULL
       LIMIT 1
     `;
 
-    if (existing.length > 0) {
+    if (existingByName.length > 0) {
       return {
         success: false,
-        error: 'A startup with this name already exists',
+        error: 'You have already submitted a startup with this name. View it in your dashboard.',
       };
     }
 
     // Create startup using raw query
     // Try to include category and businessType if columns exist, otherwise skip them
     let startupId: string | null = null;
+    const foundersDataJson = data.foundersData && data.foundersData.length > 0
+      ? JSON.stringify(data.foundersData)
+      : null;
+
     try {
       const result = await prisma.$queryRaw<any[]>`
         INSERT INTO "Startup" (
           id, name, slug, tagline, description, "websiteUrl", "linkedinUrl", "twitterUrl",
-          "foundedYear", "headquartersCity", stage, "employeeCount", founders, "logoUrl",
+          "foundedYear", "headquartersCity", stage, "employeeCount", founders, "foundersData", "logoUrl",
           "totalFundingInr", category, "businessType", "ownerId", "claimStatus", "submittedBy", "createdAt", "updatedAt"
         ) VALUES (
           gen_random_uuid(),
@@ -75,6 +105,7 @@ export async function submitStartupAction(data: StartupSubmission) {
           ${data.stage}::"StartupStage",
           ${data.employeeCount || null},
           ${data.founders}::text[],
+          ${foundersDataJson}::jsonb,
           ${data.logoUrl || null},
           ${data.totalFundingInr || 0},
           ${data.category || null},
@@ -135,6 +166,29 @@ export async function submitStartupAction(data: StartupSubmission) {
           VALUES (gen_random_uuid(), ${startupId}, ${faq.question}, ${faq.answer}, ${faq.order}, NOW(), NOW())
         `;
       }
+    }
+
+    // Insert Funding Rounds if provided
+    if (startupId && data.fundingRounds && data.fundingRounds.length > 0) {
+      for (const round of data.fundingRounds) {
+        await prisma.$executeRaw`
+          INSERT INTO "FundingRound" (id, "startupId", "roundType", "amountUsd", "amountInr", "announcedAt", "leadInvestors", "allInvestors", "createdAt")
+          VALUES (gen_random_uuid(), ${startupId}, ${round.roundType}, ${round.amountUsd}, ${round.amountInr}, ${round.announcedAt}::timestamp, ${round.leadInvestors}::text[], ${round.allInvestors}::text[], NOW())
+        `;
+      }
+    }
+
+    // Auto-calculate and store impact score
+    if (startupId) {
+      const totalFundingUsdCents = (data.fundingRounds || []).reduce((sum, r) => sum + (r.amountUsd || 0), 0);
+      const { calculateImpactScore } = await import('@/lib/impact-score');
+      const { total: impactScore } = calculateImpactScore({
+        totalFundingUsdCents,
+        employeeCount: data.employeeCount ?? null,
+        stage: data.stage,
+        foundedYear: data.foundedYear ?? null,
+      });
+      await prisma.$executeRaw`UPDATE "Startup" SET "impactScore" = ${impactScore} WHERE id = ${startupId}`;
     }
 
     // TODO: Send notification to admin
