@@ -329,6 +329,43 @@ export async function updateStartupAction(id: string, data: StartupSubmission) {
       }
     }
 
+    // Update Funding Rounds — delete existing, re-insert updated list
+    if (data.fundingRounds !== undefined) {
+      await prisma.$executeRaw`DELETE FROM "FundingRound" WHERE "startupId" = ${id}`;
+      for (const round of data.fundingRounds) {
+        await prisma.$executeRaw`
+          INSERT INTO "FundingRound" (id, "startupId", "roundType", "amountUsd", "amountInr", "announcedAt", "leadInvestors", "allInvestors", "createdAt")
+          VALUES (gen_random_uuid(), ${id}, ${round.roundType}, ${round.amountUsd}, ${round.amountInr}, ${round.announcedAt}::timestamp, ${round.leadInvestors}::text[], ${round.allInvestors}::text[], NOW())
+        `;
+      }
+    }
+
+    // Update foundersData if provided
+    if (data.foundersData !== undefined) {
+      const foundersDataJson = data.foundersData.length > 0
+        ? JSON.stringify(data.foundersData)
+        : null;
+      const founderNames = data.foundersData.filter(f => f.name.trim()).map(f => f.name);
+      await prisma.$executeRaw`
+        UPDATE "Startup"
+        SET "foundersData" = ${foundersDataJson}::jsonb,
+            founders = ${founderNames}::text[],
+            "updatedAt" = NOW()
+        WHERE id = ${id}
+      `;
+    }
+
+    // Recalculate impact score
+    const totalFundingUsdCents = (data.fundingRounds || []).reduce((sum, r) => sum + (r.amountUsd || 0), 0);
+    const { calculateImpactScore } = await import('@/lib/impact-score');
+    const { total: impactScore } = calculateImpactScore({
+      totalFundingUsdCents,
+      employeeCount: data.employeeCount ?? null,
+      stage: data.stage,
+      foundedYear: data.foundedYear ?? null,
+    });
+    await prisma.$executeRaw`UPDATE "Startup" SET "impactScore" = ${impactScore} WHERE id = ${id}`;
+
     // TODO: Send notification to admin if status changed to PENDING
     // TODO: Send confirmation email to founder
 

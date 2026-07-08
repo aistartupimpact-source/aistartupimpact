@@ -13,7 +13,7 @@ export async function getStartupsAction() {
         "foundedYear", "headquartersCity", stage, "totalFundingInr", "employeeCount",
         "isFeatured", "featuredUntil", "impactScore", "isApproved", "approvedAt",
         "isVerified", "claimStatus", "contentReviewed",
-        "ownerId", category, "businessType", "createdAt", "updatedAt"
+        "ownerId", category, "businessType", founders, "foundersData", "createdAt", "updatedAt"
       FROM "Startup"
       WHERE "deletedAt" IS NULL
       ORDER BY "isApproved" ASC, "isFeatured" DESC, "createdAt" DESC
@@ -24,6 +24,23 @@ export async function getStartupsAction() {
     return [];
   }
 }
+
+export async function getStartupFundingRoundsAction(startupId: string) {
+  try {
+    const fundingRounds = await sql`
+      SELECT 
+        id, "startupId", "roundType", "amountUsd", "amountInr", "announcedAt", "leadInvestors", "allInvestors", "createdAt"
+      FROM "FundingRound"
+      WHERE "startupId" = ${startupId}
+      ORDER BY "announcedAt" DESC
+    `;
+    return fundingRounds;
+  } catch (error) {
+    console.error('Error fetching startup funding rounds:', error);
+    return [];
+  }
+}
+
 
 export async function getStartupFAQsAction(startupId: string) {
   try {
@@ -173,14 +190,36 @@ export async function updateStartupAction(id: string, data: {
   category?: string;
   businessType?: string;
   faqs?: Array<{ question: string; answer: string; order: number }>;
+  fundingRounds?: Array<{
+    roundType: string;
+    amountUsd: number;
+    amountInr: number;
+    announcedAt: string;
+    leadInvestors: string[];
+    allInvestors: string[];
+  }>;
+  foundersData?: Array<{
+    name: string;
+    role: string;
+    prev: string;
+    bio: string;
+    avatar: string;
+    linkedin: string;
+  }>;
 }) {
   try {
     // Auto-calculate impact score from funding + employees + stage + age
-    const fundingResult = await sql`
-      SELECT COALESCE(SUM("amountUsd"), 0)::bigint AS total
-      FROM "FundingRound" WHERE "startupId" = ${id}
-    `;
-    const totalFundingUsdCents = Number(fundingResult[0]?.total || 0);
+    let totalFundingUsdCents = 0;
+    if (data.fundingRounds !== undefined) {
+      totalFundingUsdCents = (data.fundingRounds || []).reduce((sum, r) => sum + (r.amountUsd || 0), 0);
+    } else {
+      const fundingResult = await sql`
+        SELECT COALESCE(SUM("amountUsd"), 0)::bigint AS total
+        FROM "FundingRound" WHERE "startupId" = ${id}
+      `;
+      totalFundingUsdCents = Number(fundingResult[0]?.total || 0);
+    }
+
     const { calculateImpactScore } = await import('@/lib/impact-score');
     const { total: impactScore } = calculateImpactScore({
       totalFundingUsdCents,
@@ -227,6 +266,36 @@ export async function updateStartupAction(id: string, data: {
       }
     }
 
+    // Update Funding Rounds if provided
+    if (data.fundingRounds !== undefined) {
+      // Delete existing rounds
+      await sql`DELETE FROM "FundingRound" WHERE "startupId" = ${id}`;
+      
+      // Insert new rounds
+      if (data.fundingRounds.length > 0) {
+        for (const round of data.fundingRounds) {
+          await sql`
+            INSERT INTO "FundingRound" (id, "startupId", "roundType", "amountUsd", "amountInr", "announcedAt", "leadInvestors", "allInvestors", "createdAt")
+            VALUES (gen_random_uuid(), ${id}, ${round.roundType}, ${round.amountUsd}, ${round.amountInr}, ${round.announcedAt}::timestamp, ${round.leadInvestors}::text[], ${round.allInvestors}::text[], NOW())
+          `;
+        }
+      }
+    }
+
+    // Update foundersData if provided
+    if (data.foundersData !== undefined) {
+      const foundersDataJson = data.foundersData.length > 0
+        ? JSON.stringify(data.foundersData)
+        : null;
+      const foundersNames = data.foundersData.filter(f => f.name.trim()).map(f => f.name);
+      await sql`
+        UPDATE "Startup"
+        SET "foundersData" = ${foundersDataJson}::jsonb,
+            founders = ${foundersNames}::text[]
+        WHERE id = ${id}
+      `;
+    }
+
     revalidatePath('/startups-dir');
     return { success: true };
   } catch (error) {
@@ -234,6 +303,7 @@ export async function updateStartupAction(id: string, data: {
     return { success: false, error: 'Failed to update startup' };
   }
 }
+
 
 export async function deleteStartupAction(id: string) {
   try {

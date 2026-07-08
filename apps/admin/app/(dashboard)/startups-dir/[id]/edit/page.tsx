@@ -3,9 +3,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Upload, Loader2, Save, Crown } from 'lucide-react';
-import { getStartupsAction, getStartupFAQsAction, updateStartupAction } from '../../actions';
+import { getStartupsAction, getStartupFAQsAction, getStartupFundingRoundsAction, updateStartupAction } from '../../actions';
 import { uploadLogoAction } from '../../../media/actions';
 import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
+import FundingRoundsManager, { FundingRound, convertToSaveFormat, convertFromDbFormat } from '@/components/shared/FundingRoundsManager';
+import FoundersDetailsManager, { FounderDetail } from '@/components/shared/FoundersDetailsManager';
+
 
 const stages = ['IDEA', 'PRE_SEED', 'SEED', 'SERIES_A', 'SERIES_B', 'SERIES_C', 'GROWTH', 'PUBLIC'];
 
@@ -37,10 +40,13 @@ interface Startup {
   isFeatured: boolean;
   foundedYear?: number | null;
   employeeCount?: number | null;
-        impactScore?: number | null;
+  impactScore?: number | null;
   category?: string;
   businessType?: string;
+  founders?: string[];
+  foundersData?: any[] | null;
 }
+
 
 export default function EditStartupPage() {
   const router = useRouter();
@@ -54,8 +60,12 @@ export default function EditStartupPage() {
   const [logoPreviewError, setLogoPreviewError] = useState(false);
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [loadingFaqs, setLoadingFaqs] = useState(false);
+  const [fundingRounds, setFundingRounds] = useState<FundingRound[]>([]);
+  const [foundersDetails, setFoundersDetails] = useState<FounderDetail[]>([]);
+  const [loadingFundingRounds, setLoadingFundingRounds] = useState(false);
   
   const [formData, setFormData] = useState<Startup | null>(null);
+
 
   useEffect(() => {
     loadStartup();
@@ -75,6 +85,13 @@ export default function EditStartupPage() {
       
       setFormData(startup as Startup);
       
+      // Load Founders Details
+      if (startup.foundersData && Array.isArray(startup.foundersData)) {
+        setFoundersDetails(startup.foundersData);
+      } else {
+        setFoundersDetails([]);
+      }
+
       // Load FAQs
       setLoadingFaqs(true);
       try {
@@ -86,6 +103,18 @@ export default function EditStartupPage() {
         // If table doesn't exist, just set empty array
         setFaqs([]);
       }
+
+      // Load Funding Rounds
+      setLoadingFundingRounds(true);
+      try {
+        const dbRounds = await getStartupFundingRoundsAction(startupId);
+        setFundingRounds(convertFromDbFormat(dbRounds));
+      } catch (roundError) {
+        console.error('Error loading funding rounds:', roundError);
+        setFundingRounds([]);
+      } finally {
+        setLoadingFundingRounds(false);
+      }
     } catch (error) {
       console.error('Error loading startup:', error);
       alert('Error loading startup');
@@ -94,6 +123,7 @@ export default function EditStartupPage() {
       setLoadingFaqs(false);
     }
   };
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     if (!formData) return;
@@ -159,7 +189,11 @@ export default function EditStartupPage() {
         employeeCount: formData.employeeCount,
         category: formData.category,
         businessType: formData.businessType,
-        faqs: faqs.length > 0 ? faqs : undefined,
+        faqs: faqs.length > 0 ? faqs : [],
+        fundingRounds: fundingRounds.length > 0 ? convertToSaveFormat(fundingRounds) : [],
+        foundersData: foundersDetails.filter(f => f.name.trim()).length > 0
+          ? foundersDetails.filter(f => f.name.trim())
+          : [],
       });
       
       if (result.success) {
@@ -174,6 +208,7 @@ export default function EditStartupPage() {
       setSaving(false);
     }
   };
+
 
   if (loading) {
     return (
@@ -468,6 +503,23 @@ export default function EditStartupPage() {
           </div>
         </div>
 
+        {/* Founders Details */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6">
+          <FoundersDetailsManager founders={foundersDetails} onChange={setFoundersDetails} maxFounders={5} />
+        </div>
+
+        {/* Funding Rounds */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6">
+          {loadingFundingRounds ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-5 h-5 animate-spin text-brand" />
+              <span className="ml-2 text-sm text-gray-500">Loading funding rounds...</span>
+            </div>
+          ) : (
+            <FundingRoundsManager rounds={fundingRounds} onChange={setFundingRounds} maxRounds={10} />
+          )}
+        </div>
+
         {/* FAQs */}
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6">
           {loadingFaqs ? (
@@ -479,6 +531,7 @@ export default function EditStartupPage() {
             <FAQManager faqs={faqs} onChange={setFaqs} maxFaqs={10} />
           )}
         </div>
+
 
         {/* Actions */}
         <div className="flex items-center justify-end gap-3 sticky bottom-0 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 p-4 rounded-xl">

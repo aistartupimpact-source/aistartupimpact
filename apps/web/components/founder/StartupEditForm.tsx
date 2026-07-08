@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Upload, X, Loader2 } from 'lucide-react';
 import { updateStartupAction } from '@/app/founder/startups/actions';
 import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
+import FundingRoundsManager, { FundingRound, convertToSaveFormat, convertFromDbFormat } from '@/components/shared/FundingRoundsManager';
+import FoundersDetailsManager, { FounderDetail } from '@/components/shared/FoundersDetailsManager';
 
 interface Startup {
   id: string;
@@ -61,9 +63,10 @@ const BUSINESS_TYPES = [
 interface StartupEditFormProps {
   startup: Startup;
   existingFaqs?: any[];
+  existingFundingRounds?: any[];
 }
 
-export default function StartupEditForm({ startup, existingFaqs = [] }: StartupEditFormProps) {
+export default function StartupEditForm({ startup, existingFaqs = [], existingFundingRounds = [] }: StartupEditFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -75,6 +78,23 @@ export default function StartupEditForm({ startup, existingFaqs = [] }: StartupE
       answer: faq.answer,
       order: faq.order ?? index,
     }))
+  );
+  // Seed existing funding rounds into the manager
+  const [fundingRounds, setFundingRounds] = useState<FundingRound[]>(
+    convertFromDbFormat(existingFundingRounds)
+  );
+  // Seed existing foundersData from startup
+  const [foundersDetails, setFoundersDetails] = useState<FounderDetail[]>(
+    Array.isArray(startup.foundersData)
+      ? startup.foundersData.map((f: any) => ({
+          name: f.name || '',
+          role: f.role || '',
+          prev: f.prev || '',
+          bio: f.bio || '',
+          avatar: f.avatar || '',
+          linkedin: f.linkedin || '',
+        }))
+      : []
   );
 
   const [formData, setFormData] = useState({
@@ -189,6 +209,10 @@ export default function StartupEditForm({ startup, existingFaqs = [] }: StartupE
         businessType: formData.businessType || undefined,
         totalFundingInr: formData.totalFundingInr ? Math.round(parseFloat(formData.totalFundingInr) * 100) : undefined,
         faqs: faqs.length > 0 ? faqs : undefined,
+        fundingRounds: fundingRounds.length > 0 ? convertToSaveFormat(fundingRounds) : undefined,
+        foundersData: foundersDetails.filter(f => f.name.trim()).length > 0
+          ? foundersDetails.filter(f => f.name.trim())
+          : undefined,
       });
 
       if (!result.success) {
@@ -586,6 +610,16 @@ export default function StartupEditForm({ startup, existingFaqs = [] }: StartupE
       {/* FAQs Section */}
       <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
         <FAQManager faqs={faqs} onChange={setFaqs} maxFaqs={10} />
+      </div>
+
+      {/* Founders Details Section */}
+      <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
+        <FoundersDetailsManager founders={foundersDetails} onChange={setFoundersDetails} maxFounders={5} />
+      </div>
+
+      {/* Funding Rounds Section */}
+      <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
+        <FundingRoundsManager rounds={fundingRounds} onChange={setFundingRounds} maxRounds={10} />
       </div>
 
       {/* Submit Button */}
