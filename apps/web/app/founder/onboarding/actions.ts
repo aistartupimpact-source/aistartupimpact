@@ -6,11 +6,14 @@ import { revalidatePath } from 'next/cache';
 
 export async function completeOnboardingAction(data: {
   company: string;
+  previousCompany?: string;
   role: string;
   phone?: string;
   linkedin?: string;
   twitter?: string;
   website?: string;
+  bio?: string;
+  avatar?: string;
 }) {
   try {
     const session = await requireFounderAuth();
@@ -19,11 +22,14 @@ export async function completeOnboardingAction(data: {
       where: { id: session.userId },
       data: {
         company: data.company,
+        previousCompany: data.previousCompany || null,
         role: data.role,
         phone: data.phone || null,
         linkedin: data.linkedin || null,
         twitter: data.twitter || null,
         website: data.website || null,
+        bio: data.bio || null,
+        avatar: data.avatar || null,
         onboardingCompleted: true,
         onboardingStep: 2,
         updatedAt: new Date(),

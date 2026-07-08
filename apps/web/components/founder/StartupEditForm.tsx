@@ -108,7 +108,6 @@ export default function StartupEditForm({ startup, existingFaqs = [], existingFu
     headquartersCity: startup.headquartersCity || '',
     stage: startup.stage,
     employeeCount: startup.employeeCount?.toString() || '',
-    founders: startup.founders.join(', '),
     logoUrl: startup.logoUrl || '',
     category: startup.category || '',
     businessType: startup.businessType || '',
@@ -183,13 +182,18 @@ export default function StartupEditForm({ startup, existingFaqs = [], existingFu
     setError('');
 
     try {
-      if (!formData.name || !formData.tagline || !formData.description || !formData.websiteUrl || !formData.category) {
+      // Validate required fields
+      if (!formData.name || !formData.tagline || !formData.description || !formData.websiteUrl || !formData.category || !formData.businessType || !formData.employeeCount || !formData.foundedYear || !formData.stage || !formData.logoUrl) {
         throw new Error('Please fill in all required fields');
       }
 
-      const foundersArray = formData.founders
-        .split(',')
-        .map((f: string) => f.trim())
+      const activeFounders = foundersDetails.filter(f => f.name.trim());
+      if (activeFounders.length === 0) {
+        throw new Error('Please add at least one founder under Founders Details');
+      }
+
+      const foundersArray = foundersDetails
+        .map(f => f.name.trim())
         .filter(Boolean);
 
       const result = await updateStartupAction(startup.id, {
@@ -239,7 +243,7 @@ export default function StartupEditForm({ startup, existingFaqs = [], existingFu
       {/* Logo Upload */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Logo
+          Logo <span className="text-red-500">*</span>
         </label>
         <div className="flex items-center gap-4">
           {logoPreview ? (
@@ -381,13 +385,14 @@ export default function StartupEditForm({ startup, existingFaqs = [], existingFu
       {/* Business Type */}
       <div>
         <label htmlFor="businessType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Business Model
+          Business Model <span className="text-red-500">*</span>
         </label>
         <select
           id="businessType"
           name="businessType"
           value={formData.businessType}
           onChange={handleChange}
+          required
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
         >
           <option value="">Select business model</option>
@@ -456,7 +461,7 @@ export default function StartupEditForm({ startup, existingFaqs = [], existingFu
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label htmlFor="foundedYear" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Founded Year
+            Founded Year <span className="text-red-500">*</span>
           </label>
           <input
             type="number"
@@ -466,19 +471,21 @@ export default function StartupEditForm({ startup, existingFaqs = [], existingFu
             onChange={handleChange}
             min="1900"
             max={new Date().getFullYear()}
+            required
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
           />
         </div>
 
         <div>
           <label htmlFor="stage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Funding Stage
+            Funding Stage <span className="text-red-500">*</span>
           </label>
           <select
             id="stage"
             name="stage"
             value={formData.stage ?? ''}
             onChange={handleChange}
+            required
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
           >
             {STARTUP_STAGES.map(stage => (
@@ -491,7 +498,7 @@ export default function StartupEditForm({ startup, existingFaqs = [], existingFu
 
         <div>
           <label htmlFor="employeeCount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Team Size
+            Team Size <span className="text-red-500">*</span>
           </label>
           <input
             type="number"
@@ -500,6 +507,7 @@ export default function StartupEditForm({ startup, existingFaqs = [], existingFu
             value={formData.employeeCount}
             onChange={handleChange}
             min="1"
+            required
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
             placeholder="e.g. 10"
           />
@@ -591,21 +599,6 @@ export default function StartupEditForm({ startup, existingFaqs = [], existingFu
         />
       </div>
 
-      {/* Founders */}
-      <div>
-        <label htmlFor="founders" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Founders
-        </label>
-        <input
-          type="text"
-          id="founders"
-          name="founders"
-          value={formData.founders}
-          onChange={handleChange}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
-          placeholder="Comma-separated names, e.g. John Doe, Jane Smith"
-        />
-      </div>
 
       {/* FAQs Section */}
       <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
@@ -633,7 +626,20 @@ export default function StartupEditForm({ startup, existingFaqs = [], existingFu
         </button>
         <button
           type="submit"
-          disabled={loading}
+          disabled={
+            loading ||
+            !formData.name ||
+            !formData.tagline ||
+            !formData.description ||
+            !formData.websiteUrl ||
+            !formData.category ||
+            !formData.businessType ||
+            !formData.employeeCount ||
+            !formData.foundedYear ||
+            !formData.stage ||
+            !formData.logoUrl ||
+            !foundersDetails.some(f => f.name.trim())
+          }
           className="px-6 py-2 bg-brand hover:bg-brand/90 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {loading && <Loader2 className="w-4 h-4 animate-spin" />}

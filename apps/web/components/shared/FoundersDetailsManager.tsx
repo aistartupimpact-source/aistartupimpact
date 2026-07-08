@@ -78,7 +78,7 @@ export default function FoundersDetailsManager({ founders, onChange, maxFounders
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-gray-900 dark:text-white font-sora">Founders</h3>
+        <h3 className="text-sm font-bold text-gray-900 dark:text-white font-sora">Founders <span className="text-red-500">*</span></h3>
         {founders.length < maxFounders && (
           <button
             type="button"

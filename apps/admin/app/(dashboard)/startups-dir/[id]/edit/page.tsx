@@ -267,8 +267,11 @@ export default function EditStartupPage() {
             </div>
 
             <div className="md:col-span-2">
-              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
-                Tagline *
+              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta flex justify-between items-center">
+                <span>Tagline *</span>
+                <span className="text-[10px] lowercase font-normal text-gray-400 font-jakarta">
+                  {(formData.tagline || '').length}/60 characters
+                </span>
               </label>
               <input
                 type="text"
@@ -276,6 +279,7 @@ export default function EditStartupPage() {
                 value={formData.tagline}
                 onChange={handleChange}
                 required
+                maxLength={60}
                 className="input-field text-sm"
                 placeholder="e.g. India-first foundation models"
               />
@@ -349,14 +353,18 @@ export default function EditStartupPage() {
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
-              Description
+            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta flex justify-between items-center">
+              <span>Description</span>
+              <span className="text-[10px] lowercase font-normal text-gray-400 font-jakarta">
+                {(formData.description || '').length}/500 characters
+              </span>
             </label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
               rows={6}
+              maxLength={500}
               className="input-field text-sm"
               placeholder="Brief description of the startup..."
             />

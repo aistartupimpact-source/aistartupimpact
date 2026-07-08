@@ -33,7 +33,18 @@ const STARTUP_CATEGORIES = [
 
 const BUSINESS_TYPES = ['B2B', 'B2C', 'B2B2C', 'B2G', 'D2C', 'Marketplace', 'Platform'];
 
-export default function StartupForm() {
+interface StartupFormProps {
+  initialFounder?: {
+    name: string;
+    role: string;
+    prev: string;
+    bio: string;
+    avatar: string;
+    linkedin: string;
+  };
+}
+
+export default function StartupForm({ initialFounder }: StartupFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -51,7 +62,6 @@ export default function StartupForm() {
     headquartersCity: '',
     stage: 'SEED',
     employeeCount: '',
-    founders: '',
     logoUrl: '',
     category: '',
     businessType: '',
@@ -59,7 +69,20 @@ export default function StartupForm() {
 
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [fundingRounds, setFundingRounds] = useState<FundingRound[]>([]);
-  const [foundersDetails, setFoundersDetails] = useState<FounderDetail[]>([]);
+  const [foundersDetails, setFoundersDetails] = useState<FounderDetail[]>(
+    initialFounder && initialFounder.name
+      ? [
+          {
+            name: initialFounder.name,
+            role: initialFounder.role,
+            prev: initialFounder.prev,
+            bio: initialFounder.bio,
+            avatar: initialFounder.avatar,
+            linkedin: initialFounder.linkedin,
+          },
+        ]
+      : []
+  );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData(prev => ({
@@ -117,14 +140,18 @@ export default function StartupForm() {
 
     try {
       // Validate required fields
-      if (!formData.name || !formData.tagline || !formData.description || !formData.websiteUrl) {
+      if (!formData.name || !formData.tagline || !formData.description || !formData.websiteUrl || !formData.category || !formData.businessType || !formData.employeeCount || !formData.foundedYear || !formData.stage || !formData.logoUrl) {
         throw new Error('Please fill in all required fields');
       }
 
-      // Parse founders
-      const foundersArray = formData.founders
-        .split(',')
-        .map(f => f.trim())
+      const activeFounders = foundersDetails.filter(f => f.name.trim());
+      if (activeFounders.length === 0) {
+        throw new Error('Please add at least one founder under Founders Details');
+      }
+
+      // Parse founders from details
+      const foundersArray = foundersDetails
+        .map(f => f.name.trim())
         .filter(Boolean);
 
       const result = await submitStartupAction({
@@ -203,7 +230,7 @@ export default function StartupForm() {
       {/* Logo Upload */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Logo
+          Logo <span className="text-red-500">*</span>
         </label>
         <div className="flex items-center gap-4">
           {logoPreview ? (
@@ -267,12 +294,12 @@ export default function StartupForm() {
           value={formData.tagline}
           onChange={handleChange}
           required
-          maxLength={200}
+          maxLength={60}
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
-          placeholder="A short, catchy description (max 200 characters)"
+          placeholder="A short, catchy description (max 60 characters)"
         />
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          {formData.tagline.length}/200 characters
+          {formData.tagline.length}/60 characters
         </p>
       </div>
 
@@ -287,13 +314,13 @@ export default function StartupForm() {
           value={formData.description}
           onChange={handleChange}
           required
-          maxLength={1000}
+          maxLength={500}
           rows={6}
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
           placeholder="Describe your startup, what problem it solves, and what makes it unique..."
         />
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          {formData.description.length}/1000 characters
+          {formData.description.length}/500 characters
         </p>
       </div>
 
@@ -351,7 +378,7 @@ export default function StartupForm() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label htmlFor="foundedYear" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Founded Year
+            Founded Year <span className="text-red-500">*</span>
           </label>
           <input
             type="number"
@@ -361,19 +388,21 @@ export default function StartupForm() {
             onChange={handleChange}
             min="1900"
             max={new Date().getFullYear()}
+            required
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
           />
         </div>
 
         <div>
           <label htmlFor="stage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Funding Stage
+            Funding Stage <span className="text-red-500">*</span>
           </label>
           <select
             id="stage"
             name="stage"
             value={formData.stage}
             onChange={handleChange}
+            required
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
           >
             {STARTUP_STAGES.map(stage => (
@@ -386,7 +415,7 @@ export default function StartupForm() {
 
         <div>
           <label htmlFor="employeeCount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Team Size
+            Team Size <span className="text-red-500">*</span>
           </label>
           <input
             type="number"
@@ -395,6 +424,7 @@ export default function StartupForm() {
             value={formData.employeeCount}
             onChange={handleChange}
             min="1"
+            required
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
             placeholder="e.g. 10"
           />
@@ -440,13 +470,14 @@ export default function StartupForm() {
 
         <div>
           <label htmlFor="businessType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Business Type
+            Business Type <span className="text-red-500">*</span>
           </label>
           <select
             id="businessType"
             name="businessType"
             value={formData.businessType}
             onChange={handleChange}
+            required
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
           >
             <option value="">Select business type</option>
@@ -457,21 +488,6 @@ export default function StartupForm() {
         </div>
       </div>
 
-      {/* Founders */}
-      <div>
-        <label htmlFor="founders" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Founders
-        </label>
-        <input
-          type="text"
-          id="founders"
-          name="founders"
-          value={formData.founders}
-          onChange={handleChange}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
-          placeholder="Comma-separated names, e.g. John Doe, Jane Smith"
-        />
-      </div>
 
       {/* Founders Details Section */}
       <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
@@ -499,7 +515,20 @@ export default function StartupForm() {
         </button>
         <button
           type="submit"
-          disabled={loading}
+          disabled={
+            loading ||
+            !formData.name ||
+            !formData.tagline ||
+            !formData.description ||
+            !formData.websiteUrl ||
+            !formData.category ||
+            !formData.businessType ||
+            !formData.employeeCount ||
+            !formData.foundedYear ||
+            !formData.stage ||
+            !formData.logoUrl ||
+            !foundersDetails.some(f => f.name.trim())
+          }
           className="px-6 py-2 bg-brand hover:bg-brand/90 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {loading && <Loader2 className="w-4 h-4 animate-spin" />}

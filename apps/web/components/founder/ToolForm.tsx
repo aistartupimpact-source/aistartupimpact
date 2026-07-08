@@ -388,12 +388,12 @@ export default function ToolForm() {
           value={formData.tagline}
           onChange={handleChange}
           required
-          maxLength={200}
+          maxLength={60}
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
-          placeholder="A short, catchy description (max 200 characters)"
+          placeholder="A short, catchy description (max 60 characters)"
         />
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          {formData.tagline.length}/200 characters
+          {formData.tagline.length}/60 characters
         </p>
       </div>
 
@@ -408,13 +408,13 @@ export default function ToolForm() {
           value={formData.description}
           onChange={handleChange}
           required
-          maxLength={1000}
+          maxLength={500}
           rows={6}
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
           placeholder="Describe your tool, its features, and what makes it unique..."
         />
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          {formData.description.length}/1000 characters
+          {formData.description.length}/500 characters
         </p>
       </div>
 

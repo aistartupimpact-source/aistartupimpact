@@ -331,12 +331,12 @@ export default function EditToolPage() {
                 value={formData.tagline}
                 onChange={handleChange}
                 required
-                maxLength={200}
+                maxLength={60}
                 className="input-field text-sm"
                 placeholder="A short, catchy description"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {formData.tagline.length}/200 characters
+                {formData.tagline.length}/60 characters
               </p>
             </div>
           </div>
@@ -350,12 +350,12 @@ export default function EditToolPage() {
               value={formData.description}
               onChange={handleChange}
               rows={6}
-              maxLength={1000}
+              maxLength={500}
               className="input-field text-sm"
               placeholder="Detailed description of the tool..."
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {formData.description.length}/1000 characters
+              {formData.description.length}/500 characters
             </p>
           </div>
         </div>

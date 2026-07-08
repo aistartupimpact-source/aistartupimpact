@@ -1,8 +1,30 @@
 import { requireFounderAuth } from '@/lib/founder-auth';
+import { prisma } from '@aistartupimpact/database';
 import StartupForm from '@/components/founder/StartupForm';
 
 export default async function NewStartupPage() {
-  await requireFounderAuth();
+  const session = await requireFounderAuth();
+
+  const user = await prisma.founderUser.findUnique({
+    where: { id: session.userId },
+    select: {
+      name: true,
+      role: true,
+      previousCompany: true,
+      bio: true,
+      avatar: true,
+      linkedin: true,
+    },
+  });
+
+  const initialFounder = user ? {
+    name: user.name,
+    role: user.role || 'Founder',
+    prev: user.previousCompany || '',
+    bio: user.bio || '',
+    avatar: user.avatar || '',
+    linkedin: user.linkedin || '',
+  } : undefined;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -17,7 +39,7 @@ export default async function NewStartupPage() {
       </div>
 
       {/* Form */}
-      <StartupForm />
+      <StartupForm initialFounder={initialFounder} />
     </div>
   );
 }
