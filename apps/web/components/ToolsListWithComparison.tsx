@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Star, Zap, ArrowRight, CheckSquare, Square, X, BarChart, Search, Grid3X3, List, ChevronDown } from 'lucide-react';
+import { Star, Zap, ArrowRight, CheckSquare, Square, X, BarChart, Search, Grid3X3, List, Loader2 } from 'lucide-react';
 import BookmarkButton from './BookmarkButton';
 
 interface ToolPick {
@@ -366,17 +366,9 @@ export default function ToolsListWithComparison({ picks }: { picks: ToolPick[] }
         </div>
       )}
 
-      {/* ── Load More / Pagination ── */}
-      {hasMore && (
-        <div className="mt-8 text-center">
-          <button
-            onClick={() => setVisibleCount(prev => prev + ITEMS_PER_PAGE)}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold font-jakarta text-gray-700 dark:text-gray-300 hover:border-brand hover:text-brand transition-colors shadow-sm"
-          >
-            <ChevronDown className="w-4 h-4" />
-            Show more tools ({filteredTools.length - visibleCount} remaining)
-          </button>
-        </div>
+      {/* ── Infinite Scroll ── */}
+      {filteredTools.length > 0 && hasMore && (
+        <ToolsInfiniteScrollTrigger onIntersect={() => setVisibleCount(prev => prev + ITEMS_PER_PAGE)} />
       )}
 
       {/* No Results */}
@@ -470,6 +462,35 @@ export default function ToolsListWithComparison({ picks }: { picks: ToolPick[] }
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function ToolsInfiniteScrollTrigger({ onIntersect }: { onIntersect: () => void }) {
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const onIntersectRef = useRef(onIntersect);
+  onIntersectRef.current = onIntersect;
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          onIntersectRef.current();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={sentinelRef} className="flex items-center justify-center py-6">
+      <Loader2 className="w-5 h-5 text-brand animate-spin" />
     </div>
   );
 }

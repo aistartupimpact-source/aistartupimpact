@@ -60,7 +60,7 @@ const config: Config = {
         'slide-up': 'slideUp 0.3s ease-out',
         'slide-down': 'slideDown 0.3s ease-out',
         'fade-in': 'fadeIn 0.3s ease-out',
-        ticker: 'ticker 30s linear infinite',
+        ticker: 'ticker 15s linear infinite',
       },
       keyframes: {
         slideUp: {

@@ -110,9 +110,9 @@ export default function Footer() {
 
   return (
     <footer className={`${pathname === '/newsletter' ? 'hidden md:block' : ''} bg-navy dark:bg-gray-950 border-t border-gray-800 dark:border-gray-800`}>
-      {/* Newsletter CTA Section - Redesigned to match image */}
+      {/* Newsletter CTA Section - Hidden on mobile, shown on tablet+ */}
       {pathname !== '/newsletter' && (
-      <div className="border-b border-white/10">
+      <div className="border-b border-white/10 hidden sm:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
           <div className="max-w-6xl mx-auto">
             <div className="relative overflow-hidden bg-gradient-to-br from-[#0a1628] via-[#0f1f3a] to-[#1a2942] rounded-2xl p-8 sm:p-10 md:p-12 border border-blue-500/20 shadow-2xl">
@@ -296,19 +296,59 @@ export default function Footer() {
       </div>
       )}
 
+      {/* Compact Mobile Newsletter */}
+      {pathname !== '/newsletter' && (
+        <div className="sm:hidden border-b border-white/10 px-4 py-4">
+          <p className="text-white text-xs font-bold font-sora mb-2">Weekly AI Newsletter <span className="text-gray-500 font-normal font-jakarta">· Every Friday</span></p>
+          <form className="flex gap-2" onSubmit={handleSubmit}>
+            <input
+              type="email"
+              name="email"
+              placeholder="your@email.com"
+              required
+              disabled={isSubmitting || showSuccess}
+              className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-brand/50 font-jakarta text-xs disabled:opacity-50"
+            />
+            <button
+              type="submit"
+              disabled={isSubmitting || showSuccess}
+              className="px-3 py-2 bg-brand text-white text-xs font-bold rounded-lg shrink-0 disabled:opacity-50"
+            >
+              {showSuccess ? '✓' : 'Join'}
+            </button>
+          </form>
+        </div>
+      )}
+
       {/* Link Columns */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-8">
-          {/* Brand Column */}
-          <div className="col-span-2 sm:col-span-3 lg:col-span-1 mb-4 lg:mb-0">
-            <Link href="/" className="inline-block">
-              <Logo height={76} forceLight />
-            </Link>
-            <p className="text-gray-400 text-sm font-jakarta mt-3 leading-relaxed max-w-xs">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-12">
+        <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-8 lg:gap-8">
+          {/* Brand Column - minimal on mobile */}
+          <div className="col-span-3 sm:col-span-3 lg:col-span-1 mb-1 lg:mb-0">
+            <div className="flex items-center justify-between sm:block">
+              <Link href="/" className="inline-block">
+                <Logo height={76} forceLight />
+              </Link>
+              <div className="flex items-center gap-2 sm:hidden">
+                {socials.map((s) => (
+                  <a
+                    key={s.label}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-7 h-7 rounded-md bg-white/5 flex items-center justify-center"
+                    aria-label={s.label}
+                  >
+                    <s.icon className="w-3 h-3 text-gray-400" />
+                  </a>
+                ))}
+              </div>
+            </div>
+            <p className="text-gray-400 text-sm font-jakarta mt-3 leading-relaxed max-w-xs hidden sm:block">
               India&apos;s definitive source for AI startup news, tools, funding data,
               and ecosystem intelligence.
             </p>
-            <div className="flex items-center gap-3 mt-5">
+            <div className="hidden sm:flex items-center gap-3 mt-5">
               {socials.map((s) => (
                 <a
                   key={s.label}
@@ -324,18 +364,18 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Link Columns - All in one row */}
+          {/* Link Columns */}
           {footerLinks.map((col) => (
             <div key={col.title}>
-              <h4 className="font-jakarta font-bold text-xs uppercase tracking-widest text-gray-500 mb-4">
+              <h4 className="font-jakarta font-bold text-[10px] sm:text-xs uppercase tracking-widest text-gray-500 mb-2 sm:mb-4">
                 {col.title}
               </h4>
-              <ul className="space-y-2.5">
+              <ul className="space-y-1 sm:space-y-2.5">
                 {col.links.map((link) => (
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="text-sm font-jakarta transition-colors text-gray-400 hover:text-white"
+                      className="text-[11px] sm:text-sm font-jakarta transition-colors text-gray-400 hover:text-white"
                     >
                       {link.label}
                     </Link>
@@ -349,11 +389,11 @@ export default function Footer() {
 
       {/* Bottom Bar */}
       <div className="border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500 font-jakarta">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-3 text-[11px] sm:text-xs text-gray-500 font-jakarta">
             <span>&copy; {new Date().getFullYear()} AI Startup Impact. All rights reserved.</span>
 
-            <a href="https://www.producthunt.com/products/aistartupimpact?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-aistartupimpact" target="_blank" rel="noopener noreferrer" className="order-first sm:order-none mb-4 sm:mb-0">
+            <a href="https://www.producthunt.com/products/aistartupimpact?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-aistartupimpact" target="_blank" rel="noopener noreferrer" className="hidden sm:block order-first sm:order-none mb-4 sm:mb-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 alt="AIStartupImpact - Discover, feature & grow AI startups in one place | Product Hunt"
@@ -363,11 +403,11 @@ export default function Footer() {
               />
             </a>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               <CookieSettingsLink className="hover:text-brand transition-colors" />
-              <Link href="/contact" className="flex items-center gap-1.5 hover:text-brand transition-colors">
-                <Mail className="w-3.5 h-3.5" />
-                Contact Us
+              <Link href="/contact" className="flex items-center gap-1 sm:gap-1.5 hover:text-brand transition-colors">
+                <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                Contact
               </Link>
             </div>
           </div>

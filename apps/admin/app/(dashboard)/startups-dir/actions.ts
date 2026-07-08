@@ -11,10 +11,12 @@ export async function getStartupsAction() {
       SELECT 
         id, name, tagline, description, "logoUrl", "websiteUrl", "linkedinUrl", "twitterUrl",
         "foundedYear", "headquartersCity", stage, "totalFundingInr", "employeeCount",
-        "isFeatured", "featuredUntil", "impactScore", "createdAt", "updatedAt"
+        "isFeatured", "featuredUntil", "impactScore", "isApproved", "approvedAt",
+        "isVerified", "claimStatus", "contentReviewed",
+        "ownerId", category, "businessType", "createdAt", "updatedAt"
       FROM "Startup"
       WHERE "deletedAt" IS NULL
-      ORDER BY "isFeatured" DESC, "createdAt" DESC
+      ORDER BY "isApproved" ASC, "isFeatured" DESC, "createdAt" DESC
     `;
     return startups;
   } catch (error) {
@@ -51,23 +53,76 @@ export async function createStartupAction(data: {
   isFeatured?: boolean;
   foundedYear?: number | null;
   employeeCount?: number | null;
-  impactScore?: number | null;
+  category?: string;
+  businessType?: string;
   faqs?: Array<{ question: string; answer: string; order: number }>;
+  fundingRounds?: Array<{
+    roundType: string;
+    amountUsd: number;
+    amountInr: number;
+    announcedAt: string;
+    leadInvestors: string[];
+    allInvestors: string[];
+  }>;
+  foundersData?: Array<{
+    name: string;
+    role: string;
+    prev: string;
+    bio: string;
+    avatar: string;
+    linkedin: string;
+  }>;
 }) {
   try {
-    const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Math.random().toString(36).substring(2, 6);
-    // Ensure impactScore is never null - default to 0 if not provided
-    const impactScore = data.impactScore ?? 0;
+    // Generate clean SEO-friendly slug
+    const { slugify } = await import('@/lib/slug-utils');
+    const baseSlug = slugify(data.name);
+    let slug = baseSlug;
+    let counter = 1;
+    while (true) {
+      const taken = await sql`SELECT id FROM "Startup" WHERE slug = ${slug} LIMIT 1`;
+      if (taken.length === 0) break;
+      counter++;
+      slug = `${baseSlug}-${counter}`;
+    }
+
+    // Check for duplicate name
+    const existingStartup = await sql`
+      SELECT id FROM "Startup"
+      WHERE LOWER(name) = LOWER(${data.name}) AND "deletedAt" IS NULL
+      LIMIT 1
+    `;
+    if (existingStartup.length > 0) {
+      return { success: false, error: 'A startup with this name already exists' };
+    }
+
+    // Auto-calculate impact score from funding rounds + employees + stage + age
+    const totalFundingUsdCents = (data.fundingRounds || []).reduce((sum, r) => sum + (r.amountUsd || 0), 0);
+    const { calculateImpactScore } = await import('@/lib/impact-score');
+    const { total: impactScore } = calculateImpactScore({
+      totalFundingUsdCents,
+      employeeCount: data.employeeCount ?? null,
+      stage: data.stage,
+      foundedYear: data.foundedYear ?? null,
+    });
+    const foundersDataJson = data.foundersData && data.foundersData.length > 0
+      ? JSON.stringify(data.foundersData)
+      : null;
+    const foundersNames = data.foundersData
+      ? data.foundersData.filter(f => f.name.trim()).map(f => f.name)
+      : [];
     
     const result = await sql`
       INSERT INTO "Startup" (
         id, name, slug, tagline, description, "logoUrl", "websiteUrl", "linkedinUrl", "twitterUrl", stage, "headquartersCity",
-        "isFeatured", "isIndian", "impactScore", "foundedYear", "employeeCount", "createdAt", "updatedAt"
+        "isFeatured", "isIndian", "impactScore", "foundedYear", "employeeCount", category, "businessType",
+        founders, "foundersData", "isApproved", "approvedAt", "createdAt", "updatedAt"
       )
       VALUES (
         gen_random_uuid(), ${data.name}, ${slug}, ${data.tagline}, ${data.description},
         ${data.logoUrl || null}, ${data.websiteUrl || null}, ${data.linkedinUrl || null}, ${data.twitterUrl || null}, ${data.stage}::"StartupStage", ${data.headquartersCity || null},
-        ${data.isFeatured || false}, true, ${impactScore}, ${data.foundedYear || null}, ${data.employeeCount || null}, NOW(), NOW()
+        ${data.isFeatured || false}, true, ${impactScore}, ${data.foundedYear || null}, ${data.employeeCount || null}, ${data.category || null}, ${data.businessType || null},
+        ${foundersNames}::text[], ${foundersDataJson}::jsonb, true, NOW(), NOW(), NOW()
       )
       RETURNING id
     `;
@@ -80,6 +135,16 @@ export async function createStartupAction(data: {
         await sql`
           INSERT INTO "StartupFAQ" (id, "startupId", question, answer, "order", "createdAt", "updatedAt")
           VALUES (gen_random_uuid(), ${startupId}, ${faq.question}, ${faq.answer}, ${faq.order}, NOW(), NOW())
+        `;
+      }
+    }
+
+    // Insert Funding Rounds if provided
+    if (startupId && data.fundingRounds && data.fundingRounds.length > 0) {
+      for (const round of data.fundingRounds) {
+        await sql`
+          INSERT INTO "FundingRound" (id, "startupId", "roundType", "amountUsd", "amountInr", "announcedAt", "leadInvestors", "allInvestors", "createdAt")
+          VALUES (gen_random_uuid(), ${startupId}, ${round.roundType}, ${round.amountUsd}, ${round.amountInr}, ${round.announcedAt}::timestamp, ${round.leadInvestors}::text[], ${round.allInvestors}::text[], NOW())
         `;
       }
     }
@@ -105,13 +170,25 @@ export async function updateStartupAction(id: string, data: {
   isFeatured?: boolean;
   foundedYear?: number | null;
   employeeCount?: number | null;
-  impactScore?: number | null;
+  category?: string;
+  businessType?: string;
   faqs?: Array<{ question: string; answer: string; order: number }>;
 }) {
   try {
-    // Ensure impactScore is never null - default to 0 if not provided
-    const impactScore = data.impactScore ?? 0;
-    
+    // Auto-calculate impact score from funding + employees + stage + age
+    const fundingResult = await sql`
+      SELECT COALESCE(SUM("amountUsd"), 0)::bigint AS total
+      FROM "FundingRound" WHERE "startupId" = ${id}
+    `;
+    const totalFundingUsdCents = Number(fundingResult[0]?.total || 0);
+    const { calculateImpactScore } = await import('@/lib/impact-score');
+    const { total: impactScore } = calculateImpactScore({
+      totalFundingUsdCents,
+      employeeCount: data.employeeCount ?? null,
+      stage: data.stage,
+      foundedYear: data.foundedYear ?? null,
+    });
+
     await sql`
       UPDATE "Startup"
       SET 
@@ -128,6 +205,8 @@ export async function updateStartupAction(id: string, data: {
         "foundedYear" = ${data.foundedYear || null},
         "employeeCount" = ${data.employeeCount || null},
         "impactScore" = ${impactScore},
+        category = ${data.category || null},
+        "businessType" = ${data.businessType || null},
         "updatedAt" = NOW()
       WHERE id = ${id}
     `;
@@ -173,9 +252,9 @@ export async function deleteStartupAction(id: string) {
 }
 
 export async function toggleFeaturedAction(id: string, isFeatured: boolean) {
+  // Legacy toggle — kept for backward compat but prefer scheduleFeaturedCampaign
   try {
     if (isFeatured) {
-      // Set featured with expiry date
       await sql`
         UPDATE "Startup"
         SET 
@@ -185,7 +264,6 @@ export async function toggleFeaturedAction(id: string, isFeatured: boolean) {
         WHERE id = ${id}
       `;
     } else {
-      // Unset featured
       await sql`
         UPDATE "Startup"
         SET 
@@ -204,6 +282,191 @@ export async function toggleFeaturedAction(id: string, isFeatured: boolean) {
   }
 }
 
+// ─── Featured Campaign System ───────────────────────────────────────────────
+
+const TIER_SLOTS: Record<string, number> = {
+  PREMIUM: 1,
+  STANDARD: 4,
+  BASIC: 6,
+};
+
+export async function getFeaturedCampaignsAction() {
+  try {
+    const campaigns = await sql`
+      SELECT fc.id, fc."startupId", fc.tier, fc."startDate", fc."endDate",
+             fc.notes, fc."pricePaid", fc."cancelledAt", fc."createdAt",
+             s.name AS "startupName", s."logoUrl"
+      FROM "FeaturedCampaign" fc
+      JOIN "Startup" s ON s.id = fc."startupId"
+      ORDER BY
+        CASE WHEN fc."cancelledAt" IS NOT NULL THEN 2
+             WHEN fc."startDate" > NOW() THEN 1
+             ELSE 0 END ASC,
+        fc.tier ASC,
+        fc."startDate" ASC
+    `;
+    return campaigns;
+  } catch (error) {
+    console.error('Error fetching featured campaigns:', error);
+    return [];
+  }
+}
+
+export async function scheduleFeaturedCampaignAction(data: {
+  startupId: string;
+  tier: 'PREMIUM' | 'STANDARD' | 'BASIC';
+  startDate: string; // ISO date string (UTC)
+  endDate: string;   // ISO date string (UTC)
+  notes?: string;
+  pricePaid?: number;
+}) {
+  try {
+    const { startupId, tier, startDate, endDate, notes, pricePaid } = data;
+
+    // Validate dates
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (end <= start) {
+      return { success: false, error: 'End date must be after start date' };
+    }
+
+    // Check slot availability for this tier in the requested window
+    const overlapping = await sql`
+      SELECT COUNT(*)::int AS count
+      FROM "FeaturedCampaign"
+      WHERE tier = ${tier}::"FeaturedTier"
+        AND "cancelledAt" IS NULL
+        AND tsrange("startDate", "endDate", '[]') && tsrange(${startDate}::timestamp, ${endDate}::timestamp, '[]')
+    `;
+
+    const usedSlots = (overlapping[0] as any).count;
+    const maxSlots = TIER_SLOTS[tier] || 4;
+
+    if (usedSlots >= maxSlots) {
+      // Find next available window
+      const nextAvailable = await sql`
+        SELECT "endDate"
+        FROM "FeaturedCampaign"
+        WHERE tier = ${tier}::"FeaturedTier"
+          AND "cancelledAt" IS NULL
+          AND "endDate" > NOW()
+        ORDER BY "endDate" ASC
+        LIMIT 1
+      `;
+
+      const nextDate = nextAvailable.length > 0 
+        ? new Date((nextAvailable[0] as any).endDate).toISOString().split('T')[0]
+        : null;
+
+      return { 
+        success: false, 
+        error: `All ${maxSlots} ${tier} slot(s) are booked for this period.`,
+        nextAvailableDate: nextDate,
+        slotsUsed: usedSlots,
+        slotsMax: maxSlots
+      };
+    }
+
+    // Insert campaign — the DB exclusion constraint is the final safety net
+    try {
+      await sql`
+        INSERT INTO "FeaturedCampaign" (id, "startupId", tier, "startDate", "endDate", notes, "pricePaid", "createdAt", "updatedAt")
+        VALUES (gen_random_uuid(), ${startupId}, ${tier}::"FeaturedTier", ${startDate}::timestamp, ${endDate}::timestamp, ${notes || null}, ${pricePaid || null}, NOW(), NOW())
+      `;
+    } catch (dbError: any) {
+      // Handle the exclusion constraint violation (race condition protection)
+      if (dbError.message?.includes('no_overlapping_campaigns')) {
+        return { success: false, error: 'Slot conflict — another campaign was just booked for this window. Please try a different date range.' };
+      }
+      throw dbError;
+    }
+
+    // Also update legacy isFeatured flag for backward compat on public queries
+    if (start <= new Date()) {
+      await sql`UPDATE "Startup" SET "isFeatured" = true, "updatedAt" = NOW() WHERE id = ${startupId}`;
+    }
+
+    revalidatePath('/startups-dir');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error scheduling featured campaign:', error);
+    return { success: false, error: error.message || 'Failed to schedule campaign' };
+  }
+}
+
+export async function cancelFeaturedCampaignAction(campaignId: string) {
+  try {
+    // Soft cancel — sets cancelledAt, freeing the slot immediately
+    const result = await sql`
+      UPDATE "FeaturedCampaign"
+      SET "cancelledAt" = NOW(), "updatedAt" = NOW()
+      WHERE id = ${campaignId} AND "cancelledAt" IS NULL
+      RETURNING "startupId"
+    `;
+
+    if (result.length > 0) {
+      const startupId = (result[0] as any).startupId;
+      // Check if startup has any other active campaign
+      const activeCampaigns = await sql`
+        SELECT COUNT(*)::int AS count FROM "FeaturedCampaign"
+        WHERE "startupId" = ${startupId}
+          AND "cancelledAt" IS NULL
+          AND "startDate" <= NOW() AND "endDate" >= NOW()
+      `;
+      if ((activeCampaigns[0] as any).count === 0) {
+        await sql`UPDATE "Startup" SET "isFeatured" = false, "updatedAt" = NOW() WHERE id = ${startupId}`;
+      }
+    }
+
+    revalidatePath('/startups-dir');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error cancelling featured campaign:', error);
+    return { success: false, error: error.message || 'Failed to cancel campaign' };
+  }
+}
+
+export async function getSlotAvailabilityAction(tier: string, startDate: string, endDate: string) {
+  try {
+    const overlapping = await sql`
+      SELECT COUNT(*)::int AS count
+      FROM "FeaturedCampaign"
+      WHERE tier = ${tier}::"FeaturedTier"
+        AND "cancelledAt" IS NULL
+        AND tsrange("startDate", "endDate", '[]') && tsrange(${startDate}::timestamp, ${endDate}::timestamp, '[]')
+    `;
+
+    const usedSlots = (overlapping[0] as any).count;
+    const maxSlots = TIER_SLOTS[tier] || 4;
+
+    return { 
+      success: true, 
+      available: usedSlots < maxSlots,
+      slotsUsed: usedSlots, 
+      slotsMax: maxSlots,
+      slotsRemaining: maxSlots - usedSlots
+    };
+  } catch (error: any) {
+    console.error('Error checking slot availability:', error);
+    return { success: false, available: false, slotsUsed: 0, slotsMax: 0, slotsRemaining: 0 };
+  }
+}
+
+export async function toggleContentReviewedAction(id: string, currentValue: boolean) {
+  try {
+    await sql`
+      UPDATE "Startup"
+      SET "contentReviewed" = ${!currentValue}, "updatedAt" = NOW()
+      WHERE id = ${id}
+    `;
+    revalidatePath('/startups-dir');
+    return { success: true };
+  } catch (error: any) {
+    console.error('toggleContentReviewedAction error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 // One-time fix for null impactScore values
 export async function fixNullImpactScoresAction() {
   try {
@@ -217,5 +480,107 @@ export async function fixNullImpactScoresAction() {
   } catch (error) {
     console.error('Error fixing null impactScores:', error);
     return { success: false, error: 'Failed to fix null impactScores' };
+  }
+}
+
+export async function approveStartupAction(id: string) {
+  try {
+    // Get startup details and owner email
+    const startups = await sql`
+      SELECT s.id, s.name, s.slug, s."ownerId", s.stage, s."employeeCount", s."foundedYear",
+             fu.email AS "founderEmail", fu.name AS "founderName"
+      FROM "Startup" s
+      LEFT JOIN "FounderUser" fu ON fu.id = s."ownerId"
+      WHERE s.id = ${id}
+      LIMIT 1
+    `;
+
+    if (startups.length === 0) {
+      return { success: false, error: 'Startup not found' };
+    }
+
+    // Update the startup to approved, auto-calculate impact score
+    const startup = startups[0] as any;
+    const fundingResult = await sql`
+      SELECT COALESCE(SUM("amountUsd"), 0)::bigint AS total FROM "FundingRound" WHERE "startupId" = ${id}
+    `;
+    const totalFundingUsdCents = Number(fundingResult[0]?.total || 0);
+    const { calculateImpactScore } = await import('@/lib/impact-score');
+    const { total: impactScore } = calculateImpactScore({
+      totalFundingUsdCents,
+      employeeCount: startup.employeeCount ?? null,
+      stage: startup.stage,
+      foundedYear: startup.foundedYear ?? null,
+    });
+
+    await sql`
+      UPDATE "Startup"
+      SET "isApproved" = true, "approvedAt" = NOW(), "impactScore" = ${impactScore}, "updatedAt" = NOW()
+      WHERE id = ${id}
+    `;
+
+    // Send approval email to founder if they have an email
+    if (startup.founderEmail) {
+      try {
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aistartupimpact.com';
+        const liveUrl = `${siteUrl}/startups/${startup.slug}`;
+        const dashboardUrl = `${siteUrl}/founder/dashboard`;
+
+        const { Resend } = await import('resend');
+        const resendKey = process.env.RESEND_API_KEY;
+        if (resendKey) {
+          const resend = new Resend(resendKey);
+          await resend.emails.send({
+            from: `${process.env.RESEND_FROM_NAME || 'AI Startup Impact'} <${process.env.RESEND_FROM_EMAIL || 'no-reply@aistartupimpact.com'}>`,
+            to: startup.founderEmail,
+            subject: `Your startup "${startup.name}" is now live on AI Startup Impact`,
+            html: `
+              <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+                <div style="border-bottom: 3px solid #6366f1; padding-bottom: 20px; margin-bottom: 30px;">
+                  <h1 style="color: #111827; font-size: 20px; font-weight: 700; margin: 0;">AI Startup Impact</h1>
+                </div>
+                
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 8px;">Hi ${startup.founderName || 'there'},</p>
+                
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+                  Your startup <strong>"${startup.name}"</strong> has been reviewed and approved by our editorial team. Your listing is now live and visible to investors, enterprise buyers, and the broader AI ecosystem.
+                </p>
+
+                <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                  <p style="color: #6b7280; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 8px 0; font-weight: 600;">Your Live Listing</p>
+                  <a href="${liveUrl}" style="color: #6366f1; font-size: 15px; font-weight: 600; text-decoration: none;">${liveUrl}</a>
+                </div>
+
+                <div style="margin: 32px 0;">
+                  <a href="${liveUrl}" style="background: #111827; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-size: 14px; font-weight: 600;">View Your Listing</a>
+                  <a href="${dashboardUrl}" style="background: #ffffff; color: #374151; padding: 12px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-size: 14px; font-weight: 600; border: 1px solid #d1d5db; margin-left: 12px;">Founder Dashboard</a>
+                </div>
+
+                <p style="color: #374151; font-size: 15px; line-height: 1.6; margin-bottom: 8px;">
+                  To increase visibility, we recommend sharing your listing on LinkedIn and with your network.
+                </p>
+
+                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
+                
+                <p style="color: #6b7280; font-size: 13px; line-height: 1.5; margin: 0;">
+                  Best regards,<br/>
+                  The AI Startup Impact Team<br/>
+                  <a href="${siteUrl}" style="color: #6366f1; text-decoration: none;">${siteUrl}</a>
+                </p>
+              </div>
+            `
+          });
+        }
+      } catch (emailError) {
+        console.error('Failed to send approval email:', emailError);
+        // Don't fail the approval if email fails
+      }
+    }
+
+    revalidatePath('/startups-dir');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error approving startup:', error);
+    return { success: false, error: error.message || 'Failed to approve startup' };
   }
 }

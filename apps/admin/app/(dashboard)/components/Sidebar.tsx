@@ -31,54 +31,77 @@ import {
 } from 'lucide-react';
 
 const sidebarItems = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: 'all' },
   
-  { type: 'divider' as const, label: 'Content' },
-  { label: 'Articles', href: '/articles', icon: FileText },
-  { label: 'Hero Slots', href: '/hero-slots', icon: Layers },
-  { label: 'Media Library', href: '/media', icon: Image },
-  { label: 'Tickers', href: '/tickers', icon: Radio },
+  { type: 'divider' as const, label: 'Content', roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER', 'WRITER', 'CONTRIBUTOR'] },
+  { label: 'Articles', href: '/articles', icon: FileText, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER', 'WRITER', 'CONTRIBUTOR'] },
+  { label: 'Hero Slots', href: '/hero-slots', icon: Layers, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
+  { label: 'Media Library', href: '/media', icon: Image, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER', 'WRITER'] },
+  { label: 'Tickers', href: '/tickers', icon: Radio, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
   
-  { type: 'divider' as const, label: 'Directories' },
-  { label: 'AI Tools', href: '/tools-dir', icon: Wrench },
-  { label: 'Tool Reviews', href: '/tool-reviews', icon: MessageSquare },
-  { label: 'Startups', href: '/startups-dir', icon: Building2 },
-  { label: 'Startup Reviews', href: '/startup-reviews', icon: Star },
-  { label: 'Funding Digests', href: '/funding-dir', icon: IndianRupee },
+  { type: 'divider' as const, label: 'Directories', roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER'] },
+  { label: 'AI Tools', href: '/tools-dir', icon: Wrench, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER'] },
+  { label: 'Tool Reviews', href: '/tool-reviews', icon: MessageSquare, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER'] },
+  { label: 'Startups', href: '/startups-dir', icon: Building2, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER'] },
+  { label: 'Startup Reviews', href: '/startup-reviews', icon: Star, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER'] },
+  { label: 'Funding Digests', href: '/funding-dir', icon: IndianRupee, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER'] },
   
-  { type: 'divider' as const, label: 'India AI' },
-  { label: 'Stats & Cities', href: '/india-ai/stats', icon: MapPin },
-  { label: 'Gov Schemes', href: '/india-ai/schemes', icon: FileText },
-  { label: 'Policy Updates', href: '/india-ai/policy', icon: Newspaper },
-  { label: 'AI Researchers', href: '/india-ai/researchers', icon: GraduationCap },
-  { label: 'Indian AI Tools', href: '/india-ai/tools', icon: Wrench },
-  { label: 'Featured Founders', href: '/india-ai/founders', icon: Star },
+  { type: 'divider' as const, label: 'India AI', roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER'] },
+  { label: 'Stats & Cities', href: '/india-ai/stats', icon: MapPin, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER'] },
+  { label: 'Gov Schemes', href: '/india-ai/schemes', icon: FileText, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER'] },
+  { label: 'Policy Updates', href: '/india-ai/policy', icon: Newspaper, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER'] },
+  { label: 'AI Researchers', href: '/india-ai/researchers', icon: GraduationCap, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER'] },
+  { label: 'Indian AI Tools', href: '/india-ai/tools', icon: Wrench, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER'] },
+  { label: 'Featured Founders', href: '/india-ai/founders', icon: Star, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER'] },
   
-  { type: 'divider' as const, label: 'Marketing' },
-  { label: 'Subscribers', href: '/subscribers', icon: Users },
-  { label: 'Newsletter', href: '/newsletter-admin', icon: Mail },
-  { label: 'Highlights', href: '/newsletter-highlights', icon: Sparkles },
-  { label: 'Testimonials', href: '/testimonials', icon: MessageSquare },
-  { label: 'Placements', href: '/placements', icon: Megaphone },
-  { label: 'Sponsors', href: '/sponsors', icon: Building2 },
+  { type: 'divider' as const, label: 'Marketing', roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'AD_MANAGER'] },
+  { label: 'Subscribers', href: '/subscribers', icon: Users, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'AD_MANAGER'] },
+  { label: 'Newsletter', href: '/newsletter-admin', icon: Mail, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
+  { label: 'Highlights', href: '/newsletter-highlights', icon: Sparkles, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
+  { label: 'Testimonials', href: '/testimonials', icon: MessageSquare, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'AD_MANAGER'] },
+  { label: 'Placements', href: '/placements', icon: Megaphone, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'AD_MANAGER'] },
+  { label: 'Sponsors', href: '/sponsors', icon: Building2, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'AD_MANAGER'] },
   
-  { type: 'divider' as const, label: 'System' },
-  { label: 'Founders', href: '/founders', icon: UserCog },
-  { label: 'Admin Users', href: '/users', icon: Shield },
-  { label: 'Web Users', href: '/web-users', icon: Users },
-  { label: 'Analytics', href: '/analytics', icon: BarChart3 },
-  { label: 'Tool Analytics', href: '/tool-analytics', icon: Sparkles },
-  { label: 'Consent Logs', href: '/consent-logs', icon: Shield },
-  { label: 'Settings', href: '/settings', icon: Settings },
-  { label: 'Dev Tools', href: '/dev-tools', icon: Wrench },
+  { type: 'divider' as const, label: 'Analytics', roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER', 'AD_MANAGER'] },
+  { label: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER', 'AD_MANAGER'] },
+  { label: 'Tool Analytics', href: '/tool-analytics', icon: Sparkles, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER', 'AD_MANAGER'] },
+
+  { type: 'divider' as const, label: 'System', roles: ['SUPER_ADMIN'] },
+  { label: 'Founders', href: '/founders', icon: UserCog, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
+  { label: 'Admin Users', href: '/users', icon: Shield, roles: ['SUPER_ADMIN'] },
+  { label: 'Web Users', href: '/web-users', icon: Users, roles: ['SUPER_ADMIN'] },
+  { label: 'Consent Logs', href: '/consent-logs', icon: Shield, roles: ['SUPER_ADMIN'] },
+  { label: 'Settings', href: '/settings', icon: Settings, roles: ['SUPER_ADMIN'] },
+  { label: 'Dev Tools', href: '/dev-tools', icon: Wrench, roles: ['SUPER_ADMIN'] },
 ];
 
 export function AdminSidebar({ session }: { session: any }) {
   const pathname = usePathname();
   const userName = session?.user?.name || "Admin User";
   const userRole = session?.user?.role?.replace(/_/g, ' ') || "SUPER ADMIN";
+  const userRoleRaw = session?.user?.role || "SUPER_ADMIN";
   const userInitials = userName.substring(0, 2).toUpperCase();
   const userAvatar = session?.user?.image || session?.user?.avatar;
+
+  // Filter sidebar items by role
+  const visibleItems = sidebarItems.filter((item: any) => {
+    if (item.roles === 'all') return true;
+    if (Array.isArray(item.roles)) return item.roles.includes(userRoleRaw);
+    return true;
+  });
+
+  // Remove dividers that have no following items
+  const filteredItems = visibleItems.filter((item: any, index: number) => {
+    if ('type' in item && item.type === 'divider') {
+      // Check if there's at least one non-divider item after this before the next divider
+      for (let i = index + 1; i < visibleItems.length; i++) {
+        if ('type' in visibleItems[i] && (visibleItems[i] as any).type === 'divider') return false;
+        if (!('type' in visibleItems[i])) return true;
+      }
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
@@ -94,7 +117,7 @@ export function AdminSidebar({ session }: { session: any }) {
         </div>
 
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-          {sidebarItems.map((item, i) => {
+          {filteredItems.map((item: any, i: number) => {
             if ('type' in item && item.type === 'divider') {
               return (
                 <div key={i} className="pt-4 pb-2">

@@ -179,6 +179,7 @@ model AiTool {
   ToolTraffic         ToolTraffic[]
   ToolUseCase         ToolUseCase[]
   SavedTool           SavedTool[]
+  ToolFeaturedCampaign ToolFeaturedCampaign[]
 
   @@index([avgRating])
   @@index([categoryId])
@@ -1010,6 +1011,9 @@ model Startup {
   ownerId                                    String?
   submittedBy                                String?
   isVerified                                 Boolean                  @default(false)
+  isApproved                                 Boolean                  @default(false)
+  contentReviewed                            Boolean                  @default(false)
+  approvedAt                                 DateTime?
   verifiedAt                                 DateTime?
   verificationToken                          String?                  @unique
   verifiedDomain                             String?
@@ -1026,11 +1030,13 @@ model Startup {
   FounderUser_Startup_claimedByToFounderUser FounderUser?             @relation("Startup_claimedByToFounderUser", fields: [claimedBy], references: [id], onDelete: SetNull)
   FounderUser_Startup_ownerIdToFounderUser   FounderUser?             @relation("Startup_ownerIdToFounderUser", fields: [ownerId], references: [id], onDelete: Cascade)
   StartupVerificationLog                     StartupVerificationLog[]
+  FeaturedCampaign                           FeaturedCampaign[]
 
   @@index([category])
   @@index([claimStatus])
   @@index([claimedBy])
   @@index([impactScore])
+  @@index([isApproved])
   @@index([isFeatured])
   @@index([isIndian])
   @@index([isVerified])
@@ -1362,6 +1368,50 @@ model newsletter_testimonials {
   display_order       Int?      @default(0)
   created_at          DateTime? @default(now()) @db.Timestamp(6)
   updated_at          DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model FeaturedCampaign {
+  id          String       @id @default(dbgenerated("gen_random_uuid()"))
+  startupId   String
+  tier        FeaturedTier @default(STANDARD)
+  startDate   DateTime
+  endDate     DateTime
+  notes       String?
+  pricePaid   Int?
+  createdBy   String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  cancelledAt DateTime?
+  startup     Startup      @relation(fields: [startupId], references: [id], onDelete: Cascade)
+
+  @@index([startupId])
+  @@index([startDate, endDate])
+  @@index([tier, startDate, endDate])
+}
+
+model ToolFeaturedCampaign {
+  id          String      @id @default(dbgenerated("gen_random_uuid()"))
+  toolId      String
+  tier        ListingTier @default(PRIORITY)
+  startDate   DateTime
+  endDate     DateTime
+  notes       String?
+  pricePaid   Int?
+  createdBy   String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  cancelledAt DateTime?
+  tool        AiTool      @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@index([toolId])
+  @@index([startDate, endDate])
+  @@index([tier, startDate, endDate])
+}
+
+enum FeaturedTier {
+  PREMIUM
+  STANDARD
+  BASIC
 }
 
 enum AdZoneType {

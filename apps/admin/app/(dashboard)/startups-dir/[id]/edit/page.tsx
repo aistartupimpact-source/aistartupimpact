@@ -9,6 +9,20 @@ import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
 
 const stages = ['IDEA', 'PRE_SEED', 'SEED', 'SERIES_A', 'SERIES_B', 'SERIES_C', 'GROWTH', 'PUBLIC'];
 
+const STARTUP_CATEGORIES = [
+  'FinTech', 'HealthTech', 'BioTech & Life Sciences', 'EdTech', 'E-Commerce & Retail',
+  'SaaS', 'AI/ML', 'Enterprise & B2B Software', 'Developer Tools', 'Cybersecurity',
+  'Consumer Apps & Social', 'DeepTech & Hardware', 'CleanTech & Energy', 'AgriTech',
+  'Logistics & Supply Chain', 'HRTech', 'MarTech & AdTech', 'PropTech',
+  'FoodTech & Restaurant', 'Mobility & Transportation', 'Gaming & eSports',
+  'Media & Entertainment', 'Creator Economy', 'Web3 & Blockchain', 'InsurTech',
+  'LegalTech', 'Robotics & Drones', 'SpaceTech & Aerospace', 'Defense & GovTech',
+  'Travel & Hospitality', 'Construction & InfraTech', 'Telecom & Connectivity',
+  'Fashion & Beauty', 'Sports & Fitness', 'Other',
+];
+
+const BUSINESS_TYPES = ['B2B', 'B2C', 'B2B2C', 'B2G', 'D2C', 'Marketplace', 'Platform'];
+
 interface Startup {
   id: string;
   name: string;
@@ -23,7 +37,9 @@ interface Startup {
   isFeatured: boolean;
   foundedYear?: number | null;
   employeeCount?: number | null;
-  impactScore?: number | null;
+        impactScore?: number | null;
+  category?: string;
+  businessType?: string;
 }
 
 export default function EditStartupPage() {
@@ -86,7 +102,7 @@ export default function EditStartupPage() {
     
     if (type === 'checkbox') {
       setFormData(prev => prev ? { ...prev, [name]: (e.target as HTMLInputElement).checked } : null);
-    } else if (name === 'foundedYear' || name === 'employeeCount' || name === 'impactScore') {
+    } else if (name === 'foundedYear' || name === 'employeeCount') {
       setFormData(prev => prev ? { ...prev, [name]: value ? parseInt(value) : null } : null);
     } else {
       setFormData(prev => prev ? { ...prev, [name]: value } : null);
@@ -139,10 +155,10 @@ export default function EditStartupPage() {
         twitterUrl: formData.twitterUrl,
         stage: formData.stage,
         headquartersCity: formData.headquartersCity,
-        isFeatured: formData.isFeatured,
         foundedYear: formData.foundedYear,
         employeeCount: formData.employeeCount,
-        impactScore: formData.impactScore,
+        category: formData.category,
+        businessType: formData.businessType,
         faqs: faqs.length > 0 ? faqs : undefined,
       });
       
@@ -258,6 +274,42 @@ export default function EditStartupPage() {
                 className="input-field text-sm"
                 placeholder="e.g. Bengaluru"
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
+                Category
+              </label>
+              <select
+                name="category"
+                value={formData.category || ''}
+                onChange={handleChange}
+                className="input-field text-sm"
+              >
+                <option value="">Select category</option>
+                {STARTUP_CATEGORIES.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
+                Business Type
+              </label>
+              <select
+                name="businessType"
+                value={formData.businessType || ''}
+                onChange={handleChange}
+                className="input-field text-sm"
+              >
+                <option value="">Select business type</option>
+                {BUSINESS_TYPES.map(bt => (
+                  <option key={bt} value={bt}>{bt}</option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -399,42 +451,20 @@ export default function EditStartupPage() {
                 placeholder="50"
               />
             </div>
-            <div>
-              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
-                Impact Score
-              </label>
-              <input
-                type="number"
-                name="impactScore"
-                value={formData.impactScore ?? ''}
-                onChange={handleChange}
-                min={1}
-                max={100}
-                className="input-field text-sm"
-                placeholder="1-100"
-              />
-            </div>
           </div>
 
           <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                name="isFeatured"
-                checked={formData.isFeatured}
-                onChange={handleChange}
-                className="w-4 h-4 text-brand bg-gray-100 border-gray-300 rounded focus:ring-brand dark:focus:ring-brand dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-              />
+            <div className="flex items-center gap-3">
               <div>
                 <span className="text-sm font-medium text-navy dark:text-white font-jakarta flex items-center gap-2">
                   <Crown className="w-4 h-4 text-yellow-500" />
-                  Feature at Top
+                  Featured Placement
                 </span>
                 <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-0.5">
-                  Featured startups appear at the top of the startup directory page
+                  To schedule featured campaigns, use the &quot;Schedule&quot; button from the startups list page.
                 </p>
               </div>
-            </label>
+            </div>
           </div>
         </div>
 

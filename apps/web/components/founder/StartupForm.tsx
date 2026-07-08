@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Upload, X, Loader2 } from 'lucide-react';
 import { submitStartupAction } from '@/app/founder/startups/actions';
 import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
+import FundingRoundsManager, { FundingRound, convertToSaveFormat } from '@/components/shared/FundingRoundsManager';
+import FoundersDetailsManager, { FounderDetail } from '@/components/shared/FoundersDetailsManager';
 
 const STARTUP_STAGES = [
   'IDEA',
@@ -17,11 +19,26 @@ const STARTUP_STAGES = [
   'PUBLIC',
 ];
 
+const STARTUP_CATEGORIES = [
+  'FinTech', 'HealthTech', 'BioTech & Life Sciences', 'EdTech', 'E-Commerce & Retail',
+  'SaaS', 'AI/ML', 'Enterprise & B2B Software', 'Developer Tools', 'Cybersecurity',
+  'Consumer Apps & Social', 'DeepTech & Hardware', 'CleanTech & Energy', 'AgriTech',
+  'Logistics & Supply Chain', 'HRTech', 'MarTech & AdTech', 'PropTech',
+  'FoodTech & Restaurant', 'Mobility & Transportation', 'Gaming & eSports',
+  'Media & Entertainment', 'Creator Economy', 'Web3 & Blockchain', 'InsurTech',
+  'LegalTech', 'Robotics & Drones', 'SpaceTech & Aerospace', 'Defense & GovTech',
+  'Travel & Hospitality', 'Construction & InfraTech', 'Telecom & Connectivity',
+  'Fashion & Beauty', 'Sports & Fitness', 'Other',
+];
+
+const BUSINESS_TYPES = ['B2B', 'B2C', 'B2B2C', 'B2G', 'D2C', 'Marketplace', 'Platform'];
+
 export default function StartupForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [logoPreview, setLogoPreview] = useState('');
+  const [success, setSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -36,9 +53,13 @@ export default function StartupForm() {
     employeeCount: '',
     founders: '',
     logoUrl: '',
+    category: '',
+    businessType: '',
   });
 
   const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [fundingRounds, setFundingRounds] = useState<FundingRound[]>([]);
+  const [foundersDetails, setFoundersDetails] = useState<FounderDetail[]>([]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData(prev => ({
@@ -119,22 +140,57 @@ export default function StartupForm() {
         employeeCount: formData.employeeCount ? parseInt(formData.employeeCount) : undefined,
         founders: foundersArray,
         logoUrl: formData.logoUrl || undefined,
+        category: formData.category || undefined,
+        businessType: formData.businessType || undefined,
         faqs: faqs.length > 0 ? faqs : undefined,
+        fundingRounds: fundingRounds.length > 0 ? convertToSaveFormat(fundingRounds) : undefined,
+        foundersData: foundersDetails.filter(f => f.name.trim()).length > 0
+          ? foundersDetails.filter(f => f.name.trim())
+          : undefined,
       });
 
       if (!result.success) {
         throw new Error(result.error || 'Submission failed');
       }
 
-      // Success - redirect to startups list
-      router.push('/founder/startups');
-      router.refresh();
+      // Show success card
+      setSuccess(true);
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
     }
   };
+
+  if (success) {
+    return (
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-8 text-center">
+        <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white font-sora mb-2">Startup Submitted Successfully</h2>
+        <p className="text-gray-600 dark:text-gray-400 font-jakarta text-sm mb-6">
+          Our editorial team will review your submission within 2-3 business days. You'll receive an email once it's approved and live.
+        </p>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <button
+            onClick={() => router.push('/founder/startups')}
+            className="px-6 py-2.5 bg-brand text-white font-bold text-sm rounded-lg hover:bg-brand/90 transition-colors"
+          >
+            View in Dashboard
+          </button>
+          <button
+            onClick={() => router.push('/founder/dashboard')}
+            className="px-6 py-2.5 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          >
+            Go to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 space-y-6">
@@ -361,6 +417,46 @@ export default function StartupForm() {
         />
       </div>
 
+      {/* Category & Business Type */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Category <span className="text-red-500">*</span>
+          </label>
+          <select
+            id="category"
+            name="category"
+            value={formData.category}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+          >
+            <option value="">Select category</option>
+            {STARTUP_CATEGORIES.map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="businessType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Business Type
+          </label>
+          <select
+            id="businessType"
+            name="businessType"
+            value={formData.businessType}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+          >
+            <option value="">Select business type</option>
+            {BUSINESS_TYPES.map(bt => (
+              <option key={bt} value={bt}>{bt}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       {/* Founders */}
       <div>
         <label htmlFor="founders" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -375,6 +471,16 @@ export default function StartupForm() {
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
           placeholder="Comma-separated names, e.g. John Doe, Jane Smith"
         />
+      </div>
+
+      {/* Founders Details Section */}
+      <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
+        <FoundersDetailsManager founders={foundersDetails} onChange={setFoundersDetails} maxFounders={5} />
+      </div>
+
+      {/* Funding Rounds Section */}
+      <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
+        <FundingRoundsManager rounds={fundingRounds} onChange={setFundingRounds} maxRounds={10} />
       </div>
 
       {/* FAQs Section */}

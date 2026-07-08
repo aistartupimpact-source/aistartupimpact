@@ -13,6 +13,11 @@ import BookmarkButton from '@/components/BookmarkButton';
 import { StartupSchema, FAQSchema } from '@/components/seo';
 import { generateStartupFAQs, formatUsd as formatUsdUtil } from '@/lib/seo-utils';
 import FAQSection from '@/components/FAQSection';
+import SimilarStartupsCarousel from '@/components/SimilarStartupsCarousel';
+import ImpactScoreBadge from '@/components/ImpactScoreBadge';
+import { calculateImpactScore } from '@/lib/impact-score';
+import ShareButton from '@/components/ShareButton';
+import SubscribeForm from '@/components/SubscribeForm';
 
 export const revalidate = 0; // Disable cache for debugging
 export const dynamic = 'force-dynamic'; // Force dynamic rendering
@@ -86,18 +91,60 @@ async function getStartup(slug: string) {
       LIMIT 4
     `;
 
-    // Get similar startups based on stage
-    const similar = await sql`
-      SELECT name, slug, tagline, "logoUrl", stage, "headquartersCity"
+    // Smart similar startups: priority-based matching (8 results for carousel)
+    // Priority 1: same category + same stage
+    const sameCategoryStage = await sql`
+      SELECT name, slug, tagline, "logoUrl", stage, "headquartersCity", category, "businessType"
       FROM "Startup"
-      WHERE "deletedAt" IS NULL 
-        AND slug != ${slug}
-        AND stage = ${s.stage}
-      ORDER BY 
-        "impactScore" DESC NULLS LAST, 
-        "createdAt" DESC
-      LIMIT 4
+      WHERE "deletedAt" IS NULL AND "isApproved" = true AND slug != ${slug}
+        AND category = ${s.category || ''} AND stage = ${s.stage}
+      ORDER BY "impactScore" DESC NULLS LAST LIMIT 3
     `;
+
+    // Priority 2: same category, any stage
+    const sameCategoryOnly = await sql`
+      SELECT name, slug, tagline, "logoUrl", stage, "headquartersCity", category, "businessType"
+      FROM "Startup"
+      WHERE "deletedAt" IS NULL AND "isApproved" = true AND slug != ${slug}
+        AND category = ${s.category || ''}
+        AND slug NOT IN (${sameCategoryStage.length > 0 ? sameCategoryStage.map((r: any) => r.slug) : ['__none__']})
+      ORDER BY "impactScore" DESC NULLS LAST LIMIT 3
+    `;
+
+    // Priority 3: same city
+    const sameCity = await sql`
+      SELECT name, slug, tagline, "logoUrl", stage, "headquartersCity", category, "businessType"
+      FROM "Startup"
+      WHERE "deletedAt" IS NULL AND "isApproved" = true AND slug != ${slug}
+        AND "headquartersCity" = ${s.headquartersCity || ''}
+        AND "headquartersCity" IS NOT NULL AND "headquartersCity" != ''
+      ORDER BY "impactScore" DESC NULLS LAST LIMIT 2
+    `;
+
+    // Priority 4: same stage fallback
+    const sameStage = await sql`
+      SELECT name, slug, tagline, "logoUrl", stage, "headquartersCity", category, "businessType"
+      FROM "Startup"
+      WHERE "deletedAt" IS NULL AND "isApproved" = true AND slug != ${slug}
+        AND stage = ${s.stage}
+      ORDER BY "impactScore" DESC NULLS LAST LIMIT 3
+    `;
+
+    // Merge and deduplicate, max 8
+    const seenSlugs = new Set<string>();
+    const similar: any[] = [];
+    const addWithReason = (rows: any[], reason: string) => {
+      for (const r of rows) {
+        if (!seenSlugs.has(r.slug) && similar.length < 8) {
+          seenSlugs.add(r.slug);
+          similar.push({ ...r, matchReason: reason });
+        }
+      }
+    };
+    addWithReason(sameCategoryStage, s.category || '');
+    addWithReason(sameCategoryOnly, s.category || '');
+    addWithReason(sameCity, s.headquartersCity ? `In ${s.headquartersCity}` : '');
+    addWithReason(sameStage, '');
 
     // Reviews feature not yet implemented - return empty arrays
     const reviews: any[] = [];
@@ -320,81 +367,105 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
       {/* Claim Banner - Removed (now in sidebar only) */}
 
       {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 mb-8">
-        {/* Logo */}
-        <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center shrink-0 shadow-sm border border-brand/10">
-          {startup.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={startup.logoUrl} alt={startup.name} className="w-14 h-14 object-contain" />
-          ) : (
-            <Building2 className="w-8 h-8 text-brand" />
-          )}
-          {startup.isVerified && <VerifiedBadge onLogo size="md" />}
-        </div>
+      <div className="mb-6">
+        {/* Row 1: Logo + Name/Tagline + Impact Score */}
+        <div className="flex items-start gap-4 mb-4">
+          {/* Logo */}
+          <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center shrink-0 shadow-sm border border-brand/10">
+            {startup.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={startup.logoUrl} alt={startup.name} className="w-14 h-14 object-contain" />
+            ) : (
+              <Building2 className="w-8 h-8 text-brand" />
+            )}
+            {startup.isVerified && <VerifiedBadge onLogo size="md" />}
+          </div>
 
-        {/* Name + badges */}
-        <div className="flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="font-sora font-extrabold text-2xl sm:text-3xl text-navy dark:text-white">{startup.name}</h1>
-            {startup.isVerified && <VerifiedBadge size="md" showText />}
-          </div>
-          <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm sm:text-base mt-1">{startup.tagline}</p>
-          <div className="flex flex-wrap items-center gap-2 mt-3">
-            {industryTag && (
-              <span className="flex items-center gap-1 text-[10px] font-bold bg-brand/10 dark:bg-brand/20 text-brand px-2.5 py-1 rounded-full uppercase">
-                <Tag className="w-3 h-3" />{industryTag}
-              </span>
-            )}
-            {startup.businessType && (
-              <span className="flex items-center gap-1 text-[10px] font-bold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2.5 py-1 rounded-full uppercase">
-                {startup.businessType}
-              </span>
-            )}
-            <span className="text-[10px] font-bold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2.5 py-1 rounded-full uppercase">
-              {stageLabel(startup.stage)}
-            </span>
-            {startup.headquartersCity && (
-              <span className="flex items-center gap-1 text-xs text-gray-400 font-jakarta">
-                <MapPin className="w-3 h-3" />{startup.headquartersCity}
-              </span>
-            )}
-            {startup.isFeatured && (
-              <span className="text-[10px] font-bold bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2.5 py-1 rounded-full">★ Featured</span>
-            )}
-          </div>
-          <div className="flex gap-3 mt-4">
-            {startup.websiteUrl && (
-              <a href={startup.websiteUrl} target="_blank" rel="noopener noreferrer" className="btn-brand text-sm">
-                Visit Website <ExternalLink className="w-4 h-4 ml-1" />
-              </a>
-            )}
-            {startup.linkedinUrl && (
-              <a href={startup.linkedinUrl} target="_blank" rel="noopener noreferrer" className="btn-outline text-sm">LinkedIn</a>
-            )}
-            <BookmarkButton 
-              type="startup" 
-              itemId={startup.slug} 
-              itemName={startup.name} 
-              variant="button" 
-              size="md" 
-            />
-          </div>
-        </div>
-
-        {/* Total Raised + Impact Score */}
-        <div className="text-right shrink-0">
-          {totalRaised > 0 && (
-            <>
-              <div className="font-sora font-extrabold text-2xl sm:text-3xl text-brand">{formatUsd(totalRaised)}</div>
-              <div className="text-xs text-gray-400 font-jakarta">Total Raised</div>
-            </>
-          )}
-          {startup.impactScore && (
-            <div className="flex items-center gap-1 justify-end mt-2">
-              <TrendingUp className="w-3.5 h-3.5 text-brand" />
-              <span className="text-sm font-sora font-bold text-brand">Impact Score: {startup.impactScore}</span>
+          {/* Name + Tagline (flex-1 so Impact Score stays right) */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="font-sora font-extrabold text-xl sm:text-3xl text-navy dark:text-white leading-tight">{startup.name}</h1>
+                  {startup.isVerified && <VerifiedBadge size="md" showText />}
+                </div>
+                <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm sm:text-base mt-1 line-clamp-2">{startup.tagline}</p>
+              </div>
+              {/* Impact Score — top right, parallel to logo */}
+              {startup.impactScore > 0 && (() => {
+                const totalFundingUsdCents = (startup.fundingRounds || []).reduce((sum: number, r: any) => sum + Number(r.amountUsd || 0), 0);
+                const breakdown = calculateImpactScore({
+                  totalFundingUsdCents,
+                  employeeCount: startup.employeeCount,
+                  stage: startup.stage,
+                  foundedYear: startup.foundedYear,
+                });
+                return (
+                  <div className="relative shrink-0">
+                    <ImpactScoreBadge score={breakdown.total} breakdown={breakdown} />
+                  </div>
+                );
+              })()}
             </div>
+          </div>
+        </div>
+
+        {/* Row 2: Tags — category, business type, stage, location */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          {industryTag && (
+            <span className="flex items-center gap-1 text-[10px] font-bold bg-brand/10 dark:bg-brand/20 text-brand px-2.5 py-1 rounded-full uppercase">
+              <Tag className="w-3 h-3" />{industryTag}
+            </span>
           )}
+          {startup.businessType && (
+            <span className="flex items-center gap-1 text-[10px] font-bold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2.5 py-1 rounded-full uppercase">
+              {startup.businessType}
+            </span>
+          )}
+          <span className="text-[10px] font-bold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2.5 py-1 rounded-full uppercase">
+            {stageLabel(startup.stage)}
+          </span>
+          {startup.headquartersCity && (
+            <span className="flex items-center gap-1 text-xs text-gray-400 font-jakarta">
+              <MapPin className="w-3 h-3" />{startup.headquartersCity}
+            </span>
+          )}
+          {startup.isFeatured && (
+            <span className="text-[10px] font-bold bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2.5 py-1 rounded-full">★ Featured</span>
+          )}
+          {totalRaised > 0 && (
+            <span className="flex items-center gap-1 text-[10px] font-bold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-full">
+              {formatUsd(totalRaised)} raised
+            </span>
+          )}
+        </div>
+
+        {/* Row 3: Action bar — Visit Website (text) + LinkedIn icon + Bookmark icon + Share icon */}
+        <div className="flex items-center gap-2">
+          {startup.websiteUrl && (
+            <a href={startup.websiteUrl} target="_blank" rel="noopener noreferrer"
+              className="btn-brand text-sm px-4 py-2 h-9"
+            >
+              Visit Website <ExternalLink className="w-3.5 h-3.5 ml-1" />
+            </a>
+          )}
+          {startup.linkedinUrl && (
+            <a href={startup.linkedinUrl} target="_blank" rel="noopener noreferrer"
+              className="w-9 h-9 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-center shadow-sm hover:border-[#0A66C2] hover:text-[#0A66C2] transition-colors text-gray-500 dark:text-gray-400"
+              title="LinkedIn"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+              </svg>
+            </a>
+          )}
+          <BookmarkButton type="startup" itemId={startup.slug} itemName={startup.name} variant="icon" size="sm" />
+          <ShareButton
+            title={`${startup.name} — ${startup.tagline}`}
+            text={`${startup.name}: ${startup.tagline}${startup.stage ? ` · ${startup.stage.replace(/_/g, ' ')}` : ''}${startup.headquartersCity ? ` · ${startup.headquartersCity}` : ''}`}
+            url={`https://aistartupimpact.com/startups/${startup.slug}`}
+            iconOnly
+          />
         </div>
       </div>
 
@@ -598,8 +669,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
             <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta mb-4">
               Get notified about funding rounds, product launches, and news.
             </p>
-            <input type="email" placeholder="your@email.com" className="input-field text-xs mb-2" />
-            <button className="btn-brand w-full text-xs">Subscribe</button>
+            <SubscribeForm source="sidebar" buttonText="Subscribe" />
           </div>
         </aside>
       </div>
@@ -609,52 +679,8 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
         <FAQSection faqs={faqs} />
       </div>
 
-      {/* Similar Startups Section */}
-      {startup.similarStartups?.length > 0 && (
-        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
-          <h2 className="font-sora font-bold text-xl text-navy dark:text-white mb-6">
-            You might also want to explore
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {startup.similarStartups.map((s: any) => (
-              <Link
-                key={s.slug}
-                href={`/startups/${s.slug}`}
-                className="group card p-4 hover:border-brand dark:hover:border-brand transition-all hover:shadow-lg"
-              >
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center shrink-0 overflow-hidden">
-                    {s.logoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={s.logoUrl} alt={s.name} className="w-10 h-10 object-contain" />
-                    ) : (
-                      <Building2 className="w-6 h-6 text-brand" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand transition-colors truncate">
-                      {s.name}
-                    </h3>
-                    {s.headquartersCity && (
-                      <span className="text-[10px] text-gray-400 font-jakarta flex items-center gap-1 mt-0.5">
-                        <MapPin className="w-2.5 h-2.5" />{s.headquartersCity}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <p className="text-xs text-gray-600 dark:text-gray-400 font-jakarta leading-relaxed line-clamp-2 mb-3">
-                  {s.tagline}
-                </p>
-                {s.stage && (
-                  <span className="inline-block text-[9px] font-bold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full uppercase">
-                    {stageLabel(s.stage)}
-                  </span>
-                )}
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Similar Startups Carousel */}
+      <SimilarStartupsCarousel startups={startup.similarStartups || []} />
     </div>
   );
 }

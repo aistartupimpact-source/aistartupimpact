@@ -87,6 +87,17 @@ export async function GET(request: NextRequest) {
         RETURNING *
       `;
       user = result;
+
+      // Add new Google OAuth user to newsletter subscribers
+      try {
+        await sql`
+          INSERT INTO "NewsletterSubscriber" (id, email, name, source, "isActive", "subscribedAt", tags)
+          VALUES (gen_random_uuid(), ${googleUser.email}, ${googleUser.name}, 'founder_google', true, NOW(), '{"founder"}')
+          ON CONFLICT (email) DO UPDATE SET "isActive" = true, source = COALESCE("NewsletterSubscriber".source, 'founder_google')
+        `;
+      } catch (subError) {
+        console.error('Failed to add Google OAuth user to newsletter:', subError);
+      }
     }
 
     // Set session

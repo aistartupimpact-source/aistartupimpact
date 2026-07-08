@@ -20,6 +20,7 @@ const roles = [
   "EDITOR_IN_CHIEF",
   "SENIOR_WRITER",
   "WRITER",
+  "AD_MANAGER",
   "CONTRIBUTOR",
 ];
 
@@ -28,6 +29,7 @@ const roleColors: Record<string, string> = {
   EDITOR_IN_CHIEF: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400",
   SENIOR_WRITER: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
   WRITER: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
+  AD_MANAGER: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
   CONTRIBUTOR: "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400",
 };
 
