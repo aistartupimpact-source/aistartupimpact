@@ -1,9 +1,10 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import SignInModal from '@/components/auth/SignInModal';
 
-export default function SignupPage() {
+function SignupContent() {
   const searchParams = useSearchParams();
   const returnTo = searchParams.get('returnTo');
 
@@ -16,5 +17,13 @@ export default function SignupPage() {
       returnTo={returnTo}
       fullPage={true}
     />
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupContent />
+    </Suspense>
   );
 }
