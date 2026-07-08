@@ -62,6 +62,7 @@ export default function ToolForm({ action, initialData }: ToolFormProps) {
               name="tagline"
               defaultValue={initialData?.tagline}
               required
+              maxLength={60}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
               placeholder="India's first full-stack AI platform"
             />
@@ -75,6 +76,7 @@ export default function ToolForm({ action, initialData }: ToolFormProps) {
               name="description"
               defaultValue={initialData?.description}
               required
+              maxLength={500}
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
               placeholder="Detailed description of the AI tool..."

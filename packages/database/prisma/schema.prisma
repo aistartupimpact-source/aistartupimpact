@@ -455,6 +455,7 @@ model FounderUser {
   name                                   String
   passwordHash                           String?
   company                                String?
+  previousCompany                        String?
   role                                   String?
   phone                                  String?
   avatar                                 String?

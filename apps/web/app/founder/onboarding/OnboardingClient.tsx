@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, User, Briefcase, Phone, Linkedin, Twitter, Globe, ArrowRight, CheckCircle } from 'lucide-react';
+import { Building2, User, Briefcase, Phone, Linkedin, Twitter, Globe, ArrowRight, CheckCircle, Upload } from 'lucide-react';
 import { completeOnboardingAction } from './actions';
 
 interface User {
@@ -16,6 +16,9 @@ interface User {
   linkedin: string | null;
   twitter: string | null;
   website: string | null;
+  previousCompany: string | null;
+  bio: string | null;
+  avatar: string | null;
   onboardingStep: number;
 }
 
@@ -24,22 +27,60 @@ export default function OnboardingClient({ user, returnTo }: { user: User; retur
   const [step, setStep] = useState(user.onboardingStep || 1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [uploading, setUploading] = useState(false);
   
   const [formData, setFormData] = useState({
     company: user.company || '',
+    previousCompany: user.previousCompany || '',
     role: user.role || '',
     phone: user.phone || '',
     linkedin: user.linkedin || '',
     twitter: user.twitter || '',
     website: user.website || '',
+    bio: user.bio || '',
+    avatar: user.avatar || '',
   });
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a JPG or PNG image file');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be less than 5MB');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const data = new FormData();
+      data.append('file', file);
+
+      const res = await fetch('/api/media/upload', {
+        method: 'POST',
+        body: data,
+      });
+
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Upload failed');
+      setFormData(prev => ({ ...prev, avatar: result.url }));
+    } catch (err: any) {
+      console.error('Avatar upload failed:', err);
+      alert('Upload failed: ' + (err.message || 'Please try again'));
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     
-    if (!formData.company || !formData.role) {
-      setError('Company name and role are required');
+    if (!formData.company || !formData.role || !formData.bio || !formData.avatar) {
+      setError('Profile photo, company name, role, and short bio are required');
       return;
     }
 
@@ -112,6 +153,44 @@ export default function OnboardingClient({ user, returnTo }: { user: User; retur
               </div>
             )}
 
+             {/* Avatar Upload */}
+             <div className="flex flex-col items-center gap-4 border-b border-gray-100 dark:border-gray-800 pb-6">
+               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 font-jakarta self-start">
+                 Profile Picture <span className="text-red-500">*</span>
+               </label>
+               <div className="flex items-center gap-6 w-full">
+                 <div className="relative w-20 h-20 rounded-full overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
+                   {formData.avatar ? (
+                     <img src={formData.avatar} alt="Avatar preview" className="w-full h-full object-cover" />
+                   ) : (
+                     <User className="w-10 h-10 text-gray-400" />
+                   )}
+                   {uploading && (
+                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                     </div>
+                   )}
+                 </div>
+                 <div className="flex-1 space-y-1">
+                   <input
+                     type="file"
+                     id="avatar-upload"
+                     accept="image/*"
+                     onChange={handleAvatarUpload}
+                     className="hidden"
+                   />
+                   <label
+                     htmlFor="avatar-upload"
+                     className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-brand bg-brand/10 hover:bg-brand/20 rounded-lg cursor-pointer transition-colors"
+                   >
+                     <Upload className="w-3.5 h-3.5" />
+                     Upload Photo
+                   </label>
+                   <p className="text-[10px] text-gray-400 font-jakarta">JPG, PNG up to 5MB</p>
+                 </div>
+               </div>
+             </div>
+
             {/* Email (read-only) */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 font-jakarta">
@@ -179,6 +258,42 @@ export default function OnboardingClient({ user, returnTo }: { user: User; retur
                 </select>
                 <Briefcase className="absolute left-3.5 top-3.5 w-5 h-5 text-gray-400" />
               </div>
+            </div>
+
+            {/* Previous Experience */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 font-jakarta">
+                Previous Experience / Company
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={formData.previousCompany}
+                  onChange={(e) => setFormData({ ...formData, previousCompany: e.target.value })}
+                  placeholder="e.g., Senior Engineer at Google, Founder at StartupX"
+                  className="w-full px-4 py-3 pl-11 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent font-jakarta"
+                />
+                <Briefcase className="absolute left-3.5 top-3.5 w-5 h-5 text-gray-400" />
+              </div>
+            </div>
+
+            {/* Short Bio */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 font-jakarta flex justify-between items-center">
+                <span>Short Bio <span className="text-red-500">*</span></span>
+                <span className="text-[10px] font-normal text-gray-400 font-jakarta">
+                  {formData.bio.length}/150 characters
+                </span>
+              </label>
+              <textarea
+                value={formData.bio}
+                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                placeholder="A brief 1-2 sentence bio about your expertise and background..."
+                required
+                maxLength={150}
+                rows={3}
+                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent font-jakarta resize-none"
+              />
             </div>
 
             {/* Phone */}
