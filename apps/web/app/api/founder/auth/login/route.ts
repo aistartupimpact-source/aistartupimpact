@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     
     // Find user with raw SQL
     const users = await sql`
-      SELECT id, email, name, "passwordHash", company, "emailVerified", status, "twoFactorEnabled"
+      SELECT id, email, name, "passwordHash", company, "emailVerified", status, "twoFactorEnabled", "onboardingCompleted"
       FROM "FounderUser"
       WHERE email = ${validated.email.toLowerCase()}
       LIMIT 1
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     `;
     
     // Set session
-    await setFounderSession(user.id, user.email, user.name);
+    await setFounderSession(user.id, user.email, user.name, !!user.onboardingCompleted);
     
     return NextResponse.json({
       success: true,

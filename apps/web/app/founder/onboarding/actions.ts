@@ -1,10 +1,11 @@
 'use server';
 
-import { requireFounderAuth } from '@/lib/founder-auth';
+import { requireFounderAuth, setFounderSession } from '@/lib/founder-auth';
 import { prisma } from '@aistartupimpact/database';
 import { revalidatePath } from 'next/cache';
 
 export async function completeOnboardingAction(data: {
+  name: string;
   company: string;
   previousCompany?: string;
   role: string;
@@ -21,6 +22,7 @@ export async function completeOnboardingAction(data: {
     await prisma.founderUser.update({
       where: { id: session.userId },
       data: {
+        name: data.name,
         company: data.company,
         previousCompany: data.previousCompany || null,
         role: data.role,
@@ -32,9 +34,13 @@ export async function completeOnboardingAction(data: {
         avatar: data.avatar || null,
         onboardingCompleted: true,
         onboardingStep: 2,
+        status: 'ACTIVE',
         updatedAt: new Date(),
       },
     });
+
+    // Refresh the session cookie with onboardingCompleted: true
+    await setFounderSession(session.userId, session.email, session.name, true);
 
     revalidatePath('/founder/dashboard');
     revalidatePath('/founder/onboarding');

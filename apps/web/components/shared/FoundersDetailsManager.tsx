@@ -154,14 +154,14 @@ export default function FoundersDetailsManager({ founders, onChange, maxFounders
             <div className="flex-1 space-y-2">
               <input
                 type="text"
-                value={founder.name}
+                value={founder.name || ''}
                 onChange={(e) => updateFounder(index, 'name', e.target.value)}
                 placeholder="Full name *"
                 className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
               />
               <input
                 type="text"
-                value={founder.role}
+                value={founder.role || ''}
                 onChange={(e) => updateFounder(index, 'role', e.target.value)}
                 placeholder="Role (e.g. Co-founder & CEO)"
                 className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
@@ -175,7 +175,7 @@ export default function FoundersDetailsManager({ founders, onChange, maxFounders
               <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Previous Company</label>
               <input
                 type="text"
-                value={founder.prev}
+                value={founder.prev || ''}
                 onChange={(e) => updateFounder(index, 'prev', e.target.value)}
                 placeholder="e.g. Ex-Google AI"
                 className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
@@ -185,7 +185,7 @@ export default function FoundersDetailsManager({ founders, onChange, maxFounders
               <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">LinkedIn URL</label>
               <input
                 type="url"
-                value={founder.linkedin}
+                value={founder.linkedin || ''}
                 onChange={(e) => updateFounder(index, 'linkedin', e.target.value)}
                 placeholder="https://linkedin.com/in/..."
                 className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
@@ -197,18 +197,18 @@ export default function FoundersDetailsManager({ founders, onChange, maxFounders
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase">Short Bio</label>
-              <span className="text-[10px] text-gray-400">{founder.bio.length}/300</span>
+              <span className="text-[10px] text-gray-400">{(founder.bio || '').length}/500</span>
             </div>
             <textarea
-              value={founder.bio}
+              value={founder.bio || ''}
               onChange={(e) => {
-                if (e.target.value.length <= 300) {
+                if ((e.target.value || '').length <= 500) {
                   updateFounder(index, 'bio', e.target.value);
                 }
               }}
               placeholder="Brief background (1-2 lines)"
               rows={2}
-              maxLength={300}
+              maxLength={500}
               className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
             />
           </div>

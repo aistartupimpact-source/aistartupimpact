@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Set session
-    await setFounderSession(user[0].id, user[0].email, user[0].name);
+    await setFounderSession(user[0].id, user[0].email, user[0].name, !!user[0].onboardingCompleted);
 
     // Parse state to get return URL
     let returnTo = '/founder/dashboard';

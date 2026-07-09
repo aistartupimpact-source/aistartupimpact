@@ -124,7 +124,9 @@ export async function sendApprovalEmail(
   entityName: string,
   entitySlug: string
 ) {
-  const liveUrl = `${SITE_URL}/${entityType === 'startup' ? 'startups' : 'tools'}/${entitySlug}`;
+  const emailSiteUrl = (SITE_URL && !SITE_URL.includes('localhost')) ? SITE_URL : 'https://aistartupimpact.com';
+  const liveUrl = `${emailSiteUrl}/${entityType === 'startup' ? 'startups' : 'tools'}/${entitySlug}`;
+  const dashboardUrl = `${emailSiteUrl}/founder/dashboard`;
   
   const client = getResend();
   if (!client) {
@@ -156,8 +158,17 @@ export async function sendApprovalEmail(
 
           <div style="margin: 32px 0;">
             <a href="${liveUrl}" style="background: #111827; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-size: 14px; font-weight: 600;">View Your Listing</a>
-            <a href="${SITE_URL}/founder/dashboard" style="background: #ffffff; color: #374151; padding: 12px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-size: 14px; font-weight: 600; border: 1px solid #d1d5db; margin-left: 12px;">Founder Dashboard</a>
+            <a href="${dashboardUrl}" style="background: #ffffff; color: #374151; padding: 12px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-size: 14px; font-weight: 600; border: 1px solid #d1d5db; margin-left: 12px;">Founder Dashboard</a>
           </div>
+
+          ${entityType === 'startup' ? `
+          <div style="background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+            <p style="color: #4338ca; font-size: 14px; font-weight: 700; margin: 0 0 8px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">Get Your Verified Badge</p>
+            <p style="color: #374151; font-size: 14px; line-height: 1.5; margin: 0;">
+              Verifying your startup through the DNS will help you get a verified badge and increase trust with investors and enterprise buyers. You can configure this easily from your <a href="${dashboardUrl}" style="color: #6366f1; font-weight: 600; text-decoration: none;">Founder Dashboard</a>.
+            </p>
+          </div>
+          ` : ''}
 
           <p style="color: #374151; font-size: 15px; line-height: 1.6; margin-bottom: 8px;">
             To increase visibility, we recommend sharing your listing on LinkedIn and with your network.

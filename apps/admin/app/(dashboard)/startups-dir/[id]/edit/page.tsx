@@ -270,7 +270,7 @@ export default function EditStartupPage() {
               <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta flex justify-between items-center">
                 <span>Tagline *</span>
                 <span className="text-[10px] lowercase font-normal text-gray-400 font-jakarta">
-                  {(formData.tagline || '').length}/60 characters
+                  {(formData.tagline || '').length}/100 characters
                 </span>
               </label>
               <input
@@ -279,7 +279,7 @@ export default function EditStartupPage() {
                 value={formData.tagline}
                 onChange={handleChange}
                 required
-                maxLength={60}
+                maxLength={100}
                 className="input-field text-sm"
                 placeholder="e.g. India-first foundation models"
               />
@@ -356,7 +356,7 @@ export default function EditStartupPage() {
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta flex justify-between items-center">
               <span>Description</span>
               <span className="text-[10px] lowercase font-normal text-gray-400 font-jakarta">
-                {(formData.description || '').length}/500 characters
+                {(formData.description || '').length}/1000 characters
               </span>
             </label>
             <textarea
@@ -364,7 +364,7 @@ export default function EditStartupPage() {
               value={formData.description}
               onChange={handleChange}
               rows={6}
-              maxLength={500}
+              maxLength={1000}
               className="input-field text-sm"
               placeholder="Brief description of the startup..."
             />

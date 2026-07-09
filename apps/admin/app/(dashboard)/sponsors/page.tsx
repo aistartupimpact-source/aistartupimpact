@@ -186,10 +186,10 @@ export default function SponsorsPage() {
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">
-                  Tagline * <span className="text-gray-400 normal-case font-normal">(max 60 chars)</span>
+                  Tagline * <span className="text-gray-400 normal-case font-normal">(max 100 chars)</span>
                 </label>
-                <input type="text" className="input-field text-sm" maxLength={60} value={form.tagline} onChange={e => setForm({ ...form, tagline: e.target.value })} placeholder="e.g. Powering Indian AI with NVIDIA H100 GPU Cloud" />
-                <p className={`text-xs mt-1 text-right font-jakarta ${form.tagline.length > 50 ? 'text-amber-500' : 'text-gray-400'}`}>{form.tagline.length}/60</p>
+                <input type="text" className="input-field text-sm" maxLength={100} value={form.tagline} onChange={e => setForm({ ...form, tagline: e.target.value })} placeholder="e.g. Powering Indian AI with NVIDIA H100 GPU Cloud" />
+                <p className={`text-xs mt-1 text-right font-jakarta ${form.tagline.length > 90 ? 'text-amber-500' : 'text-gray-400'}`}>{form.tagline.length}/100</p>
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block font-jakarta">CTA URL *</label>

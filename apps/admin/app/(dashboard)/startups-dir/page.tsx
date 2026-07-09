@@ -352,6 +352,13 @@ export default function StartupsDirPage() {
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400">
                       <CheckCircle className="w-2.5 h-2.5" /> Approved
                     </span>
+                  ) : startup.ownerId ? (
+                    <span 
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400" 
+                      title="Submitted by founder. Please approve from the Founder Management section."
+                    >
+                      <Clock className="w-2.5 h-2.5" /> Founder Submission
+                    </span>
                   ) : (
                     <button
                       onClick={() => handleApprove(startup.id)}

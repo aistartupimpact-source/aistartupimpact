@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     // Get user
     const users = await sql`
-      SELECT id, email, name, company, "twoFactorEnabled", "twoFactorSecret", "twoFactorBackupCodes"
+      SELECT id, email, name, company, "twoFactorEnabled", "twoFactorSecret", "twoFactorBackupCodes", "onboardingCompleted"
       FROM "FounderUser"
       WHERE id = ${userId}
       LIMIT 1
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     `;
 
     // Set session
-    await setFounderSession(user.id, user.email, user.name);
+    await setFounderSession(user.id, user.email, user.name, !!user.onboardingCompleted);
 
     return NextResponse.json({
       success: true,

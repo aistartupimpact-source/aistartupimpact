@@ -272,12 +272,12 @@ export default function NewToolPage() {
                 value={formData.tagline}
                 onChange={handleChange}
                 required
-                maxLength={60}
+                maxLength={100}
                 className="input-field text-sm"
                 placeholder="A short, catchy description"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {formData.tagline.length}/60 characters
+                {formData.tagline.length}/100 characters
               </p>
             </div>
           </div>
@@ -291,12 +291,12 @@ export default function NewToolPage() {
               value={formData.description}
               onChange={handleChange}
               rows={6}
-              maxLength={500}
+              maxLength={1000}
               className="input-field text-sm"
               placeholder="Detailed description of the tool..."
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {formData.description.length}/500 characters
+              {formData.description.length}/1000 characters
             </p>
           </div>
         </div>
