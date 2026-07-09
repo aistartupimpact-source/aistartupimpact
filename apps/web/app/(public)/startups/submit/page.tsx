@@ -129,12 +129,12 @@ export default function SubmitStartupPage() {
           </div>
           <div>
             <label className="block font-sora font-bold text-sm text-navy dark:text-white mb-2">
-              Tagline * <span className="text-gray-400 font-normal text-xs">(max 60 chars)</span>
+              Tagline * <span className="text-gray-400 font-normal text-xs">(max 100 chars)</span>
             </label>
-            <input type="text" maxLength={60} className="input-field w-full" value={form.tagline}
+            <input type="text" maxLength={100} className="input-field w-full" value={form.tagline}
               onChange={e => setForm({ ...form, tagline: e.target.value })}
               placeholder="One-line description of what you build" />
-            <div className="text-right text-xs text-gray-400 mt-1">{form.tagline.length}/60</div>
+            <div className="text-right text-xs text-gray-400 mt-1">{form.tagline.length}/100</div>
           </div>
           <div>
             <label className="block font-sora font-bold text-sm text-navy dark:text-white mb-2">

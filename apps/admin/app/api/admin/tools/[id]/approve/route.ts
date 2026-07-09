@@ -38,7 +38,9 @@ export async function POST(
         const { Resend } = await import('resend');
         const resendKey = process.env.RESEND_API_KEY;
         if (resendKey) {
-          const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aistartupimpact.com';
+          const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL.includes('localhost'))
+            ? process.env.NEXT_PUBLIC_SITE_URL
+            : 'https://aistartupimpact.com';
           const liveUrl = `${siteUrl}/tools/${tool.slug}`;
           const dashboardUrl = `${siteUrl}/founder/dashboard`;
 

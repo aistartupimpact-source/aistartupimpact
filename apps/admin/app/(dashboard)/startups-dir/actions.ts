@@ -592,7 +592,9 @@ export async function approveStartupAction(id: string) {
     // Send approval email to founder if they have an email
     if (startup.founderEmail) {
       try {
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aistartupimpact.com';
+        const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL.includes('localhost'))
+          ? process.env.NEXT_PUBLIC_SITE_URL
+          : 'https://aistartupimpact.com';
         const liveUrl = `${siteUrl}/startups/${startup.slug}`;
         const dashboardUrl = `${siteUrl}/founder/dashboard`;
 
@@ -624,6 +626,13 @@ export async function approveStartupAction(id: string) {
                 <div style="margin: 32px 0;">
                   <a href="${liveUrl}" style="background: #111827; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-size: 14px; font-weight: 600;">View Your Listing</a>
                   <a href="${dashboardUrl}" style="background: #ffffff; color: #374151; padding: 12px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-size: 14px; font-weight: 600; border: 1px solid #d1d5db; margin-left: 12px;">Founder Dashboard</a>
+                </div>
+
+                <div style="background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                  <p style="color: #4338ca; font-size: 14px; font-weight: 700; margin: 0 0 8px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">Get Your Verified Badge</p>
+                  <p style="color: #374151; font-size: 14px; line-height: 1.5; margin: 0;">
+                    Verifying your startup through the DNS will help you get a verified badge and increase trust with investors and enterprise buyers. You can configure this easily from your <a href="${dashboardUrl}" style="color: #6366f1; font-weight: 600; text-decoration: none;">Founder Dashboard</a>.
+                  </p>
                 </div>
 
                 <p style="color: #374151; font-size: 15px; line-height: 1.6; margin-bottom: 8px;">

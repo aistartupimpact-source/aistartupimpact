@@ -25,17 +25,17 @@ const statusConfig: Record<string, { color: string; icon: typeof Clock; label: s
     label: 'Pending',
   },
   CLAIMED: {
-    color: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
+    color: 'bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-900/30',
     icon: CheckCircle,
     label: 'Live',
   },
   VERIFIED: {
-    color: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
+    color: 'bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-900/30',
     icon: CheckCircle,
     label: 'Verified',
   },
   REJECTED: {
-    color: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
+    color: 'bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900/50',
     icon: XCircle,
     label: 'Rejected',
   },

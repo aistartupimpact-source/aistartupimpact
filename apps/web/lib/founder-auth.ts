@@ -11,11 +11,12 @@ export interface FounderSession {
   userId: string;
   email: string;
   name: string;
+  onboardingCompleted: boolean;
 }
 
 // Create JWT token
-export async function createFounderToken(userId: string, email: string, name: string) {
-  const token = await new SignJWT({ userId, email, name })
+export async function createFounderToken(userId: string, email: string, name: string, onboardingCompleted: boolean) {
+  const token = await new SignJWT({ userId, email, name, onboardingCompleted })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('7d')
@@ -45,8 +46,8 @@ export async function getFounderSession(): Promise<FounderSession | null> {
 }
 
 // Set founder session cookie
-export async function setFounderSession(userId: string, email: string, name: string) {
-  const token = await createFounderToken(userId, email, name);
+export async function setFounderSession(userId: string, email: string, name: string, onboardingCompleted: boolean) {
+  const token = await createFounderToken(userId, email, name, onboardingCompleted);
   const cookieStore = cookies();
   
   cookieStore.set('founder-token', token, {

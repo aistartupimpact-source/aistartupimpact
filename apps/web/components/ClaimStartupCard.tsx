@@ -18,37 +18,8 @@ export default function ClaimStartupCard({
   isClaimed = false,
   isOwner = false,
 }: ClaimStartupCardProps) {
-  // If verified, don't show the card at all
-  if (isVerified) {
-    return null;
-  }
-
-  // If claimed but not verified, show verification prompt (only to owner)
-  if (isClaimed && !isVerified && isOwner) {
-    return (
-      <div className="card p-5 border-2 border-yellow-500/20 bg-yellow-50/50 dark:bg-yellow-900/10">
-        <div className="flex items-center gap-2 mb-4">
-          <Shield className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-          <h4 className="font-sora font-bold text-sm text-yellow-900 dark:text-yellow-100">
-            Verification Pending
-          </h4>
-        </div>
-        <p className="text-xs text-yellow-700 dark:text-yellow-300 font-jakarta mb-4 leading-relaxed">
-          Complete DNS verification to get your verified badge and unlock premium features.
-        </p>
-        <Link
-          href={`/founder/claim/${startupId}`}
-          className="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-white font-bold text-sm font-jakarta transition-colors"
-        >
-          <Shield className="w-4 h-4" />
-          Complete Verification
-        </Link>
-      </div>
-    );
-  }
-
-  // If claimed but user is not the owner, don't show the card
-  if (isClaimed && !isOwner) {
+  // If claimed or verified, don't show the card at all
+  if (isVerified || isClaimed) {
     return null;
   }
 

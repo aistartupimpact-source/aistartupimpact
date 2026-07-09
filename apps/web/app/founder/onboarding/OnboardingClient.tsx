@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Building2, User, Briefcase, Phone, Linkedin, Twitter, Globe, ArrowRight, CheckCircle, Upload } from 'lucide-react';
 import { completeOnboardingAction } from './actions';
@@ -30,6 +30,7 @@ export default function OnboardingClient({ user, returnTo }: { user: User; retur
   const [uploading, setUploading] = useState(false);
   
   const [formData, setFormData] = useState({
+    name: user.name || '',
     company: user.company || '',
     previousCompany: user.previousCompany || '',
     role: user.role || '',
@@ -40,6 +41,32 @@ export default function OnboardingClient({ user, returnTo }: { user: User; retur
     bio: user.bio || '',
     avatar: user.avatar || '',
   });
+
+  const [draftLoaded, setDraftLoaded] = useState(false);
+
+  // Load draft from localStorage on mount
+  useEffect(() => {
+    const savedDraft = localStorage.getItem('founder_onboarding_draft');
+    if (savedDraft) {
+      try {
+        const parsed = JSON.parse(savedDraft);
+        setFormData(prev => ({
+          ...prev,
+          ...parsed
+        }));
+      } catch (e) {
+        console.error('Error parsing onboarding draft:', e);
+      }
+    }
+    setDraftLoaded(true);
+  }, []);
+
+  // Save draft to localStorage when formData changes
+  useEffect(() => {
+    if (draftLoaded) {
+      localStorage.setItem('founder_onboarding_draft', JSON.stringify(formData));
+    }
+  }, [formData, draftLoaded]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -75,12 +102,22 @@ export default function OnboardingClient({ user, returnTo }: { user: User; retur
     }
   };
 
+  const isFormValid = () => {
+    return (
+      formData.avatar.trim() !== '' &&
+      formData.name.trim() !== '' &&
+      formData.company.trim() !== '' &&
+      formData.role.trim() !== '' &&
+      formData.bio.trim() !== ''
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     
-    if (!formData.company || !formData.role || !formData.bio || !formData.avatar) {
-      setError('Profile photo, company name, role, and short bio are required');
+    if (!formData.company || !formData.role || !formData.bio || !formData.avatar || !formData.name) {
+      setError('Profile photo, full name, company name, role, and short bio are required');
       return;
     }
 
@@ -94,6 +131,9 @@ export default function OnboardingClient({ user, returnTo }: { user: User; retur
         setLoading(false);
         return;
       }
+
+      // Clear local storage draft
+      localStorage.removeItem('founder_onboarding_draft');
 
       // Redirect to returnTo URL or dashboard with welcome message
       const destination = returnTo || '/founder/dashboard?welcome=true';
@@ -217,6 +257,24 @@ export default function OnboardingClient({ user, returnTo }: { user: User; retur
               )}
             </div>
 
+            {/* Full Name */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 font-jakarta">
+                Full Name <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Venkatesh"
+                  required
+                  className="w-full px-4 py-3 pl-11 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent font-jakarta"
+                />
+                <User className="absolute left-3.5 top-3.5 w-5 h-5 text-gray-400" />
+              </div>
+            </div>
+
             {/* Company Name */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 font-jakarta">
@@ -227,7 +285,7 @@ export default function OnboardingClient({ user, returnTo }: { user: User; retur
                   type="text"
                   value={formData.company}
                   onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                  placeholder="e.g., Yotta Data Services"
+                  placeholder="AI Startup Impact"
                   required
                   className="w-full px-4 py-3 pl-11 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent font-jakarta"
                 />
@@ -282,7 +340,7 @@ export default function OnboardingClient({ user, returnTo }: { user: User; retur
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 font-jakarta flex justify-between items-center">
                 <span>Short Bio <span className="text-red-500">*</span></span>
                 <span className="text-[10px] font-normal text-gray-400 font-jakarta">
-                  {formData.bio.length}/150 characters
+                  {formData.bio.length}/500 characters
                 </span>
               </label>
               <textarea
@@ -290,7 +348,7 @@ export default function OnboardingClient({ user, returnTo }: { user: User; retur
                 onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                 placeholder="A brief 1-2 sentence bio about your expertise and background..."
                 required
-                maxLength={150}
+                maxLength={500}
                 rows={3}
                 className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent font-jakarta resize-none"
               />
@@ -368,7 +426,7 @@ export default function OnboardingClient({ user, returnTo }: { user: User; retur
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !isFormValid()}
               className="w-full bg-brand hover:bg-brand-600 text-white font-semibold py-4 rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed font-jakarta"
             >
               {loading ? (

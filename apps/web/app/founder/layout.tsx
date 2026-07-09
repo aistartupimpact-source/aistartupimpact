@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation';
 import { getFounderSession } from '@/lib/founder-auth';
 import FounderNav from '@/components/founder/FounderNav';
 import FounderSidebar from '@/components/founder/FounderSidebar';
+import { neon } from '@neondatabase/serverless';
+import DNSVerificationModal from '@/components/founder/DNSVerificationModal';
 
 export default async function FounderLayout({
   children,
@@ -14,6 +16,13 @@ export default async function FounderLayout({
   if (!session) {
     redirect('/auth/login');
   }
+
+  // Query unverified startups owned by the founder
+  const sql = neon(process.env.DATABASE_URL!);
+  const unverifiedStartups = await sql`
+    SELECT id, name, slug FROM "Startup"
+    WHERE "ownerId" = ${session.userId} AND "isVerified" = false AND "deletedAt" IS NULL
+  `;
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50 dark:bg-gray-950">
@@ -36,6 +45,9 @@ export default async function FounderLayout({
           </div>
         </main>
       </div>
+
+      {/* DNS Verification Reminder Modal */}
+      <DNSVerificationModal unverifiedStartups={unverifiedStartups as any[]} />
     </div>
   );
 }

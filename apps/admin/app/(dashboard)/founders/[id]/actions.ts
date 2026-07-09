@@ -50,12 +50,57 @@ export async function getFounderByIdAction(founderId: string) {
         name,
         slug,
         tagline,
+        description,
+        "logoUrl",
+        "websiteUrl",
+        "linkedinUrl",
+        "twitterUrl",
+        "foundedYear",
+        "headquartersCity",
+        stage,
+        "employeeCount",
+        category,
+        "businessType",
+        "foundersData",
         "claimStatus" AS status,
+        "isApproved",
         "createdAt"::text AS "createdAt"
       FROM "Startup"
-      WHERE "ownerId" = ${founderId}
+      WHERE "ownerId" = ${founderId} AND "deletedAt" IS NULL
       ORDER BY "createdAt" DESC
     `;
+
+    // Fetch FAQs and Funding Rounds for each startup
+    if (startups && startups.length > 0) {
+      for (const startup of startups) {
+        let faqs: any[] = [];
+        try {
+          faqs = await sql`
+            SELECT id, question, answer, "order"
+            FROM "StartupFAQ"
+            WHERE "startupId" = ${startup.id}
+            ORDER BY "order" ASC
+          `;
+        } catch (faqError) {
+          console.error(`Error fetching FAQs for startup ${startup.id}:`, faqError);
+        }
+
+        let fundingRounds: any[] = [];
+        try {
+          fundingRounds = await sql`
+            SELECT id, "roundType", "amountUsd", "amountInr", "announcedAt"::text AS "announcedAt", "leadInvestors", "allInvestors"
+            FROM "FundingRound"
+            WHERE "startupId" = ${startup.id}
+            ORDER BY "announcedAt" DESC
+          `;
+        } catch (fundingError) {
+          console.error(`Error fetching FundingRounds for startup ${startup.id}:`, fundingError);
+        }
+
+        startup.faqs = faqs || [];
+        startup.fundingRounds = fundingRounds || [];
+      }
+    }
 
     // Get founder's tools
     const tools = await sql`
