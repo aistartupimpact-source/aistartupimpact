@@ -23,6 +23,24 @@ export default function ToolForm() {
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [success, setSuccess] = useState(false);
 
+  const [draftLoaded, setDraftLoaded] = useState(false);
+
+  // Load draft on mount
+  useEffect(() => {
+    const draft = localStorage.getItem('draft_founder_new_tool');
+    if (draft) {
+      try {
+        const { formData: dForm, faqs: dFaqs, screenshots: dScreenshots } = JSON.parse(draft);
+        if (dForm) setFormData(dForm);
+        if (dFaqs) setFaqs(dFaqs);
+        if (dScreenshots) setScreenshots(dScreenshots);
+      } catch (e) {
+        console.error('Failed to restore tool draft:', e);
+      }
+    }
+    setDraftLoaded(true);
+  }, []);
+
   const [formData, setFormData] = useState({
     name: '',
     tagline: '',
@@ -42,6 +60,12 @@ export default function ToolForm() {
     useCases: '',
     logoUrl: '',
   });
+
+  // Save draft on changes
+  useEffect(() => {
+    if (!draftLoaded) return;
+    localStorage.setItem('draft_founder_new_tool', JSON.stringify({ formData, faqs, screenshots }));
+  }, [formData, faqs, screenshots, draftLoaded]);
 
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
 
@@ -252,6 +276,7 @@ export default function ToolForm() {
         throw new Error(result.error || 'Submission failed');
       }
 
+      localStorage.removeItem('draft_founder_new_tool');
       setSuccess(true);
     } catch (err: any) {
       setError(err.message || 'Something went wrong');

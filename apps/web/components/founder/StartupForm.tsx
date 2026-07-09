@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Upload, X, Loader2 } from 'lucide-react';
 import { submitStartupAction } from '@/app/founder/startups/actions';
@@ -51,6 +51,25 @@ export default function StartupForm({ initialFounder }: StartupFormProps) {
   const [logoPreview, setLogoPreview] = useState('');
   const [success, setSuccess] = useState(false);
 
+  const [draftLoaded, setDraftLoaded] = useState(false);
+
+  // Load draft from localStorage on mount
+  useEffect(() => {
+    const draft = localStorage.getItem('draft_founder_new_startup');
+    if (draft) {
+      try {
+        const { formData: dForm, faqs: dFaqs, fundingRounds: dRounds, foundersDetails: dFounders } = JSON.parse(draft);
+        if (dForm) setFormData(dForm);
+        if (dFaqs) setFaqs(dFaqs);
+        if (dRounds) setFundingRounds(dRounds);
+        if (dFounders) setFoundersDetails(dFounders);
+      } catch (e) {
+        console.error('Failed to restore startup draft:', e);
+      }
+    }
+    setDraftLoaded(true);
+  }, []);
+
   const [formData, setFormData] = useState({
     name: '',
     tagline: '',
@@ -83,6 +102,12 @@ export default function StartupForm({ initialFounder }: StartupFormProps) {
         ]
       : []
   );
+
+  // Save draft to localStorage on changes
+  useEffect(() => {
+    if (!draftLoaded) return;
+    localStorage.setItem('draft_founder_new_startup', JSON.stringify({ formData, faqs, fundingRounds, foundersDetails }));
+  }, [formData, faqs, fundingRounds, foundersDetails, draftLoaded]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData(prev => ({
@@ -181,6 +206,7 @@ export default function StartupForm({ initialFounder }: StartupFormProps) {
       }
 
       // Show success card
+      localStorage.removeItem('draft_founder_new_startup');
       setSuccess(true);
     } catch (err: any) {
       setError(err.message || 'Something went wrong');

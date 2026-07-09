@@ -94,6 +94,20 @@ export default function EditToolPage() {
         console.error('Error loading FAQs:', faqError);
         setFaqs([]);
       }
+
+      // Check for drafts after database load finishes successfully
+      const draftKey = `draft_admin_edit_tool_${toolId}`;
+      const draft = localStorage.getItem(draftKey);
+      if (draft) {
+        try {
+          const { formData: dForm, faqs: dFaqs, screenshots: dScreenshots } = JSON.parse(draft);
+          if (dForm) setFormData(dForm);
+          if (dFaqs) setFaqs(dFaqs);
+          if (dScreenshots) setScreenshots(dScreenshots);
+        } catch (e) {
+          console.error('Failed to restore tool draft:', e);
+        }
+      }
     } catch (error) {
       console.error('Error loading tool:', error);
       alert('Error loading tool');
@@ -102,6 +116,13 @@ export default function EditToolPage() {
       setLoadingFaqs(false);
     }
   };
+
+  // Save draft to localStorage on changes
+  useEffect(() => {
+    if (loading || !formData) return;
+    const draftKey = `draft_admin_edit_tool_${toolId}`;
+    localStorage.setItem(draftKey, JSON.stringify({ formData, faqs, screenshots }));
+  }, [formData, faqs, screenshots, loading, toolId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     if (!formData) return;
@@ -216,6 +237,7 @@ export default function EditToolPage() {
       });
       
       if (result.success) {
+        localStorage.removeItem(`draft_admin_edit_tool_${toolId}`);
         router.push('/tools-dir');
         router.refresh();
       } else {

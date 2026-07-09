@@ -115,6 +115,21 @@ export default function EditStartupPage() {
       } finally {
         setLoadingFundingRounds(false);
       }
+
+      // Check for drafts after database load finishes successfully
+      const draftKey = `draft_admin_edit_startup_${startupId}`;
+      const draft = localStorage.getItem(draftKey);
+      if (draft) {
+        try {
+          const { formData: dForm, faqs: dFaqs, fundingRounds: dRounds, foundersDetails: dFounders } = JSON.parse(draft);
+          if (dForm) setFormData(dForm);
+          if (dFaqs) setFaqs(dFaqs);
+          if (dRounds) setFundingRounds(dRounds);
+          if (dFounders) setFoundersDetails(dFounders);
+        } catch (e) {
+          console.error('Failed to restore startup draft:', e);
+        }
+      }
     } catch (error) {
       console.error('Error loading startup:', error);
       alert('Error loading startup');
@@ -124,6 +139,13 @@ export default function EditStartupPage() {
     }
   };
 
+
+  // Save draft to localStorage on changes
+  useEffect(() => {
+    if (loading || !formData) return;
+    const draftKey = `draft_admin_edit_startup_${startupId}`;
+    localStorage.setItem(draftKey, JSON.stringify({ formData, faqs, fundingRounds, foundersDetails }));
+  }, [formData, faqs, fundingRounds, foundersDetails, loading, startupId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     if (!formData) return;
@@ -197,6 +219,7 @@ export default function EditStartupPage() {
       });
       
       if (result.success) {
+        localStorage.removeItem(`draft_admin_edit_startup_${startupId}`);
         router.push('/startups-dir');
         router.refresh();
       } else {

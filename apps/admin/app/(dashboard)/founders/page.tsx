@@ -37,11 +37,18 @@ export default function FoundersPage() {
 
   const loadFounders = async () => {
     setLoading(true);
-    const result = await getFoundersAction();
-    if (result.success) {
-      setFounders(result.data as Founder[]);
+    try {
+      const result = await getFoundersAction();
+      if (result && result.success) {
+        setFounders(result.data as Founder[]);
+      } else {
+        console.error('Failed to load founders:', result?.error);
+      }
+    } catch (error) {
+      console.error('Error loading founders:', error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const filteredFounders = founders.filter(f => {

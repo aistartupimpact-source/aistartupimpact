@@ -8,6 +8,7 @@ const USD_INR_RATE = 95.4;
 const ROUND_TYPES = [
   'Pre-Seed', 'Seed', 'Series A', 'Series B', 'Series C',
   'Series D', 'Growth', 'Debt', 'Grant', 'Internal Funding',
+  'IPO', 'Public',
 ];
 
 const AMOUNT_UNITS = [
@@ -56,8 +57,8 @@ export function convertToSaveFormat(rounds: FundingRound[]): FundingRoundForSave
         amountUsd: amountUsdCents,
         amountInr: amountInrPaise,
         announcedAt: r.announcedAt,
-        leadInvestors: r.leadInvestors.split(',').map(s => s.trim()).filter(Boolean),
-        allInvestors: r.allInvestors.split(',').map(s => s.trim()).filter(Boolean),
+        leadInvestors: (r.leadInvestors || '').split(',').map(s => s.trim()).filter(Boolean),
+        allInvestors: (r.allInvestors || '').split(',').map(s => s.trim()).filter(Boolean),
       };
     });
 }

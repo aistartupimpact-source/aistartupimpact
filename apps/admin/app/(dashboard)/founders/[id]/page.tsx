@@ -890,7 +890,7 @@ export default function FounderDetailPage({ params }: { params: { id: string } }
                   Close
                 </button>
                 
-                {viewingStartup.status === 'PENDING' && !isRejecting && (
+                {!viewingStartup.isApproved && !isRejecting && (
                   <>
                     <button
                       onClick={() => setIsRejecting(true)}

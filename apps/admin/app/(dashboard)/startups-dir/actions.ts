@@ -2,6 +2,7 @@
 
 import { neon } from '@neondatabase/serverless';
 import { revalidatePath } from 'next/cache';
+import { calculateImpactScore } from '@/lib/impact-score';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -115,7 +116,6 @@ export async function createStartupAction(data: {
 
     // Auto-calculate impact score from funding rounds + employees + stage + age
     const totalFundingUsdCents = (data.fundingRounds || []).reduce((sum, r) => sum + (r.amountUsd || 0), 0);
-    const { calculateImpactScore } = await import('@/lib/impact-score');
     const { total: impactScore } = calculateImpactScore({
       totalFundingUsdCents,
       employeeCount: data.employeeCount ?? null,
@@ -157,8 +157,10 @@ export async function createStartupAction(data: {
     }
 
     // Insert Funding Rounds if provided
+    let totalFundingInr = BigInt(0);
     if (startupId && data.fundingRounds && data.fundingRounds.length > 0) {
       for (const round of data.fundingRounds) {
+        totalFundingInr += BigInt(round.amountInr || 0);
         await sql`
           INSERT INTO "FundingRound" (id, "startupId", "roundType", "amountUsd", "amountInr", "announcedAt", "leadInvestors", "allInvestors", "createdAt")
           VALUES (gen_random_uuid(), ${startupId}, ${round.roundType}, ${round.amountUsd}, ${round.amountInr}, ${round.announcedAt}::timestamp, ${round.leadInvestors}::text[], ${round.allInvestors}::text[], NOW())
@@ -166,11 +168,19 @@ export async function createStartupAction(data: {
       }
     }
 
+    if (startupId) {
+      await sql`
+        UPDATE "Startup"
+        SET "totalFundingInr" = ${totalFundingInr.toString()}::bigint
+        WHERE id = ${startupId}
+      `;
+    }
+
     revalidatePath('/startups-dir');
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating startup:', error);
-    return { success: false, error: 'Failed to create startup' };
+    return { success: false, error: error.message || 'Failed to create startup' };
   }
 }
 
@@ -220,7 +230,6 @@ export async function updateStartupAction(id: string, data: {
       totalFundingUsdCents = Number(fundingResult[0]?.total || 0);
     }
 
-    const { calculateImpactScore } = await import('@/lib/impact-score');
     const { total: impactScore } = calculateImpactScore({
       totalFundingUsdCents,
       employeeCount: data.employeeCount ?? null,
@@ -272,14 +281,22 @@ export async function updateStartupAction(id: string, data: {
       await sql`DELETE FROM "FundingRound" WHERE "startupId" = ${id}`;
       
       // Insert new rounds
+      let totalFundingInr = BigInt(0);
       if (data.fundingRounds.length > 0) {
         for (const round of data.fundingRounds) {
+          totalFundingInr += BigInt(round.amountInr || 0);
           await sql`
             INSERT INTO "FundingRound" (id, "startupId", "roundType", "amountUsd", "amountInr", "announcedAt", "leadInvestors", "allInvestors", "createdAt")
             VALUES (gen_random_uuid(), ${id}, ${round.roundType}, ${round.amountUsd}, ${round.amountInr}, ${round.announcedAt}::timestamp, ${round.leadInvestors}::text[], ${round.allInvestors}::text[], NOW())
           `;
         }
       }
+
+      await sql`
+        UPDATE "Startup"
+        SET "totalFundingInr" = ${totalFundingInr.toString()}::bigint
+        WHERE id = ${id}
+      `;
     }
 
     // Update foundersData if provided
@@ -298,9 +315,9 @@ export async function updateStartupAction(id: string, data: {
 
     revalidatePath('/startups-dir');
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating startup:', error);
-    return { success: false, error: 'Failed to update startup' };
+    return { success: false, error: error.message || 'Failed to update startup' };
   }
 }
 
