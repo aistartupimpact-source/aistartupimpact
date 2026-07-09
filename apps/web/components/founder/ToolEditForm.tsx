@@ -70,6 +70,25 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
   // Extract features and use cases from the useCases array
   const existingUseCases = tool.useCases.map(uc => uc.text).join('\n');
 
+  const [draftLoaded, setDraftLoaded] = useState(false);
+
+  // Load draft from localStorage on mount
+  useEffect(() => {
+    const draftKey = `draft_founder_edit_tool_${tool.id}`;
+    const draft = localStorage.getItem(draftKey);
+    if (draft) {
+      try {
+        const { formData: dForm, faqs: dFaqs, screenshots: dScreenshots } = JSON.parse(draft);
+        if (dForm) setFormData(dForm);
+        if (dFaqs) setFaqs(dFaqs);
+        if (dScreenshots) setScreenshots(dScreenshots);
+      } catch (e) {
+        console.error('Failed to restore tool draft:', e);
+      }
+    }
+    setDraftLoaded(true);
+  }, [tool.id]);
+
   const [formData, setFormData] = useState({
     name: tool.name,
     tagline: tool.tagline,
@@ -98,6 +117,13 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
       order: faq.order ?? index,
     }))
   );
+
+  // Save draft on changes
+  useEffect(() => {
+    if (!draftLoaded) return;
+    const draftKey = `draft_founder_edit_tool_${tool.id}`;
+    localStorage.setItem(draftKey, JSON.stringify({ formData, faqs, screenshots }));
+  }, [formData, faqs, screenshots, draftLoaded, tool.id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const value = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value;
@@ -295,6 +321,7 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
         throw new Error(result.error || 'Update failed');
       }
 
+      localStorage.removeItem(`draft_founder_edit_tool_${tool.id}`);
       router.push('/founder/tools');
       router.refresh();
     } catch (err: any) {

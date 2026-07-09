@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Upload, X, Loader2 } from 'lucide-react';
 import { updateStartupAction } from '@/app/founder/startups/actions';
@@ -97,6 +97,26 @@ export default function StartupEditForm({ startup, existingFaqs = [], existingFu
       : []
   );
 
+  const [draftLoaded, setDraftLoaded] = useState(false);
+
+  // Load draft from localStorage on mount
+  useEffect(() => {
+    const draftKey = `draft_founder_edit_startup_${startup.id}`;
+    const draft = localStorage.getItem(draftKey);
+    if (draft) {
+      try {
+        const { formData: dForm, faqs: dFaqs, fundingRounds: dRounds, foundersDetails: dFounders } = JSON.parse(draft);
+        if (dForm) setFormData(dForm);
+        if (dFaqs) setFaqs(dFaqs);
+        if (dRounds) setFundingRounds(dRounds);
+        if (dFounders) setFoundersDetails(dFounders);
+      } catch (e) {
+        console.error('Failed to restore startup draft:', e);
+      }
+    }
+    setDraftLoaded(true);
+  }, [startup.id]);
+
   const [formData, setFormData] = useState({
     name: startup.name,
     tagline: startup.tagline,
@@ -114,6 +134,13 @@ export default function StartupEditForm({ startup, existingFaqs = [], existingFu
     totalFundingInr: startup.totalFundingInr ? (Number(startup.totalFundingInr) / 100).toString() : '',
     fundingCurrency: 'INR',
   });
+
+  // Save draft on changes
+  useEffect(() => {
+    if (!draftLoaded) return;
+    const draftKey = `draft_founder_edit_startup_${startup.id}`;
+    localStorage.setItem(draftKey, JSON.stringify({ formData, faqs, fundingRounds, foundersDetails }));
+  }, [formData, faqs, fundingRounds, foundersDetails, draftLoaded, startup.id]);
 
   const taglineCharLimit = 60;
   const descriptionCharLimit = 500;
@@ -223,6 +250,7 @@ export default function StartupEditForm({ startup, existingFaqs = [], existingFu
         throw new Error(result.error || 'Update failed');
       }
 
+      localStorage.removeItem(`draft_founder_edit_startup_${startup.id}`);
       router.push('/founder/startups');
       router.refresh();
     } catch (err: any) {

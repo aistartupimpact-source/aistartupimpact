@@ -340,7 +340,7 @@ export default function OnboardingClient({ user, returnTo }: { user: User; retur
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 font-jakarta flex justify-between items-center">
                 <span>Short Bio <span className="text-red-500">*</span></span>
                 <span className="text-[10px] font-normal text-gray-400 font-jakarta">
-                  {formData.bio.length}/500 characters
+                  {formData.bio.length}/800 characters
                 </span>
               </label>
               <textarea
@@ -348,7 +348,7 @@ export default function OnboardingClient({ user, returnTo }: { user: User; retur
                 onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                 placeholder="A brief 1-2 sentence bio about your expertise and background..."
                 required
-                maxLength={500}
+                maxLength={800}
                 rows={3}
                 className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent font-jakarta resize-none"
               />

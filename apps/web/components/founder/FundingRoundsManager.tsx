@@ -30,6 +30,8 @@ const ROUND_TYPES = [
   'Bridge',
   'Debt',
   'Grant',
+  'IPO',
+  'Public',
 ];
 
 export default function FundingRoundsManager({ startupId, existingRounds = [], onUpdate }: FundingRoundsManagerProps) {

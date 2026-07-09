@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Upload, Loader2, Save, Crown } from 'lucide-react';
 import { createStartupAction } from '../actions';
@@ -36,6 +36,25 @@ export default function NewStartupPage() {
   const [fundingRounds, setFundingRounds] = useState<FundingRound[]>([]);
   const [foundersDetails, setFoundersDetails] = useState<FounderDetail[]>([]);
   
+  const [draftLoaded, setDraftLoaded] = useState(false);
+
+  // Load draft from localStorage on mount
+  useEffect(() => {
+    const draft = localStorage.getItem('draft_admin_new_startup');
+    if (draft) {
+      try {
+        const { formData: dForm, faqs: dFaqs, fundingRounds: dRounds, foundersDetails: dFounders } = JSON.parse(draft);
+        if (dForm) setFormData(dForm);
+        if (dFaqs) setFaqs(dFaqs);
+        if (dRounds) setFundingRounds(dRounds);
+        if (dFounders) setFoundersDetails(dFounders);
+      } catch (e) {
+        console.error('Failed to restore startup draft:', e);
+      }
+    }
+    setDraftLoaded(true);
+  }, []);
+
   const [formData, setFormData] = useState({
     name: '',
     tagline: '',
@@ -52,6 +71,12 @@ export default function NewStartupPage() {
     category: '',
     businessType: '',
   });
+
+  // Save draft to localStorage on changes
+  useEffect(() => {
+    if (!draftLoaded) return;
+    localStorage.setItem('draft_admin_new_startup', JSON.stringify({ formData, faqs, fundingRounds, foundersDetails }));
+  }, [formData, faqs, fundingRounds, foundersDetails, draftLoaded]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -111,6 +136,7 @@ export default function NewStartupPage() {
       });
       
       if (result.success) {
+        localStorage.removeItem('draft_admin_new_startup');
         router.push('/startups-dir');
         router.refresh();
       } else {

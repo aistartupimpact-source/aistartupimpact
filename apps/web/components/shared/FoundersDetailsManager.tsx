@@ -197,18 +197,18 @@ export default function FoundersDetailsManager({ founders, onChange, maxFounders
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase">Short Bio</label>
-              <span className="text-[10px] text-gray-400">{(founder.bio || '').length}/500</span>
+              <span className="text-[10px] text-gray-400">{(founder.bio || '').length}/800</span>
             </div>
             <textarea
               value={founder.bio || ''}
               onChange={(e) => {
-                if ((e.target.value || '').length <= 500) {
+                if ((e.target.value || '').length <= 800) {
                   updateFounder(index, 'bio', e.target.value);
                 }
               }}
               placeholder="Brief background (1-2 lines)"
               rows={2}
-              maxLength={500}
+              maxLength={800}
               className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
             />
           </div>

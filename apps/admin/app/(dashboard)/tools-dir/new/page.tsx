@@ -28,6 +28,24 @@ export default function NewToolPage() {
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [screenshots, setScreenshots] = useState<string[]>([]);
   
+  const [draftLoaded, setDraftLoaded] = useState(false);
+
+  // Load draft from localStorage on mount
+  useEffect(() => {
+    const draft = localStorage.getItem('draft_admin_new_tool');
+    if (draft) {
+      try {
+        const { formData: dForm, faqs: dFaqs, screenshots: dScreenshots } = JSON.parse(draft);
+        if (dForm) setFormData(dForm);
+        if (dFaqs) setFaqs(dFaqs);
+        if (dScreenshots) setScreenshots(dScreenshots);
+      } catch (e) {
+        console.error('Failed to restore tool draft:', e);
+      }
+    }
+    setDraftLoaded(true);
+  }, []);
+
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -47,6 +65,12 @@ export default function NewToolPage() {
     headquartersCountry: '',
     avgRating: 0,
   });
+
+  // Save draft to localStorage on changes
+  useEffect(() => {
+    if (!draftLoaded) return;
+    localStorage.setItem('draft_admin_new_tool', JSON.stringify({ formData, faqs, screenshots }));
+  }, [formData, faqs, screenshots, draftLoaded]);
 
   useEffect(() => {
     loadCategories();
@@ -177,6 +201,7 @@ export default function NewToolPage() {
       });
       
       if (result.success) {
+        localStorage.removeItem('draft_admin_new_tool');
         router.push('/tools-dir');
         router.refresh();
       } else {
