@@ -20,7 +20,9 @@ interface FundingRoundsManagerProps {
 
 const ROUND_TYPES = [
   'Pre-Seed',
+  'Angle',
   'Seed',
+  'Pre-Series A',
   'Series A',
   'Series B',
   'Series C',

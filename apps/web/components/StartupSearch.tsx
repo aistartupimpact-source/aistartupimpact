@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { Search, Building2, TrendingUp, MapPin, X, Loader2 } from 'lucide-react';
+import { Search, Building2, MapPin, X, Loader2, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { VerifiedBadge } from './VerifiedBadge';
 
@@ -12,13 +12,16 @@ interface Startup {
   isFeatured: boolean; totalUsd: number; isVerified?: boolean;
   employeeCount?: number; foundedYear?: number; category?: string;
   businessType?: string; founders?: string[] | string;
+  status?: string;
 }
 
 const STAGES = [
   { value: '', label: 'All Stages' },
+  { value: 'BOOTSTRAPPED', label: 'Bootstrapped' },
   { value: 'IDEA', label: 'Idea' },
   { value: 'PRE_SEED', label: 'Pre-Seed' },
   { value: 'SEED', label: 'Seed' },
+  { value: 'PRE_SERIES_A', label: 'Pre-Series A' },
   { value: 'SERIES_A', label: 'Series A' },
   { value: 'SERIES_B', label: 'Series B' },
   { value: 'SERIES_C', label: 'Series C' },
@@ -27,7 +30,7 @@ const STAGES = [
 ];
 
 const CATEGORIES = [
-  { value: '', label: 'All' },
+  { value: '', label: 'All Categories' },
   { value: 'FinTech', label: 'FinTech' },
   { value: 'HealthTech', label: 'HealthTech' },
   { value: 'BioTech & Life Sciences', label: 'BioTech' },
@@ -76,6 +79,29 @@ const BUSINESS_TYPES = [
   { value: 'Platform', label: 'Platform' },
 ];
 
+const STATUSES = [
+  { value: '', label: 'All Statuses' },
+  { value: 'ACTIVE', label: 'Active' },
+  { value: 'PUBLIC', label: 'Public' },
+  { value: 'ACQUIRED', label: 'Acquired' },
+  { value: 'INACTIVE', label: 'Inactive' },
+];
+
+const EMPLOYEE_RANGES = [
+  { value: '', label: 'All Team Sizes' },
+  { value: '1-10', label: '1 - 10 employees' },
+  { value: '11-50', label: '11 - 50 employees' },
+  { value: '51-200', label: '51 - 200 employees' },
+  { value: '201-500', label: '201 - 500 employees' },
+  { value: '500+', label: '500+ employees' },
+];
+
+const COUNTRIES = [
+  { value: '', label: 'All Countries' },
+  { value: 'India', label: 'India' },
+  { value: 'International', label: 'International' },
+];
+
 const ITEMS_PER_PAGE = 24;
 
 function formatUsd(usd: number) {
@@ -92,9 +118,10 @@ function stageLabel(s: string) {
 interface Props {
   initialStartups: Startup[];
   initialTotal: number;
+  cities: string[];
 }
 
-export default function StartupSearch({ initialStartups, initialTotal }: Props) {
+export default function StartupSearch({ initialStartups, initialTotal, cities }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -103,14 +130,23 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
   const [stage, setStage] = useState(searchParams.get('stage') || '');
   const [category, setCategory] = useState(searchParams.get('category') || '');
   const [businessType, setBusinessType] = useState(searchParams.get('businessType') || '');
+  const [status, setStatus] = useState(searchParams.get('status') || '');
+  const [city, setCity] = useState(searchParams.get('city') || '');
+  const [country, setCountry] = useState(searchParams.get('country') || '');
+  const [employeeRange, setEmployeeRange] = useState(searchParams.get('employeeRange') || '');
+  
   const [startups, setStartups] = useState<Startup[]>(initialStartups);
   const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  
   const hasUserInteracted = useRef(false);
   const debounceRef = useRef<NodeJS.Timeout>();
 
-  const fetchStartups = useCallback(async (q: string, s: string, c: string, bt: string) => {
+  const fetchStartups = useCallback(async (
+    q: string, s: string, c: string, bt: string, st: string, ci: string, co: string, er: string
+  ) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -118,6 +154,10 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
       if (s) params.set('stage', s);
       if (c) params.set('category', c);
       if (bt) params.set('businessType', bt);
+      if (st) params.set('status', st);
+      if (ci) params.set('city', ci);
+      if (co) params.set('country', co);
+      if (er) params.set('employeeRange', er);
       params.set('limit', '500'); // Fetch all matching for client-side pagination
       const res = await fetch(`/api/startups/search?${params}`);
       const data = await res.json();
@@ -136,17 +176,21 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
     if (!hasUserInteracted.current) return;
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      fetchStartups(query, stage, category, businessType);
+      fetchStartups(query, stage, category, businessType, status, city, country, employeeRange);
       const params = new URLSearchParams();
       if (query) params.set('q', query);
       if (stage) params.set('stage', stage);
       if (category) params.set('category', category);
       if (businessType) params.set('businessType', businessType);
+      if (status) params.set('status', status);
+      if (city) params.set('city', city);
+      if (country) params.set('country', country);
+      if (employeeRange) params.set('employeeRange', employeeRange);
       const newUrl = params.toString() ? `${pathname}?${params}` : pathname;
       router.replace(newUrl, { scroll: false });
     }, 300);
     return () => clearTimeout(debounceRef.current);
-  }, [query, stage, category, businessType, fetchStartups, pathname, router]);
+  }, [query, stage, category, businessType, status, city, country, employeeRange, fetchStartups, pathname, router]);
 
   const handleCategoryChange = (value: string) => {
     hasUserInteracted.current = true;
@@ -157,11 +201,45 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
   const clearSearch = () => {
     hasUserInteracted.current = true;
     setQuery(''); setStage(''); setCategory(''); setBusinessType('');
+    setStatus(''); setCity(''); setCountry(''); setEmployeeRange('');
     setVisibleCount(ITEMS_PER_PAGE);
   };
 
   const visibleStartups = startups.slice(0, visibleCount);
   const hasMore = visibleCount < startups.length;
+
+  const activeFiltersCount = [
+    stage,
+    category,
+    businessType,
+    status,
+    city,
+    country,
+    employeeRange
+  ].filter(Boolean).length;
+
+  const getFilterLabel = (key: string, val: string) => {
+    if (key === 'stage') return STAGES.find(x => x.value === val)?.label || val;
+    if (key === 'category') return CATEGORIES.find(x => x.value === val)?.label || val;
+    if (key === 'businessType') return BUSINESS_TYPES.find(x => x.value === val)?.label || val;
+    if (key === 'status') return STATUSES.find(x => x.value === val)?.label || val;
+    if (key === 'employeeRange') return EMPLOYEE_RANGES.find(x => x.value === val)?.label || val;
+    if (key === 'city') return `City: ${val}`;
+    if (key === 'country') return `Country: ${val}`;
+    return val;
+  };
+
+  const removeFilter = (key: string) => {
+    hasUserInteracted.current = true;
+    if (key === 'stage') setStage('');
+    if (key === 'category') setCategory('');
+    if (key === 'businessType') setBusinessType('');
+    if (key === 'status') setStatus('');
+    if (key === 'city') setCity('');
+    if (key === 'country') setCountry('');
+    if (key === 'employeeRange') setEmployeeRange('');
+    setVisibleCount(ITEMS_PER_PAGE);
+  };
 
   return (
     <div className="space-y-5">
@@ -176,7 +254,7 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
           >
-            All
+            All Sectors
           </button>
           {CATEGORIES.filter(c => c.value !== '').map(cat => (
             <button
@@ -194,62 +272,196 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
         </div>
       </div>
 
-      {/* ── Search + Filters Row ── */}
-      <div className="space-y-2.5 sm:space-y-3">
-        {/* Search Input */}
-        <div className="relative">
-          <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            value={query}
-            onChange={e => { hasUserInteracted.current = true; setQuery(e.target.value); }}
-            placeholder="Search startups..."
-            className="w-full pl-9 sm:pl-11 pr-9 sm:pr-10 py-2 sm:py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent text-sm font-jakarta"
-          />
-          {query && (
-            <button onClick={() => { hasUserInteracted.current = true; setQuery(''); }} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
-              <X className="w-3.5 h-3.5 text-gray-400" />
-            </button>
-          )}
-        </div>
-
-        {/* Filter Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Stage Filter */}
-            <select
-              value={stage}
-              onChange={e => { hasUserInteracted.current = true; setStage(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
-              className="px-2.5 sm:px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-[11px] sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
-            >
-              {STAGES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-            </select>
-
-            {/* Business Type Filter */}
-            <select
-              value={businessType}
-              onChange={e => { hasUserInteracted.current = true; setBusinessType(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
-              className="px-2.5 sm:px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-[11px] sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
-            >
-              {BUSINESS_TYPES.map(bt => <option key={bt.value} value={bt.value}>{bt.label}</option>)}
-            </select>
-
-            {/* Clear Filters */}
-            {(query || stage || category || businessType) && (
-              <button onClick={clearSearch} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-brand hover:bg-brand/5 transition-colors font-jakarta">
-                Clear all
+      {/* ── Search + Toggle Row ── */}
+      <div className="space-y-3">
+        {/* Main Search Row */}
+        <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={query}
+              onChange={e => { hasUserInteracted.current = true; setQuery(e.target.value); }}
+              placeholder="Search startups by name, tagline, founder or category..."
+              className="w-full pl-10 sm:pl-12 pr-10 py-2 sm:py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent text-sm font-jakarta"
+            />
+            {query && (
+              <button onClick={() => { hasUserInteracted.current = true; setQuery(''); }} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
+                <X className="w-3.5 h-3.5 text-gray-400" />
               </button>
             )}
           </div>
 
-          {/* Results Count */}
-          <span className="text-xs text-gray-400 font-jakarta">
-            {loading ? (
-              <span className="flex items-center gap-1.5"><Loader2 className="w-3 h-3 animate-spin" /> Searching...</span>
-            ) : (
-              <span><span className="font-bold text-navy dark:text-white">{total}</span> startups</span>
+          <button
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className={`flex items-center justify-center gap-2 px-4 py-2 sm:py-2.5 rounded-xl border font-jakarta text-sm font-semibold transition-all select-none min-h-[44px] sm:min-h-0 ${
+              showAdvanced || activeFiltersCount > 0
+                ? 'border-brand bg-brand/5 text-brand shadow-sm'
+                : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+            }`}
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+            <span>Filters</span>
+            {activeFiltersCount > 0 && (
+              <span className="w-5 h-5 flex items-center justify-center bg-brand text-white text-[11px] font-bold rounded-full animate-scale-in">
+                {activeFiltersCount}
+              </span>
             )}
-          </span>
+            {showAdvanced ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+
+        {/* Collapsible Advanced Filters Grid */}
+        {showAdvanced && (
+          <div className="bg-gray-50/50 dark:bg-gray-900/30 border border-gray-200/60 dark:border-gray-800 rounded-2xl p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-scale-in">
+            {/* Stage Filter */}
+            <div className="flex flex-col">
+              <label className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Funding Stage</label>
+              <select
+                value={stage}
+                onChange={e => { hasUserInteracted.current = true; setStage(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+              >
+                {STAGES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+            </div>
+
+
+            {/* Business Model Filter */}
+            <div className="flex flex-col">
+              <label className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Business Model</label>
+              <select
+                value={businessType}
+                onChange={e => { hasUserInteracted.current = true; setBusinessType(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+              >
+                {BUSINESS_TYPES.map(bt => <option key={bt.value} value={bt.value}>{bt.label}</option>)}
+              </select>
+            </div>
+
+            {/* Company Status Filter */}
+            <div className="flex flex-col">
+              <label className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Company Status</label>
+              <select
+                value={status}
+                onChange={e => { hasUserInteracted.current = true; setStatus(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+              >
+                {STATUSES.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
+              </select>
+            </div>
+
+            {/* Employee Size Filter */}
+            <div className="flex flex-col">
+              <label className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Team Size</label>
+              <select
+                value={employeeRange}
+                onChange={e => { hasUserInteracted.current = true; setEmployeeRange(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+              >
+                {EMPLOYEE_RANGES.map(er => <option key={er.value} value={er.value}>{er.label}</option>)}
+              </select>
+            </div>
+
+            {/* Country Filter */}
+            <div className="flex flex-col">
+              <label className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Country</label>
+              <select
+                value={country}
+                onChange={e => { hasUserInteracted.current = true; setCountry(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+              >
+                {COUNTRIES.map(co => <option key={co.value} value={co.value}>{co.label}</option>)}
+              </select>
+            </div>
+
+            {/* City Filter */}
+            <div className="flex flex-col">
+              <label className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Headquarters City</label>
+              <select
+                value={city}
+                onChange={e => { hasUserInteracted.current = true; setCity(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+              >
+                <option value="">All Cities</option>
+                {cities.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+
+            {/* Clear All Button Grid Cell */}
+            <div className="flex items-end">
+              <button
+                onClick={clearSearch}
+                className="w-full px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 text-gray-500 hover:text-brand hover:border-brand/40 text-xs font-semibold font-jakarta transition-colors min-h-[36px]"
+              >
+                Reset All Filters
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Results Info & Active Tags Row */}
+        <div className="flex flex-col gap-2">
+          {/* Active Filter Tags */}
+          {activeFiltersCount > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1">
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mr-1 font-jakarta select-none">Active Filters:</span>
+              {stage && (
+                <button onClick={() => removeFilter('stage')} className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand/5 border border-brand/20 text-brand hover:bg-brand/10 transition-colors font-jakarta">
+                  <span>{getFilterLabel('stage', stage)}</span>
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+              {category && (
+                <button onClick={() => removeFilter('category')} className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand/5 border border-brand/20 text-brand hover:bg-brand/10 transition-colors font-jakarta">
+                  <span>{getFilterLabel('category', category)}</span>
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+              {businessType && (
+                <button onClick={() => removeFilter('businessType')} className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand/5 border border-brand/20 text-brand hover:bg-brand/10 transition-colors font-jakarta">
+                  <span>{getFilterLabel('businessType', businessType)}</span>
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+              {status && (
+                <button onClick={() => removeFilter('status')} className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand/5 border border-brand/20 text-brand hover:bg-brand/10 transition-colors font-jakarta">
+                  <span>{getFilterLabel('status', status)}</span>
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+              {employeeRange && (
+                <button onClick={() => removeFilter('employeeRange')} className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand/5 border border-brand/20 text-brand hover:bg-brand/10 transition-colors font-jakarta">
+                  <span>{getFilterLabel('employeeRange', employeeRange)}</span>
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+              {country && (
+                <button onClick={() => removeFilter('country')} className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand/5 border border-brand/20 text-brand hover:bg-brand/10 transition-colors font-jakarta">
+                  <span>{getFilterLabel('country', country)}</span>
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+              {city && (
+                <button onClick={() => removeFilter('city')} className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand/5 border border-brand/20 text-brand hover:bg-brand/10 transition-colors font-jakarta">
+                  <span>{getFilterLabel('city', city)}</span>
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+              <button onClick={clearSearch} className="text-xs text-brand hover:underline font-jakarta font-bold px-2 py-1">
+                Clear all
+              </button>
+            </div>
+          )}
+
+          {/* Results Count & Loader status */}
+          <div className="flex items-center justify-between text-xs text-gray-400 font-jakarta">
+            {loading ? (
+              <span className="flex items-center gap-1.5"><Loader2 className="w-3 h-3 animate-spin" /> Searching directory...</span>
+            ) : (
+              <span>Found <span className="font-bold text-navy dark:text-white">{total}</span> startups</span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -269,7 +481,7 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
         <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 transition-opacity duration-200 ${loading ? 'opacity-50' : 'opacity-100'}`}>
           {visibleStartups.map(s => (
             <Link key={s.slug} href={`/startups/${s.slug}`} className="group">
-              <div className="relative bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:border-brand/30 dark:hover:border-brand/30 transition-all duration-300 h-full">
+              <div className="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:border-brand/30 dark:hover:border-brand/30 transition-all duration-300 h-full">
                 {/* Header Section */}
                 <div className="flex items-start gap-2.5 sm:gap-3 mb-3 sm:mb-4">
                   {/* Logo */}
@@ -341,6 +553,17 @@ export default function StartupSearch({ initialStartups, initialTotal }: Props) 
                   <span className="text-xs font-semibold bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 px-2.5 py-1 rounded-full">
                     {stageLabel(s.stage)}
                   </span>
+                  {s.status && s.status !== 'ACTIVE' && (
+                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${
+                      s.status === 'PUBLIC'
+                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-900/30'
+                        : s.status === 'ACQUIRED'
+                        ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-purple-100 dark:border-purple-900/30'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
+                    }`}>
+                      {s.status}
+                    </span>
+                  )}
                 </div>
 
                 {/* Stats Grid */}

@@ -11,7 +11,7 @@ export async function getStartupsAction() {
     const startups = await sql`
       SELECT 
         id, name, tagline, description, "logoUrl", "websiteUrl", "linkedinUrl", "twitterUrl",
-        "foundedYear", "headquartersCity", stage, "totalFundingInr", "employeeCount",
+        "foundedYear", "headquartersCity", stage, status, "totalFundingInr", "employeeCount",
         "isFeatured", "featuredUntil", "impactScore", "isApproved", "approvedAt",
         "isVerified", "claimStatus", "contentReviewed",
         "ownerId", category, "businessType", founders, "foundersData", "createdAt", "updatedAt"
@@ -73,6 +73,7 @@ export async function createStartupAction(data: {
   employeeCount?: number | null;
   category?: string;
   businessType?: string;
+  status?: string;
   faqs?: Array<{ question: string; answer: string; order: number }>;
   fundingRounds?: Array<{
     roundType: string;
@@ -85,10 +86,15 @@ export async function createStartupAction(data: {
   foundersData?: Array<{
     name: string;
     role: string;
-    prev: string;
+    prev?: string;
     bio: string;
     avatar: string;
     linkedin: string;
+    twitter?: string;
+  }>;
+  socialLinks?: Array<{
+    platform: string;
+    url: string;
   }>;
 }) {
   try {
@@ -128,18 +134,21 @@ export async function createStartupAction(data: {
     const foundersNames = data.foundersData
       ? data.foundersData.filter(f => f.name.trim()).map(f => f.name)
       : [];
+    const socialLinksJson = data.socialLinks && data.socialLinks.length > 0
+      ? JSON.stringify(data.socialLinks)
+      : null;
     
     const result = await sql`
       INSERT INTO "Startup" (
         id, name, slug, tagline, description, "logoUrl", "websiteUrl", "linkedinUrl", "twitterUrl", stage, "headquartersCity",
-        "isFeatured", "isIndian", "impactScore", "foundedYear", "employeeCount", category, "businessType",
-        founders, "foundersData", "isApproved", "approvedAt", "createdAt", "updatedAt"
+        "isFeatured", "isIndian", "impactScore", "foundedYear", "employeeCount", category, "businessType", status,
+        founders, "foundersData", "socialLinks", "isApproved", "approvedAt", "createdAt", "updatedAt"
       )
       VALUES (
         gen_random_uuid(), ${data.name}, ${slug}, ${data.tagline}, ${data.description},
         ${data.logoUrl || null}, ${data.websiteUrl || null}, ${data.linkedinUrl || null}, ${data.twitterUrl || null}, ${data.stage}::"StartupStage", ${data.headquartersCity || null},
-        ${data.isFeatured || false}, true, ${impactScore}, ${data.foundedYear || null}, ${data.employeeCount || null}, ${data.category || null}, ${data.businessType || null},
-        ${foundersNames}::text[], ${foundersDataJson}::jsonb, true, NOW(), NOW(), NOW()
+        ${data.isFeatured || false}, true, ${impactScore}, ${data.foundedYear || null}, ${data.employeeCount || null}, ${data.category || null}, ${data.businessType || null}, ${data.status || 'ACTIVE'}::"CompanyStatus",
+        ${foundersNames}::text[], ${foundersDataJson}::jsonb, ${socialLinksJson}::jsonb, true, NOW(), NOW(), NOW()
       )
       RETURNING id
     `;
@@ -193,6 +202,7 @@ export async function updateStartupAction(id: string, data: {
   linkedinUrl?: string;
   twitterUrl?: string;
   stage: string;
+  status?: string;
   headquartersCity?: string;
   isFeatured?: boolean;
   foundedYear?: number | null;
@@ -211,10 +221,15 @@ export async function updateStartupAction(id: string, data: {
   foundersData?: Array<{
     name: string;
     role: string;
-    prev: string;
+    prev?: string;
     bio: string;
     avatar: string;
     linkedin: string;
+    twitter?: string;
+  }>;
+  socialLinks?: Array<{
+    platform: string;
+    url: string;
   }>;
 }) {
   try {
@@ -237,6 +252,10 @@ export async function updateStartupAction(id: string, data: {
       foundedYear: data.foundedYear ?? null,
     });
 
+    const socialLinksJson = data.socialLinks && data.socialLinks.length > 0
+      ? JSON.stringify(data.socialLinks)
+      : null;
+
     await sql`
       UPDATE "Startup"
       SET 
@@ -248,6 +267,7 @@ export async function updateStartupAction(id: string, data: {
         "linkedinUrl" = ${data.linkedinUrl || null},
         "twitterUrl" = ${data.twitterUrl || null},
         stage = ${data.stage}::"StartupStage",
+        status = ${data.status || 'ACTIVE'}::"CompanyStatus",
         "headquartersCity" = ${data.headquartersCity || null},
         "isFeatured" = ${data.isFeatured || false},
         "foundedYear" = ${data.foundedYear || null},
@@ -255,6 +275,7 @@ export async function updateStartupAction(id: string, data: {
         "impactScore" = ${impactScore},
         category = ${data.category || null},
         "businessType" = ${data.businessType || null},
+        "socialLinks" = ${socialLinksJson}::jsonb,
         "updatedAt" = NOW()
       WHERE id = ${id}
     `;

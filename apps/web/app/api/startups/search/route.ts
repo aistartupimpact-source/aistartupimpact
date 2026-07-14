@@ -7,6 +7,10 @@ export async function GET(req: NextRequest) {
   const stage = searchParams.get('stage') || '';
   const category = searchParams.get('category') || '';
   const businessType = searchParams.get('businessType') || '';
+  const status = searchParams.get('status') || '';
+  const city = searchParams.get('city') || '';
+  const country = searchParams.get('country') || '';
+  const employeeRange = searchParams.get('employeeRange') || '';
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
   const limit = Math.min(500, Math.max(1, parseInt(searchParams.get('limit') || '12')));
   const offset = (page - 1) * limit;
@@ -15,12 +19,34 @@ export async function GET(req: NextRequest) {
     let rows: any[];
     let countRows: any[];
 
+    // Construct SQL clauses for new filters
+    const statusFilter = status ? sql`AND s.status = ${status}::"CompanyStatus"` : sql``;
+    const cityFilter = city ? sql`AND s."headquartersCity" = ${city}` : sql``;
+    const countryFilter = country === 'India' 
+      ? sql`AND s."isIndian" = true` 
+      : country === 'International' 
+      ? sql`AND s."isIndian" = false` 
+      : sql``;
+    
+    let employeeFilter = sql``;
+    if (employeeRange === '1-10') {
+      employeeFilter = sql`AND (s."employeeCount" >= 1 AND s."employeeCount" <= 10 OR s."employeeCount" IS NULL)`;
+    } else if (employeeRange === '11-50') {
+      employeeFilter = sql`AND s."employeeCount" >= 11 AND s."employeeCount" <= 50`;
+    } else if (employeeRange === '51-200') {
+      employeeFilter = sql`AND s."employeeCount" >= 51 AND s."employeeCount" <= 200`;
+    } else if (employeeRange === '201-500') {
+      employeeFilter = sql`AND s."employeeCount" >= 201 AND s."employeeCount" <= 500`;
+    } else if (employeeRange === '500+') {
+      employeeFilter = sql`AND s."employeeCount" > 500`;
+    }
+
     if (q) {
       // Full-text search using tsvector — handles millions of rows via GIN index
       const tsQuery = q.split(/\s+/).filter(Boolean).map(w => w + ':*').join(' & ');
 
       rows = await sql`
-        SELECT s.id, s.name, s.slug, s.tagline, s."logoUrl", s.stage,
+        SELECT s.id, s.name, s.slug, s.tagline, s."logoUrl", s.stage, s.status,
                s."headquartersCity", s."isFeatured", s."isVerified",
                s."employeeCount", s."foundedYear", s.category, s."businessType", s.founders,
                COALESCE(SUM(fr."amountUsd") / 100, 0) AS "totalUsd",
@@ -33,6 +59,10 @@ export async function GET(req: NextRequest) {
           ${stage ? sql`AND s.stage = ${stage}::"StartupStage"` : sql``}
           ${category ? sql`AND s.category = ${category}` : sql``}
           ${businessType ? sql`AND s."businessType" = ${businessType}` : sql``}
+          ${statusFilter}
+          ${cityFilter}
+          ${countryFilter}
+          ${employeeFilter}
         GROUP BY s.id
         ORDER BY rank DESC, s."isFeatured" DESC
         LIMIT ${limit} OFFSET ${offset}
@@ -45,10 +75,14 @@ export async function GET(req: NextRequest) {
           ${stage ? sql`AND s.stage = ${stage}::"StartupStage"` : sql``}
           ${category ? sql`AND s.category = ${category}` : sql``}
           ${businessType ? sql`AND s."businessType" = ${businessType}` : sql``}
+          ${statusFilter}
+          ${cityFilter}
+          ${countryFilter}
+          ${employeeFilter}
       `;
     } else {
       rows = await sql`
-        SELECT s.id, s.name, s.slug, s.tagline, s."logoUrl", s.stage,
+        SELECT s.id, s.name, s.slug, s.tagline, s."logoUrl", s.stage, s.status,
                s."headquartersCity", s."isFeatured", s."isVerified",
                s."employeeCount", s."foundedYear", s.category, s."businessType", s.founders,
                COALESCE(SUM(fr."amountUsd") / 100, 0) AS "totalUsd",
@@ -64,6 +98,10 @@ export async function GET(req: NextRequest) {
           ${stage ? sql`AND s.stage = ${stage}::"StartupStage"` : sql``}
           ${category ? sql`AND s.category = ${category}` : sql``}
           ${businessType ? sql`AND s."businessType" = ${businessType}` : sql``}
+          ${statusFilter}
+          ${cityFilter}
+          ${countryFilter}
+          ${employeeFilter}
         GROUP BY s.id, fc.id, fc.tier
         ORDER BY
           CASE WHEN fc.tier = 'PREMIUM' THEN 1
@@ -81,6 +119,10 @@ export async function GET(req: NextRequest) {
           ${stage ? sql`AND s.stage = ${stage}::"StartupStage"` : sql``}
           ${category ? sql`AND s.category = ${category}` : sql``}
           ${businessType ? sql`AND s."businessType" = ${businessType}` : sql``}
+          ${statusFilter}
+          ${cityFilter}
+          ${countryFilter}
+          ${employeeFilter}
       `;
     }
 

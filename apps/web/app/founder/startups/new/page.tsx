@@ -14,6 +14,7 @@ export default async function NewStartupPage() {
       bio: true,
       avatar: true,
       linkedin: true,
+      twitter: true,
     },
   });
 
@@ -24,6 +25,7 @@ export default async function NewStartupPage() {
     bio: user.bio || '',
     avatar: user.avatar || '',
     linkedin: user.linkedin || '',
+    twitter: user.twitter || '',
   } : undefined;
 
   return (

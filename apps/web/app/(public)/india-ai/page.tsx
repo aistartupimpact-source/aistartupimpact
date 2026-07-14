@@ -222,7 +222,7 @@ export default async function IndiaAIPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(datasetSchema) }}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-10">
+      <div className="max-w-7xl mx-auto px-0 sm:px-2 lg:px-4 py-4 sm:py-6 lg:py-10">
         {/* ============================================
             SECTION 1: HERO WITH LIVE STATS
             ============================================ */}

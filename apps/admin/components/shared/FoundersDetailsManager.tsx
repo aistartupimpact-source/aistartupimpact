@@ -6,10 +6,11 @@ import { Plus, Trash2, Upload, Loader2 } from 'lucide-react';
 export interface FounderDetail {
   name: string;
   role: string;
-  prev: string;
+  prev?: string;
   bio: string;
   avatar: string;
   linkedin: string;
+  twitter?: string;
 }
 
 interface FoundersDetailsManagerProps {
@@ -25,7 +26,7 @@ export default function FoundersDetailsManager({ founders, onChange, maxFounders
 
   const addFounder = () => {
     if (founders.length >= maxFounders) return;
-    onChange([...founders, { name: '', role: '', prev: '', bio: '', avatar: '', linkedin: '' }]);
+    onChange([...founders, { name: '', role: '', prev: '', bio: '', avatar: '', linkedin: '', twitter: '' }]);
   };
 
   const removeFounder = (index: number) => {
@@ -169,18 +170,8 @@ export default function FoundersDetailsManager({ founders, onChange, maxFounders
             </div>
           </div>
 
-          {/* Row 2: Previous Company + LinkedIn */}
+          {/* Row 2: LinkedIn + Twitter */}
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Previous Company</label>
-              <input
-                type="text"
-                value={founder.prev || ''}
-                onChange={(e) => updateFounder(index, 'prev', e.target.value)}
-                placeholder="e.g. Ex-Google AI"
-                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
-              />
-            </div>
             <div>
               <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">LinkedIn URL</label>
               <input
@@ -188,6 +179,16 @@ export default function FoundersDetailsManager({ founders, onChange, maxFounders
                 value={founder.linkedin || ''}
                 onChange={(e) => updateFounder(index, 'linkedin', e.target.value)}
                 placeholder="https://linkedin.com/in/..."
+                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Twitter URL</label>
+              <input
+                type="url"
+                value={founder.twitter || ''}
+                onChange={(e) => updateFounder(index, 'twitter', e.target.value)}
+                placeholder="https://twitter.com/..."
                 className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
               />
             </div>

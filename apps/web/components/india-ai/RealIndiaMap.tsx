@@ -58,8 +58,10 @@ const SECTORS = [
 
 const STAGES = [
   'All Stages',
+  'Bootstrapped',
   'Pre-seed',
   'Seed',
+  'Pre-Series A',
   'Series A',
   'Series B',
   'Series C',

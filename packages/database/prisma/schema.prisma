@@ -1007,6 +1007,7 @@ model Startup {
   deletedAt                                  DateTime?
   founders                                   String[]                 @default([])
   foundersData                               Json?
+  socialLinks                                Json?
   claimStatus                                ClaimStatus              @default(UNCLAIMED)
   claimedAt                                  DateTime?
   ownerId                                    String?
@@ -1022,12 +1023,14 @@ model Startup {
   searchVector                               Unsupported("tsvector")?
   category                                   String?                  @db.VarChar(100)
   businessType                               String?
+  status                                     CompanyStatus            @default(ACTIVE)
   AiTool                                     AiTool[]
   Article                                    Article[]
   FundingRound                               FundingRound[]
   Job                                        Job[]
   StartupReview                              StartupReview[]
   SavedStartup                               SavedStartup[]
+  StartupFAQ                                 StartupFAQ[]
   FounderUser_Startup_claimedByToFounderUser FounderUser?             @relation("Startup_claimedByToFounderUser", fields: [claimedBy], references: [id], onDelete: SetNull)
   FounderUser_Startup_ownerIdToFounderUser   FounderUser?             @relation("Startup_ownerIdToFounderUser", fields: [ownerId], references: [id], onDelete: Cascade)
   StartupVerificationLog                     StartupVerificationLog[]
@@ -1045,6 +1048,19 @@ model Startup {
   @@index([searchVector], type: Gin)
   @@index([slug])
   @@index([stage])
+}
+
+model StartupFAQ {
+  id        String   @id @default(cuid())
+  startupId String
+  question  String
+  answer    String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+
+  @@index([startupId])
 }
 
 model StartupReview {
@@ -1539,16 +1555,26 @@ enum ReviewStatus {
   FLAGGED
 }
 
+enum CompanyStatus {
+  ACTIVE
+  PUBLIC
+  ACQUIRED
+  INACTIVE
+}
+
 enum StartupStage {
+  BOOTSTRAPPED
   IDEA
   PRE_SEED
   SEED
+  PRE_SERIES_A
   SERIES_A
   SERIES_B
   SERIES_C
   GROWTH
   PUBLIC
 }
+
 
 enum ToolApprovalStatus {
   PENDING

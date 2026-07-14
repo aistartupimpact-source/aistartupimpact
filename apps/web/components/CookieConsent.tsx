@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import ConsentManager from '@/lib/consent-manager';
 import { ConsentState } from '@/types/consent';
 import styles from '@/styles/CookieConsent.module.css';
+import { Cookie, ShieldCheck, BarChart3, Target, X } from 'lucide-react';
 
 export default function CookieConsent() {
   const [showBanner, setShowBanner] = useState(false);
@@ -75,14 +76,17 @@ export default function CookieConsent() {
       {showBanner && !showPreferences && (
         <div className={styles.banner} role="dialog" aria-label="Cookie consent banner">
           <div className={styles.bannerContent}>
-            <div className={styles.bannerText}>
+            <div className={styles.bannerHeader}>
+              <div className={styles.iconWrapper}>
+                <Cookie size={20} />
+              </div>
               <h2 className={styles.bannerTitle}>We value your privacy</h2>
-              <p className={styles.bannerDescription}>
-                We use cookies to enhance your browsing experience, serve personalized content, and analyze our traffic. 
-                By clicking "Accept All", you consent to our use of cookies. Read our{' '}
-                <a href="/cookie-policy" className={styles.link}>Cookie Policy</a>.
-              </p>
             </div>
+            <p className={styles.bannerDescription}>
+              We use cookies to enhance your browsing experience, serve personalized content, and analyze our traffic. 
+              By clicking "Accept All", you consent to our use of cookies. Read our{' '}
+              <a href="/cookie-policy" className={styles.link}>Cookie Policy</a>.
+            </p>
             <div className={styles.bannerActions}>
               <button
                 onClick={handleRejectAll}
@@ -100,7 +104,7 @@ export default function CookieConsent() {
               </button>
               <button
                 onClick={handleAcceptAll}
-                className={`${styles.button} ${styles.buttonPrimary}`}
+                className={`${styles.button} ${styles.buttonPrimary} ${styles.acceptAllButton}`}
                 aria-label="Accept all cookies"
               >
                 Accept All
@@ -115,13 +119,18 @@ export default function CookieConsent() {
         <div className={styles.modalOverlay} role="dialog" aria-modal="true" aria-label="Cookie preferences">
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>Cookie Preferences</h2>
+              <div className={styles.modalTitleWrapper}>
+                <div className={styles.iconWrapper}>
+                  <Cookie size={20} />
+                </div>
+                <h2 className={styles.modalTitle}>Cookie Settings</h2>
+              </div>
               <button
                 onClick={() => setShowPreferences(false)}
                 className={styles.modalClose}
                 aria-label="Close preferences"
               >
-                ×
+                <X size={18} />
               </button>
             </div>
 
@@ -134,10 +143,14 @@ export default function CookieConsent() {
               {/* Necessary Cookies */}
               <div className={styles.preferenceItem}>
                 <div className={styles.preferenceHeader}>
-                  <div>
-                    <h3 className={styles.preferenceTitle}>Necessary Cookies</h3>
+                  <div className={styles.preferenceTextWrapper}>
+                    <div className={styles.preferenceTitleRow}>
+                      <ShieldCheck size={18} className={styles.preferenceIcon} />
+                      <h3 className={styles.preferenceTitle}>Necessary</h3>
+                      <span className={styles.badge}>Always Active</span>
+                    </div>
                     <p className={styles.preferenceDescription}>
-                      Essential for the website to function properly. These cannot be disabled.
+                      Essential for the website to function properly. They cannot be disabled and do not store any personally identifiable information.
                     </p>
                   </div>
                   <div className={`${styles.toggle} ${styles.toggleDisabled}`}>
@@ -155,10 +168,13 @@ export default function CookieConsent() {
               {/* Analytics Cookies */}
               <div className={styles.preferenceItem}>
                 <div className={styles.preferenceHeader}>
-                  <div>
-                    <h3 className={styles.preferenceTitle}>Analytics Cookies</h3>
+                  <div className={styles.preferenceTextWrapper}>
+                    <div className={styles.preferenceTitleRow}>
+                      <BarChart3 size={18} className={styles.preferenceIcon} />
+                      <h3 className={styles.preferenceTitle}>Analytics</h3>
+                    </div>
                     <p className={styles.preferenceDescription}>
-                      Help us understand how visitors interact with our website by collecting and reporting information anonymously.
+                      Help us measure traffic and see how visitors interact with our website by collecting and reporting information anonymously.
                     </p>
                   </div>
                   <div className={styles.toggle}>
@@ -176,10 +192,13 @@ export default function CookieConsent() {
               {/* Marketing Cookies */}
               <div className={styles.preferenceItem}>
                 <div className={styles.preferenceHeader}>
-                  <div>
-                    <h3 className={styles.preferenceTitle}>Marketing Cookies</h3>
+                  <div className={styles.preferenceTextWrapper}>
+                    <div className={styles.preferenceTitleRow}>
+                      <Target size={18} className={styles.preferenceIcon} />
+                      <h3 className={styles.preferenceTitle}>Marketing</h3>
+                    </div>
                     <p className={styles.preferenceDescription}>
-                      Used to track visitors across websites to display relevant and engaging advertisements.
+                      Used to track visitors across websites so that publishers can display relevant and engaging advertisements.
                     </p>
                   </div>
                   <div className={styles.toggle}>
@@ -208,11 +227,11 @@ export default function CookieConsent() {
                 className={`${styles.button} ${styles.buttonPrimary}`}
                 aria-label="Save preferences"
               >
-                Save Preferences
+                Save Choices
               </button>
               <button
                 onClick={handleAcceptAll}
-                className={`${styles.button} ${styles.buttonPrimary}`}
+                className={`${styles.button} ${styles.buttonPrimary} ${styles.acceptAllButton}`}
                 aria-label="Accept all cookies"
               >
                 Accept All
