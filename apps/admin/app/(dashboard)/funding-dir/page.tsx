@@ -18,7 +18,7 @@ interface Round {
 }
 interface Startup { id: string; name: string; }
 
-const ROUND_TYPES = ['Pre-Seed', 'Seed', 'Series A', 'Series B', 'Series C', 'Series D', 'Growth', 'Bridge', 'IPO', 'Public'];
+const ROUND_TYPES = ['Pre-Seed', 'Angle', 'Seed', 'Pre-Series A', 'Series A', 'Series B', 'Series C', 'Series D', 'Growth', 'Bridge', 'IPO', 'Public'];
 
 function formatUsd(cents: string | number | null) {
   if (!cents) return '—';

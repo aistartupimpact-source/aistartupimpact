@@ -36,7 +36,7 @@ export default function ImpactScoreBadge({ score, breakdown }: Props) {
         {/* Badge trigger */}
         <button
           onClick={() => setOpen(v => !v)}
-          className="flex items-center gap-1.5 bg-brand/8 dark:bg-brand/15 border border-brand/25 rounded-lg px-2.5 py-1.5 hover:bg-brand/15 transition-colors group"
+          className="flex items-center gap-1.5 bg-brand/8 dark:bg-brand/15 rounded-lg px-2.5 py-1.5 hover:bg-brand/15 transition-colors group"
         >
           <TrendingUp className="w-3 h-3 text-brand" />
           <span className="text-xs font-sora font-bold text-brand">{score}/100</span>

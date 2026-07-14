@@ -118,7 +118,7 @@ export default function BookmarkButton({
   const sizeClasses = {
     sm: 'w-7 h-7',
     md: 'w-9 h-9',
-    lg: 'w-10 h-10',
+    lg: 'w-11 h-11',
   };
 
   const iconSizes = {
@@ -149,21 +149,28 @@ export default function BookmarkButton({
   }
 
   return (
-    <button
-      onClick={handleToggle}
-      disabled={isLoading}
-      title={isSaved ? `Remove ${itemName || type} from saved` : `Save ${itemName || type}`}
-      className={`${sizeClasses[size]} rounded-lg flex items-center justify-center transition-all duration-200 ${
-        isSaved
-          ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30'
-          : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200'
-      } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 active:scale-95'} ${className}`}
-    >
-      <Bookmark
-        className={`${iconSizes[size]} transition-all duration-300 ${
-          isSaved ? 'fill-current' : ''
-        } ${isAnimating ? 'scale-125 rotate-12' : 'scale-100 rotate-0'}`}
-      />
-    </button>
+    <div className="relative group">
+      <button
+        onClick={handleToggle}
+        disabled={isLoading}
+        className={`${sizeClasses[size]} rounded-lg flex items-center justify-center transition-all duration-200 ${
+          isSaved
+            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+            : 'bg-white dark:bg-gray-900 text-blue-500/80 dark:text-blue-400/80 border border-gray-200 dark:border-gray-700 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-950/20'
+        } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 active:scale-95'} ${className}`}
+      >
+        <Bookmark
+          className={`${iconSizes[size]} transition-all duration-300 ${
+            isSaved ? 'fill-current' : ''
+          } ${isAnimating ? 'scale-125 rotate-12' : 'scale-100 rotate-0'}`}
+        />
+      </button>
+      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:flex flex-col items-center z-50">
+        <div className="w-2.5 h-2.5 bg-black dark:bg-gray-800 rotate-45 -mb-1.5" />
+        <div className="bg-black dark:bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg font-jakarta">
+          {isSaved ? 'Saved' : 'Save'}
+        </div>
+      </div>
+    </div>
   );
 }

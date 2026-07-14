@@ -8,9 +8,10 @@ import { uploadLogoAction } from '../../../media/actions';
 import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
 import FundingRoundsManager, { FundingRound, convertToSaveFormat, convertFromDbFormat } from '@/components/shared/FundingRoundsManager';
 import FoundersDetailsManager, { FounderDetail } from '@/components/shared/FoundersDetailsManager';
+import SocialLinksManager, { SocialLink } from '@/components/shared/SocialLinksManager';
 
 
-const stages = ['IDEA', 'PRE_SEED', 'SEED', 'SERIES_A', 'SERIES_B', 'SERIES_C', 'GROWTH', 'PUBLIC'];
+const stages = ['BOOTSTRAPPED', 'IDEA', 'PRE_SEED', 'SEED', 'PRE_SERIES_A', 'SERIES_A', 'SERIES_B', 'SERIES_C', 'GROWTH', 'PUBLIC'];
 
 const STARTUP_CATEGORIES = [
   'FinTech', 'HealthTech', 'BioTech & Life Sciences', 'EdTech', 'E-Commerce & Retail',
@@ -36,6 +37,7 @@ interface Startup {
   linkedinUrl?: string;
   twitterUrl?: string;
   stage: string;
+  status: string;
   headquartersCity?: string;
   isFeatured: boolean;
   foundedYear?: number | null;
@@ -45,6 +47,7 @@ interface Startup {
   businessType?: string;
   founders?: string[];
   foundersData?: any[] | null;
+  socialLinks?: any[] | null;
 }
 
 
@@ -62,9 +65,11 @@ export default function EditStartupPage() {
   const [loadingFaqs, setLoadingFaqs] = useState(false);
   const [fundingRounds, setFundingRounds] = useState<FundingRound[]>([]);
   const [foundersDetails, setFoundersDetails] = useState<FounderDetail[]>([]);
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [loadingFundingRounds, setLoadingFundingRounds] = useState(false);
   
   const [formData, setFormData] = useState<Startup | null>(null);
+  const [draftLoaded, setDraftLoaded] = useState(false);
 
 
   useEffect(() => {
@@ -90,6 +95,13 @@ export default function EditStartupPage() {
         setFoundersDetails(startup.foundersData);
       } else {
         setFoundersDetails([]);
+      }
+
+      // Load Social Links
+      if (startup.socialLinks && Array.isArray(startup.socialLinks)) {
+        setSocialLinks(startup.socialLinks);
+      } else {
+        setSocialLinks([]);
       }
 
       // Load FAQs
@@ -121,15 +133,17 @@ export default function EditStartupPage() {
       const draft = localStorage.getItem(draftKey);
       if (draft) {
         try {
-          const { formData: dForm, faqs: dFaqs, fundingRounds: dRounds, foundersDetails: dFounders } = JSON.parse(draft);
+          const { formData: dForm, faqs: dFaqs, fundingRounds: dRounds, foundersDetails: dFounders, socialLinks: dSocialLinks } = JSON.parse(draft);
           if (dForm) setFormData(dForm);
           if (dFaqs) setFaqs(dFaqs);
           if (dRounds) setFundingRounds(dRounds);
           if (dFounders) setFoundersDetails(dFounders);
+          if (dSocialLinks) setSocialLinks(dSocialLinks);
         } catch (e) {
           console.error('Failed to restore startup draft:', e);
         }
       }
+      setDraftLoaded(true);
     } catch (error) {
       console.error('Error loading startup:', error);
       alert('Error loading startup');
@@ -140,12 +154,12 @@ export default function EditStartupPage() {
   };
 
 
-  // Save draft to localStorage on changes
+  // Save draft on changes
   useEffect(() => {
-    if (loading || !formData) return;
+    if (!draftLoaded) return;
     const draftKey = `draft_admin_edit_startup_${startupId}`;
-    localStorage.setItem(draftKey, JSON.stringify({ formData, faqs, fundingRounds, foundersDetails }));
-  }, [formData, faqs, fundingRounds, foundersDetails, loading, startupId]);
+    localStorage.setItem(draftKey, JSON.stringify({ formData, faqs, fundingRounds, foundersDetails, socialLinks }));
+  }, [formData, faqs, fundingRounds, foundersDetails, socialLinks, draftLoaded, startupId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     if (!formData) return;
@@ -206,6 +220,7 @@ export default function EditStartupPage() {
         linkedinUrl: formData.linkedinUrl,
         twitterUrl: formData.twitterUrl,
         stage: formData.stage,
+        status: formData.status,
         headquartersCity: formData.headquartersCity,
         foundedYear: formData.foundedYear,
         employeeCount: formData.employeeCount,
@@ -216,6 +231,7 @@ export default function EditStartupPage() {
         foundersData: foundersDetails.filter(f => f.name.trim()).length > 0
           ? foundersDetails.filter(f => f.name.trim())
           : [],
+        socialLinks: socialLinks.length > 0 ? socialLinks : [],
       });
       
       if (result.success) {
@@ -321,6 +337,23 @@ export default function EditStartupPage() {
                 {stages.map(s => (
                   <option key={s} value={s}>{s.replace('_', ' ')}</option>
                 ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
+                Company Status
+              </label>
+              <select
+                name="status"
+                value={formData.status || 'ACTIVE'}
+                onChange={handleChange}
+                className="input-field text-sm"
+              >
+                <option value="ACTIVE">Active</option>
+                <option value="PUBLIC">Public</option>
+                <option value="ACQUIRED">Acquired</option>
+                <option value="INACTIVE">Inactive</option>
               </select>
             </div>
 
@@ -483,6 +516,10 @@ export default function EditStartupPage() {
                 placeholder="https://twitter.com/..."
               />
             </div>
+          </div>
+
+          <div className="border-t border-gray-150 dark:border-gray-800 pt-6">
+            <SocialLinksManager links={socialLinks} onChange={setSocialLinks} />
           </div>
         </div>
 

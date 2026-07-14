@@ -19,6 +19,7 @@ interface StartupSubmission {
   logoUrl?: string;
   category?: string;
   businessType?: string;
+  status?: string;
   totalFundingInr?: number;
   faqs?: Array<{
     question: string;
@@ -36,10 +37,15 @@ interface StartupSubmission {
   foundersData?: Array<{
     name: string;
     role: string;
-    prev: string;
+    prev?: string;
     bio: string;
     avatar: string;
     linkedin: string;
+    twitter?: string;
+  }>;
+  socialLinks?: Array<{
+    platform: string;
+    url: string;
   }>;
 }
 
@@ -84,13 +90,16 @@ export async function submitStartupAction(data: StartupSubmission) {
     const foundersDataJson = data.foundersData && data.foundersData.length > 0
       ? JSON.stringify(data.foundersData)
       : null;
+    const socialLinksJson = data.socialLinks && data.socialLinks.length > 0
+      ? JSON.stringify(data.socialLinks)
+      : null;
 
     try {
       const result = await prisma.$queryRaw<any[]>`
         INSERT INTO "Startup" (
           id, name, slug, tagline, description, "websiteUrl", "linkedinUrl", "twitterUrl",
-          "foundedYear", "headquartersCity", stage, "employeeCount", founders, "foundersData", "logoUrl",
-          "totalFundingInr", category, "businessType", "ownerId", "claimStatus", "submittedBy", "createdAt", "updatedAt"
+          "foundedYear", "headquartersCity", stage, "employeeCount", founders, "foundersData", "socialLinks", "logoUrl",
+          "totalFundingInr", category, "businessType", status, "ownerId", "claimStatus", "submittedBy", "createdAt", "updatedAt"
         ) VALUES (
           gen_random_uuid(),
           ${data.name},
@@ -106,10 +115,12 @@ export async function submitStartupAction(data: StartupSubmission) {
           ${data.employeeCount || null},
           ${data.founders}::text[],
           ${foundersDataJson}::jsonb,
+          ${socialLinksJson}::jsonb,
           ${data.logoUrl || null},
           ${data.totalFundingInr || 0},
           ${data.category || null},
           ${data.businessType || null},
+          ${data.status || 'ACTIVE'}::"CompanyStatus",
           ${session.userId},
           'PENDING'::"ClaimStatus",
           'FOUNDER',
@@ -126,8 +137,8 @@ export async function submitStartupAction(data: StartupSubmission) {
         const result = await prisma.$queryRaw<any[]>`
           INSERT INTO "Startup" (
             id, name, slug, tagline, description, "websiteUrl", "linkedinUrl", "twitterUrl",
-            "foundedYear", "headquartersCity", stage, "employeeCount", founders, "logoUrl",
-            "totalFundingInr", "ownerId", "claimStatus", "submittedBy", "createdAt", "updatedAt"
+            "foundedYear", "headquartersCity", stage, "employeeCount", founders, "socialLinks", "logoUrl",
+            "totalFundingInr", status, "ownerId", "claimStatus", "submittedBy", "createdAt", "updatedAt"
           ) VALUES (
             gen_random_uuid(),
             ${data.name},
@@ -142,8 +153,10 @@ export async function submitStartupAction(data: StartupSubmission) {
             ${data.stage}::"StartupStage",
             ${data.employeeCount || null},
             ${data.founders}::text[],
+            ${socialLinksJson}::jsonb,
             ${data.logoUrl || null},
             ${data.totalFundingInr || 0},
+            ${data.status || 'ACTIVE'}::"CompanyStatus",
             ${session.userId},
             'PENDING'::"ClaimStatus",
             'FOUNDER',
@@ -259,6 +272,10 @@ export async function updateStartupAction(id: string, data: StartupSubmission) {
       : startup.claimStatus;
 
     // Try to update with category and businessType, fallback if columns don't exist
+    const socialLinksJson = data.socialLinks && data.socialLinks.length > 0
+      ? JSON.stringify(data.socialLinks)
+      : null;
+
     try {
       await prisma.$executeRaw`
         UPDATE "Startup"
@@ -279,6 +296,8 @@ export async function updateStartupAction(id: string, data: StartupSubmission) {
           "totalFundingInr" = ${data.totalFundingInr || 0},
           category = ${data.category || null},
           "businessType" = ${data.businessType || null},
+          status = ${data.status || 'ACTIVE'}::"CompanyStatus",
+          "socialLinks" = ${socialLinksJson}::jsonb,
           "claimStatus" = ${newStatus}::"ClaimStatus",
           "updatedAt" = NOW()
         WHERE id = ${id}
@@ -304,6 +323,8 @@ export async function updateStartupAction(id: string, data: StartupSubmission) {
             founders = ${data.founders}::text[],
             "logoUrl" = ${data.logoUrl || null},
             "totalFundingInr" = ${data.totalFundingInr || 0},
+            status = ${data.status || 'ACTIVE'}::"CompanyStatus",
+            "socialLinks" = ${socialLinksJson}::jsonb,
             "claimStatus" = ${newStatus}::"ClaimStatus",
             "updatedAt" = NOW()
           WHERE id = ${id}

@@ -98,7 +98,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="font-jakarta antialiased bg-white dark:bg-gray-950 text-charcoal dark:text-gray-100">
+      <body className="font-jakarta antialiased bg-[#F9FAFB] dark:bg-gray-950 text-charcoal dark:text-gray-100">
         {/* Site-level structured data */}
         <script
           type="application/ld+json"

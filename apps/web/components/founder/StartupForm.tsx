@@ -7,11 +7,14 @@ import { submitStartupAction } from '@/app/founder/startups/actions';
 import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
 import FundingRoundsManager, { FundingRound, convertToSaveFormat } from '@/components/shared/FundingRoundsManager';
 import FoundersDetailsManager, { FounderDetail } from '@/components/shared/FoundersDetailsManager';
+import SocialLinksManager, { SocialLink } from '@/components/shared/SocialLinksManager';
 
 const STARTUP_STAGES = [
+  'BOOTSTRAPPED',
   'IDEA',
   'PRE_SEED',
   'SEED',
+  'PRE_SERIES_A',
   'SERIES_A',
   'SERIES_B',
   'SERIES_C',
@@ -37,10 +40,11 @@ interface StartupFormProps {
   initialFounder?: {
     name: string;
     role: string;
-    prev: string;
+    prev?: string;
     bio: string;
     avatar: string;
     linkedin: string;
+    twitter?: string;
   };
 }
 
@@ -58,11 +62,12 @@ export default function StartupForm({ initialFounder }: StartupFormProps) {
     const draft = localStorage.getItem('draft_founder_new_startup');
     if (draft) {
       try {
-        const { formData: dForm, faqs: dFaqs, fundingRounds: dRounds, foundersDetails: dFounders } = JSON.parse(draft);
+        const { formData: dForm, faqs: dFaqs, fundingRounds: dRounds, foundersDetails: dFounders, socialLinks: dSocialLinks } = JSON.parse(draft);
         if (dForm) setFormData(dForm);
         if (dFaqs) setFaqs(dFaqs);
         if (dRounds) setFundingRounds(dRounds);
         if (dFounders) setFoundersDetails(dFounders);
+        if (dSocialLinks) setSocialLinks(dSocialLinks);
       } catch (e) {
         console.error('Failed to restore startup draft:', e);
       }
@@ -80,6 +85,7 @@ export default function StartupForm({ initialFounder }: StartupFormProps) {
     foundedYear: new Date().getFullYear(),
     headquartersCity: '',
     stage: 'SEED',
+    status: 'ACTIVE',
     employeeCount: '',
     logoUrl: '',
     category: '',
@@ -94,20 +100,23 @@ export default function StartupForm({ initialFounder }: StartupFormProps) {
           {
             name: initialFounder.name,
             role: initialFounder.role,
-            prev: initialFounder.prev,
+            prev: initialFounder.prev || '',
             bio: initialFounder.bio,
             avatar: initialFounder.avatar,
             linkedin: initialFounder.linkedin,
+            twitter: initialFounder.twitter || '',
           },
         ]
       : []
   );
 
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
+
   // Save draft to localStorage on changes
   useEffect(() => {
     if (!draftLoaded) return;
-    localStorage.setItem('draft_founder_new_startup', JSON.stringify({ formData, faqs, fundingRounds, foundersDetails }));
-  }, [formData, faqs, fundingRounds, foundersDetails, draftLoaded]);
+    localStorage.setItem('draft_founder_new_startup', JSON.stringify({ formData, faqs, fundingRounds, foundersDetails, socialLinks }));
+  }, [formData, faqs, fundingRounds, foundersDetails, socialLinks, draftLoaded]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData(prev => ({
@@ -189,6 +198,7 @@ export default function StartupForm({ initialFounder }: StartupFormProps) {
         foundedYear: formData.foundedYear,
         headquartersCity: formData.headquartersCity || undefined,
         stage: formData.stage as any,
+        status: formData.status,
         employeeCount: formData.employeeCount ? parseInt(formData.employeeCount) : undefined,
         founders: foundersArray,
         logoUrl: formData.logoUrl || undefined,
@@ -199,6 +209,7 @@ export default function StartupForm({ initialFounder }: StartupFormProps) {
         foundersData: foundersDetails.filter(f => f.name.trim()).length > 0
           ? foundersDetails.filter(f => f.name.trim())
           : undefined,
+        socialLinks: socialLinks.length > 0 ? socialLinks : undefined,
       });
 
       if (!result.success) {
@@ -400,6 +411,10 @@ export default function StartupForm({ initialFounder }: StartupFormProps) {
         </div>
       </div>
 
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6">
+        <SocialLinksManager links={socialLinks} onChange={setSocialLinks} />
+      </div>
+
       {/* Company Details */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
@@ -436,6 +451,25 @@ export default function StartupForm({ initialFounder }: StartupFormProps) {
                 {stage.replace('_', ' ')}
               </option>
             ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Company Status <span className="text-red-500">*</span>
+          </label>
+          <select
+            id="status"
+            name="status"
+            value={formData.status}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+          >
+            <option value="ACTIVE">Active</option>
+            <option value="PUBLIC">Public</option>
+            <option value="ACQUIRED">Acquired</option>
+            <option value="INACTIVE">Inactive</option>
           </select>
         </div>
 

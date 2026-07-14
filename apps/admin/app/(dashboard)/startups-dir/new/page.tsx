@@ -8,8 +8,9 @@ import { uploadLogoAction } from '../../media/actions';
 import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
 import FundingRoundsManager, { FundingRound, convertToSaveFormat } from '@/components/shared/FundingRoundsManager';
 import FoundersDetailsManager, { FounderDetail } from '@/components/shared/FoundersDetailsManager';
+import SocialLinksManager, { SocialLink } from '@/components/shared/SocialLinksManager';
 
-const stages = ['IDEA', 'PRE_SEED', 'SEED', 'SERIES_A', 'SERIES_B', 'SERIES_C', 'GROWTH', 'PUBLIC'];
+const stages = ['BOOTSTRAPPED', 'IDEA', 'PRE_SEED', 'SEED', 'PRE_SERIES_A', 'SERIES_A', 'SERIES_B', 'SERIES_C', 'GROWTH', 'PUBLIC'];
 
 const STARTUP_CATEGORIES = [
   'FinTech', 'HealthTech', 'BioTech & Life Sciences', 'EdTech', 'E-Commerce & Retail',
@@ -35,6 +36,7 @@ export default function NewStartupPage() {
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [fundingRounds, setFundingRounds] = useState<FundingRound[]>([]);
   const [foundersDetails, setFoundersDetails] = useState<FounderDetail[]>([]);
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   
   const [draftLoaded, setDraftLoaded] = useState(false);
 
@@ -43,11 +45,12 @@ export default function NewStartupPage() {
     const draft = localStorage.getItem('draft_admin_new_startup');
     if (draft) {
       try {
-        const { formData: dForm, faqs: dFaqs, fundingRounds: dRounds, foundersDetails: dFounders } = JSON.parse(draft);
+        const { formData: dForm, faqs: dFaqs, fundingRounds: dRounds, foundersDetails: dFounders, socialLinks: dSocialLinks } = JSON.parse(draft);
         if (dForm) setFormData(dForm);
         if (dFaqs) setFaqs(dFaqs);
         if (dRounds) setFundingRounds(dRounds);
         if (dFounders) setFoundersDetails(dFounders);
+        if (dSocialLinks) setSocialLinks(dSocialLinks);
       } catch (e) {
         console.error('Failed to restore startup draft:', e);
       }
@@ -64,6 +67,7 @@ export default function NewStartupPage() {
     linkedinUrl: '',
     twitterUrl: '',
     stage: 'SEED',
+    status: 'ACTIVE',
     headquartersCity: '',
     foundedYear: null as number | null,
     employeeCount: null as number | null,
@@ -75,8 +79,8 @@ export default function NewStartupPage() {
   // Save draft to localStorage on changes
   useEffect(() => {
     if (!draftLoaded) return;
-    localStorage.setItem('draft_admin_new_startup', JSON.stringify({ formData, faqs, fundingRounds, foundersDetails }));
-  }, [formData, faqs, fundingRounds, foundersDetails, draftLoaded]);
+    localStorage.setItem('draft_admin_new_startup', JSON.stringify({ formData, faqs, fundingRounds, foundersDetails, socialLinks }));
+  }, [formData, faqs, fundingRounds, foundersDetails, socialLinks, draftLoaded]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -133,6 +137,7 @@ export default function NewStartupPage() {
         foundersData: foundersDetails.filter(f => f.name.trim()).length > 0
           ? foundersDetails.filter(f => f.name.trim())
           : undefined,
+        socialLinks: socialLinks.length > 0 ? socialLinks : undefined,
       });
       
       if (result.success) {
@@ -221,6 +226,23 @@ export default function NewStartupPage() {
                 {stages.map(s => (
                   <option key={s} value={s}>{s.replace('_', ' ')}</option>
                 ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
+                Company Status
+              </label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className="input-field text-sm"
+              >
+                <option value="ACTIVE">Active</option>
+                <option value="PUBLIC">Public</option>
+                <option value="ACQUIRED">Acquired</option>
+                <option value="INACTIVE">Inactive</option>
               </select>
             </div>
 
@@ -383,6 +405,10 @@ export default function NewStartupPage() {
                 placeholder="https://twitter.com/..."
               />
             </div>
+          </div>
+
+          <div className="border-t border-gray-150 dark:border-gray-800 pt-6">
+            <SocialLinksManager links={socialLinks} onChange={setSocialLinks} />
           </div>
         </div>
 

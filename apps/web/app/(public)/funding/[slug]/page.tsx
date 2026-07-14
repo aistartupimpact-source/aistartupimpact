@@ -121,7 +121,7 @@ export default async function FundingRoundPage({ params }: { params: { slug: str
   };
   
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+    <div className="max-w-5xl mx-auto px-0 sm:px-2 lg:px-4 py-6 sm:py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       
       {/* Breadcrumb */}

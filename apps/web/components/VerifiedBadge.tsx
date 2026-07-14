@@ -1,4 +1,4 @@
-import { CheckCircle } from 'lucide-react';
+import { BadgeCheck, Check } from 'lucide-react';
 
 interface VerifiedBadgeProps {
   size?: 'sm' | 'md' | 'lg';
@@ -16,48 +16,48 @@ export function VerifiedBadge({
   const sizes = {
     sm: { 
       icon: 'w-3 h-3', 
-      text: 'text-xs', 
-      padding: 'px-2 py-0.5', 
-      badge: 'p-0.5',
-      border: 'border'
+      logoIcon: 'w-2.5 h-2.5',
+      text: 'text-[10px]', 
+      padding: 'px-1.5 py-0.5', 
+      badgePadding: 'p-[2px]',
     },
     md: { 
-      icon: 'w-4 h-4', 
-      text: 'text-sm', 
-      padding: 'px-3 py-1', 
-      badge: 'p-1',
-      border: 'border-2'
+      icon: 'w-3.5 h-3.5', 
+      logoIcon: 'w-3 h-3',
+      text: 'text-xs', 
+      padding: 'px-2 py-0.5', 
+      badgePadding: 'p-[2.5px]',
     },
     lg: { 
-      icon: 'w-5 h-5', 
-      text: 'text-base', 
-      padding: 'px-4 py-1.5', 
-      badge: 'p-1.5',
-      border: 'border-2'
+      icon: 'w-4 h-4', 
+      logoIcon: 'w-3.5 h-3.5',
+      text: 'text-sm', 
+      padding: 'px-2.5 py-1', 
+      badgePadding: 'p-[3px]',
     },
   };
 
   const s = sizes[size];
 
   if (onLogo) {
-    // Badge overlay on logo (green checkmark) - positioned inside container
+    // Professional solid green circular verified badge with a crisp bold white checkmark
     return (
       <div 
-        className={`absolute bottom-0 right-0 bg-green-500 rounded-full ${s.badge} ${s.border} border-white shadow-lg ${className}`}
+        className={`absolute bottom-[-3px] right-[-3px] bg-green-500 dark:bg-green-600 rounded-full ${s.badgePadding} border-2 border-white dark:border-gray-900 shadow-sm flex items-center justify-center text-white ${className}`}
         title="Verified"
       >
-        <CheckCircle className={`${s.icon} text-white`} />
+        <Check className={`${s.logoIcon} stroke-[3.5] text-white`} />
       </div>
     );
   }
 
-  // Inline badge with green text
+  // Mini clean green chip verified badge
   return (
     <span 
-      className={`inline-flex items-center gap-1 ${s.padding} rounded-full bg-green-100 text-green-700 font-medium ${s.text} ${className}`}
+      className={`inline-flex items-center gap-1 ${s.padding} rounded-full bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 border border-green-100/60 dark:border-green-900/30 font-medium ${s.text} ${className}`}
       title="Domain verified"
     >
-      <CheckCircle className={s.icon} />
+      <BadgeCheck className={`${s.icon} text-green-500 dark:text-green-400`} />
       {showText && 'Verified'}
     </span>
   );

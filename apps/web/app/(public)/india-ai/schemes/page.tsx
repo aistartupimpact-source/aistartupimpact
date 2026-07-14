@@ -45,7 +45,7 @@ export default function GovernmentSchemesPage() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+    <div className="max-w-6xl mx-auto px-0 sm:px-2 lg:px-4 py-6 sm:py-10">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-xs sm:text-sm font-jakarta text-gray-400 dark:text-gray-500 mb-6">
         <Link href="/" className="hover:text-brand">Home</Link>

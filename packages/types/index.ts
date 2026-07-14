@@ -145,9 +145,11 @@ export interface AiTool {
 // ─── Startups & Funding ─────────────────
 
 export enum StartupStage {
+  BOOTSTRAPPED = 'BOOTSTRAPPED',
   IDEA = 'IDEA',
   PRE_SEED = 'PRE_SEED',
   SEED = 'SEED',
+  PRE_SERIES_A = 'PRE_SERIES_A',
   SERIES_A = 'SERIES_A',
   SERIES_B = 'SERIES_B',
   SERIES_C = 'SERIES_C',

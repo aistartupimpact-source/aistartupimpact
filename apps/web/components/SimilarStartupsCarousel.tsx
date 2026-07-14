@@ -21,9 +21,16 @@ interface Props {
 }
 
 const STAGE_LABELS: Record<string, string> = {
-  IDEA: 'Idea', PRE_SEED: 'Pre-Seed', SEED: 'Seed',
-  SERIES_A: 'Series A', SERIES_B: 'Series B', SERIES_C: 'Series C',
-  GROWTH: 'Growth', PUBLIC: 'Public',
+  BOOTSTRAPPED: 'Bootstrapped',
+  IDEA: 'Idea',
+  PRE_SEED: 'Pre-Seed',
+  SEED: 'Seed',
+  PRE_SERIES_A: 'Pre-Series A',
+  SERIES_A: 'Series A',
+  SERIES_B: 'Series B',
+  SERIES_C: 'Series C',
+  GROWTH: 'Growth',
+  PUBLIC: 'Public',
 };
 
 export default function SimilarStartupsCarousel({ startups }: Props) {

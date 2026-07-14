@@ -16,9 +16,11 @@ export interface ImpactScoreBreakdown {
 
 // Stage score map
 const STAGE_SCORES: Record<string, number> = {
+  BOOTSTRAPPED: 4,
   IDEA: 1,
   PRE_SEED: 3,
   SEED: 6,
+  PRE_SERIES_A: 8,
   SERIES_A: 9,
   SERIES_B: 12,
   SERIES_C: 13,
@@ -101,9 +103,16 @@ function employeeLabel(count: number | null): string {
 
 function stageLabel(stage: string | null): string {
   const labels: Record<string, string> = {
-    IDEA: 'Idea Stage', PRE_SEED: 'Pre-Seed', SEED: 'Seed',
-    SERIES_A: 'Series A', SERIES_B: 'Series B', SERIES_C: 'Series C',
-    GROWTH: 'Growth Stage', PUBLIC: 'Public Company',
+    BOOTSTRAPPED: 'Bootstrapped',
+    IDEA: 'Idea Stage',
+    PRE_SEED: 'Pre-Seed',
+    SEED: 'Seed',
+    PRE_SERIES_A: 'Pre-Series A',
+    SERIES_A: 'Series A',
+    SERIES_B: 'Series B',
+    SERIES_C: 'Series C',
+    GROWTH: 'Growth Stage',
+    PUBLIC: 'Public Company',
   };
   return stage ? (labels[stage] || stage.replace(/_/g, ' ')) : 'Unknown stage';
 }
