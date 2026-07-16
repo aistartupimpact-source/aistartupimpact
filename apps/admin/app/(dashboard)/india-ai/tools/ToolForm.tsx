@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
+import CityCombobox from '@/components/shared/CityCombobox';
 
 interface ToolFormProps {
   action: (formData: FormData) => Promise<void>;
@@ -9,6 +11,8 @@ interface ToolFormProps {
 }
 
 export default function ToolForm({ action, initialData }: ToolFormProps) {
+  const [hqValue, setHqValue] = useState(initialData?.headquarters || '');
+
   return (
     <form action={action} className="space-y-6">
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
@@ -170,12 +174,12 @@ export default function ToolForm({ action, initialData }: ToolFormProps) {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Headquarters
             </label>
-            <input
-              type="text"
+            <CityCombobox
+              id="headquarters"
               name="headquarters"
-              defaultValue={initialData?.headquarters || ''}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-              placeholder="Bangalore, India"
+              value={hqValue}
+              onChange={setHqValue}
+              placeholder="e.g. Bengaluru"
             />
           </div>
 

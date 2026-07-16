@@ -1,19 +1,20 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit } from 'lucide-react';
+import { DeleteButton } from '../components/DeleteButton';
 
 interface StatsTableRowProps {
   stat: any;
 }
 
 export default function StatsTableRow({ stat }: StatsTableRowProps) {
-  const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this stat?')) {
-      // TODO: Implement delete
-      console.log('Delete stat:', stat.id);
-    }
-  };
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <tr className="hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -51,7 +52,7 @@ export default function StatsTableRow({ stat }: StatsTableRowProps) {
         </span>
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-        {new Date(stat.lastUpdated).toLocaleDateString()}
+        {mounted ? new Date(stat.lastUpdated).toLocaleDateString() : ''}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
         <div className="flex items-center justify-end gap-2">
@@ -61,14 +62,14 @@ export default function StatsTableRow({ stat }: StatsTableRowProps) {
           >
             <Edit className="w-4 h-4" />
           </Link>
-          <button
-            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-            onClick={handleDelete}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          <DeleteButton
+            itemId={stat.id}
+            itemName={stat.metricLabel}
+            deleteEndpoint={`/api/india-ai/stats/${stat.id}/delete`}
+          />
         </div>
       </td>
     </tr>
   );
 }
+

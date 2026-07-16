@@ -9,3 +9,6 @@ export {
   extractDomain, 
   isValidDomain 
 } from './src/verification/dns';
+export { CITY_DATABASE, searchCities, standardizeCityName } from './src/cities';
+export type { CityEntry } from './src/cities';
+

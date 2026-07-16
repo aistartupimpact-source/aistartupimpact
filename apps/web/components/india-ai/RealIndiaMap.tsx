@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps';
 import { MapPin, Filter, X, Building2, Tag, DollarSign, Calendar, Info } from 'lucide-react';
 import Image from 'next/image';
+import { standardizeCityName } from '@aistartupimpact/utils/src/cities';
 
 interface City {
   id: string;
@@ -18,6 +19,7 @@ interface City {
   recentFundings: any[];
   keyAccelerators: string[];
   notableCompanies: string[];
+  aliases?: string[];
 }
 
 interface Startup {
@@ -84,6 +86,33 @@ function formatCurrency(paise: string): string {
   return `₹${lakhs.toFixed(1)}L`;
 }
 
+function matchesCity(startupCity: string | null | undefined, city: { cityName: string; aliases?: string[] }) {
+  if (!startupCity) return false;
+  
+  const stdStartup = standardizeCityName(startupCity).toLowerCase();
+  const stdCity = standardizeCityName(city.cityName).toLowerCase();
+  
+  // 1. Direct standardized match
+  if (stdStartup === stdCity) return true;
+  
+  // 2. Casing insensitive exact match of raw name
+  const rawStartup = startupCity.trim().toLowerCase();
+  const rawCity = city.cityName.trim().toLowerCase();
+  if (rawStartup === rawCity) return true;
+  
+  // 3. Match against aliases
+  if (city.aliases && Array.isArray(city.aliases)) {
+    if (city.aliases.some(alias => alias.trim().toLowerCase() === rawStartup)) {
+      return true;
+    }
+    if (city.aliases.some(alias => standardizeCityName(alias).toLowerCase() === stdStartup)) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
 export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps) {
   console.log('RealIndiaMap rendering with:', { 
     citiesCount: cities?.length, 
@@ -99,6 +128,12 @@ export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps)
   const [sectorFilter, setSectorFilter] = useState('All Sectors');
   const [stageFilter, setStageFilter] = useState('All Stages');
   const [yearFilter, setYearFilter] = useState('All Years');
+
+  const activeFiltersCount = useMemo(() => {
+    return [sectorFilter, stageFilter, yearFilter].filter(
+      (f) => !f.startsWith('All')
+    ).length;
+  }, [sectorFilter, stageFilter, yearFilter]);
 
   // Filter startups
   const filteredStartups = useMemo(() => {
@@ -120,7 +155,7 @@ export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps)
   const filteredCities = useMemo(() => {
     return cities.map((city) => {
       const cityStartups = filteredStartups.filter(
-        (s) => s.headquartersCity === city.cityName
+        (s) => matchesCity(s.headquartersCity, city)
       );
       return {
         ...city,
@@ -130,7 +165,12 @@ export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps)
   }, [cities, filteredStartups]);
 
   // Get max startup count for marker sizing
-  const maxStartups = Math.max(...filteredCities.map((c) => c.filteredCount || c.totalStartups));
+  const maxStartups = useMemo(() => {
+    const counts = filteredCities.map((c) => 
+      activeFiltersCount > 0 ? c.filteredCount : c.totalStartups
+    );
+    return Math.max(...counts, 1);
+  }, [filteredCities, activeFiltersCount]);
 
   // Calculate marker size using sqrt scaling (mathematically accurate for area-based bubbles)
   const getMarkerSize = (count: number) => {
@@ -142,21 +182,21 @@ export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps)
     return size;
   };
 
-  // Get startups for selected city
-  const selectedCityStartups = useMemo(() => {
+  // Get ALL matching startups for selected city
+  const allSelectedCityStartups = useMemo(() => {
     if (!selectedCity) return [];
-    return filteredStartups
-      .filter((s) => s.headquartersCity === selectedCity.cityName)
-      .slice(0, 10);
+    return filteredStartups.filter((s) => matchesCity(s.headquartersCity, selectedCity));
   }, [selectedCity, filteredStartups]);
 
-  const activeFiltersCount = [sectorFilter, stageFilter, yearFilter].filter(
-    (f) => !f.startsWith('All')
-  ).length;
+  // Sliced for displaying list
+  const displayedCityStartups = useMemo(() => {
+    return allSelectedCityStartups.slice(0, 10);
+  }, [allSelectedCityStartups]);
 
   function handleMoveEnd(position: any) {
     setPosition(position);
   }
+
 
   return (
     <div className="relative">
@@ -321,7 +361,8 @@ export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps)
 
                 {/* City Markers */}
                 {filteredCities.map((city) => {
-                  const markerSize = getMarkerSize(city.filteredCount || city.totalStartups);
+                  const displayCount = activeFiltersCount > 0 ? city.filteredCount : city.totalStartups;
+                  const markerSize = getMarkerSize(displayCount);
                   const isSelected = selectedCity?.id === city.id;
                   const isHovered = hoveredCity === city.id;
 
@@ -399,7 +440,7 @@ export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps)
                           letterSpacing: '0.5px'
                         }}
                       >
-                        {city.filteredCount || city.totalStartups} startups
+                        {displayCount} startups
                       </text>
                       </g>
                     </Marker>
@@ -457,7 +498,7 @@ export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps)
               <div className="grid grid-cols-2 gap-3 mb-6">
                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
                   <div className="text-2xl font-bold text-brand mb-1">
-                    {selectedCityStartups.length}
+                    {activeFiltersCount > 0 ? allSelectedCityStartups.length : selectedCity.totalStartups}
                   </div>
                   <div className="text-xs text-gray-600 dark:text-gray-400">Startups</div>
                 </div>
@@ -492,12 +533,13 @@ export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps)
                   Top Startups
                 </h4>
                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {selectedCityStartups.length === 0 ? (
+                  {allSelectedCityStartups.length === 0 ? (
                     <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
                       No startups match the current filters
                     </p>
                   ) : (
-                    selectedCityStartups.map((startup) => (
+                    displayedCityStartups.map((startup) => (
+
                       <a
                         key={startup.id}
                         href={`/startups/${startup.slug}`}

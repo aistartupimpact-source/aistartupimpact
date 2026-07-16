@@ -20,6 +20,7 @@ interface FAQManagerProps {
 export function FAQManager({ faqs, onChange, maxFaqs = 10, readonly = false }: FAQManagerProps) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingFAQ, setEditingFAQ] = useState<FAQ | null>(null);
+  const [originalFAQ, setOriginalFAQ] = useState<FAQ | null>(null);
 
   const addFAQ = () => {
     if (faqs.length >= maxFaqs) return;
@@ -31,11 +32,13 @@ export function FAQManager({ faqs, onChange, maxFaqs = 10, readonly = false }: F
     onChange([...faqs, newFAQ]);
     setEditingIndex(faqs.length);
     setEditingFAQ(newFAQ);
+    setOriginalFAQ(null);
   };
 
   const startEdit = (index: number) => {
     setEditingIndex(index);
     setEditingFAQ({ ...faqs[index] });
+    setOriginalFAQ({ ...faqs[index] });
   };
 
   const saveEdit = () => {
@@ -52,15 +55,25 @@ export function FAQManager({ faqs, onChange, maxFaqs = 10, readonly = false }: F
     onChange(updated);
     setEditingIndex(null);
     setEditingFAQ(null);
+    setOriginalFAQ(null);
   };
 
   const cancelEdit = () => {
-    // If it's a new FAQ (no question/answer), remove it
-    if (editingIndex !== null && !faqs[editingIndex].question && !faqs[editingIndex].answer) {
-      deleteFAQ(editingIndex);
+    if (editingIndex === null) return;
+
+    if (originalFAQ) {
+      // Revert parent state to originalFAQ
+      const updatedFaqs = [...faqs];
+      updatedFaqs[editingIndex] = originalFAQ;
+      onChange(updatedFaqs);
+    } else {
+      // It was a new FAQ, let's delete it
+      const updatedFaqs = faqs.filter((_, i) => i !== editingIndex);
+      onChange(updatedFaqs.map((faq, i) => ({ ...faq, order: i })));
     }
     setEditingIndex(null);
     setEditingFAQ(null);
+    setOriginalFAQ(null);
   };
 
   const deleteFAQ = (index: number) => {
@@ -135,7 +148,15 @@ export function FAQManager({ faqs, onChange, maxFaqs = 10, readonly = false }: F
                     <input
                       type="text"
                       value={editingFAQ.question}
-                      onChange={(e) => setEditingFAQ({ ...editingFAQ, question: e.target.value })}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setEditingFAQ(prev => prev ? { ...prev, question: val } : null);
+                        if (editingIndex !== null) {
+                          const updated = [...faqs];
+                          updated[editingIndex] = { ...updated[editingIndex], question: val };
+                          onChange(updated);
+                        }
+                      }}
                       maxLength={200}
                       className="input-field text-sm"
                       placeholder="e.g. What problem does your startup solve?"
@@ -152,7 +173,15 @@ export function FAQManager({ faqs, onChange, maxFaqs = 10, readonly = false }: F
                     </label>
                     <textarea
                       value={editingFAQ.answer}
-                      onChange={(e) => setEditingFAQ({ ...editingFAQ, answer: e.target.value })}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setEditingFAQ(prev => prev ? { ...prev, answer: val } : null);
+                        if (editingIndex !== null) {
+                          const updated = [...faqs];
+                          updated[editingIndex] = { ...updated[editingIndex], answer: val };
+                          onChange(updated);
+                        }
+                      }}
                       maxLength={1000}
                       rows={4}
                       className="input-field text-sm"

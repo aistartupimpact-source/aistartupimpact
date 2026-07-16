@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Building2, ChevronRight, CheckCircle2, Loader2, Plus, X } from 'lucide-react';
 import { STARTUP_CATEGORIES, USE_CASES } from '@/lib/categories';
+import CityCombobox from '@/components/shared/CityCombobox';
 
 const STAGES = ['BOOTSTRAPPED', 'IDEA', 'PRE_SEED', 'SEED', 'PRE_SERIES_A', 'SERIES_A', 'SERIES_B', 'SERIES_C', 'GROWTH', 'PUBLIC'];
 const STAGE_LABELS: Record<string, string> = {
@@ -204,8 +205,12 @@ export default function SubmitStartupPage() {
             </div>
             <div>
               <label className="block font-sora font-bold text-sm text-navy dark:text-white mb-2">HQ City</label>
-              <input type="text" className="input-field w-full" value={form.headquartersCity}
-                onChange={e => setForm({ ...form, headquartersCity: e.target.value })} placeholder="e.g. Bengaluru" />
+              <CityCombobox
+                value={form.headquartersCity}
+                onChange={val => setForm({ ...form, headquartersCity: val })}
+                placeholder="Search and select city (e.g. Bengaluru)"
+                className="input-field w-full"
+              />
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

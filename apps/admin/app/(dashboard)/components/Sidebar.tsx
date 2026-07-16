@@ -68,6 +68,7 @@ const sidebarItems = [
 
   { type: 'divider' as const, label: 'System', roles: ['SUPER_ADMIN'] },
   { label: 'Founders', href: '/founders', icon: UserCog, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
+  { label: 'Cities', href: '/cities', icon: MapPin, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
   { label: 'Admin Users', href: '/users', icon: Shield, roles: ['SUPER_ADMIN'] },
   { label: 'Web Users', href: '/web-users', icon: Users, roles: ['SUPER_ADMIN'] },
   { label: 'Consent Logs', href: '/consent-logs', icon: Shield, roles: ['SUPER_ADMIN'] },

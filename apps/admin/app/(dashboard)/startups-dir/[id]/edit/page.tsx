@@ -9,6 +9,7 @@ import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
 import FundingRoundsManager, { FundingRound, convertToSaveFormat, convertFromDbFormat } from '@/components/shared/FundingRoundsManager';
 import FoundersDetailsManager, { FounderDetail } from '@/components/shared/FoundersDetailsManager';
 import SocialLinksManager, { SocialLink } from '@/components/shared/SocialLinksManager';
+import CityCombobox from '@/components/shared/CityCombobox';
 
 
 const stages = ['BOOTSTRAPPED', 'IDEA', 'PRE_SEED', 'SEED', 'PRE_SERIES_A', 'SERIES_A', 'SERIES_B', 'SERIES_C', 'GROWTH', 'PUBLIC'];
@@ -361,13 +362,13 @@ export default function EditStartupPage() {
               <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
                 Location
               </label>
-              <input
-                type="text"
+              <CityCombobox
+                id="headquartersCity"
                 name="headquartersCity"
                 value={formData.headquartersCity || ''}
-                onChange={handleChange}
-                className="input-field text-sm"
+                onChange={(val) => setFormData(prev => prev ? { ...prev, headquartersCity: val } : null)}
                 placeholder="e.g. Bengaluru"
+                className="text-sm"
               />
             </div>
           </div>
