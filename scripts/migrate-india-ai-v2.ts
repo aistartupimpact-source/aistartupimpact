@@ -291,10 +291,10 @@ async function runMigration() {
     // Insert cities
     await sql`
       INSERT INTO "IndiaAICity" ("cityName", slug, state, latitude, longitude, "totalStartups", "totalFunding", "topSectors", "displayOrder") VALUES
-      ('Bangalore', 'bangalore', 'Karnataka', 12.9716, 77.5946, 1400, 1420000000000, ARRAY['SaaS', 'DevTools', 'B2B AI'], 1),
+      ('Bengaluru', 'bengaluru', 'Karnataka', 12.9716, 77.5946, 1400, 1420000000000, ARRAY['SaaS', 'DevTools', 'B2B AI'], 1),
       ('Mumbai', 'mumbai', 'Maharashtra', 19.0760, 72.8777, 580, 650000000000, ARRAY['FinTech', 'Enterprise AI'], 2),
       ('Hyderabad', 'hyderabad', 'Telangana', 17.3850, 78.4867, 385, 420000000000, ARRAY['Healthcare AI', 'Deep Tech'], 3),
-      ('Delhi NCR', 'delhi-ncr', 'Delhi', 28.7041, 77.1025, 490, 580000000000, ARRAY['B2B AI', 'GovTech'], 4),
+      ('Delhi', 'delhi', 'Delhi', 28.7041, 77.1025, 490, 580000000000, ARRAY['B2B AI', 'GovTech'], 4),
       ('Chennai', 'chennai', 'Tamil Nadu', 13.0827, 80.2707, 240, 280000000000, ARRAY['Deep Tech', 'Robotics'], 5),
       ('Pune', 'pune', 'Maharashtra', 18.5204, 73.8567, 320, 350000000000, ARRAY['Enterprise SaaS', 'AI'], 6)
       ON CONFLICT (slug) DO NOTHING
@@ -312,11 +312,11 @@ async function runMigration() {
     // Insert research hubs
     await sql`
       INSERT INTO "ResearchHub" (name, slug, type, city, "focusAreas", "phdPrograms", "displayOrder") VALUES
-      ('IISc Bangalore', 'iisc-bangalore', 'University', 'Bangalore', ARRAY['Machine Learning', 'Computer Vision', 'NLP'], 50, 1),
+      ('IISc Bangalore', 'iisc-bangalore', 'University', 'Bengaluru', ARRAY['Machine Learning', 'Computer Vision', 'NLP'], 50, 1),
       ('IIT Bombay', 'iit-bombay', 'University', 'Mumbai', ARRAY['AI', 'Robotics', 'Data Science'], 45, 2),
       ('IIT Madras', 'iit-madras', 'University', 'Chennai', ARRAY['Deep Learning', 'AI Safety'], 40, 3),
       ('IIIT Hyderabad', 'iiit-hyderabad', 'University', 'Hyderabad', ARRAY['NLP', 'Computer Vision'], 35, 4),
-      ('IIT Delhi', 'iit-delhi', 'University', 'Delhi NCR', ARRAY['AI', 'Machine Learning'], 38, 5)
+      ('IIT Delhi', 'iit-delhi', 'University', 'Delhi', ARRAY['AI', 'Machine Learning'], 38, 5)
       ON CONFLICT (slug) DO NOTHING
     `;
 

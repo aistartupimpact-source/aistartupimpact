@@ -28,7 +28,8 @@ export async function GET() {
         "featuredImage",
         "isFeatured",
         "premiumPlacement",
-        "displayOrder"
+        "displayOrder",
+        aliases
       FROM "IndiaAICity"
       WHERE "isActive" = true
       ORDER BY "displayOrder" ASC, "totalStartups" DESC

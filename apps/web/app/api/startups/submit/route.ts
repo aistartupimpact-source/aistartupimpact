@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { detectCategory } from '@/lib/categories';
+import { standardizeCityName } from '@aistartupimpact/utils/src/cities';
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,6 +24,8 @@ export async function POST(req: NextRequest) {
     // Auto-detect category if not provided
     const finalCategory = category || detectCategory(`${name} ${tagline} ${description || ''}`);
 
+    const finalCity = headquartersCity ? standardizeCityName(headquartersCity) : null;
+
     // Insert startup
     const result = await sql`
       INSERT INTO "Startup" (
@@ -38,7 +41,7 @@ export async function POST(req: NextRequest) {
         ${linkedinUrl || null},
         ${logoUrl || null},
         ${stage || 'SEED'}::"StartupStage",
-        ${headquartersCity || null},
+        ${finalCity},
         ${foundedYear ? parseInt(foundedYear) : null},
         ${employeeCount ? parseInt(employeeCount) : null},
         ${founders && founders.length > 0 ? founders.filter((f: any) => f.name?.trim()).map((f: any) => f.name) : null},

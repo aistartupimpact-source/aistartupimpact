@@ -8,6 +8,7 @@ import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
 import FundingRoundsManager, { FundingRound, convertToSaveFormat } from '@/components/shared/FundingRoundsManager';
 import FoundersDetailsManager, { FounderDetail } from '@/components/shared/FoundersDetailsManager';
 import SocialLinksManager, { SocialLink } from '@/components/shared/SocialLinksManager';
+import CityCombobox from '@/components/shared/CityCombobox';
 
 const STARTUP_STAGES = [
   'BOOTSTRAPPED',
@@ -491,19 +492,16 @@ export default function StartupForm({ initialFounder }: StartupFormProps) {
         </div>
       </div>
 
-      {/* Location */}
       <div>
         <label htmlFor="headquartersCity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Headquarters
         </label>
-        <input
-          type="text"
+        <CityCombobox
           id="headquartersCity"
           name="headquartersCity"
           value={formData.headquartersCity}
-          onChange={handleChange}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
-          placeholder="e.g. San Francisco, CA"
+          onChange={(val) => setFormData(prev => ({ ...prev, headquartersCity: val }))}
+          placeholder="Search and select city (e.g. Bengaluru)"
         />
       </div>
 

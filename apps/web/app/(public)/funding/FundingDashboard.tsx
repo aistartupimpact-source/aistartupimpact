@@ -4,6 +4,8 @@ import React, { useState, useMemo } from 'react';
 import { IndianRupee, MapPin, Building2, Calendar, TrendingUp, Download, Users, Map as MapIcon } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
+import { standardizeCityName } from '@aistartupimpact/utils/src/cities';
+
 interface FundingRound {
   id: string;
   roundType: string;
@@ -17,7 +19,14 @@ interface FundingRound {
   headquartersCity: string | null;
 }
 
-export default function FundingDashboard({ data }: { data: FundingRound[] }) {
+export default function FundingDashboard({ data: rawData }: { data: FundingRound[] }) {
+  const data = useMemo(() => {
+    return rawData.map(d => ({
+      ...d,
+      headquartersCity: d.headquartersCity ? standardizeCityName(d.headquartersCity) : null
+    }));
+  }, [rawData]);
+
   const [filterStage, setFilterStage] = useState('All');
   const [filterYear, setFilterYear] = useState('All');
   const [filterInvestor, setFilterInvestor] = useState('All');

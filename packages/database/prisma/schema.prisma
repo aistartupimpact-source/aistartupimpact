@@ -611,6 +611,7 @@ model IndiaAICity {
   premiumUntil     DateTime? @db.Timestamp(6)
   displayOrder     Int?      @default(0)
   isActive         Boolean?  @default(true)
+  aliases          String[]
   createdAt        DateTime? @default(now()) @db.Timestamp(6)
   updatedAt        DateTime? @default(now()) @db.Timestamp(6)
 

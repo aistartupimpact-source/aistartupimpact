@@ -3,6 +3,7 @@
 import { neon } from '@neondatabase/serverless';
 import { revalidatePath } from 'next/cache';
 import { calculateImpactScore } from '@/lib/impact-score';
+import { standardizeCityName } from '@aistartupimpact/utils/src/cities';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -138,6 +139,8 @@ export async function createStartupAction(data: {
       ? JSON.stringify(data.socialLinks)
       : null;
     
+    const finalCity = data.headquartersCity ? standardizeCityName(data.headquartersCity) : null;
+    
     const result = await sql`
       INSERT INTO "Startup" (
         id, name, slug, tagline, description, "logoUrl", "websiteUrl", "linkedinUrl", "twitterUrl", stage, "headquartersCity",
@@ -146,7 +149,7 @@ export async function createStartupAction(data: {
       )
       VALUES (
         gen_random_uuid(), ${data.name}, ${slug}, ${data.tagline}, ${data.description},
-        ${data.logoUrl || null}, ${data.websiteUrl || null}, ${data.linkedinUrl || null}, ${data.twitterUrl || null}, ${data.stage}::"StartupStage", ${data.headquartersCity || null},
+        ${data.logoUrl || null}, ${data.websiteUrl || null}, ${data.linkedinUrl || null}, ${data.twitterUrl || null}, ${data.stage}::"StartupStage", ${finalCity},
         ${data.isFeatured || false}, true, ${impactScore}, ${data.foundedYear || null}, ${data.employeeCount || null}, ${data.category || null}, ${data.businessType || null}, ${data.status || 'ACTIVE'}::"CompanyStatus",
         ${foundersNames}::text[], ${foundersDataJson}::jsonb, ${socialLinksJson}::jsonb, true, NOW(), NOW(), NOW()
       )
@@ -256,6 +259,8 @@ export async function updateStartupAction(id: string, data: {
       ? JSON.stringify(data.socialLinks)
       : null;
 
+    const finalCity = data.headquartersCity ? standardizeCityName(data.headquartersCity) : null;
+
     await sql`
       UPDATE "Startup"
       SET 
@@ -268,7 +273,7 @@ export async function updateStartupAction(id: string, data: {
         "twitterUrl" = ${data.twitterUrl || null},
         stage = ${data.stage}::"StartupStage",
         status = ${data.status || 'ACTIVE'}::"CompanyStatus",
-        "headquartersCity" = ${data.headquartersCity || null},
+        "headquartersCity" = ${finalCity},
         "isFeatured" = ${data.isFeatured || false},
         "foundedYear" = ${data.foundedYear || null},
         "employeeCount" = ${data.employeeCount || null},

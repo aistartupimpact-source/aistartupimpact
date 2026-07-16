@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Star, CheckCircle, Clock, Flag, Trash2, ExternalLink, Image as ImageIcon, AlertCircle } from "lucide-react";
 import { updateReviewStatusAction, deleteReviewAction, bulkUpdateReviewStatusAction, bulkDeleteReviewAction } from "./actions";
 
@@ -11,6 +11,11 @@ export default function StartupReviewsClient({ initialReviews }: { initialReview
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [isBulkLoading, setIsBulkLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleUpdateStatus = async (reviewId: string, status: 'PENDING' | 'APPROVED' | 'FLAGGED') => {
     setLoadingId(reviewId);
@@ -182,7 +187,7 @@ export default function StartupReviewsClient({ initialReviews }: { initialReview
                     >
                       {review.startup?.name} <ExternalLink className="w-3 h-3" />
                     </a>
-                    <div className="text-xs text-gray-400 mt-1">{new Date(review.createdAt).toLocaleDateString()}</div>
+                    <div className="text-xs text-gray-400 mt-1">{mounted ? new Date(review.createdAt).toLocaleDateString() : ''}</div>
                   </td>
 
                   {/* Author Details */}
