@@ -94,11 +94,23 @@ export async function submitStartupAction(data: StartupSubmission) {
       ? JSON.stringify(data.socialLinks)
       : null;
 
+    // Resolve cityId from headquartersCity name
+    let cityId: string | null = null;
+    if (data.headquartersCity) {
+      const cityMatch = await prisma.$queryRaw<any[]>`
+        SELECT id FROM "City"
+        WHERE LOWER(name) = LOWER(${data.headquartersCity})
+          OR ${data.headquartersCity.toLowerCase()} = ANY(aliases)
+        LIMIT 1
+      `;
+      cityId = cityMatch.length > 0 ? cityMatch[0].id : null;
+    }
+
     try {
       const result = await prisma.$queryRaw<any[]>`
         INSERT INTO "Startup" (
           id, name, slug, tagline, description, "websiteUrl", "linkedinUrl", "twitterUrl",
-          "foundedYear", "headquartersCity", stage, "employeeCount", founders, "foundersData", "socialLinks", "logoUrl",
+          "foundedYear", "headquartersCity", "cityId", stage, "employeeCount", founders, "foundersData", "socialLinks", "logoUrl",
           "totalFundingInr", category, "businessType", status, "ownerId", "claimStatus", "submittedBy", "createdAt", "updatedAt"
         ) VALUES (
           gen_random_uuid(),
@@ -111,6 +123,7 @@ export async function submitStartupAction(data: StartupSubmission) {
           ${data.twitterUrl || null},
           ${data.foundedYear},
           ${data.headquartersCity || null},
+          ${cityId},
           ${data.stage}::"StartupStage",
           ${data.employeeCount || null},
           ${data.founders}::text[],
@@ -271,6 +284,18 @@ export async function updateStartupAction(id: string, data: StartupSubmission) {
       ? 'PENDING'
       : startup.claimStatus;
 
+    // Resolve cityId from headquartersCity name
+    let updateCityId: string | null = null;
+    if (data.headquartersCity) {
+      const cityMatch = await prisma.$queryRaw<any[]>`
+        SELECT id FROM "City"
+        WHERE LOWER(name) = LOWER(${data.headquartersCity})
+          OR ${data.headquartersCity.toLowerCase()} = ANY(aliases)
+        LIMIT 1
+      `;
+      updateCityId = cityMatch.length > 0 ? cityMatch[0].id : null;
+    }
+
     // Try to update with category and businessType, fallback if columns don't exist
     const socialLinksJson = data.socialLinks && data.socialLinks.length > 0
       ? JSON.stringify(data.socialLinks)
@@ -289,6 +314,7 @@ export async function updateStartupAction(id: string, data: StartupSubmission) {
           "twitterUrl" = ${data.twitterUrl || null},
           "foundedYear" = ${data.foundedYear},
           "headquartersCity" = ${data.headquartersCity || null},
+          "cityId" = ${updateCityId},
           stage = ${data.stage}::"StartupStage",
           "employeeCount" = ${data.employeeCount || null},
           founders = ${data.founders}::text[],

@@ -138,18 +138,30 @@ export async function createStartupAction(data: {
     const socialLinksJson = data.socialLinks && data.socialLinks.length > 0
       ? JSON.stringify(data.socialLinks)
       : null;
+
+    // Resolve cityId from headquartersCity name
+    let cityId: string | null = null;
+    if (data.headquartersCity) {
+      const cityMatch = await sql`
+        SELECT id FROM "City"
+        WHERE LOWER(name) = LOWER(${data.headquartersCity})
+          OR ${data.headquartersCity.toLowerCase()} = ANY(aliases)
+        LIMIT 1
+      `;
+      cityId = cityMatch.length > 0 ? (cityMatch[0] as any).id : null;
+    }
     
     const finalCity = data.headquartersCity ? standardizeCityName(data.headquartersCity) : null;
     
     const result = await sql`
       INSERT INTO "Startup" (
-        id, name, slug, tagline, description, "logoUrl", "websiteUrl", "linkedinUrl", "twitterUrl", stage, "headquartersCity",
+        id, name, slug, tagline, description, "logoUrl", "websiteUrl", "linkedinUrl", "twitterUrl", stage, "headquartersCity", "cityId",
         "isFeatured", "isIndian", "impactScore", "foundedYear", "employeeCount", category, "businessType", status,
         founders, "foundersData", "socialLinks", "isApproved", "approvedAt", "createdAt", "updatedAt"
       )
       VALUES (
         gen_random_uuid(), ${data.name}, ${slug}, ${data.tagline}, ${data.description},
-        ${data.logoUrl || null}, ${data.websiteUrl || null}, ${data.linkedinUrl || null}, ${data.twitterUrl || null}, ${data.stage}::"StartupStage", ${finalCity},
+        ${data.logoUrl || null}, ${data.websiteUrl || null}, ${data.linkedinUrl || null}, ${data.twitterUrl || null}, ${data.stage}::"StartupStage", ${finalCity}, ${cityId},
         ${data.isFeatured || false}, true, ${impactScore}, ${data.foundedYear || null}, ${data.employeeCount || null}, ${data.category || null}, ${data.businessType || null}, ${data.status || 'ACTIVE'}::"CompanyStatus",
         ${foundersNames}::text[], ${foundersDataJson}::jsonb, ${socialLinksJson}::jsonb, true, NOW(), NOW(), NOW()
       )
@@ -261,6 +273,18 @@ export async function updateStartupAction(id: string, data: {
 
     const finalCity = data.headquartersCity ? standardizeCityName(data.headquartersCity) : null;
 
+    // Resolve cityId for the update
+    let updateCityId: string | null = null;
+    if (data.headquartersCity) {
+      const cityMatch = await sql`
+        SELECT id FROM "City"
+        WHERE LOWER(name) = LOWER(${data.headquartersCity})
+          OR ${data.headquartersCity.toLowerCase()} = ANY(aliases)
+        LIMIT 1
+      `;
+      updateCityId = cityMatch.length > 0 ? (cityMatch[0] as any).id : null;
+    }
+
     await sql`
       UPDATE "Startup"
       SET 
@@ -274,6 +298,7 @@ export async function updateStartupAction(id: string, data: {
         stage = ${data.stage}::"StartupStage",
         status = ${data.status || 'ACTIVE'}::"CompanyStatus",
         "headquartersCity" = ${finalCity},
+        "cityId" = ${updateCityId},
         "isFeatured" = ${data.isFeatured || false},
         "foundedYear" = ${data.foundedYear || null},
         "employeeCount" = ${data.employeeCount || null},

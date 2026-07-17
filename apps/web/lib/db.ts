@@ -550,7 +550,8 @@ export async function getAllFundingRoundsDirect() {
       SELECT 
         fr.id, fr."roundType", fr."amountInr", fr."amountUsd",
         fr."announcedAt"::text AS "announcedAt", fr."leadInvestors", fr."allInvestors",
-        s.name AS "startupName", s.slug AS "startupSlug", s."headquartersCity"
+        s.name AS "startupName", s.slug AS "startupSlug", s."headquartersCity",
+        s.category AS "startupCategory"
       FROM "FundingRound" fr
       JOIN "Startup" s ON s.id = fr."startupId"
       WHERE s."deletedAt" IS NULL

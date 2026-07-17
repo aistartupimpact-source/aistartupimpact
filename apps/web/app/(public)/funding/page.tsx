@@ -59,7 +59,7 @@ export default async function FundingPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-0 sm:px-2 lg:px-4 py-6 sm:py-10">
+    <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-6 sm:py-10">
       <FundingDashboardSchema rounds={rounds as any} stats={stats} />
       
       {/* Header */}

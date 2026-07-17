@@ -17,6 +17,7 @@ interface FundingRound {
   startupName: string;
   startupSlug: string;
   headquartersCity: string | null;
+  startupCategory: string | null;
 }
 
 export default function FundingDashboard({ data: rawData }: { data: FundingRound[] }) {
@@ -62,10 +63,10 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
     return new Set(sorted.slice(0, 3).map(d => d.id));
   }, [data]);
 
-  // Format chart Y-axis values to be readable (₹2,000 Cr instead of ₹2000000Cr)
+  // Format chart Y-axis values in USD millions
   const formatChartValue = (value: number) => {
-    if (value >= 1000) return `₹${(value / 1000).toFixed(1)}K Cr`;
-    return `₹${value} Cr`;
+    if (value >= 1000) return `$${(value / 1000).toFixed(1)}B`;
+    return `$${value}M`;
   };
 
   // Calculate YTD period dynamically based on actual data
@@ -125,35 +126,13 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
     return ((currentTotal - lastTotal) / lastTotal * 100).toFixed(0);
   }, [data]);
 
-  // Helper to categorize sector - updated with more specific AI categories
-  const getSector = (startupName: string) => {
-    const name = startupName.toLowerCase();
-    
-    // LLM & Foundation Models
-    if (name.includes('sarvam') || name.includes('llm') || name.includes('language model') || name.includes('gpt')) return 'LLM';
-    
-    // Infrastructure AI (compute, cloud, chips)
-    if (name.includes('neysa') || name.includes('infra') || name.includes('cloud') || name.includes('compute') || name.includes('chip')) return 'Infra AI';
-    
-    // Data & Analytics AI
-    if (name.includes('deccan') || name.includes('data') || name.includes('analytics') || name.includes('insight') || name.includes('intelligence')) return 'Data AI';
-    
-    // Sales & Marketing AI
-    if (name.includes('orbit') || name.includes('sales') || name.includes('crm') || name.includes('marketing') || name.includes('outreach')) return 'Sales AI';
-    
-    // Healthcare AI
-    if (name.includes('health') || name.includes('med') || name.includes('bio') || name.includes('pharma')) return 'Health AI';
-    
-    // FinTech AI
-    if (name.includes('fin') || name.includes('pay') || name.includes('bank') || name.includes('lending')) return 'FinTech AI';
-    
-    // EdTech AI
-    if (name.includes('edu') || name.includes('learn') || name.includes('tutor')) return 'EdTech AI';
-    
-    // DevTools AI
-    if (name.includes('dev') || name.includes('code') || name.includes('engineer')) return 'DevTools AI';
-    
-    return 'Other AI';
+  // Use real category from database, fallback to 'Other AI'
+  const getSector = (startupName: string, row?: FundingRound) => {
+    // If called with row (from table rendering), use real category
+    if (row?.startupCategory) return row.startupCategory;
+    // Fallback: lookup from data by name
+    const match = data.find(d => d.startupName === startupName);
+    return match?.startupCategory || 'Other';
   };
 
   // Helper to determine trend signal based on amount, recency, and deal characteristics
@@ -185,7 +164,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
       const matchStage = filterStage === 'All' || d.roundType.toLowerCase().includes(filterStage.toLowerCase());
       const matchYear = filterYear === 'All' || new Date(d.announcedAt).getFullYear().toString() === filterYear;
       const matchInvestor = filterInvestor === 'All' || (d.leadInvestors && d.leadInvestors.some(inv => inv === filterInvestor));
-      const matchSector = filterSector === 'All' || getSector(d.startupName) === filterSector;
+      const matchSector = filterSector === 'All' || (d.startupCategory || 'Other') === filterSector;
       const matchCity = filterCity === 'All' || d.headquartersCity === filterCity;
       
       const amount = Number(d.amountUsd || 0) / 100;
@@ -219,12 +198,12 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
   }, [data]);
   const PIE_COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#6b7280'];
 
-  // Sector Breakdown Analysis (using consistent AI sector categorization)
+  // Sector Breakdown Analysis (using real category from database)
   const sectorData = useMemo(() => {
     const sectorMap = new Map<string, { count: number; amount: number }>();
     
     data.forEach(d => {
-      const sector = getSector(d.startupName);
+      const sector = d.startupCategory || 'Other';
       
       const current = sectorMap.get(sector) || { count: 0, amount: 0 };
       sectorMap.set(sector, {
@@ -285,7 +264,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
       .slice(0, 10);
   }, [data]);
 
-  // Chart Data: Momentum (Sum by Month/Year)
+  // Chart Data: Momentum (Sum by Month/Year in USD Millions)
   const chartData = useMemo(() => {
     const map = new Map<string, number>();
     const sorted = [...data].sort((a, b) => new Date(a.announcedAt).getTime() - new Date(b.announcedAt).getTime());
@@ -294,8 +273,8 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
       const d = new Date(row.announcedAt);
       const monthYear = d.toLocaleString('default', { month: 'short', year: '2-digit' });
       const currentSum = map.get(monthYear) || 0;
-      // Convert to Crores for the chart
-      map.set(monthYear, currentSum + Number(row.amountInr || 0) / 10000000);
+      // Convert cents to USD millions for the chart
+      map.set(monthYear, currentSum + Number(row.amountUsd || 0) / 100_000_000);
     });
 
     return Array.from(map.entries()).map(([month, amount]) => ({
@@ -529,16 +508,16 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="card p-6 lg:col-span-2">
           <h3 className="section-title mb-6">Funding Momentum (Last 12 Months)</h3>
-          <div className="h-64 sm:h-80 w-full ml-[-10px] sm:ml-0">
+          <div className="h-64 sm:h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 10, right: 10, left: 20, bottom: 0 }}>
+              <BarChart data={chartData} margin={{ top: 10, right: 5, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" opacity={0.2} />
-                <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} dy={10} />
-                <YAxis tickLine={false} axisLine={false} tickFormatter={formatChartValue} width={80} tick={{ fontSize: 12, fill: '#6b7280' }} />
+                <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: '#6b7280' }} dy={10} />
+                <YAxis tickLine={false} axisLine={false} tickFormatter={formatChartValue} width={50} tick={{ fontSize: 10, fill: '#6b7280' }} />
                 <Tooltip
                   cursor={{ fill: 'rgba(79, 70, 229, 0.05)' }}
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value: any) => [`₹${Number(value).toLocaleString('en-IN')} Cr`, 'Amount']}
+                  formatter={(value: any) => [`$${Number(value).toLocaleString()}M`, 'Amount']}
                 />
                 <Bar dataKey="amount" fill="#4f46e5" radius={[4, 4, 0, 0]} maxBarSize={50} />
               </BarChart>
@@ -674,12 +653,6 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
               <option value="10M-50M">$10M - $50M</option>
               <option value="50M+">$50M+</option>
             </select>
-
-            <div className="ml-auto flex-shrink-0">
-              <a href="/submit-tool" className="text-sm font-semibold bg-brand text-white px-5 py-2 rounded-full hover:bg-brand-600 transition-colors shadow-md whitespace-nowrap inline-block">
-                + Submit Round
-              </a>
-            </div>
           </div>
         </div>
         
@@ -699,7 +672,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {filteredData.map((row) => {
-                const sector = getSector(row.startupName);
+                const sector = row.startupCategory || 'Other';
                 const trend = getTrendSignal(row);
                 
                 return (
@@ -775,14 +748,15 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
         )}
       </div>
 
-      {/* Most Active Investors in Indian AI - NEW SECTION */}
-      <div className="card p-8">
-        <h2 className="font-sora font-bold text-2xl mb-8 text-navy dark:text-white">
-          Most active investors in 2026
+      {/* Most Active Investors in Indian AI */}
+      {topInvestors.length > 0 && (
+      <div className="card p-6 sm:p-8">
+        <h2 className="font-sora font-bold text-xl sm:text-2xl mb-6 sm:mb-8 text-navy dark:text-white">
+          Most active investors in {new Date().getFullYear()}
         </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {topInvestors.slice(0, 4).map((investor, idx) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          {topInvestors.slice(0, 8).map((investor, idx) => {
             // Get portfolio companies and their deal info for this investor
             const investorDeals = data
               .filter(d => d.leadInvestors?.includes(investor.name))
@@ -845,6 +819,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
           })}
         </div>
       </div>
+      )}
     </div>
   );
 }

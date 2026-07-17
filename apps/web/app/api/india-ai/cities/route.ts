@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 
 export const runtime = 'edge';
-export const revalidate = 600; // Revalidate every 10 minutes
+export const revalidate = 60; // Revalidate every 1 minute
 
 export async function GET() {
   try {
