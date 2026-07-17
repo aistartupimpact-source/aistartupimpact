@@ -74,19 +74,79 @@ export const metadata: Metadata = {
 async function getIndiaAIData() {
   const sql = neon(process.env.DATABASE_URL!);
 
-  const [stats, cities, mission, researchHubs, recentFunding, allStartups] = await Promise.all([
-    // Live stats
+  const [computedStartupCount, thisMonthStartups, totalFundingResult, thisMonthFundingResult, manualStats, cities, mission, researchHubs, recentFunding, allStartups] = await Promise.all([
+    // Live computed: total startups
+    sql`
+      SELECT COUNT(*)::int as count
+      FROM "Startup"
+      WHERE "isIndian" = true
+        AND "deletedAt" IS NULL
+        AND "isApproved" = true
+    `,
+    // Live computed: startups this month
+    sql`
+      SELECT COUNT(*)::int as count
+      FROM "Startup"
+      WHERE "isIndian" = true
+        AND "deletedAt" IS NULL
+        AND "isApproved" = true
+        AND "createdAt" >= date_trunc('month', NOW())
+    `,
+    // Live computed: total funding
+    sql`
+      SELECT COALESCE(SUM("amountInr"), 0)::bigint as total
+      FROM "FundingRound" fr
+      JOIN "Startup" s ON fr."startupId" = s.id
+      WHERE s."isIndian" = true
+        AND s."deletedAt" IS NULL
+    `,
+    // Live computed: funding this month
+    sql`
+      SELECT COALESCE(SUM("amountInr"), 0)::bigint as total
+      FROM "FundingRound" fr
+      JOIN "Startup" s ON fr."startupId" = s.id
+      WHERE s."isIndian" = true
+        AND s."deletedAt" IS NULL
+        AND fr."announcedAt" >= date_trunc('month', NOW())
+    `,
+    // Manual stats (AI Engineers, Global Rank — can't be auto-computed)
     sql`
       SELECT * FROM "IndiaAIStats"
       WHERE "isActive" = true
+        AND "metricKey" IN ('ai_engineers', 'global_rank')
       ORDER BY "displayOrder" ASC
     `,
-    // Cities
+    // Cities for map — get ALL cities that have real startups, with coordinates from IndiaAICity
     sql`
-      SELECT * FROM "IndiaAICity"
-      WHERE "isActive" = true
-      ORDER BY "displayOrder" ASC
-      LIMIT 6
+      SELECT 
+        c.id,
+        c."cityName",
+        c.slug,
+        c.state,
+        c.latitude::float as latitude,
+        c.longitude::float as longitude,
+        c."topSectors",
+        c."totalFunding",
+        c.aliases,
+        COUNT(s.id)::int as "totalStartups"
+      FROM "IndiaAICity" c
+      INNER JOIN "Startup" s 
+        ON (
+          LOWER(s."headquartersCity") = LOWER(c."cityName")
+          OR LOWER(s."headquartersCity") = ANY(
+            SELECT LOWER(unnest(c.aliases))
+          )
+        )
+      WHERE c."isActive" = true
+        AND c.latitude != 0
+        AND c.longitude != 0
+        AND s."isIndian" = true
+        AND s."deletedAt" IS NULL
+        AND s."isApproved" = true
+      GROUP BY c.id, c."cityName", c.slug, c.state, c.latitude, c.longitude, c."topSectors", c."totalFunding", c.aliases
+      HAVING COUNT(s.id) > 0
+      ORDER BY COUNT(s.id) DESC
+      LIMIT 50
     `,
     // IndiaAI Mission
     sql`
@@ -120,7 +180,7 @@ async function getIndiaAIData() {
       ORDER BY fr."announcedAt" DESC
       LIMIT 10
     `,
-    // All Indian AI Startups for the map
+    // All Indian AI Startups for the map — only those with a headquarters city
     sql`
       SELECT 
         id,
@@ -135,11 +195,58 @@ async function getIndiaAIData() {
       FROM "Startup"
       WHERE "isIndian" = true
         AND "deletedAt" IS NULL
+        AND "isApproved" = true
         AND "headquartersCity" IS NOT NULL
+        AND "headquartersCity" != ''
       ORDER BY "totalFundingInr" DESC
-      LIMIT 500
+      LIMIT 1000
     `,
   ]);
+
+  // Build computed stats from real data
+  const totalStartups = computedStartupCount[0]?.count || 0;
+  const monthlyStartups = thisMonthStartups[0]?.count || 0;
+  const totalFunding = Number(totalFundingResult[0]?.total || 0);
+  const monthlyFunding = Number(thisMonthFundingResult[0]?.total || 0);
+
+  // Format funding — amountInr is stored in PAISE (1 INR = 100 paise)
+  function formatFundingCr(amountPaise: number): string {
+    const inr = amountPaise / 100;
+    const crores = inr / 10000000;
+    if (crores >= 100000) {
+      return `₹${(crores / 100000).toFixed(1)}L Cr`;
+    }
+    if (crores >= 1000) {
+      return `₹${Math.round(crores).toLocaleString('en-IN')} Cr`;
+    }
+    if (crores >= 1) {
+      return `₹${Math.round(crores).toLocaleString('en-IN')} Cr`;
+    }
+    const lakhs = inr / 100000;
+    return `₹${Math.round(lakhs)}L`;
+  }
+
+  const stats = [
+    {
+      id: 'computed-startups',
+      metricKey: 'total_startups',
+      metricLabel: 'Active AI Startups',
+      metricValue: `${totalStartups.toLocaleString('en-IN')}+`,
+      metricChange: monthlyStartups > 0 ? `+${monthlyStartups} this month` : 'Updated live',
+      metricIcon: 'rocket',
+      displayOrder: 1,
+    },
+    {
+      id: 'computed-funding',
+      metricKey: 'total_funding',
+      metricLabel: 'Total Funding Tracked',
+      metricValue: `${formatFundingCr(totalFunding)}+`,
+      metricChange: monthlyFunding > 0 ? `+${formatFundingCr(monthlyFunding)} this month` : 'Updated live',
+      metricIcon: 'currency',
+      displayOrder: 2,
+    },
+    ...(manualStats as any[]),
+  ];
 
   // Add sector mapping (you can enhance this based on your data)
   const startupsWithSectors = allStartups.map((s: any) => ({
@@ -173,6 +280,10 @@ const iconMap: Record<string, any> = {
 export default async function IndiaAIPage() {
   const { stats, cities, mission, researchHubs, recentFunding, allStartups } = await getIndiaAIData();
 
+  // Extract computed startup count for dynamic subtitle
+  const startupStat = stats.find((s: any) => s.metricKey === 'total_startups');
+  const startupCount = startupStat?.metricValue || '3,000+';
+
   // Calculate mission totals
   const totalBudget = mission.reduce((sum, item) => sum + Number(item.budgetAllocated), 0);
   const totalDisbursed = mission.reduce((sum, item) => sum + Number(item.budgetDisbursed), 0);
@@ -196,7 +307,7 @@ export default async function IndiaAIPage() {
     '@context': 'https://schema.org',
     '@type': 'Dataset',
     name: 'India AI Startups Database 2026',
-    description: 'Comprehensive database of 3,247+ AI startups in India with funding data, city-wise distribution, and ecosystem insights',
+    description: `Comprehensive database of ${startupCount} AI startups in India with funding data, city-wise distribution, and ecosystem insights`,
     url: 'https://aistartupimpact.com/india-ai',
     keywords: 'India AI startups, AI funding India, Indian AI companies, AI ecosystem',
     creator: {
@@ -234,7 +345,7 @@ export default async function IndiaAIPage() {
             India&apos;s AI Revolution — Live
           </h1>
           <p className="text-gray-600 dark:text-gray-300 font-jakarta text-[11px] sm:text-xs lg:text-sm mt-2 sm:mt-3 max-w-2xl mx-auto px-4 leading-relaxed">
-            Real-time intelligence on <strong>3,247+ AI startups</strong>, funding, policy, and talent shaping India&apos;s AI future
+            Real-time intelligence on <strong>{startupCount} AI startups</strong>, funding, policy, and talent shaping India&apos;s AI future
           </p>
 
           {/* Live Stats Counters */}

@@ -31,6 +31,7 @@ export default function NewCityPage() {
       ?.map(a => a.trim())
       ?.filter(Boolean) || [];
 
+    // Create in IndiaAICity table (for dropdown display)
     await prisma.indiaAICity.create({
       data: {
         cityName,
@@ -39,6 +40,7 @@ export default function NewCityPage() {
         latitude,
         longitude,
         isActive,
+        source: 'standard',
         aliases,
         // Default other fields to safe empty values
         totalStartups: 0,
@@ -51,6 +53,35 @@ export default function NewCityPage() {
         displayOrder: 99,
       },
     });
+
+    // Also sync to City table (for cityId resolution in startups)
+    if (isActive) {
+      const existingCity = await prisma.$queryRaw<any[]>`
+        SELECT id FROM "City"
+        WHERE LOWER(name) = LOWER(${cityName})
+          OR slug = ${slug}
+        LIMIT 1
+      `;
+
+      if (existingCity.length === 0) {
+        await prisma.$executeRaw`
+          INSERT INTO "City" (id, slug, name, state, country, latitude, longitude, aliases, "createdAt", "updatedAt")
+          VALUES (
+            gen_random_uuid(),
+            ${slug},
+            ${cityName},
+            ${state},
+            'India',
+            ${latitude},
+            ${longitude},
+            ${aliases},
+            NOW(),
+            NOW()
+          )
+          ON CONFLICT (slug) DO NOTHING
+        `;
+      }
+    }
 
     redirect('/cities');
   }

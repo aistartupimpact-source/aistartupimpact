@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic';
 async function getCities() {
   return await prisma.indiaAICity.findMany({
     orderBy: [
+      { source: 'asc' },
       { displayOrder: 'asc' },
       { totalStartups: 'desc' }
     ]
@@ -40,6 +41,7 @@ export default async function CitiesPage() {
     isFeatured: city.isFeatured,
     displayOrder: city.displayOrder,
     isActive: city.isActive,
+    source: city.source || 'standard',
     aliases: city.aliases,
     createdAt: city.createdAt ? city.createdAt.toISOString() : null,
     updatedAt: city.updatedAt ? city.updatedAt.toISOString() : null,

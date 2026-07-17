@@ -50,7 +50,7 @@ export default function CityCombobox({
     async function fetchDbCities() {
       setLoading(true);
       try {
-        const res = await fetch('/api/india-ai/cities');
+        const res = await fetch(`/api/india-ai/cities?t=${Date.now()}`, { cache: 'no-store' });
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
           const normalized = json.data.map((item: any) => ({
@@ -246,6 +246,14 @@ export default function CityCombobox({
               onClick={() => {
                 onChange(inputValue);
                 setIsOpen(false);
+                // Submit custom city for admin review
+                if (inputValue.trim().length >= 2) {
+                  fetch('/api/cities/custom', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cityName: inputValue.trim() }),
+                  }).catch(() => {}); // Fire and forget
+                }
               }}
               className="relative cursor-pointer select-none py-2 px-4 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-xs italic"
             >

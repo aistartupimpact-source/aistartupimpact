@@ -40,99 +40,66 @@ interface RealIndiaMapProps {
   allStartups: Startup[];
 }
 
-// India GeoJSON URL (using detailed file with state boundaries)
 const INDIA_GEO_JSON = "/india-map.json";
+const INDIA_TOPO_OBJECT = "india-states-clean";
 
 const SECTORS = [
-  'All Sectors',
-  'SaaS',
-  'FinTech',
-  'HealthTech',
-  'EdTech',
-  'DevTools',
-  'B2B AI',
-  'Enterprise AI',
-  'Deep Tech',
-  'Robotics',
-  'GovTech',
-  'AgriTech',
+  'All Sectors', 'SaaS', 'FinTech', 'HealthTech', 'EdTech',
+  'DevTools', 'B2B AI', 'Enterprise AI', 'Deep Tech', 'Robotics', 'GovTech', 'AgriTech',
 ];
 
 const STAGES = [
-  'All Stages',
-  'Bootstrapped',
-  'Pre-seed',
-  'Seed',
-  'Pre-Series A',
-  'Series A',
-  'Series B',
-  'Series C',
-  'Growth',
+  'All Stages', 'Bootstrapped', 'Pre-seed', 'Seed',
+  'Pre-Series A', 'Series A', 'Series B', 'Series C', 'Growth',
 ];
 
-const YEARS = [
-  'All Years',
-  '2024-2026',
-  '2021-2023',
-  '2018-2020',
-  'Before 2018',
-];
+const YEARS = ['All Years', '2024-2026', '2021-2023', '2018-2020', 'Before 2018'];
 
 function formatCurrency(paise: string): string {
   const amount = Number(paise);
   const crores = amount / 10000000000;
   if (crores >= 1) return `₹${crores.toFixed(0)}Cr`;
   const lakhs = amount / 1000000000;
-  return `₹${lakhs.toFixed(1)}L`;
+  if (lakhs >= 1) return `₹${lakhs.toFixed(1)}L`;
+  return '—';
 }
 
 function matchesCity(startupCity: string | null | undefined, city: { cityName: string; aliases?: string[] }) {
   if (!startupCity) return false;
-  
   const stdStartup = standardizeCityName(startupCity).toLowerCase();
   const stdCity = standardizeCityName(city.cityName).toLowerCase();
-  
-  // 1. Direct standardized match
   if (stdStartup === stdCity) return true;
-  
-  // 2. Casing insensitive exact match of raw name
   const rawStartup = startupCity.trim().toLowerCase();
   const rawCity = city.cityName.trim().toLowerCase();
   if (rawStartup === rawCity) return true;
-  
-  // 3. Match against aliases
   if (city.aliases && Array.isArray(city.aliases)) {
-    if (city.aliases.some(alias => alias.trim().toLowerCase() === rawStartup)) {
-      return true;
-    }
-    if (city.aliases.some(alias => standardizeCityName(alias).toLowerCase() === stdStartup)) {
-      return true;
-    }
+    if (city.aliases.some(alias => alias.trim().toLowerCase() === rawStartup)) return true;
+    if (city.aliases.some(alias => standardizeCityName(alias).toLowerCase() === stdStartup)) return true;
   }
-  
   return false;
 }
 
+// Normalize state names for matching between TopoJSON (UPPERCASE) and city data (Title Case)
+function normalizeStateName(name: string): string {
+  return name.trim().toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/\s+/g, ' ');
+}
+
 export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps) {
-  console.log('RealIndiaMap rendering with:', { 
-    citiesCount: cities?.length, 
-    startupsCount: allStartups?.length 
-  });
-  
+  const [selectedState, setSelectedState] = useState<string | null>(null);
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [hoveredCity, setHoveredCity] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [position, setPosition] = useState({ coordinates: [78.9629, 20.5937], zoom: 1 });
-  
+
   // Filters
   const [sectorFilter, setSectorFilter] = useState('All Sectors');
   const [stageFilter, setStageFilter] = useState('All Stages');
   const [yearFilter, setYearFilter] = useState('All Years');
 
   const activeFiltersCount = useMemo(() => {
-    return [sectorFilter, stageFilter, yearFilter].filter(
-      (f) => !f.startsWith('All')
-    ).length;
+    return [sectorFilter, stageFilter, yearFilter].filter(f => !f.startsWith('All')).length;
   }, [sectorFilter, stageFilter, yearFilter]);
 
   // Filter startups
@@ -151,52 +118,83 @@ export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps)
     });
   }, [allStartups, sectorFilter, stageFilter, yearFilter]);
 
-  // Calculate filtered city stats
+  // Cities with filtered counts
   const filteredCities = useMemo(() => {
     return cities.map((city) => {
-      const cityStartups = filteredStartups.filter(
-        (s) => matchesCity(s.headquartersCity, city)
-      );
-      return {
-        ...city,
-        filteredCount: cityStartups.length,
-      };
+      const cityStartups = filteredStartups.filter(s => matchesCity(s.headquartersCity, city));
+      return { ...city, filteredCount: cityStartups.length };
     });
   }, [cities, filteredStartups]);
 
   // Get max startup count for marker sizing
   const maxStartups = useMemo(() => {
-    const counts = filteredCities.map((c) => 
-      activeFiltersCount > 0 ? c.filteredCount : c.totalStartups
-    );
+    const counts = filteredCities.map(c => activeFiltersCount > 0 ? c.filteredCount : c.totalStartups);
     return Math.max(...counts, 1);
   }, [filteredCities, activeFiltersCount]);
 
-  // Calculate marker size using sqrt scaling (mathematically accurate for area-based bubbles)
   const getMarkerSize = (count: number) => {
-    const minSize = 4;
-    const maxSize = 16;
-    // Use sqrt for area-based scaling - makes smaller cities more visible and proportionally accurate
+    const minSize = 3;
+    const maxSize = 12;
     const normalized = Math.sqrt(count / maxStartups);
-    const size = minSize + (normalized * (maxSize - minSize));
-    return size;
+    return minSize + (normalized * (maxSize - minSize));
   };
 
-  // Get ALL matching startups for selected city
-  const allSelectedCityStartups = useMemo(() => {
+  // Get cities in selected state
+  const stateCities = useMemo(() => {
+    if (!selectedState) return [];
+    return filteredCities.filter(c => 
+      normalizeStateName(c.state) === normalizeStateName(selectedState)
+    );
+  }, [selectedState, filteredCities]);
+
+  // Get startups for selected state
+  const stateStartups = useMemo(() => {
+    if (!selectedState) return [];
+    return filteredStartups.filter(s => {
+      const city = cities.find(c => matchesCity(s.headquartersCity, c));
+      return city && normalizeStateName(city.state) === normalizeStateName(selectedState);
+    });
+  }, [selectedState, filteredStartups, cities]);
+
+  // Get startups for selected city
+  const cityStartups = useMemo(() => {
     if (!selectedCity) return [];
-    return filteredStartups.filter((s) => matchesCity(s.headquartersCity, selectedCity));
+    return filteredStartups.filter(s => matchesCity(s.headquartersCity, selectedCity));
   }, [selectedCity, filteredStartups]);
 
-  // Sliced for displaying list
-  const displayedCityStartups = useMemo(() => {
-    return allSelectedCityStartups.slice(0, 10);
-  }, [allSelectedCityStartups]);
+  // What to show in sidebar
+  const sidebarStartups = selectedCity ? cityStartups : stateStartups;
+  const sidebarTitle = selectedCity ? selectedCity.cityName : selectedState;
+  const sidebarSubtitle = selectedCity ? selectedCity.state : null;
 
-  function handleMoveEnd(position: any) {
-    setPosition(position);
+  // States that have startups (for highlighting)
+  const statesWithStartups = useMemo(() => {
+    const stateSet = new Set<string>();
+    cities.forEach(c => {
+      if (c.state) stateSet.add(normalizeStateName(c.state));
+    });
+    return stateSet;
+  }, [cities]);
+
+  function handleStateClick(stateName: string) {
+    const normalized = normalizeStateName(stateName);
+    if (selectedState && normalizeStateName(selectedState) === normalized) {
+      setSelectedState(null);
+      setSelectedCity(null);
+    } else {
+      setSelectedState(stateName);
+      setSelectedCity(null);
+    }
   }
 
+  function handleCityClick(city: City) {
+    setSelectedCity(city);
+    setSelectedState(city.state);
+  }
+
+  function handleMoveEnd(pos: any) {
+    setPosition(pos);
+  }
 
   return (
     <div className="relative">
@@ -213,25 +211,17 @@ export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps)
           <Filter className="w-4 h-4" />
           Filters
           {activeFiltersCount > 0 && (
-            <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs">
-              {activeFiltersCount}
-            </span>
+            <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs">{activeFiltersCount}</span>
           )}
         </button>
-
         {activeFiltersCount > 0 && (
           <button
-            onClick={() => {
-              setSectorFilter('All Sectors');
-              setStageFilter('All Stages');
-              setYearFilter('All Years');
-            }}
+            onClick={() => { setSectorFilter('All Sectors'); setStageFilter('All Stages'); setYearFilter('All Years'); }}
             className="text-sm text-gray-600 dark:text-gray-400 hover:text-brand transition-colors"
           >
             Clear all filters
           </button>
         )}
-
         <div className="ml-auto text-sm text-gray-600 dark:text-gray-400">
           Showing <span className="font-bold text-brand">{filteredStartups.length}</span> startups
         </div>
@@ -239,373 +229,306 @@ export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps)
 
       {/* Filter Dropdowns */}
       {showFilters && (
-        <div className="mb-6 card p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+        <div className="mb-6 card p-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
-              <Tag className="w-4 h-4" />
-              Industry Sector
+              <Tag className="w-4 h-4" /> Sector
             </label>
-            <select
-              value={sectorFilter}
-              onChange={(e) => setSectorFilter(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand"
-            >
-              {SECTORS.map((sector) => (
-                <option key={sector} value={sector}>
-                  {sector}
-                </option>
-              ))}
+            <select value={sectorFilter} onChange={(e) => setSectorFilter(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand">
+              {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
-              <DollarSign className="w-4 h-4" />
-              Funding Stage
+              <DollarSign className="w-4 h-4" /> Stage
             </label>
-            <select
-              value={stageFilter}
-              onChange={(e) => setStageFilter(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand"
-            >
-              {STAGES.map((stage) => (
-                <option key={stage} value={stage}>
-                  {stage}
-                </option>
-              ))}
+            <select value={stageFilter} onChange={(e) => setStageFilter(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand">
+              {STAGES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              Founded Year
+              <Calendar className="w-4 h-4" /> Year
             </label>
-            <select
-              value={yearFilter}
-              onChange={(e) => setYearFilter(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand"
-            >
-              {YEARS.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
+            <select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand">
+              {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           </div>
         </div>
       )}
 
-      {/* Map Container */}
+      {/* Map + Sidebar */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Map */}
         <div className="lg:col-span-2">
-          <div className="card p-4 bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 dark:from-gray-950 dark:via-blue-950 dark:to-indigo-950 overflow-hidden relative shadow-2xl border border-blue-900/30">
-            {/* Decorative glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-t from-blue-500/10 to-transparent pointer-events-none"></div>
-            
-            {/* Square container for map */}
+          <div className="card p-4 bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 overflow-hidden relative shadow-2xl border border-blue-900/30">
+            <div className="absolute inset-0 bg-gradient-to-t from-blue-500/10 to-transparent pointer-events-none" />
             <div className="w-full aspect-square max-h-[600px] flex items-center justify-center">
-            <ComposableMap
-              projection="geoMercator"
-              projectionConfig={{
-                scale: 1050,
-                center: [82.8, 22.5],
-              }}
-              width={800}
-              height={800}
-              className="w-full h-auto"
-            >
-              <ZoomableGroup
-                zoom={position.zoom}
-                center={position.coordinates as [number, number]}
-                onMoveEnd={handleMoveEnd}
-                minZoom={0.8}
-                maxZoom={8}
+              <ComposableMap
+                projection="geoMercator"
+                projectionConfig={{ scale: 1050, center: [82.8, 22.5] }}
+                width={800}
+                height={800}
+                className="w-full h-auto"
               >
-                <Geographies geography={INDIA_GEO_JSON}>
-                  {({ geographies }) =>
-                    geographies.map((geo, i) => (
-                      <Geography
-                        key={geo.rsmKey || `geo-${i}`}
-                        geography={geo}
-                        fill="rgba(30, 58, 138, 0.85)"
-                        stroke="rgba(59, 130, 246, 0.6)"
-                        strokeWidth={1.5}
-                        style={{
-                          default: {
-                            fill: "rgba(30, 58, 138, 0.85)",
-                            stroke: "rgba(59, 130, 246, 0.6)",
-                            strokeWidth: 1.5,
-                            outline: "none",
-                          },
-                          hover: {
-                            fill: "rgba(37, 99, 235, 0.95)",
-                            stroke: "rgba(96, 165, 250, 0.8)",
-                            strokeWidth: 2,
-                            outline: "none",
-                            cursor: "pointer",
-                          },
-                          pressed: {
-                            fill: "rgba(29, 78, 216, 1)",
-                            stroke: "rgba(147, 197, 253, 1)",
-                            strokeWidth: 2.5,
-                            outline: "none",
-                          },
-                        }}
-                        className="transition-all duration-200"
-                      />
-                    ))
-                  }
-                </Geographies>
+                <ZoomableGroup
+                  zoom={position.zoom}
+                  center={position.coordinates as [number, number]}
+                  onMoveEnd={handleMoveEnd}
+                  minZoom={0.8}
+                  maxZoom={8}
+                >
+                  <Geographies geography={INDIA_GEO_JSON}>
+                    {({ geographies }) =>
+                      geographies.map((geo, i) => {
+                        const stateName = geo.properties?.STNAME || geo.properties?.NAME_1 || '';
+                        const isStateSelected = selectedState && normalizeStateName(stateName) === normalizeStateName(selectedState);
+                        const hasStartups = statesWithStartups.has(normalizeStateName(stateName));
 
-                {/* City Markers */}
-                {filteredCities.map((city) => {
-                  const displayCount = activeFiltersCount > 0 ? city.filteredCount : city.totalStartups;
-                  const markerSize = getMarkerSize(displayCount);
-                  const isSelected = selectedCity?.id === city.id;
-                  const isHovered = hoveredCity === city.id;
-
-                  return (
-                    <Marker
-                      key={city.id}
-                      coordinates={[city.longitude, city.latitude]}
-                      onMouseEnter={() => setHoveredCity(city.id)}
-                      onMouseLeave={() => setHoveredCity(null)}
-                      onClick={() => setSelectedCity(city)}
-                    >
-                      <g style={{ cursor: 'pointer' }}>
-                      {/* Outer glow for selected/hovered */}
-                      {(isSelected || isHovered) && (
-                        <>
-                          <circle
-                            r={markerSize + 12}
-                            fill="rgba(59, 130, 246, 0.2)"
-                            className="animate-ping"
+                        return (
+                          <Geography
+                            key={geo.rsmKey || `geo-${i}`}
+                            geography={geo}
+                            onClick={() => handleStateClick(stateName)}
+                            style={{
+                              default: {
+                                fill: isStateSelected
+                                  ? "rgba(59, 130, 246, 0.9)"
+                                  : hasStartups
+                                  ? "rgba(30, 58, 138, 0.85)"
+                                  : "rgba(20, 40, 100, 0.6)",
+                                stroke: isStateSelected
+                                  ? "rgba(147, 197, 253, 1)"
+                                  : "rgba(59, 130, 246, 0.5)",
+                                strokeWidth: isStateSelected ? 2.5 : 1,
+                                outline: "none",
+                                cursor: "pointer",
+                              },
+                              hover: {
+                                fill: isStateSelected
+                                  ? "rgba(96, 165, 250, 0.95)"
+                                  : "rgba(37, 99, 235, 0.9)",
+                                stroke: "rgba(147, 197, 253, 0.9)",
+                                strokeWidth: 2,
+                                outline: "none",
+                                cursor: "pointer",
+                              },
+                              pressed: {
+                                fill: "rgba(59, 130, 246, 1)",
+                                stroke: "rgba(191, 219, 254, 1)",
+                                strokeWidth: 2.5,
+                                outline: "none",
+                              },
+                            }}
                           />
+                        );
+                      })
+                    }
+                  </Geographies>
+
+                  {/* City Dots — minimal, only labels on hover/select */}
+                  {filteredCities.map((city) => {
+                    const count = activeFiltersCount > 0 ? city.filteredCount : city.totalStartups;
+                    if (count === 0) return null;
+                    const markerSize = getMarkerSize(count);
+                    const isSelected = selectedCity?.id === city.id;
+                    const isHovered = hoveredCity === city.id;
+                    const isInSelectedState = selectedState && normalizeStateName(city.state) === normalizeStateName(selectedState);
+
+                    return (
+                      <Marker
+                        key={city.id}
+                        coordinates={[city.longitude, city.latitude]}
+                        onMouseEnter={() => setHoveredCity(city.id)}
+                        onMouseLeave={() => setHoveredCity(null)}
+                        onClick={() => handleCityClick(city)}
+                      >
+                        <g style={{ cursor: 'pointer' }}>
+                          {/* Pulse ring for selected */}
+                          {isSelected && (
+                            <circle r={markerSize + 10} fill="rgba(59, 130, 246, 0.15)" className="animate-ping" />
+                          )}
+
+                          {/* Dot */}
                           <circle
-                            r={markerSize + 8}
-                            fill="rgba(96, 165, 250, 0.3)"
+                            r={isSelected ? markerSize + 2 : isHovered ? markerSize + 1 : markerSize}
+                            fill={isSelected ? '#60a5fa' : isHovered ? '#93c5fd' : isInSelectedState ? '#60a5fa' : '#3b82f6'}
+                            stroke="white"
+                            strokeWidth={isSelected || isHovered ? 2.5 : 1.5}
+                            style={{
+                              filter: isSelected || isHovered
+                                ? 'drop-shadow(0 4px 8px rgba(59, 130, 246, 0.7))'
+                                : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4))',
+                              transition: 'all 0.2s ease',
+                            }}
                           />
-                        </>
-                      )}
 
-                      {/* City Dot with gradient effect */}
-                      <circle
-                        r={markerSize + 2}
-                        fill="rgba(0, 0, 0, 0.3)"
-                        transform="translate(1, 1)"
-                      />
-                      <circle
-                        r={markerSize}
-                        fill={isSelected ? '#60a5fa' : isHovered ? '#93c5fd' : '#3b82f6'}
-                        stroke="white"
-                        strokeWidth={isSelected || isHovered ? 3 : 2.5}
-                        className="transition-all duration-200"
-                        style={{
-                          filter: isSelected || isHovered 
-                            ? 'drop-shadow(0 6px 12px rgba(59, 130, 246, 0.8))' 
-                            : 'drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5))',
-                        }}
-                      />
-
-                      {/* Inner highlight */}
-                      <circle
-                        r={markerSize * 0.4}
-                        fill="rgba(255, 255, 255, 0.4)"
-                        transform={`translate(-${markerSize * 0.2}, -${markerSize * 0.2})`}
-                      />
-
-                      {/* City Label with better visibility */}
-                      <text
-                        textAnchor="middle"
-                        y={markerSize + 18}
-                        className="text-xs font-bold fill-white pointer-events-none"
-                        style={{ 
-                          fontSize: isSelected || isHovered ? '13px' : '12px',
-                          textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5)',
-                        }}
-                      >
-                        {city.cityName}
-                      </text>
-
-                      {/* Startup Count with background */}
-                      <text
-                        textAnchor="middle"
-                        y={markerSize + 33}
-                        className="text-xs fill-cyan-300 pointer-events-none font-extrabold"
-                        style={{ 
-                          fontSize: isSelected || isHovered ? '12px' : '11px',
-                          textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5)',
-                          letterSpacing: '0.5px'
-                        }}
-                      >
-                        {displayCount} startups
-                      </text>
-                      </g>
-                    </Marker>
-                  );
-                })}
-              </ZoomableGroup>
-            </ComposableMap>
+                          {/* Label — always visible */}
+                          <text
+                            textAnchor="middle"
+                            y={markerSize + 14}
+                            style={{
+                              fontSize: isSelected || isHovered ? '11px' : '10px',
+                              fontWeight: 600,
+                              fill: 'white',
+                              textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.5)',
+                              pointerEvents: 'none',
+                            }}
+                          >
+                            {city.cityName}
+                          </text>
+                          <text
+                            textAnchor="middle"
+                            y={markerSize + 26}
+                            style={{
+                              fontSize: '9px',
+                              fontWeight: 700,
+                              fill: '#67e8f9',
+                              textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                              pointerEvents: 'none',
+                            }}
+                          >
+                            {count} startup{count > 1 ? 's' : ''}
+                          </text>
+                        </g>
+                      </Marker>
+                    );
+                  })}
+                </ZoomableGroup>
+              </ComposableMap>
             </div>
 
-            {/* Map Controls Info */}
+            {/* Legend */}
             <div className="mt-3 flex items-center justify-between text-xs text-gray-400">
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-blue-600" />
-                  <span>Selected</span>
+                  <div className="w-3 h-3 rounded-full bg-blue-400 border-2 border-white" />
+                  <span>City with startups</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  <span>Small Hub</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full bg-blue-500" />
-                  <span>Major Hub</span>
+                  <div className="w-4 h-3 rounded bg-blue-600 border border-blue-300" />
+                  <span>Selected state</span>
                 </div>
               </div>
-              <span className="text-gray-500 flex items-center gap-2 text-sm">
-                <Info className="w-4 h-4" />
-                Scroll to zoom • Drag to pan
+              <span className="text-gray-500 flex items-center gap-2 text-[11px]">
+                <Info className="w-3.5 h-3.5" />
+                Click state or city dot
               </span>
             </div>
           </div>
         </div>
 
-        {/* Sidebar - Same as before */}
+        {/* Sidebar */}
         <div className="lg:col-span-1">
-          {selectedCity ? (
-            <div className="card p-6 sticky top-6 animate-in fade-in slide-in-from-right duration-300">
+          {(selectedState || selectedCity) ? (
+            <div className="card p-6 sticky top-6">
               <button
-                onClick={() => setSelectedCity(null)}
+                onClick={() => { setSelectedState(null); setSelectedCity(null); }}
                 className="absolute top-4 right-4 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-2">
+              {/* Header */}
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-1">
                   <MapPin className="w-5 h-5 text-brand" />
                   <h3 className="font-sora font-bold text-xl text-navy dark:text-white">
-                    {selectedCity.cityName}
+                    {sidebarTitle}
                   </h3>
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{selectedCity.state}</p>
+                {sidebarSubtitle && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{sidebarSubtitle}</p>
+                )}
+                <p className="text-xs text-gray-400 mt-1">
+                  {sidebarStartups.length} startup{sidebarStartups.length !== 1 ? 's' : ''}
+                  {selectedState && !selectedCity && stateCities.length > 0 && (
+                    <> across {stateCities.length} cit{stateCities.length > 1 ? 'ies' : 'y'}</>
+                  )}
+                </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
-                  <div className="text-2xl font-bold text-brand mb-1">
-                    {activeFiltersCount > 0 ? allSelectedCityStartups.length : selectedCity.totalStartups}
-                  </div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400">Startups</div>
-                </div>
-                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-1">
-                    {formatCurrency(selectedCity.totalFunding)}
-                  </div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400">Funding</div>
-                </div>
-              </div>
-
-              {selectedCity.topSectors && selectedCity.topSectors.length > 0 && (
-                <div className="mb-6">
-                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Top Sectors
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedCity.topSectors.slice(0, 4).map((sector, idx) => (
-                      <span
-                        key={idx}
-                        className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs font-medium"
-                      >
-                        {sector}
-                      </span>
-                    ))}
-                  </div>
+              {/* City pills (when state selected) */}
+              {selectedState && !selectedCity && stateCities.length > 1 && (
+                <div className="mb-4 flex flex-wrap gap-1.5">
+                  {stateCities.map(c => (
+                    <button
+                      key={c.id}
+                      onClick={() => setSelectedCity(c)}
+                      className="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800/40 transition-colors"
+                    >
+                      {c.cityName} ({activeFiltersCount > 0 ? c.filteredCount : c.totalStartups})
+                    </button>
+                  ))}
                 </div>
               )}
 
-              <div>
-                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                  Top Startups
-                </h4>
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {allSelectedCityStartups.length === 0 ? (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                      No startups match the current filters
-                    </p>
-                  ) : (
-                    displayedCityStartups.map((startup) => (
-
-                      <a
-                        key={startup.id}
-                        href={`/startups/${startup.slug}`}
-                        className="block p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 rounded bg-white dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
-                            {startup.logoUrl ? (
-                              <Image
-                                src={startup.logoUrl}
-                                alt={startup.name}
-                                width={32}
-                                height={32}
-                                className="object-contain"
-                              />
-                            ) : (
-                              <Building2 className="w-5 h-5 text-gray-400" />
+              {/* Startups list */}
+              <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                {sidebarStartups.length === 0 ? (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
+                    No startups in this {selectedCity ? 'city' : 'state'} match current filters
+                  </p>
+                ) : (
+                  sidebarStartups.slice(0, 15).map((startup) => (
+                    <a
+                      key={startup.id}
+                      href={`/startups/${startup.slug}`}
+                      className="block p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded bg-white dark:bg-gray-700 flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-gray-600">
+                          {startup.logoUrl ? (
+                            <Image src={startup.logoUrl} alt={startup.name} width={28} height={28} className="object-contain" />
+                          ) : (
+                            <Building2 className="w-4 h-4 text-gray-400" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h5 className="font-semibold text-sm text-navy dark:text-white line-clamp-1">
+                            {startup.name}
+                          </h5>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 mt-0.5">
+                            {startup.tagline}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 rounded font-medium">
+                              {startup.stage.replace(/_/g, ' ')}
+                            </span>
+                            <span className="text-[10px] text-gray-400">{startup.headquartersCity}</span>
+                            {Number(startup.totalFundingInr) > 0 && (
+                              <span className="text-[10px] font-semibold text-green-600 dark:text-green-400">
+                                {formatCurrency(startup.totalFundingInr)}
+                              </span>
                             )}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <h5 className="font-semibold text-sm text-navy dark:text-white line-clamp-1">
-                              {startup.name}
-                            </h5>
-                            <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-1">
-                              {startup.tagline}
-                            </p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
-                                {startup.stage}
-                              </span>
-                              {Number(startup.totalFundingInr) > 0 && (
-                                <span className="text-xs font-semibold text-green-600 dark:text-green-400">
-                                  {formatCurrency(startup.totalFundingInr)}
-                                </span>
-                              )}
-                            </div>
-                          </div>
                         </div>
-                      </a>
-                    ))
-                  )}
-                </div>
+                      </div>
+                    </a>
+                  ))
+                )}
+                {sidebarStartups.length > 15 && (
+                  <p className="text-xs text-center text-gray-400 pt-2">
+                    +{sidebarStartups.length - 15} more startups
+                  </p>
+                )}
               </div>
-
-              <a
-                href={`/india-ai/cities/${selectedCity.slug}`}
-                className="block mt-4 text-center text-sm text-brand font-semibold hover:underline flex items-center justify-center gap-2"
-              >
-                View Full Ecosystem
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </a>
             </div>
           ) : (
-            <div className="card p-12 text-center sticky top-6">
-              <MapPin className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <div className="card p-10 text-center sticky top-6">
+              <MapPin className="w-14 h-14 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
               <h3 className="font-sora font-bold text-lg text-gray-700 dark:text-gray-300 mb-2">
-                Select a City
+                Explore the Map
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Click on any city marker to explore its AI startup ecosystem
+              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                Click on a <strong>state</strong> to see all its startups, or click a <strong>city dot</strong> for city-level view
               </p>
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-4 flex items-center justify-center gap-2">
                 <Info className="w-4 h-4" />
-                Scroll to zoom • Drag to pan the map
+                Scroll to zoom • Drag to pan
               </p>
             </div>
           )}
