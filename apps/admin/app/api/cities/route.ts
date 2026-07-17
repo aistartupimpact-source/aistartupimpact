@@ -13,9 +13,29 @@ export async function GET() {
       ]
     });
 
+    // Serialize BigInt/Decimal fields to JSON-safe values
+    const serialized = cities.map(city => ({
+      id: city.id,
+      cityName: city.cityName,
+      slug: city.slug,
+      state: city.state,
+      latitude: city.latitude ? Number(city.latitude) : null,
+      longitude: city.longitude ? Number(city.longitude) : null,
+      totalStartups: city.totalStartups,
+      totalFunding: city.totalFunding ? Number(city.totalFunding) : 0,
+      aliases: city.aliases,
+      isActive: city.isActive,
+      source: city.source || 'standard',
+    }));
+
     return NextResponse.json({
       success: true,
-      data: cities,
+      data: serialized,
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Pragma': 'no-cache',
+      }
     });
   } catch (error) {
     console.error('Error fetching admin cities:', error);

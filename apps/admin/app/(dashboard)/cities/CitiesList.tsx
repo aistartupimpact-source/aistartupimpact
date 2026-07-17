@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Search, MapPin, X } from 'lucide-react';
+import { Search, MapPin, X, CheckCircle } from 'lucide-react';
 import { CITY_DATABASE } from '@aistartupimpact/utils/src/cities';
 import { DeleteButton } from '../india-ai/components/DeleteButton';
 
@@ -12,16 +12,36 @@ interface CitiesListProps {
 
 export default function CitiesList({ initialCities }: CitiesListProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [cities, setCities] = useState(initialCities);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+
+  async function approveCity(cityId: string) {
+    setApprovingId(cityId);
+    try {
+      const res = await fetch(`/api/cities/${cityId}/approve`, { method: 'POST' });
+      const json = await res.json();
+      if (json.success) {
+        setCities(prev => prev.map(c => 
+          c.id === cityId ? { ...c, source: 'standard', isActive: true } : c
+        ));
+      }
+    } catch (err) {
+      console.error('Failed to approve city:', err);
+    } finally {
+      setApprovingId(null);
+    }
+  }
 
   // 1. Filter cities based on search query
   const filteredCities = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
-    if (!query) return initialCities;
+    if (!query) return cities;
 
-    return initialCities.filter(city => {
+    return cities.filter(city => {
       const nameMatch = city.cityName.toLowerCase().includes(query);
       const stateMatch = city.state?.toLowerCase().includes(query) || false;
       const aliasMatch = city.aliases?.some((a: string) => a.toLowerCase().includes(query)) || false;
+      const sourceMatch = city.source?.toLowerCase().includes(query) || false;
       
       // Look up country from static list
       const staticEntry = CITY_DATABASE.find(
@@ -30,9 +50,9 @@ export default function CitiesList({ initialCities }: CitiesListProps) {
       const country = staticEntry?.country || 'India';
       const countryMatch = country.toLowerCase().includes(query);
 
-      return nameMatch || stateMatch || aliasMatch || countryMatch;
+      return nameMatch || stateMatch || aliasMatch || countryMatch || sourceMatch;
     });
-  }, [searchQuery, initialCities]);
+  }, [searchQuery, cities]);
 
   // 2. Group by country & sort alphabetically inside each country
   const groupedAndSorted = useMemo(() => {
@@ -156,20 +176,37 @@ export default function CitiesList({ initialCities }: CitiesListProps) {
 
                           <div>
                             <span className="text-xs text-gray-400 block font-semibold mb-0.5">Status:</span>
-                            <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                                city.isActive
-                                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                  : 'bg-gray-100 text-gray-850 dark:bg-gray-700 dark:text-gray-400'
-                              }`}
-                            >
-                              {city.isActive ? 'Active' : 'Inactive'}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                                  city.isActive
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                    : 'bg-gray-100 text-gray-850 dark:bg-gray-700 dark:text-gray-400'
+                                }`}
+                              >
+                                {city.isActive ? 'Active' : 'Inactive'}
+                              </span>
+                              {city.source === 'custom' && (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                                  Custom
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
 
                         {/* Actions */}
                         <div className="flex items-center gap-2 self-end sm:self-auto">
+                          {city.source === 'custom' && !city.isActive && (
+                            <button
+                              onClick={() => approveCity(city.id)}
+                              disabled={approvingId === city.id}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
+                            >
+                              <CheckCircle className="w-3.5 h-3.5" />
+                              {approvingId === city.id ? 'Approving...' : 'Approve'}
+                            </button>
+                          )}
                           <Link
                             href={`/cities/${city.id}/edit`}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-lg text-xs font-semibold text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"

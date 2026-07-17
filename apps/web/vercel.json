@@ -3,6 +3,10 @@
     {
       "path": "/api/admin/daily-digest",
       "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/india-ai/stats/refresh",
+      "schedule": "0 */6 * * *"
     }
   ]
 }

@@ -46,19 +46,11 @@ export default function CityCombobox({
   }, [value]);
 
   // Load custom/active database cities on mount
-  // Fetch from the web app's API endpoint /api/india-ai/cities
-  // Since Next.js dev serves web at :3000 and admin is on :3001, we should fetch from the relative URL if served under same hostname,
-  // but wait! Can we fetch from the database directly, or fetch from the NEXT_PUBLIC_API_URL or NEXT_PUBLIC_SITE_URL?
-  // Let's check what the API URL is: we saw NEXT_PUBLIC_SITE_URL="http://localhost:3000" in .env.
-  // Wait! In apps/admin, does it have its own DB connection? Yes! It can query database directly, but we can also just fetch from the public site URL or build a local API endpoint in the admin app too!
-  // Wait! Why not define a simple API route `/api/cities` in `apps/admin` to fetch cities directly from the database?
-  // Yes! If we create a simple GET handler in `apps/admin/app/api/cities/route.ts` that queries the `IndiaAICity` table, it will be 100% self-contained in the admin portal! It will require zero network hops to localhost:3000 and works completely offline/in dev.
-  // That's an extremely robust and clean design. Let's do that!
   useEffect(() => {
     async function fetchDbCities() {
       setLoading(true);
       try {
-        const res = await fetch('/api/cities');
+        const res = await fetch(`/api/cities?t=${Date.now()}`, { cache: 'no-store' });
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
           const normalized = json.data.map((item: any) => ({

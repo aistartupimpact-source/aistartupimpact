@@ -64,9 +64,46 @@ export default async function EditCityPage({ params }: EditCityPageProps) {
         latitude,
         longitude,
         isActive,
+        source: 'standard',
         aliases,
       },
     });
+
+    // Also sync to City table when active
+    if (isActive) {
+      const existingCity = await prisma.$queryRaw<any[]>`
+        SELECT id FROM "City"
+        WHERE LOWER(name) = LOWER(${cityName})
+          OR slug = ${slug}
+        LIMIT 1
+      `;
+
+      if (existingCity.length === 0) {
+        await prisma.$executeRaw`
+          INSERT INTO "City" (id, slug, name, state, country, latitude, longitude, aliases, "createdAt", "updatedAt")
+          VALUES (
+            gen_random_uuid(),
+            ${slug},
+            ${cityName},
+            ${state},
+            'India',
+            ${latitude},
+            ${longitude},
+            ${aliases},
+            NOW(),
+            NOW()
+          )
+          ON CONFLICT (slug) DO NOTHING
+        `;
+      } else {
+        // Update existing City table entry
+        await prisma.$executeRaw`
+          UPDATE "City"
+          SET name = ${cityName}, state = ${state}, aliases = ${aliases}, "updatedAt" = NOW()
+          WHERE LOWER(name) = LOWER(${cityName}) OR slug = ${slug}
+        `;
+      }
+    }
 
     redirect('/cities');
   }
