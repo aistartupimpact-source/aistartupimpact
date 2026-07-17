@@ -493,11 +493,11 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                 {startup.businessType}
               </span>
             )}
-            <span className="text-[10px] font-bold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2.5 py-1 rounded-full uppercase">
+            <span className="text-[10px] font-bold bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-2.5 py-1 rounded-full uppercase">
               {stageLabel(startup.stage)}
             </span>
             {startup.status && (
-              <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border ${
+              <span className={`flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border ${
                 startup.status === 'ACTIVE'
                   ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30'
                   : startup.status === 'PUBLIC'
@@ -506,6 +506,9 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                   ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-purple-100 dark:border-purple-900/30'
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
               }`}>
+                {startup.status === 'ACTIVE' && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                )}
                 {startup.status}
               </span>
             )}

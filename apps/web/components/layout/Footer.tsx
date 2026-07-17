@@ -104,7 +104,7 @@ export default function Footer() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const showNewsletter = pathname !== '/newsletter' && !pathname?.startsWith('/startups');
+  const showNewsletter = pathname !== '/newsletter' && !pathname?.startsWith('/startups') && pathname !== '/funding';
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
