@@ -1,0 +1,4 @@
+[defaults]
+# Update these after creating your Sentry project
+# org=your-sentry-org
+# project=aistartupimpact-admin

@@ -41,7 +41,9 @@
         "GOOGLE_REDIRECT_URI",
         "GOOGLE_REDIRECT_URI_USER",
         "IP_HASH_SALT",
-        "NODE_ENV"
+        "NODE_ENV",
+        "NEXT_PUBLIC_SENTRY_DSN",
+        "SENTRY_AUTH_TOKEN"
       ],
       "outputs": [
         ".next/**",

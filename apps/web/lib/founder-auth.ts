@@ -7,6 +7,10 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.FOUNDER_JWT_SECRET || 'founder-secret-change-in-production'
 );
 
+const USER_JWT_SECRET = new TextEncoder().encode(
+  process.env.USER_JWT_SECRET || 'user-secret-change-in-production'
+);
+
 export interface FounderSession {
   userId: string;
   email: string;
@@ -38,11 +42,38 @@ export async function verifyFounderToken(token: string): Promise<FounderSession 
 // Get current founder session
 export async function getFounderSession(): Promise<FounderSession | null> {
   const cookieStore = cookies();
+  
+  // 1. Try founder-token cookie (legacy)
   const token = cookieStore.get('founder-token')?.value;
+  if (token) {
+    const session = await verifyFounderToken(token);
+    if (session) return session;
+  }
   
-  if (!token) return null;
+  // 2. Fallback: user-token cookie → find FounderUser by email
+  const userToken = cookieStore.get('user-token')?.value;
+  if (userToken) {
+    try {
+      const { payload } = await jwtVerify(userToken, USER_JWT_SECRET);
+      const email = (payload as any).email;
+      if (email) {
+        const founder = await prisma.founderUser.findUnique({
+          where: { email: email.toLowerCase() },
+          select: { id: true, email: true, name: true, onboardingCompleted: true, status: true },
+        });
+        if (founder && founder.status !== 'SUSPENDED') {
+          return {
+            userId: founder.id,
+            email: founder.email,
+            name: founder.name,
+            onboardingCompleted: founder.onboardingCompleted,
+          };
+        }
+      }
+    } catch {}
+  }
   
-  return await verifyFounderToken(token);
+  return null;
 }
 
 // Set founder session cookie

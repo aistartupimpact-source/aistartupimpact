@@ -24,6 +24,7 @@ interface ToolSubmission {
   logoUrl?: string;
   screenshotUrls: string[];
   faqs?: Array<{ question: string; answer: string; order: number }>;
+  tagIds?: string[];
 }
 
 export async function submitToolAction(data: ToolSubmission) {
@@ -142,6 +143,24 @@ export async function submitToolAction(data: ToolSubmission) {
           VALUES (gen_random_uuid()::text, ${toolId}, ${faq.question}, ${faq.answer}, ${faq.order}, NOW(), NOW())
         `;
       }
+    }
+
+    // Create tag mappings if provided (max 30)
+    if (data.tagIds && data.tagIds.length > 0) {
+      const cappedTagIds = data.tagIds.slice(0, 30);
+      for (const tagId of cappedTagIds) {
+        await prisma.$queryRaw`
+          INSERT INTO "ToolSystemTagMapping" (id, "toolId", "tagId", "addedBy", "createdAt")
+          VALUES (gen_random_uuid(), ${toolId}, ${tagId}, 'founder', NOW())
+          ON CONFLICT ("toolId", "tagId") DO NOTHING
+        `;
+      }
+      // Increment tag counts
+      await prisma.$queryRaw`
+        UPDATE "ToolSystemTag"
+        SET "tagCount" = "tagCount" + 1, "updatedAt" = NOW()
+        WHERE id = ANY(${cappedTagIds}::text[])
+      `;
     }
 
     // TODO: Send notification to admin
@@ -280,6 +299,50 @@ export async function updateToolAction(id: string, data: ToolSubmission) {
       }
     }
 
+    // Update tags if provided
+    if (data.tagIds !== undefined) {
+      const cappedTagIds = data.tagIds.slice(0, 30);
+
+      // Get existing tag mappings
+      const existingMappings = await prisma.$queryRaw<any[]>`
+        SELECT "tagId" FROM "ToolSystemTagMapping" WHERE "toolId" = ${id}
+      `;
+      const existingIds = new Set(existingMappings.map((r: any) => r.tagId));
+      const newIds = new Set(cappedTagIds);
+
+      // Tags to remove
+      const toRemove = [...existingIds].filter(tid => !newIds.has(tid));
+      // Tags to add
+      const toAdd = cappedTagIds.filter(tid => !existingIds.has(tid));
+
+      if (toRemove.length > 0) {
+        await prisma.$queryRaw`
+          DELETE FROM "ToolSystemTagMapping"
+          WHERE "toolId" = ${id} AND "tagId" = ANY(${toRemove}::text[])
+        `;
+        await prisma.$queryRaw`
+          UPDATE "ToolSystemTag"
+          SET "tagCount" = GREATEST("tagCount" - 1, 0), "updatedAt" = NOW()
+          WHERE id = ANY(${toRemove}::text[])
+        `;
+      }
+
+      if (toAdd.length > 0) {
+        for (const tagId of toAdd) {
+          await prisma.$queryRaw`
+            INSERT INTO "ToolSystemTagMapping" (id, "toolId", "tagId", "addedBy", "createdAt")
+            VALUES (gen_random_uuid(), ${id}, ${tagId}, 'founder', NOW())
+            ON CONFLICT ("toolId", "tagId") DO NOTHING
+          `;
+        }
+        await prisma.$queryRaw`
+          UPDATE "ToolSystemTag"
+          SET "tagCount" = "tagCount" + 1, "updatedAt" = NOW()
+          WHERE id = ANY(${toAdd}::text[])
+        `;
+      }
+    }
+
     // TODO: Send notification to admin if status changed to PENDING
     // TODO: Send confirmation email to founder
 
@@ -294,5 +357,61 @@ export async function updateToolAction(id: string, data: ToolSubmission) {
       success: false,
       error: error.message || 'Failed to update tool',
     };
+  }
+}
+
+// ─── Tag System Actions (Founder) ───────────────────────────────────────────
+
+export async function getTagGroupsForFounderAction() {
+  try {
+    const groups = await prisma.$queryRaw<any[]>`
+      SELECT id, name, slug, icon, description, "sortOrder", "displayMode", "maxVisibleDefault", "isAdminOnly", "isActive"
+      FROM "ToolTagGroup"
+      WHERE "isActive" = true AND "isAdminOnly" = false
+      ORDER BY "sortOrder" ASC
+    `;
+
+    const tags = await prisma.$queryRaw<any[]>`
+      SELECT id, name, slug, emoji, "groupId", "sortOrder", "isActive", "tagCount"
+      FROM "ToolSystemTag"
+      WHERE "isActive" = true
+      ORDER BY "sortOrder" ASC, name ASC
+    `;
+
+    // Group tags by groupId
+    const tagsByGroup: Record<string, any[]> = {};
+    for (const tag of tags) {
+      const gid = tag.groupId;
+      if (!tagsByGroup[gid]) tagsByGroup[gid] = [];
+      tagsByGroup[gid].push(tag);
+    }
+
+    return groups.map((g: any) => ({
+      ...g,
+      tags: tagsByGroup[g.id] || [],
+    }));
+  } catch (error) {
+    console.error('getTagGroupsForFounderAction error:', error);
+    return [];
+  }
+}
+
+export async function getToolTagIdsAction(toolId: string) {
+  try {
+    const session = await requireFounderAuth();
+
+    // Verify ownership
+    const tools = await prisma.$queryRaw<any[]>`
+      SELECT id FROM "AiTool" WHERE id = ${toolId} AND "ownerId" = ${session.userId} LIMIT 1
+    `;
+    if (tools.length === 0) return [];
+
+    const mappings = await prisma.$queryRaw<any[]>`
+      SELECT "tagId" FROM "ToolSystemTagMapping" WHERE "toolId" = ${toolId}
+    `;
+    return mappings.map((m: any) => m.tagId);
+  } catch (error) {
+    console.error('getToolTagIdsAction error:', error);
+    return [];
   }
 }

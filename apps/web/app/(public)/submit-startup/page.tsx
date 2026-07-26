@@ -1,14 +1,20 @@
 import { redirect } from 'next/navigation';
 import { getFounderSession } from '@/lib/founder-auth';
+import { getUnifiedSession } from '@/lib/unified-auth';
 
 export default async function SubmitStartupPage() {
+  // Try unified session first
+  const unifiedSession = await getUnifiedSession();
+  if (unifiedSession?.founderId) {
+    redirect('/founder/startups/new');
+  }
+
+  // Fallback: legacy founder session
   const session = await getFounderSession();
-  
-  // If user is authenticated, redirect to startup submission form
   if (session) {
     redirect('/founder/startups/new');
   }
   
-  // If not authenticated, redirect to signup with returnTo parameter
+  // Not authenticated — redirect to signup with returnTo parameter
   redirect('/auth/signup?returnTo=/founder/startups/new');
 }

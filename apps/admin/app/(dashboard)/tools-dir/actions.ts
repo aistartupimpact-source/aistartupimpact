@@ -2,6 +2,7 @@
 
 import { neon } from '@neondatabase/serverless';
 import { revalidatePath } from 'next/cache';
+import { logAuditEvent, canDelete } from '@/lib/audit-log';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -150,10 +151,49 @@ export async function rejectToolAction(id: string, reason?: string) {
 
 export async function getCategoriesAction() {
   try {
-    const cats = await sql`SELECT id, name, slug FROM "ToolCategory" ORDER BY name ASC`;
+    const cats = await sql`
+      SELECT c.id, c.name, c.slug, c."parentId",
+             p.name AS "parentName", p.slug AS "parentSlug", p.icon AS "parentIcon"
+      FROM "ToolCategory" c
+      LEFT JOIN "ToolCategory" p ON p.id = c."parentId"
+      WHERE c.level = 1 AND c."isActive" = true
+      ORDER BY p."sortOrder" ASC, c."sortOrder" ASC, c.name ASC
+    `;
     return cats;
   } catch (error) {
     console.error('getCategoriesAction error:', error);
+    return [];
+  }
+}
+
+export async function getCategoryTreeAction() {
+  try {
+    const parents = await sql`
+      SELECT id, name, slug, icon, description, "toolCount", "sortOrder"
+      FROM "ToolCategory"
+      WHERE level = 0 AND "isActive" = true
+      ORDER BY "sortOrder" ASC
+    `;
+    const subcategories = await sql`
+      SELECT id, name, slug, description, "parentId", "toolCount", "sortOrder"
+      FROM "ToolCategory"
+      WHERE level = 1 AND "isActive" = true
+      ORDER BY "sortOrder" ASC, name ASC
+    `;
+
+    const subsByParent: Record<string, any[]> = {};
+    for (const sub of subcategories) {
+      const pid = (sub as any).parentId;
+      if (!subsByParent[pid]) subsByParent[pid] = [];
+      subsByParent[pid].push(sub);
+    }
+
+    return parents.map((p: any) => ({
+      ...p,
+      subcategories: subsByParent[p.id] || [],
+    }));
+  } catch (error) {
+    console.error('getCategoryTreeAction error:', error);
     return [];
   }
 }
@@ -229,7 +269,16 @@ export async function createToolAction(data: {
     }
     
     revalidatePath('/tools-dir');
-    return { success: true };
+
+    // Audit log
+    await logAuditEvent({
+      action: 'CREATE',
+      resourceType: 'AI_TOOL',
+      resourceId: toolId,
+      after: { name: data.name, slug: data.slug, pricingModel: data.pricingModel, status: data.status },
+    });
+
+    return { success: true, toolId };
   } catch (error: any) {
     console.error('createToolAction error:', error);
     return { success: false, error: error.message || 'Failed to create tool' };
@@ -310,9 +359,28 @@ export async function updateToolAction(id: string, data: {
 }
 
 export async function deleteToolAction(id: string) {
+  // Only SUPER_ADMIN can delete
+  const { allowed, error } = await canDelete();
+  if (!allowed) {
+    return { success: false, error: error || 'Unauthorized' };
+  }
+
   try {
+    // Capture before state for audit
+    const existing = await sql`SELECT id, name, slug FROM "AiTool" WHERE id = ${id} LIMIT 1`;
+    const before = existing[0] || null;
+
     await sql`UPDATE "AiTool" SET "deletedAt" = NOW() WHERE id = ${id}`;
     revalidatePath('/tools-dir');
+
+    // Audit log
+    await logAuditEvent({
+      action: 'DELETE',
+      resourceType: 'AI_TOOL',
+      resourceId: id,
+      before: before ? { name: before.name, slug: before.slug } : undefined,
+    });
+
     return { success: true };
   } catch (error: any) {
     console.error('deleteToolAction error:', error);

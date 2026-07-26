@@ -4,6 +4,7 @@ import { neon } from '@neondatabase/serverless';
 import { revalidatePath } from 'next/cache';
 import { calculateImpactScore } from '@/lib/impact-score';
 import { standardizeCityName } from '@aistartupimpact/utils/src/cities';
+import { logAuditEvent, canDelete } from '@/lib/audit-log';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -201,6 +202,15 @@ export async function createStartupAction(data: {
     }
 
     revalidatePath('/startups-dir');
+    
+    // Audit log
+    await logAuditEvent({
+      action: 'CREATE',
+      resourceType: 'STARTUP',
+      resourceId: startupId,
+      after: { name: data.name, slug, stage: data.stage, headquartersCity: data.headquartersCity },
+    });
+
     return { success: true };
   } catch (error: any) {
     console.error('Error creating startup:', error);
@@ -374,12 +384,32 @@ export async function updateStartupAction(id: string, data: {
 
 
 export async function deleteStartupAction(id: string) {
+  // Only SUPER_ADMIN can delete
+  const { allowed, error } = await canDelete();
+  if (!allowed) {
+    return { success: false, error: error || 'Unauthorized' };
+  }
+
   try {
+    // Capture before state for audit
+    const existing = await sql`
+      SELECT id, name, slug, stage, "headquartersCity" FROM "Startup" WHERE id = ${id} LIMIT 1
+    `;
+    const before = existing[0] || null;
+
     await sql`
       UPDATE "Startup"
       SET "deletedAt" = NOW()
       WHERE id = ${id}
     `;
+
+    // Audit log
+    await logAuditEvent({
+      action: 'DELETE',
+      resourceType: 'STARTUP',
+      resourceId: id,
+      before: before ? { name: before.name, slug: before.slug, stage: before.stage, headquartersCity: before.headquartersCity } : undefined,
+    });
 
     revalidatePath('/startups-dir');
     return { success: true };
@@ -725,6 +755,15 @@ export async function approveStartupAction(id: string) {
     }
 
     revalidatePath('/startups-dir');
+    
+    // Audit log for approval
+    await logAuditEvent({
+      action: 'APPROVE',
+      resourceType: 'STARTUP',
+      resourceId: id,
+      after: { name: startup.name, slug: startup.slug, impactScore },
+    });
+
     return { success: true };
   } catch (error: any) {
     console.error('Error approving startup:', error);

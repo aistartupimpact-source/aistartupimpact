@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Metadata } from 'next';
 import { generateItemListSchema, generateCollectionPageSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import ToolsListWithComparison from '@/components/ToolsListWithComparison';
+import FounderActionButton from '@/components/auth/FounderActionButton';
 
 export const revalidate = 60;
 
@@ -27,13 +28,28 @@ export const metadata: Metadata = {
   },
 };
 
-import { getDirectoryToolsDirect, getToolCategoriesDirect } from '@/lib/db';
+import { getDirectoryToolsDirect, getToolCategoryTreeDirect, getToolTagGroupsForFilterDirect, getToolTagMappingsDirect } from '@/lib/db';
 
-export default async function ToolsPage({ searchParams }: { searchParams: { category?: string } }) {
-  const [picks, categories] = await Promise.all([
+export default async function ToolsPage({ searchParams }: { searchParams: { category?: string; tag?: string } }) {
+  const [picks, categoryTree, tagGroups, toolTagMap] = await Promise.all([
     getDirectoryToolsDirect(),
-    getToolCategoriesDirect()
+    getToolCategoryTreeDirect(),
+    getToolTagGroupsForFilterDirect(),
+    getToolTagMappingsDirect(),
   ]);
+
+  // Resolve initial tag slug to tag ID if ?tag= query param provided
+  const initialTagSlug = searchParams.tag || null;
+  let initialTagId: string | null = null;
+  if (initialTagSlug) {
+    for (const group of tagGroups) {
+      const found = group.tags.find((t: any) => t.slug === initialTagSlug);
+      if (found) {
+        initialTagId = found.id;
+        break;
+      }
+    }
+  }
 
   const siteUrl = 'https://aistartupimpact.com';
 
@@ -75,13 +91,16 @@ export default async function ToolsPage({ searchParams }: { searchParams: { cate
             Browse, filter, and compare {picks.length}+ AI tools — tested by real users, ranked by what actually works.
           </p>
         </div>
-        <Link href="/submit-tool" className="bg-brand text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold font-jakarta text-xs sm:text-sm hover:scale-105 transition-transform shadow-lg shadow-brand/20 whitespace-nowrap text-center shrink-0">
+        <FounderActionButton
+          href="/founder/tools/new"
+          className="bg-brand text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold font-jakarta text-xs sm:text-sm hover:scale-105 transition-transform shadow-lg shadow-brand/20 whitespace-nowrap text-center shrink-0"
+        >
           + Submit Your Tool
-        </Link>
+        </FounderActionButton>
       </div>
 
       {/* Tools List Component with State */}
-      <ToolsListWithComparison picks={picks} />
+      <ToolsListWithComparison picks={picks} tagGroups={tagGroups} toolTagMap={toolTagMap} initialTagId={initialTagId} />
 
 
     </div>

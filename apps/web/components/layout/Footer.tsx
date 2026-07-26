@@ -35,8 +35,7 @@ const footerLinks = [
     links: [
       { label: 'Submit Startup', href: '/submit-startup' },
       { label: 'Submit AI Tool', href: '/submit-tool' },
-      { label: 'Founder Login', href: '/auth/login' },
-      { label: 'Founder Signup', href: '/auth/signup' },
+      { label: 'Create Event', href: '/events' },
     ],
   },
   {
@@ -45,8 +44,10 @@ const footerLinks = [
       { label: 'Privacy Policy', href: '/privacy' },
       { label: 'Terms of Service', href: '/terms' },
       { label: 'Cookie Policy', href: '/cookie-policy' },
-      { label: 'Refund Policy', href: '/refund' },
-      { label: 'Disclaimer', href: '/disclaimer' },
+      { label: 'Content Guidelines', href: '/content-guidelines' },
+      { label: 'Copyright Policy', href: '/copyright' },
+      { label: 'Trademark Policy', href: '/trademark' },
+      { label: 'Verification Policy', href: '/verification-policy' },
     ],
   },
 ];
@@ -104,7 +105,7 @@ export default function Footer() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const showNewsletter = pathname !== '/newsletter' && !pathname?.startsWith('/startups') && pathname !== '/funding';
+  const showNewsletter = false; // hidden for now
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

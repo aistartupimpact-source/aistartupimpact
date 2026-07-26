@@ -148,6 +148,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
     q: string, s: string, c: string, bt: string, st: string, ci: string, co: string, er: string
   ) => {
     setLoading(true);
+    setStartups([]); // Clear immediately — shows skeleton
     try {
       const params = new URLSearchParams();
       if (q) params.set('q', q);
@@ -158,23 +159,24 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
       if (ci) params.set('city', ci);
       if (co) params.set('country', co);
       if (er) params.set('employeeRange', er);
-      params.set('limit', '500'); // Fetch all matching for client-side pagination
+      params.set('limit', '100');
       const res = await fetch(`/api/startups/search?${params}`);
       const data = await res.json();
       setStartups(data.startups || []);
       setTotal(data.total || 0);
       setVisibleCount(ITEMS_PER_PAGE);
     } catch {
-      // keep existing results
+      // keep empty on error
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Debounced search
+  // Fast debounced search — instant for filters, 150ms for typing
   useEffect(() => {
     if (!hasUserInteracted.current) return;
     clearTimeout(debounceRef.current);
+    const isTyping = query !== (searchParams.get('q') || '');
     debounceRef.current = setTimeout(() => {
       fetchStartups(query, stage, category, businessType, status, city, country, employeeRange);
       const params = new URLSearchParams();
@@ -188,9 +190,9 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
       if (employeeRange) params.set('employeeRange', employeeRange);
       const newUrl = params.toString() ? `${pathname}?${params}` : pathname;
       router.replace(newUrl, { scroll: false });
-    }, 300);
+    }, isTyping ? 150 : 0);
     return () => clearTimeout(debounceRef.current);
-  }, [query, stage, category, businessType, status, city, country, employeeRange, fetchStartups, pathname, router]);
+  }, [query, stage, category, businessType, status, city, country, employeeRange, fetchStartups, pathname, router, searchParams]);
 
   const handleCategoryChange = (value: string) => {
     hasUserInteracted.current = true;
@@ -457,7 +459,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
           {/* Results Count & Loader status */}
           <div className="flex items-center justify-between text-xs text-gray-400 font-jakarta">
             {loading ? (
-              <span className="flex items-center gap-1.5"><Loader2 className="w-3 h-3 animate-spin" /> Searching directory...</span>
+              <span className="flex items-center gap-1.5"><Loader2 className="w-3 h-3 animate-spin" /> Finding startups...</span>
             ) : (
               <span>Found <span className="font-bold text-navy dark:text-white">{total}</span> startups</span>
             )}
@@ -466,19 +468,44 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
       </div>
 
       {/* ── Grid ── */}
-      {startups.length === 0 && !loading ? (
+      {loading && startups.length === 0 ? (
+        /* Skeleton loading — matches card layout exactly */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-5 animate-pulse">
+              {/* Header: logo + name */}
+              <div className="flex items-start gap-2.5 sm:gap-3 mb-3 sm:mb-4">
+                <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl bg-gray-100 dark:bg-gray-800 shrink-0" />
+                <div className="flex-1 min-w-0 pt-1">
+                  <div className="h-4 sm:h-5 w-3/4 bg-gray-100 dark:bg-gray-800 rounded mb-2" />
+                  <div className="h-3 w-1/2 bg-gray-100 dark:bg-gray-800 rounded" />
+                </div>
+              </div>
+              {/* Tagline */}
+              <div className="h-3 w-full bg-gray-100 dark:bg-gray-800 rounded mb-2" />
+              <div className="h-3 w-4/5 bg-gray-100 dark:bg-gray-800 rounded mb-4" />
+              {/* Tags */}
+              <div className="flex gap-2 mb-3">
+                <div className="h-6 w-16 bg-gray-100 dark:bg-gray-800 rounded-full" />
+                <div className="h-6 w-12 bg-gray-100 dark:bg-gray-800 rounded-full" />
+                <div className="h-6 w-14 bg-gray-100 dark:bg-gray-800 rounded-full" />
+              </div>
+              {/* Footer */}
+              <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex justify-between">
+                <div className="h-3 w-20 bg-gray-100 dark:bg-gray-800 rounded" />
+                <div className="h-3 w-16 bg-gray-100 dark:bg-gray-800 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : startups.length === 0 && !loading ? (
         <div className="text-center py-16">
           <Building2 className="w-12 h-12 text-gray-200 dark:text-gray-700 mx-auto mb-3" />
           <p className="text-gray-400 font-jakarta text-sm mb-2">No startups found matching your criteria.</p>
           <button onClick={clearSearch} className="text-sm text-brand font-semibold hover:underline">Clear all filters</button>
         </div>
-      ) : loading && startups.length === 0 ? (
-        <div className="text-center py-16">
-          <Loader2 className="w-12 h-12 text-brand mx-auto mb-3 animate-spin" />
-          <p className="text-gray-500 font-jakarta text-sm">Loading startups...</p>
-        </div>
       ) : (
-        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 transition-opacity duration-200 ${loading ? 'opacity-50' : 'opacity-100'}`}>
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 transition-opacity duration-150 ${loading ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
           {visibleStartups.map(s => (
             <Link key={s.slug} href={`/startups/${s.slug}`} className="group">
               <div className="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:border-brand/30 dark:hover:border-brand/30 transition-all duration-300 h-full">

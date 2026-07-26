@@ -6,6 +6,9 @@ import { ArrowLeft, Upload, Loader2, Save, Plus, X } from 'lucide-react';
 import { createToolAction, getCategoriesAction } from '../actions';
 import { uploadLogoAction } from '../../media/actions';
 import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
+import CategoryCascadeSelect from '@/components/shared/CategoryCascadeSelect';
+import ToolTagSelector from '@/components/shared/ToolTagSelector';
+import { getTagGroupsWithTagsAction, updateToolTagsAction } from '../tags/actions';
 
 const pricingModels = ['FREE', 'FREEMIUM', 'PAID', 'ENTERPRISE', 'OPEN_SOURCE'];
 
@@ -13,6 +16,10 @@ interface Category {
   id: string;
   name: string;
   slug: string;
+  parentId?: string | null;
+  parentName?: string | null;
+  parentSlug?: string | null;
+  parentIcon?: string | null;
 }
 
 export default function NewToolPage() {
@@ -27,6 +34,8 @@ export default function NewToolPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [screenshots, setScreenshots] = useState<string[]>([]);
+  const [tagGroups, setTagGroups] = useState<any[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   
   const [draftLoaded, setDraftLoaded] = useState(false);
 
@@ -78,11 +87,12 @@ export default function NewToolPage() {
 
   const loadCategories = async () => {
     try {
-      const cats = await getCategoriesAction();
+      const [cats, tagGroupsData] = await Promise.all([
+        getCategoriesAction(),
+        getTagGroupsWithTagsAction(),
+      ]);
       setCategories(cats as Category[]);
-      if (cats.length > 0 && !formData.categoryId) {
-        setFormData(prev => ({ ...prev, categoryId: cats[0].id }));
-      }
+      setTagGroups(tagGroupsData as any[]);
     } catch (error) {
       console.error('Error loading categories:', error);
     }
@@ -201,6 +211,10 @@ export default function NewToolPage() {
       });
       
       if (result.success) {
+        // Save tags if any selected
+        if (selectedTagIds.length > 0 && result.toolId) {
+          await updateToolTagsAction(result.toolId, selectedTagIds);
+        }
         localStorage.removeItem('draft_admin_new_tool');
         router.push('/tools-dir');
         router.refresh();
@@ -270,21 +284,12 @@ export default function NewToolPage() {
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
-                Category *
-              </label>
-              <select
-                name="categoryId"
+              <CategoryCascadeSelect
+                categories={categories}
                 value={formData.categoryId}
-                onChange={handleChange}
+                onChange={(categoryId) => setFormData(prev => ({ ...prev, categoryId }))}
                 required
-                className="input-field text-sm"
-              >
-                <option value="">Select category</option>
-                {categories.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+              />
             </div>
 
             <div className="md:col-span-2">
@@ -323,6 +328,24 @@ export default function NewToolPage() {
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               {formData.description.length}/1000 characters
             </p>
+          </div>
+
+          {/* Tags — inline in Basic Info */}
+          <div>
+            {tagGroups.length > 0 ? (
+              <ToolTagSelector
+                groups={tagGroups}
+                selectedTagIds={selectedTagIds}
+                onChange={setSelectedTagIds}
+                maxTags={30}
+                isAdmin={true}
+              />
+            ) : (
+              <div className="flex items-center gap-2 py-2">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />
+                <span className="text-xs text-gray-500">Loading tags...</span>
+              </div>
+            )}
           </div>
         </div>
 

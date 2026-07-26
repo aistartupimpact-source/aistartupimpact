@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Upload, X, Loader2, Plus } from 'lucide-react';
-import { submitToolAction } from '@/app/founder/tools/actions';
+import { submitToolAction, getTagGroupsForFounderAction } from '@/app/founder/tools/actions';
 import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
+import CategoryCascadeSelect from '@/components/shared/CategoryCascadeSelect';
+import ToolTagSelector from '@/components/shared/ToolTagSelector';
 
 const PRICING_MODELS = [
   'FREE',
@@ -22,8 +24,15 @@ export default function ToolForm() {
   const [screenshots, setScreenshots] = useState<string[]>([]);
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [success, setSuccess] = useState(false);
+  const [tagGroups, setTagGroups] = useState<any[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
   const [draftLoaded, setDraftLoaded] = useState(false);
+
+  // Load tag groups on mount
+  useEffect(() => {
+    getTagGroupsForFounderAction().then(setTagGroups).catch(() => {});
+  }, []);
 
   // Load draft on mount
   useEffect(() => {
@@ -66,28 +75,6 @@ export default function ToolForm() {
     if (!draftLoaded) return;
     localStorage.setItem('draft_founder_new_tool', JSON.stringify({ formData, faqs, screenshots }));
   }, [formData, faqs, screenshots, draftLoaded]);
-
-  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
-
-  // Load categories on mount
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const res = await fetch('/api/tool-categories');
-        const data = await res.json();
-        if (data.success && data.categories) {
-          setCategories(data.categories);
-          // Set first category as default if available
-          if (data.categories.length > 0 && !formData.categoryId) {
-            setFormData(prev => ({ ...prev, categoryId: data.categories[0].id }));
-          }
-        }
-      } catch (err) {
-        console.error('Failed to load categories:', err);
-      }
-    };
-    loadCategories();
-  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const value = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value;
@@ -270,6 +257,7 @@ export default function ToolForm() {
         logoUrl: formData.logoUrl || undefined,
         screenshotUrls: screenshots,
         faqs: faqs.length > 0 ? faqs : undefined,
+        tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
       });
 
       if (!result.success) {
@@ -380,24 +368,11 @@ export default function ToolForm() {
         </div>
 
         <div>
-          <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Category <span className="text-red-500">*</span>
-          </label>
-          <select
-            id="categoryId"
-            name="categoryId"
+          <CategoryCascadeSelect
             value={formData.categoryId}
-            onChange={handleChange}
+            onChange={(categoryId) => setFormData(prev => ({ ...prev, categoryId }))}
             required
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
-          >
-            <option value="">Select a category</option>
-            {categories.map(cat => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
+          />
         </div>
       </div>
 
@@ -702,6 +677,18 @@ export default function ToolForm() {
             </label>
           )}
         </div>
+      </div>
+
+      {/* Tags */}
+      <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
+        {tagGroups.length > 0 ? (
+          <ToolTagSelector
+            groups={tagGroups}
+            selectedTagIds={selectedTagIds}
+            onChange={setSelectedTagIds}
+            maxTags={30}
+          />
+        ) : null}
       </div>
 
       {/* FAQs Section */}
