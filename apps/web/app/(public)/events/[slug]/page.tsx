@@ -1,0 +1,229 @@
+import { Metadata } from "next";
+import { notFound, redirect } from "next/navigation";
+import { sql } from "@/lib/db";
+import EventDetailClient from "./EventDetailClient";
+
+export const revalidate = 60;
+
+async function getEvent(slug: string) {
+  try {
+    // 1. Try current slug
+    const rows: any[] = await sql`
+      SELECT 
+        e.id, e.slug, e."shortCode", e.title, e.subtitle, e.category, e.format, e.status,
+        e."startAt"::text AS "startAt", e."endAt"::text AS "endAt",
+        e.timezone, e."venueName", e.address, e.latitude, e.longitude,
+        e."meetingLink", e."revealLinkAfterRegistration",
+        e."coverImageUrl", e."galleryImageUrls", e.description,
+        e.capacity, e."registrationCount", e.visibility,
+        e."registrationDeadline"::text AS "registrationDeadline",
+        e."approvalRequired",
+        e."metaTitle", e."metaDescription", e."socialImageUrl",
+        e."organizerId", e."deletedAt",
+        o.name AS "organizerName", o.avatar AS "organizerAvatar"
+      FROM "Event" e
+      LEFT JOIN "EventOrganizer" o ON o.id = e."organizerId"
+      WHERE e.slug = ${slug}
+      LIMIT 1
+    `;
+
+    if (rows.length) {
+      const event = rows[0];
+      // Soft-deleted → 410 Gone (handled via notFound for now)
+      if (event.deletedAt) return { __gone: true };
+      // Not published / not visible
+      if (event.status !== "PUBLISHED" || !["PUBLIC", "UNLISTED"].includes(event.visibility)) return null;
+      return event;
+    }
+
+    // 2. Check slug history → redirect to current slug (no chains)
+    const historyRows: any[] = await sql`
+      SELECT e.slug
+      FROM "EventSlugHistory" h
+      JOIN "Event" e ON e.id = h."eventId"
+      WHERE h."oldSlug" = ${slug} AND e."deletedAt" IS NULL
+      LIMIT 1
+    `;
+
+    if (historyRows.length) {
+      return { __redirect: historyRows[0].slug };
+    }
+
+    return null;
+  } catch (e) {
+    console.error("getEvent error:", e);
+    return null;
+  }
+}
+
+async function getEventSpeakers(eventId: string) {
+  try {
+    const rows = await sql`
+      SELECT id, name, title, company, "headshotUrl", bio, "talkTitle", "sortOrder"
+      FROM "EventSpeaker"
+      WHERE "eventId" = ${eventId}
+      ORDER BY "sortOrder" ASC
+    `;
+    return rows;
+  } catch {
+    return [];
+  }
+}
+
+async function getEventAgenda(eventId: string) {
+  try {
+    const rows = await sql`
+      SELECT a.id, a."dayNumber", a."startTime", a."endTime", a.title, a.description,
+             s.name AS "speakerName"
+      FROM "EventAgendaItem" a
+      LEFT JOIN "EventSpeaker" s ON s.id = a."speakerId"
+      WHERE a."eventId" = ${eventId}
+      ORDER BY a."dayNumber" ASC, a."sortOrder" ASC
+    `;
+    return rows;
+  } catch {
+    return [];
+  }
+}
+
+async function getEventTags(eventId: string) {
+  try {
+    const rows = await sql`
+      SELECT t.name, t."canonicalName"
+      FROM "EventTagMapping" m
+      JOIN "EventTag" t ON t.id = m."tagId"
+      WHERE m."eventId" = ${eventId}
+      ORDER BY t.name
+    `;
+    return rows;
+  } catch {
+    return [];
+  }
+}
+
+async function getEventTicketTiers(eventId: string) {
+  try {
+    const rows = await sql`
+      SELECT id, name, "priceCents", quantity, "soldCount", "tierType", description
+      FROM "EventTicketTier"
+      WHERE "eventId" = ${eventId}
+      ORDER BY "priceCents" ASC
+    `;
+    return rows;
+  } catch {
+    return [];
+  }
+}
+
+async function getEventCustomQuestions(eventId: string) {
+  try {
+    const rows = await sql`
+      SELECT id, "questionText", "questionType", options, required, "sortOrder"
+      FROM "EventCustomQuestion"
+      WHERE "eventId" = ${eventId}
+      ORDER BY "sortOrder" ASC
+    `;
+    return rows;
+  } catch {
+    return [];
+  }
+}
+
+async function getSimilarEvents(eventId: string, category: string) {
+  try {
+    const now = new Date().toISOString();
+    const rows = await sql`
+      SELECT id, title, slug, category, format,
+             "startAt"::text AS "startAt", "venueName",
+             "coverImageUrl", "registrationCount"
+      FROM "Event"
+      WHERE id != ${eventId}
+        AND status = 'PUBLISHED'
+        AND "deletedAt" IS NULL
+        AND visibility = 'PUBLIC'
+        AND "startAt" >= ${now}::timestamp
+        AND category = ${category}::"EventCategory"
+      ORDER BY "startAt" ASC
+      LIMIT 3
+    `;
+    return rows;
+  } catch {
+    return [];
+  }
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
+  const event = await getEvent(params.slug);
+  if (!event) return { title: "Event Not Found" };
+
+  const title = event.metaTitle || event.title;
+  const description =
+    event.metaDescription ||
+    event.subtitle ||
+    `${event.category.replace("_", " ")} - ${new Date(event.startAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      url: `https://aistartupimpact.com/events/${event.slug}`,
+      images: event.socialImageUrl || event.coverImageUrl
+        ? [{ url: event.socialImageUrl || event.coverImageUrl }]
+        : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
+}
+
+export default async function EventDetailPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const event = await getEvent(params.slug);
+
+  // Handle redirect (old slug → current slug, no chains)
+  if (event && (event as any).__redirect) {
+    redirect(`/events/${(event as any).__redirect}`);
+  }
+
+  // Handle 410 Gone (soft-deleted)
+  if (event && (event as any).__gone) {
+    notFound();
+  }
+
+  if (!event) notFound();
+
+  const [speakers, agenda, tags, ticketTiers, customQuestions, similarEvents] =
+    await Promise.all([
+      getEventSpeakers(event.id),
+      getEventAgenda(event.id),
+      getEventTags(event.id),
+      getEventTicketTiers(event.id),
+      getEventCustomQuestions(event.id),
+      getSimilarEvents(event.id, event.category),
+    ]);
+
+  return (
+    <EventDetailClient
+      event={event}
+      speakers={speakers as any}
+      agenda={agenda as any}
+      tags={tags as any}
+      ticketTiers={ticketTiers as any}
+      customQuestions={customQuestions as any}
+      similarEvents={similarEvents as any}
+    />
+  );
+}

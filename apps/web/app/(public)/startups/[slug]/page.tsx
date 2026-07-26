@@ -17,6 +17,7 @@ import SimilarStartupsCarousel from '@/components/SimilarStartupsCarousel';
 import ImpactScoreBadge from '@/components/ImpactScoreBadge';
 import { calculateImpactScore } from '@/lib/impact-score';
 import ShareButton from '@/components/ShareButton';
+import ReportButton from '@/components/ReportButton';
 import SubscribeForm from '@/components/SubscribeForm';
 
 export const revalidate = 0; // Disable cache for debugging
@@ -530,6 +531,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                 <Clock className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" /> {relativeTime}
               </span>
             )}
+            <ReportButton entityType="STARTUP" entityId={startup.id} entityName={startup.name} entitySlug={startup.slug} />
           </div>
 
           {/* Right Side: Action Buttons */}

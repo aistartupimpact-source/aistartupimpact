@@ -42,20 +42,19 @@ export async function GET(req: NextRequest) {
     }
 
     if (q) {
-      // Full-text search using tsvector — handles millions of rows via GIN index
-      const tsQuery = q.split(/\s+/).filter(Boolean).map(w => w + ':*').join(' & ');
+      // Use ILIKE for fuzzy/partial matching — works for "mysoft" matching "Microsoft"
+      const likePattern = `%${q}%`;
 
       rows = await sql`
         SELECT s.id, s.name, s.slug, s.tagline, s."logoUrl", s.stage, s.status,
                s."headquartersCity", s."isFeatured", s."isVerified",
                s."employeeCount", s."foundedYear", s.category, s."businessType", s.founders,
-               COALESCE(SUM(fr."amountUsd") / 100, 0) AS "totalUsd",
-               ts_rank(s."searchVector", to_tsquery('english', ${tsQuery})) AS rank
+               COALESCE(SUM(fr."amountUsd") / 100, 0) AS "totalUsd"
         FROM "Startup" s
         LEFT JOIN "FundingRound" fr ON fr."startupId" = s.id
         WHERE s."deletedAt" IS NULL
           AND s."isApproved" = true
-          AND s."searchVector" @@ to_tsquery('english', ${tsQuery})
+          AND (s.name ILIKE ${likePattern} OR s.tagline ILIKE ${likePattern} OR s."headquartersCity" ILIKE ${likePattern})
           ${stage ? sql`AND s.stage = ${stage}::"StartupStage"` : sql``}
           ${category ? sql`AND s.category = ${category}` : sql``}
           ${businessType ? sql`AND s."businessType" = ${businessType}` : sql``}
@@ -64,14 +63,16 @@ export async function GET(req: NextRequest) {
           ${countryFilter}
           ${employeeFilter}
         GROUP BY s.id
-        ORDER BY rank DESC, s."isFeatured" DESC
+        ORDER BY
+          CASE WHEN s.name ILIKE ${q + '%'} THEN 0 WHEN s.name ILIKE ${likePattern} THEN 1 ELSE 2 END ASC,
+          s."isFeatured" DESC, s."createdAt" DESC
         LIMIT ${limit} OFFSET ${offset}
       `;
       countRows = await sql`
         SELECT COUNT(*) FROM "Startup" s
         WHERE s."deletedAt" IS NULL
           AND s."isApproved" = true
-          AND s."searchVector" @@ to_tsquery('english', ${tsQuery})
+          AND (s.name ILIKE ${likePattern} OR s.tagline ILIKE ${likePattern} OR s."headquartersCity" ILIKE ${likePattern})
           ${stage ? sql`AND s.stage = ${stage}::"StartupStage"` : sql``}
           ${category ? sql`AND s.category = ${category}` : sql``}
           ${businessType ? sql`AND s."businessType" = ${businessType}` : sql``}
@@ -127,7 +128,10 @@ export async function GET(req: NextRequest) {
     }
 
     const total = parseInt((countRows[0] as any).count || '0');
-    return NextResponse.json({ startups: rows, total, page, pages: Math.ceil(total / limit) });
+    return NextResponse.json(
+      { startups: rows, total, page, pages: Math.ceil(total / limit) },
+      { headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=30" } }
+    );
   } catch (e: any) {
     console.error('startup search error:', e);
     return NextResponse.json({ startups: [], total: 0, page: 1, pages: 0 });

@@ -5,11 +5,12 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Search, X, Menu, Moon, Sun,
-  Home, Newspaper, BookOpen, Wrench, Flag, Building2, TrendingUp, Users, Star, LogOut, UserCircle, Bookmark,
+  Home, Newspaper, BookOpen, Wrench, Flag, Building2, TrendingUp, Users, Star,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import SearchOverlay from './SearchOverlay';
 import SignInModal from '@/components/auth/SignInModal';
+import ProfileDropdown from '@/components/ProfileDropdown';
 import Logo from '@/components/Logo';
 
 const mainNav = [
@@ -17,6 +18,7 @@ const mainNav = [
   { label: 'Founder Stories', href: '/stories' },
   { label: 'AI Tools', href: '/tools' },
   { label: 'AI Startups', href: '/startups' },
+  { label: 'Events', href: '/events' },
   { label: 'Funding', href: '/funding' },
   { label: 'India AI', href: '/india-ai' },
 ];
@@ -50,14 +52,29 @@ export default function Navbar() {
   const router = useRouter();
   const { theme, toggle } = useTheme();
 
-  // Fetch user session
+  // Fetch user session — try legacy first (where existing users are), then unified
   useEffect(() => {
     const fetchUser = async () => {
       try {
+        // Try legacy user session first (existing WebUser accounts)
         const res = await fetch('/api/user/session');
         if (res.ok) {
           const data = await res.json();
-          setUser(data.user);
+          if (data.user) {
+            setUser(data.user);
+            setLoading(false);
+            return;
+          }
+        }
+        // Fallback: try unified session
+        const unifiedRes = await fetch('/api/auth/session');
+        if (unifiedRes.ok) {
+          const data = await unifiedRes.json();
+          if (data.user) {
+            setUser(data.user);
+            setLoading(false);
+            return;
+          }
         }
       } catch (error) {
         console.error('Failed to fetch user:', error);
@@ -70,7 +87,11 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/user/auth/logout', { method: 'POST' });
+      // Logout from all session types
+      await Promise.allSettled([
+        fetch('/api/user/auth/logout', { method: 'POST' }),
+        fetch('/api/auth/logout', { method: 'POST' }),
+      ]);
       setUser(null);
       router.push('/');
       router.refresh();
@@ -169,55 +190,8 @@ export default function Navbar() {
               {!loading && (
                 <>
                   {user ? (
-                    <div className="relative group hidden md:block">
-                      {/* Profile Icon Button */}
-                      <button 
-                        className="p-1 rounded-full hover:ring-2 hover:ring-gray-200 dark:hover:ring-gray-700 transition-all duration-200"
-                        aria-label="User menu"
-                      >
-                        <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
-                          {user.avatar ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img 
-                              src={user.avatar} 
-                              alt={user.name || 'User'} 
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <UserCircle className="w-6 h-6 text-gray-600 dark:text-gray-400" />
-                          )}
-                        </div>
-                      </button>
-                      
-                      {/* Dropdown Menu - Clean Minimal Style */}
-                      <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform group-hover:translate-y-0 translate-y-1">
-                        {/* Menu Items */}
-                        <div className="py-1.5">
-                          <Link 
-                            href="/profile"
-                            className="flex items-center gap-3 px-4 py-2.5 text-[15px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                          >
-                            <UserCircle className="w-[18px] h-[18px] text-gray-600 dark:text-gray-400" />
-                            <span>My Profile</span>
-                          </Link>
-                          
-                          <Link 
-                            href="/profile#saved"
-                            className="flex items-center gap-3 px-4 py-2.5 text-[15px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                          >
-                            <Bookmark className="w-[18px] h-[18px] text-gray-600 dark:text-gray-400" />
-                            <span>Saved Items</span>
-                          </Link>
-                          
-                          <button
-                            onClick={handleLogout}
-                            className="flex items-center gap-3 px-4 py-2.5 text-[15px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors w-full text-left"
-                          >
-                            <LogOut className="w-[18px] h-[18px] text-gray-600 dark:text-gray-400" />
-                            <span>Sign Out</span>
-                          </button>
-                        </div>
-                      </div>
+                    <div className="hidden md:block">
+                      <ProfileDropdown user={user} />
                     </div>
                   ) : (
                     <button
@@ -293,46 +267,63 @@ export default function Navbar() {
             <div className="my-5 mx-5 border-t border-gray-100 dark:border-gray-800" />
 
             {/* User Section */}
-            <div className="space-y-3 px-1">
+            <div className="space-y-2 px-1">
               {user ? (
                 <>
-                  {/* User Info Card */}
-                  <div className="flex items-center gap-3 px-5 py-4 bg-gray-50 dark:bg-gray-900 rounded-2xl">
-                    <div className="w-11 h-11 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden shrink-0">
+                  {/* User Info */}
+                  <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-900 rounded-xl">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden shrink-0">
                       {user.avatar ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={user.avatar} alt={user.name || 'User'} className="w-full h-full object-cover" />
                       ) : (
-                        <UserCircle className="w-7 h-7 text-gray-500" />
+                        <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">{(user.name || 'U').charAt(0)}</span>
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="font-bold text-[15px] text-gray-900 dark:text-white truncate">{user.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                      <p className="font-semibold text-[14px] text-gray-900 dark:text-white truncate">{user.name}</p>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
                     </div>
                   </div>
 
-                  {/* Profile Button */}
                   <Link href="/profile" onClick={() => setMobileOpen(false)}
-                    className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl bg-brand text-white font-bold text-[15px] font-jakarta active:scale-[0.98] transition-transform">
-                    <UserCircle className="w-5 h-5" />
-                    My Profile
+                    className="block w-full px-4 py-3 text-[14px] font-medium text-gray-800 dark:text-gray-200 rounded-xl active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
+                    Profile
                   </Link>
-
-                  {/* Saved Items */}
                   <Link href="/profile#saved" onClick={() => setMobileOpen(false)}
-                    className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-bold text-[15px] font-jakarta active:scale-[0.98] transition-transform">
-                    <Bookmark className="w-5 h-5" />
-                    Saved Items
+                    className="block w-full px-4 py-3 text-[14px] font-medium text-gray-800 dark:text-gray-200 rounded-xl active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
+                    Saved
+                  </Link>
+                  <Link href="/events/my-events" onClick={() => setMobileOpen(false)}
+                    className="block w-full px-4 py-3 text-[14px] font-medium text-gray-800 dark:text-gray-200 rounded-xl active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
+                    My Events
                   </Link>
 
-                  {/* Logout */}
-                  <button
-                    onClick={() => { handleLogout(); setMobileOpen(false); }}
-                    className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl border-2 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 font-semibold text-[15px] font-jakarta active:scale-[0.98] transition-transform">
-                    <LogOut className="w-5 h-5" />
-                    Sign Out
-                  </button>
+                  {/* Workspace links */}
+                  {(user?.founderId || user?.organizerId) && (
+                    <div className="border-t border-gray-100 dark:border-gray-800 pt-2 mt-1">
+                      {user?.founderId && (
+                        <Link href="/founder/dashboard" onClick={() => setMobileOpen(false)}
+                          className="block w-full px-4 py-3 text-[14px] font-medium text-gray-800 dark:text-gray-200 rounded-xl active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
+                          Founder Dashboard
+                        </Link>
+                      )}
+                      {user?.organizerId && (
+                        <Link href="/organizer" onClick={() => setMobileOpen(false)}
+                          className="block w-full px-4 py-3 text-[14px] font-medium text-gray-800 dark:text-gray-200 rounded-xl active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
+                          Organizer Dashboard
+                        </Link>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="border-t border-gray-100 dark:border-gray-800 pt-2 mt-1">
+                    <button
+                      onClick={() => { handleLogout(); setMobileOpen(false); }}
+                      className="block w-full text-left px-4 py-3 text-[14px] font-medium text-gray-500 dark:text-gray-400 rounded-xl active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
+                      Sign out
+                    </button>
+                  </div>
                 </>
               ) : (
                 <>

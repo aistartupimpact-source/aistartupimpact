@@ -92,9 +92,13 @@ export async function getAiToolBySlugDirect(slug: string) {
         t.*,
         c.name AS "categoryName",
         c.slug AS "categorySlug",
+        pc.name AS "parentCategoryName",
+        pc.slug AS "parentCategorySlug",
+        pc.icon AS "parentCategoryIcon",
         s.id AS "startupId", s.name AS "startupName", s."totalFundingInr"
       FROM "AiTool" t
       LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+      LEFT JOIN "ToolCategory" pc ON pc.id = c."parentId"
       LEFT JOIN "Startup" s ON s.id = t."startupId"
       WHERE t.slug = ${slug} AND t."deletedAt" IS NULL
       LIMIT 1
@@ -148,7 +152,7 @@ export async function getAiToolBySlugDirect(slug: string) {
 
 export async function getSimilarToolsDirect(categoryId: string, excludeSlug: string, limit = 8) {
   try {
-    // Priority 1: same category, sorted by rating
+    // Priority 1: same subcategory, sorted by rating
     const sameCategory = await sql`
       SELECT
         t.id, t.name, t.slug, t.tagline, t."logoUrl",
@@ -165,14 +169,39 @@ export async function getSimilarToolsDirect(categoryId: string, excludeSlug: str
       LIMIT ${limit}
     `;
 
-    // If we have enough from same category, return early
+    // If we have enough from same subcategory, return early
     if (sameCategory.length >= limit) {
       return sameCategory as any[];
     }
 
-    // Priority 2: top-rated approved tools as fallback filler
+    // Priority 2: same parent category (sibling subcategories)
     const slugsAlready = sameCategory.map((r: any) => r.slug).concat([excludeSlug]);
     const needed = limit - sameCategory.length;
+    const sameParent = await sql`
+      SELECT
+        t.id, t.name, t.slug, t.tagline, t."logoUrl",
+        t."avgRating", t."pricingModel", t."websiteUrl",
+        c.name AS "categoryName", c.slug AS "categorySlug",
+        'same-parent' AS "matchType"
+      FROM "AiTool" t
+      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+      WHERE c."parentId" = (SELECT "parentId" FROM "ToolCategory" WHERE id = ${categoryId})
+        AND t."categoryId" != ${categoryId}
+        AND t.slug != ALL(${slugsAlready}::text[])
+        AND t.status = 'APPROVED'
+        AND t."deletedAt" IS NULL
+      ORDER BY t."avgRating" DESC NULLS LAST
+      LIMIT ${needed}
+    `;
+
+    const combined = [...sameCategory, ...sameParent];
+    if (combined.length >= limit) {
+      return combined as any[];
+    }
+
+    // Priority 3: top-rated approved tools as fallback filler
+    const allSlugs = combined.map((r: any) => r.slug).concat([excludeSlug]);
+    const fillerNeeded = limit - combined.length;
     const filler = await sql`
       SELECT
         t.id, t.name, t.slug, t.tagline, t."logoUrl",
@@ -182,12 +211,12 @@ export async function getSimilarToolsDirect(categoryId: string, excludeSlug: str
       FROM "AiTool" t
       LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
       WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
-        AND t.slug != ALL(${slugsAlready}::text[])
+        AND t.slug != ALL(${allSlugs}::text[])
       ORDER BY t."avgRating" DESC NULLS LAST, t."listingTier" DESC
-      LIMIT ${needed}
+      LIMIT ${fillerNeeded}
     `;
 
-    return [...sameCategory, ...filler] as Array<{
+    return [...combined, ...filler] as Array<{
       id: string;
       name: string;
       slug: string;
@@ -248,10 +277,155 @@ export async function getPriorityToolsDirect(limit = 6) {
 
 export async function getToolCategoriesDirect() {
   try {
-    const rows = await sql`SELECT id, name, slug FROM "ToolCategory" ORDER BY name ASC`;
+    const rows = await sql`
+      SELECT id, name, slug, icon, description, "parentId", level, "toolCount", "sortOrder"
+      FROM "ToolCategory"
+      WHERE "isActive" = true
+      ORDER BY level ASC, "sortOrder" ASC, name ASC
+    `;
     return rows;
   } catch (e) {
     console.error('getToolCategoriesDirect error:', e);
+    return [];
+  }
+}
+
+/**
+ * Get hierarchical tool categories: parents with nested subcategories.
+ */
+export async function getToolCategoryTreeDirect() {
+  try {
+    const parents = await sql`
+      SELECT id, name, slug, icon, description, "toolCount", "sortOrder"
+      FROM "ToolCategory"
+      WHERE level = 0 AND "isActive" = true
+      ORDER BY "sortOrder" ASC
+    `;
+    const subcategories = await sql`
+      SELECT id, name, slug, description, "parentId", "toolCount", "sortOrder"
+      FROM "ToolCategory"
+      WHERE level = 1 AND "isActive" = true
+      ORDER BY "sortOrder" ASC, name ASC
+    `;
+
+    // Build tree
+    const subsByParent = new Map<string, any[]>();
+    for (const sub of subcategories) {
+      const parentId = sub.parentId;
+      if (!subsByParent.has(parentId)) subsByParent.set(parentId, []);
+      subsByParent.get(parentId)!.push(sub);
+    }
+
+    return parents.map((p: any) => ({
+      ...p,
+      subcategories: subsByParent.get(p.id) || [],
+    }));
+  } catch (e) {
+    console.error('getToolCategoryTreeDirect error:', e);
+    return [];
+  }
+}
+
+/**
+ * Get tag groups with tags for the public tools listing filter sidebar.
+ * Only returns active, non-admin-only groups with active tags that have tagCount > 0 OR are commonly needed.
+ */
+export async function getToolTagGroupsForFilterDirect() {
+  try {
+    const groups = await sql`
+      SELECT id, name, slug, icon, description, "sortOrder", "displayMode", "maxVisibleDefault"
+      FROM "ToolTagGroup"
+      WHERE "isActive" = true AND "isAdminOnly" = false
+      ORDER BY "sortOrder" ASC
+    `;
+
+    const tags = await sql`
+      SELECT id, name, slug, emoji, "groupId", "sortOrder", "tagCount"
+      FROM "ToolSystemTag"
+      WHERE "isActive" = true
+      ORDER BY "sortOrder" ASC, name ASC
+    `;
+
+    const tagsByGroup: Record<string, any[]> = {};
+    for (const tag of tags) {
+      const gid = (tag as any).groupId;
+      if (!tagsByGroup[gid]) tagsByGroup[gid] = [];
+      tagsByGroup[gid].push(tag);
+    }
+
+    return groups.map((g: any) => ({
+      ...g,
+      tags: tagsByGroup[g.id] || [],
+    }));
+  } catch (e) {
+    console.error('getToolTagGroupsForFilterDirect error:', e);
+    return [];
+  }
+}
+
+/**
+ * Get tag IDs mapped to tool IDs for client-side filtering.
+ * Returns a map: { toolId -> [tagId, tagId, ...] }
+ */
+export async function getToolTagMappingsDirect() {
+  try {
+    const mappings = await sql`
+      SELECT "toolId", "tagId"
+      FROM "ToolSystemTagMapping"
+    `;
+    const map: Record<string, string[]> = {};
+    for (const m of mappings) {
+      const tid = (m as any).toolId;
+      if (!map[tid]) map[tid] = [];
+      map[tid].push((m as any).tagId);
+    }
+    return map;
+  } catch (e) {
+    console.error('getToolTagMappingsDirect error:', e);
+    return {};
+  }
+}
+
+/**
+ * Get all tags for a specific tool, grouped by tag group.
+ * Used on tool detail pages.
+ */
+export async function getToolTagsGroupedDirect(toolId: string) {
+  try {
+    const rows = await sql`
+      SELECT t.id, t.name, t.slug, t.emoji, 
+             g.id AS "groupId", g.name AS "groupName", g.slug AS "groupSlug", g.icon AS "groupIcon", g."sortOrder" AS "groupSortOrder"
+      FROM "ToolSystemTagMapping" m
+      JOIN "ToolSystemTag" t ON t.id = m."tagId"
+      JOIN "ToolTagGroup" g ON g.id = t."groupId"
+      WHERE m."toolId" = ${toolId} AND t."isActive" = true AND g."isActive" = true
+      ORDER BY g."sortOrder" ASC, t."sortOrder" ASC
+    `;
+
+    // Group by tag group
+    const groupMap = new Map<string, { id: string; name: string; slug: string; icon: string | null; tags: any[] }>();
+    for (const row of rows) {
+      const r = row as any;
+      if (!groupMap.has(r.groupId)) {
+        groupMap.set(r.groupId, {
+          id: r.groupId,
+          name: r.groupName,
+          slug: r.groupSlug,
+          icon: r.groupIcon,
+          tags: [],
+        });
+      }
+      groupMap.get(r.groupId)!.tags.push({
+        id: r.id,
+        name: r.name,
+        slug: r.slug,
+        emoji: r.emoji,
+      });
+    }
+
+    return Array.from(groupMap.values());
+  } catch (e) {
+    console.error('getToolTagsGroupedDirect error:', e);
     return [];
   }
 }
@@ -260,17 +434,24 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
   try {
     let rows: any[];
     if (categorySlug && categorySlug !== 'all') {
+      // Check if slug is a parent category or subcategory
       rows = await sql`
         SELECT t.id, t.name, t.slug, t.tagline, t.description, t."pricingModel", t."logoUrl", t."avgRating", 
                t."hasApi", t."hasMobileApp", t."launchYear", t."headquartersCountry", t."founderNames",
                c.name AS "categoryName", c.slug AS "categorySlug",
+               pc.name AS "parentCategoryName", pc.slug AS "parentCategorySlug",
                tfc.tier AS "campaignTier"
         FROM "AiTool" t
         LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+        LEFT JOIN "ToolCategory" pc ON pc.id = c."parentId"
         LEFT JOIN "ToolFeaturedCampaign" tfc ON tfc."toolId" = t.id
           AND tfc."cancelledAt" IS NULL
           AND tfc."startDate" <= NOW() AND tfc."endDate" >= NOW()
-        WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL AND c.slug = ${categorySlug}
+        WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
+          AND (
+            c.slug = ${categorySlug}
+            OR c."parentId" IN (SELECT id FROM "ToolCategory" WHERE slug = ${categorySlug})
+          )
         ORDER BY 
           CASE WHEN tfc.tier = 'FEATURED' THEN 1
                WHEN tfc.tier = 'PRIORITY' THEN 2
@@ -284,9 +465,11 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
         SELECT t.id, t.name, t.slug, t.tagline, t.description, t."pricingModel", t."logoUrl", t."avgRating",
                t."hasApi", t."hasMobileApp", t."launchYear", t."headquartersCountry", t."founderNames",
                c.name AS "categoryName", c.slug AS "categorySlug",
+               pc.name AS "parentCategoryName", pc.slug AS "parentCategorySlug",
                tfc.tier AS "campaignTier"
         FROM "AiTool" t
         LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+        LEFT JOIN "ToolCategory" pc ON pc.id = c."parentId"
         LEFT JOIN "ToolFeaturedCampaign" tfc ON tfc."toolId" = t.id
           AND tfc."cancelledAt" IS NULL
           AND tfc."startDate" <= NOW() AND tfc."endDate" >= NOW()
@@ -309,6 +492,8 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
       logoUrl: t.logoUrl || null,
       category: t.categoryName || 'General',
       categorySlug: t.categorySlug || 'general',
+      parentCategory: t.parentCategoryName || null,
+      parentCategorySlug: t.parentCategorySlug || null,
       rating: parseFloat(t.avgRating || '4.0'),
       pricing: t.pricingModel || 'Free',
       verdict: t.description ? t.description.substring(0, 120) + '...' : 'An excellent AI tool optimized for productivity.',

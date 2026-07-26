@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@aistartupimpact/database";
 import { Resend } from "resend";
 import { generateNewsletterHtml } from "@/lib/newsletter-templates";
+import { logAuditEvent, canDelete } from '@/lib/audit-log';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -102,6 +103,15 @@ export async function saveCampaignAction(payload: {
             "updatedAt" = NOW()
         WHERE id = ${id}
       `;
+
+      // Audit log
+      await logAuditEvent({
+        action: 'UPDATE',
+        resourceType: 'NEWSLETTER',
+        resourceId: id,
+        after: { subject },
+      });
+
       return { success: true, id };
     } else {
       const rows = await prisma.$queryRaw<any[]>`
@@ -109,6 +119,15 @@ export async function saveCampaignAction(payload: {
         VALUES (gen_random_uuid(), ${subject}, ${previewText}, ${contentJson}::jsonb, 'DRAFT', ${scheduledAt ? new Date(scheduledAt) : null}, NOW(), NOW())
         RETURNING id
       `;
+
+      // Audit log
+      await logAuditEvent({
+        action: 'CREATE',
+        resourceType: 'NEWSLETTER',
+        resourceId: rows[0]?.id,
+        after: { subject },
+      });
+
       return { success: true, id: rows[0]?.id };
     }
   } catch (e: any) {
@@ -117,12 +136,27 @@ export async function saveCampaignAction(payload: {
 }
 
 export async function deleteCampaignAction(id: string) {
-  const session: any = await getServerSession(authOptions);
-  if (!session?.user || !["SUPER_ADMIN", "EDITOR_IN_CHIEF"].includes(session.user.role))
-    return { success: false, error: "Unauthorized" };
+  // Only SUPER_ADMIN can delete
+  const { allowed, error } = await canDelete();
+  if (!allowed) {
+    return { success: false, error: error || 'Unauthorized' };
+  }
 
   try {
+    // Capture before state
+    const campaign: any[] = await prisma.$queryRaw`SELECT id, subject FROM "NewsletterCampaign" WHERE id = ${id} LIMIT 1`;
+    const before = campaign[0] || null;
+
     await prisma.$executeRaw`DELETE FROM "NewsletterCampaign" WHERE id = ${id}`;
+
+    // Audit log
+    await logAuditEvent({
+      action: 'DELETE',
+      resourceType: 'NEWSLETTER',
+      resourceId: id,
+      before: before ? { subject: before.subject } : undefined,
+    });
+
     return { success: true };
   } catch (e: any) {
     return { success: false, error: e.message };
@@ -221,6 +255,14 @@ export async function sendCampaignAction(id: string) {
       SET status = 'SENT', "sentAt" = NOW(), "totalSent" = ${totalSent}, "updatedAt" = NOW()
       WHERE id = ${id}
     `;
+
+    // Audit log for newsletter send
+    await logAuditEvent({
+      action: 'PUBLISH',
+      resourceType: 'NEWSLETTER',
+      resourceId: id,
+      after: { subject: campaign.subject, totalSent },
+    });
 
     return { success: true, sent: totalSent };
   } catch (e: any) {

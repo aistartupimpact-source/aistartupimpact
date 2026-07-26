@@ -6,6 +6,9 @@ import { ArrowLeft, Upload, Loader2, Save, Plus, X } from 'lucide-react';
 import { getToolsAction, getToolFAQsAction, updateToolAction, getCategoriesAction } from '../../actions';
 import { uploadLogoAction } from '../../../media/actions';
 import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
+import CategoryCascadeSelect from '@/components/shared/CategoryCascadeSelect';
+import ToolTagSelector from '@/components/shared/ToolTagSelector';
+import { getTagGroupsWithTagsAction, getToolTagsAction, updateToolTagsAction } from '../../tags/actions';
 
 const pricingModels = ['FREE', 'FREEMIUM', 'PAID', 'ENTERPRISE', 'OPEN_SOURCE'];
 const listingTiers = ['STANDARD', 'PRIORITY', 'FEATURED'];
@@ -39,6 +42,10 @@ interface Category {
   id: string;
   name: string;
   slug: string;
+  parentId?: string | null;
+  parentName?: string | null;
+  parentSlug?: string | null;
+  parentIcon?: string | null;
 }
 
 export default function EditToolPage() {
@@ -57,6 +64,8 @@ export default function EditToolPage() {
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [loadingFaqs, setLoadingFaqs] = useState(false);
   const [screenshots, setScreenshots] = useState<string[]>([]);
+  const [tagGroups, setTagGroups] = useState<any[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   
   const [formData, setFormData] = useState<Tool | null>(null);
 
@@ -67,9 +76,10 @@ export default function EditToolPage() {
   const loadTool = async () => {
     setLoading(true);
     try {
-      const [tools, cats] = await Promise.all([
+      const [tools, cats, tagGroupsData] = await Promise.all([
         getToolsAction(),
         getCategoriesAction(),
+        getTagGroupsWithTagsAction(),
       ]);
       
       const tool = tools.find((t: any) => t.id === toolId);
@@ -83,15 +93,19 @@ export default function EditToolPage() {
       setFormData(tool as Tool);
       setCategories(cats as Category[]);
       setScreenshots(tool.screenshotUrls || []);
+      setTagGroups(tagGroupsData as any[]);
       
-      // Load FAQs
+      // Load FAQs and Tags in parallel
       setLoadingFaqs(true);
       try {
-        const toolFaqs = await getToolFAQsAction(toolId);
-        console.log('Loaded FAQs:', toolFaqs);
+        const [toolFaqs, toolTags] = await Promise.all([
+          getToolFAQsAction(toolId),
+          getToolTagsAction(toolId),
+        ]);
         setFaqs(toolFaqs as FAQ[]);
+        setSelectedTagIds((toolTags as any[]).map((t: any) => t.id));
       } catch (faqError) {
-        console.error('Error loading FAQs:', faqError);
+        console.error('Error loading FAQs/Tags:', faqError);
         setFaqs([]);
       }
 
@@ -237,6 +251,10 @@ export default function EditToolPage() {
       });
       
       if (result.success) {
+        // Save tags separately
+        if (selectedTagIds.length > 0 || true) {
+          await updateToolTagsAction(toolId, selectedTagIds);
+        }
         localStorage.removeItem(`draft_admin_edit_tool_${toolId}`);
         router.push('/tools-dir');
         router.refresh();
@@ -326,21 +344,12 @@ export default function EditToolPage() {
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
-                Category *
-              </label>
-              <select
-                name="categoryId"
+              <CategoryCascadeSelect
+                categories={categories}
                 value={formData.categoryId}
-                onChange={handleChange}
+                onChange={(categoryId) => setFormData(prev => prev ? { ...prev, categoryId } : null)}
                 required
-                className="input-field text-sm"
-              >
-                <option value="">Select category</option>
-                {categories.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+              />
             </div>
 
             <div className="md:col-span-2">
@@ -379,6 +388,24 @@ export default function EditToolPage() {
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               {formData.description.length}/1000 characters
             </p>
+          </div>
+
+          {/* Tags — inline in Basic Info */}
+          <div>
+            {tagGroups.length > 0 ? (
+              <ToolTagSelector
+                groups={tagGroups}
+                selectedTagIds={selectedTagIds}
+                onChange={setSelectedTagIds}
+                maxTags={30}
+                isAdmin={true}
+              />
+            ) : (
+              <div className="flex items-center gap-2 py-2">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />
+                <span className="text-xs text-gray-500">Loading tags...</span>
+              </div>
+            )}
           </div>
         </div>
 

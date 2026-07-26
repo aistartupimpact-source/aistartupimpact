@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Resend } from "resend";
+import { logAuditEvent } from '@/lib/audit-log';
 
 const sql = neon(process.env.DATABASE_URL!);
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
@@ -135,6 +136,14 @@ export async function inviteUser(data: { name: string; email: string; role: stri
     }
 
     revalidatePath("/users");
+    
+    // Audit log
+    await logAuditEvent({
+      action: 'CREATE',
+      resourceType: 'USER',
+      after: { name: data.name, email: data.email, role: data.role },
+    });
+
     return { success: true };
   } catch (error: any) {
     console.error("Error inviting user:", error);
@@ -149,6 +158,8 @@ export async function updateUserMode(id: string, data: { name: string; role: str
   }
 
   try {
+    const before = await prisma.user.findUnique({ where: { id }, select: { name: true, role: true } });
+
     await prisma.user.update({
       where: { id },
       data: {
@@ -157,6 +168,16 @@ export async function updateUserMode(id: string, data: { name: string; role: str
       },
       select: { id: true }
     });
+
+    // Audit log
+    await logAuditEvent({
+      action: 'UPDATE',
+      resourceType: 'USER',
+      resourceId: id,
+      before: before ? { name: before.name, role: before.role } : undefined,
+      after: { name: data.name, role: data.role },
+    });
+
     revalidatePath("/users");
     return { success: true };
   } catch (error: any) {
@@ -199,9 +220,25 @@ export async function deleteUser(id: string) {
   }
 
   try {
-    await prisma.user.delete({
+    // Capture the user data before deletion for audit
+    const user = await prisma.user.findUnique({
       where: { id },
+      select: { id: true, name: true, email: true, role: true }
+    });
+
+    // Soft delete: deactivate instead of hard delete
+    await prisma.user.update({
+      where: { id },
+      data: { isActive: false },
       select: { id: true }
+    });
+
+    // Audit log
+    await logAuditEvent({
+      action: 'DELETE',
+      resourceType: 'USER',
+      resourceId: id,
+      before: user ? { name: user.name, email: user.email, role: user.role } : undefined,
     });
 
     revalidatePath("/users");

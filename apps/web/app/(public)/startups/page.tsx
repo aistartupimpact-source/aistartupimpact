@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import { sql } from '@/lib/db';
 import { Suspense } from 'react';
 import StartupSearch from '@/components/StartupSearch';
+import FounderActionButton from '@/components/auth/FounderActionButton';
 
 export const revalidate = 60;
 
@@ -202,6 +203,12 @@ export default async function StartupsPage({
             Browse {total}+ startups by sector, stage, and city — from bootstrapped to Series C, across the globe.
           </p>
         </div>
+        <FounderActionButton
+          href="/founder/startups/new"
+          className="bg-brand text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold font-jakarta text-xs sm:text-sm hover:scale-105 transition-transform shadow-lg shadow-brand/20 whitespace-nowrap text-center shrink-0"
+        >
+          + Add Startup
+        </FounderActionButton>
       </div>
 
       <Suspense fallback={<div className="h-12 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />}>

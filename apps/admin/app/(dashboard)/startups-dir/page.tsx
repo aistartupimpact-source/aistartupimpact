@@ -224,6 +224,9 @@ export default function StartupsDirPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={() => router.push('/startups-dir/manage')} className="btn-outline text-xs flex items-center gap-1.5 px-3 py-2">
+            Categories & Types
+          </button>
           <button onClick={runImpactScoreFix} className="px-3 py-2 text-xs font-medium border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300">
             Fix Null Scores
           </button>

@@ -208,9 +208,17 @@ export default function ToolsDirPage() {
             Manage AI tools • {pendingCount} pending • {featuredCount} featured
           </p>
         </div>
-        <button onClick={openCreate} className="btn-brand text-sm flex items-center gap-2">
-          <Plus className="w-4 h-4" /> Add Tool
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => router.push('/tools-dir/categories')} className="btn-outline text-sm flex items-center gap-2">
+            Categories
+          </button>
+          <button onClick={() => router.push('/tools-dir/tags')} className="btn-outline text-sm flex items-center gap-2">
+            Tags
+          </button>
+          <button onClick={openCreate} className="btn-brand text-sm flex items-center gap-2">
+            <Plus className="w-4 h-4" /> Add Tool
+          </button>
+        </div>
       </div>
 
       <div className="relative">

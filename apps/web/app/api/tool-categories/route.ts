@@ -1,27 +1,57 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@aistartupimpact/database';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const { searchParams } = request.nextUrl;
+  const format = searchParams.get('format') || 'flat'; // 'flat' | 'tree'
+
   try {
-    // Use raw SQL to avoid date validation issues
+    if (format === 'tree') {
+      // Return hierarchical structure: parents with nested subcategories
+      const parents = await prisma.$queryRaw<any[]>`
+        SELECT id, name, slug, icon, description, "toolCount", "sortOrder"
+        FROM "ToolCategory"
+        WHERE level = 0 AND "isActive" = true
+        ORDER BY "sortOrder" ASC
+      `;
+      const subcategories = await prisma.$queryRaw<any[]>`
+        SELECT id, name, slug, description, "parentId", "toolCount", "sortOrder"
+        FROM "ToolCategory"
+        WHERE level = 1 AND "isActive" = true
+        ORDER BY "sortOrder" ASC, name ASC
+      `;
+
+      // Group subcategories by parentId
+      const subsByParent = new Map<string, any[]>();
+      for (const sub of subcategories) {
+        const pid = sub.parentId;
+        if (!subsByParent.has(pid)) subsByParent.set(pid, []);
+        subsByParent.get(pid)!.push(sub);
+      }
+
+      const tree = parents.map((p: any) => ({
+        ...p,
+        subcategories: subsByParent.get(p.id) || [],
+      }));
+
+      return NextResponse.json({ success: true, categories: tree });
+    }
+
+    // Default: flat list of subcategories only (for backwards compatibility with forms)
     const categories = await prisma.$queryRaw<any[]>`
-      SELECT id, name, slug
-      FROM "ToolCategory"
-      ORDER BY "sortOrder" ASC, name ASC
+      SELECT c.id, c.name, c.slug, c."parentId",
+             p.name AS "parentName", p.slug AS "parentSlug", p.icon AS "parentIcon"
+      FROM "ToolCategory" c
+      LEFT JOIN "ToolCategory" p ON p.id = c."parentId"
+      WHERE c.level = 1 AND c."isActive" = true
+      ORDER BY p."sortOrder" ASC, c."sortOrder" ASC, c.name ASC
     `;
 
-    return NextResponse.json({
-      success: true,
-      categories,
-    });
+    return NextResponse.json({ success: true, categories });
   } catch (error: any) {
     console.error('Error fetching tool categories:', error);
     return NextResponse.json(
-      {
-        success: false,
-        error: error.message || 'Failed to fetch categories',
-        categories: [],
-      },
+      { success: false, error: error.message || 'Failed to fetch categories', categories: [] },
       { status: 500 }
     );
   }

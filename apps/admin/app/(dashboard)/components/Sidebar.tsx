@@ -28,6 +28,9 @@ import {
   Newspaper,
   GraduationCap,
   Star,
+  CalendarDays,
+  Flag,
+  Activity,
 } from 'lucide-react';
 
 const sidebarItems = [
@@ -54,6 +57,10 @@ const sidebarItems = [
   { label: 'Indian AI Tools', href: '/india-ai/tools', icon: Wrench, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER'] },
   { label: 'Featured Founders', href: '/india-ai/founders', icon: Star, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER'] },
   
+  { type: 'divider' as const, label: 'Events', roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'EVENT_ORGANIZER'] },
+  { label: 'Events', href: '/events', icon: CalendarDays, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'EVENT_ORGANIZER'] },
+  { label: 'Event Subscribers', href: '/events/subscribers', icon: Users, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
+
   { type: 'divider' as const, label: 'Marketing', roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'AD_MANAGER'] },
   { label: 'Subscribers', href: '/subscribers', icon: Users, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'AD_MANAGER'] },
   { label: 'Newsletter', href: '/newsletter-admin', icon: Mail, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
@@ -66,12 +73,17 @@ const sidebarItems = [
   { label: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER', 'AD_MANAGER'] },
   { label: 'Tool Analytics', href: '/tool-analytics', icon: Sparkles, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER', 'AD_MANAGER'] },
 
-  { type: 'divider' as const, label: 'System', roles: ['SUPER_ADMIN'] },
+  { type: 'divider' as const, label: 'Users', roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
+  { label: 'People', href: '/people', icon: Users, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
   { label: 'Founders', href: '/founders', icon: UserCog, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
+  { label: 'Web Users', href: '/web-users', icon: Users, roles: ['SUPER_ADMIN'] },
+
+  { type: 'divider' as const, label: 'System', roles: ['SUPER_ADMIN'] },
+  { label: 'Team Activity', href: '/activity', icon: Activity, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
   { label: 'Cities', href: '/cities', icon: MapPin, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
   { label: 'Admin Users', href: '/users', icon: Shield, roles: ['SUPER_ADMIN'] },
-  { label: 'Web Users', href: '/web-users', icon: Users, roles: ['SUPER_ADMIN'] },
   { label: 'Consent Logs', href: '/consent-logs', icon: Shield, roles: ['SUPER_ADMIN'] },
+  { label: 'Reports', href: '/reports', icon: Flag, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
   { label: 'Settings', href: '/settings', icon: Settings, roles: ['SUPER_ADMIN'] },
   { label: 'Dev Tools', href: '/dev-tools', icon: Wrench, roles: ['SUPER_ADMIN'] },
 ];
@@ -129,7 +141,9 @@ export function AdminSidebar({ session }: { session: any }) {
               );
             }
 
-            const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+            // For items with sub-pages in sidebar, use exact match only
+            const hasChildInSidebar = sidebarItems.some((other: any) => other.href && other.href !== item.href && other.href.startsWith(item.href + '/'));
+            const isActive = hasChildInSidebar ? pathname === item.href : (pathname === item.href || pathname?.startsWith(item.href + '/'));
             const Icon = 'icon' in item ? item.icon : null;
 
             return (

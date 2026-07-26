@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { prisma } from "@aistartupimpact/database";
 import { revalidatePath } from "next/cache";
+import { logAuditEvent, canDelete } from '@/lib/audit-log';
 
 const s3Client = new S3Client({
   region: "auto",
@@ -300,6 +301,14 @@ export async function saveArticleAction(payload: any, articleId?: string | null)
     revalidatePath("/articles");
     revalidatePath("/dashboard");
 
+    // Audit log
+    await logAuditEvent({
+      action: articleId ? 'UPDATE' : 'CREATE',
+      resourceType: 'ARTICLE',
+      resourceId: article.id,
+      after: { title: payload.title, slug: payload.slug, status: payload.status },
+    });
+
     return { success: true, data: article };
   } catch (error: any) {
     console.error("[saveArticleAction] Error:", {
@@ -431,13 +440,28 @@ export async function updateArticleStatusAction(id: string, status: string) {
 }
 
 export async function deleteArticleAction(id: string) {
-  const session: any = await getServerSession(authOptions);
-  if (!session?.user || !["SUPER_ADMIN", "EDITOR_IN_CHIEF"].includes(session.user.role)) {
-    return { success: false, error: "Unauthorized to delete articles" };
+  // Only SUPER_ADMIN can delete
+  const { allowed, error } = await canDelete();
+  if (!allowed) {
+    return { success: false, error: error || 'Unauthorized' };
   }
+
   try {
+    // Capture before state for audit
+    const article: any[] = await prisma.$queryRaw`SELECT id, title, slug FROM "Article" WHERE id = ${id} LIMIT 1`;
+    const before = article[0] || null;
+
     // Soft delete to avoid FK constraint failures from related records
     await prisma.$executeRaw`UPDATE "Article" SET "deletedAt" = NOW() WHERE id = ${id}`;
+
+    // Audit log
+    await logAuditEvent({
+      action: 'DELETE',
+      resourceType: 'ARTICLE',
+      resourceId: id,
+      before: before ? { title: before.title, slug: before.slug } : undefined,
+    });
+
     revalidatePath("/articles");
     revalidatePath("/dashboard");
     return { success: true };

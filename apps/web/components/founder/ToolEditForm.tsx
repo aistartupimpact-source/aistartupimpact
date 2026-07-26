@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Upload, X, Loader2, Plus } from 'lucide-react';
-import { updateToolAction } from '@/app/founder/tools/actions';
+import { updateToolAction, getTagGroupsForFounderAction, getToolTagIdsAction } from '@/app/founder/tools/actions';
 import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
+import CategoryCascadeSelect from '@/components/shared/CategoryCascadeSelect';
+import ToolTagSelector from '@/components/shared/ToolTagSelector';
 
 interface AiTool {
   id: string;
@@ -49,28 +51,23 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
   const [error, setError] = useState('');
   const [logoPreview, setLogoPreview] = useState(tool.logoUrl || '');
   const [screenshots, setScreenshots] = useState<string[]>(tool.screenshotUrls || []);
-  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
-
-  // Load categories on mount
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const res = await fetch('/api/tool-categories');
-        const data = await res.json();
-        if (data.success && data.categories) {
-          setCategories(data.categories);
-        }
-      } catch (err) {
-        console.error('Failed to load categories:', err);
-      }
-    };
-    loadCategories();
-  }, []);
-
+  const [tagGroups, setTagGroups] = useState<any[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   // Extract features and use cases from the useCases array
   const existingUseCases = tool.useCases.map(uc => uc.text).join('\n');
 
   const [draftLoaded, setDraftLoaded] = useState(false);
+
+  // Load tag groups and tool's existing tags on mount
+  useEffect(() => {
+    Promise.all([
+      getTagGroupsForFounderAction(),
+      getToolTagIdsAction(tool.id),
+    ]).then(([groups, tagIds]) => {
+      setTagGroups(groups);
+      setSelectedTagIds(tagIds);
+    }).catch(() => {});
+  }, [tool.id]);
 
   // Load draft from localStorage on mount
   useEffect(() => {
@@ -315,6 +312,7 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
         logoUrl: formData.logoUrl || undefined,
         screenshotUrls: screenshots,
         faqs: faqs.length > 0 ? faqs : undefined,
+        tagIds: selectedTagIds,
       });
 
       if (!result.success) {
@@ -416,25 +414,13 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
       </div>
 
       {/* Category */}
+      {/* Category */}
       <div>
-        <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Category <span className="text-red-500">*</span>
-        </label>
-        <select
-          id="categoryId"
-          name="categoryId"
+        <CategoryCascadeSelect
           value={formData.categoryId}
-          onChange={handleChange}
+          onChange={(categoryId) => setFormData(prev => ({ ...prev, categoryId }))}
           required
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
-        >
-          <option value="">Select a category</option>
-          {categories.map(cat => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </select>
+        />
       </div>
 
       {/* Description */}
@@ -720,6 +706,18 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
             </label>
           )}
         </div>
+      </div>
+
+      {/* Tags */}
+      <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
+        {tagGroups.length > 0 ? (
+          <ToolTagSelector
+            groups={tagGroups}
+            selectedTagIds={selectedTagIds}
+            onChange={setSelectedTagIds}
+            maxTags={30}
+          />
+        ) : null}
       </div>
 
       {/* FAQs Section */}

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Star, Zap, ArrowRight, CheckSquare, Square, X, BarChart, Search, Grid3X3, List, Loader2 } from 'lucide-react';
+import { Star, Zap, ArrowRight, CheckSquare, Square, X, BarChart, Search, Grid3X3, List, Loader2, SlidersHorizontal, ChevronDown, ChevronRight } from 'lucide-react';
 import BookmarkButton from './BookmarkButton';
 
 interface ToolPick {
@@ -23,12 +23,44 @@ interface ToolPick {
   founderNames?: string[];
 }
 
+interface TagItem {
+  id: string;
+  name: string;
+  slug: string;
+  emoji: string | null;
+  groupId: string;
+  sortOrder: number;
+  tagCount: number;
+}
+
+interface TagGroupItem {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string | null;
+  description: string | null;
+  sortOrder: number;
+  displayMode: string;
+  maxVisibleDefault: number;
+  tags: TagItem[];
+}
+
+interface ToolsListProps {
+  picks: ToolPick[];
+  tagGroups?: TagGroupItem[];
+  toolTagMap?: Record<string, string[]>;
+  initialTagId?: string | null;
+}
+
 type SortOption = 'rating' | 'name' | 'newest';
 type ViewMode = 'grid' | 'list';
 
 const ITEMS_PER_PAGE = 24;
 
-export default function ToolsListWithComparison({ picks }: { picks: ToolPick[] }) {
+// Primary filter groups shown expanded by default (sortOrder 1-4)
+const PRIMARY_GROUP_SLUGS = ['pricing-access', 'platform-access', 'target-user', 'ai-model-technology'];
+
+export default function ToolsListWithComparison({ picks, tagGroups = [], toolTagMap = {}, initialTagId }: ToolsListProps) {
   const [selectedTools, setSelectedTools] = useState<ToolPick[]>([]);
   const [showComparison, setShowComparison] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -37,6 +69,12 @@ export default function ToolsListWithComparison({ picks }: { picks: ToolPick[] }
   const [sortBy, setSortBy] = useState<SortOption>('rating');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(initialTagId ? [initialTagId] : []);
+  const [showMoreFilters, setShowMoreFilters] = useState(!!initialTagId);
+  const [expandedFilterGroups, setExpandedFilterGroups] = useState<Set<string>>(
+    new Set(PRIMARY_GROUP_SLUGS)
+  );
+  const [showAllInGroup, setShowAllInGroup] = useState<Set<string>>(new Set());
 
   // Get unique categories with counts
   const categories = useMemo(() => {
@@ -67,7 +105,34 @@ export default function ToolsListWithComparison({ picks }: { picks: ToolPick[] }
       const matchesCategory = selectedCategory === 'all' || tool.categorySlug === selectedCategory;
       const matchesPricing = selectedPricing === 'all' || tool.pricing === selectedPricing;
 
-      return matchesSearch && matchesCategory && matchesPricing;
+      // Tag filtering: within a group → OR, across groups → AND
+      let matchesTags = true;
+      if (selectedTagIds.length > 0) {
+        const toolTags = new Set(toolTagMap[tool.id] || []);
+        // Group selected tags by their group
+        const selectedByGroup = new Map<string, string[]>();
+        for (const tagId of selectedTagIds) {
+          // Find which group this tag belongs to
+          for (const group of tagGroups) {
+            const tag = group.tags.find((t: TagItem) => t.id === tagId);
+            if (tag) {
+              if (!selectedByGroup.has(group.id)) selectedByGroup.set(group.id, []);
+              selectedByGroup.get(group.id)!.push(tagId);
+              break;
+            }
+          }
+        }
+        // AND across groups: tool must match at least one tag from each group
+        for (const [, groupTagIds] of selectedByGroup) {
+          const hasAny = groupTagIds.some(tid => toolTags.has(tid));
+          if (!hasAny) {
+            matchesTags = false;
+            break;
+          }
+        }
+      }
+
+      return matchesSearch && matchesCategory && matchesPricing && matchesTags;
     });
 
     // Sort
@@ -84,7 +149,7 @@ export default function ToolsListWithComparison({ picks }: { picks: ToolPick[] }
     }
 
     return result;
-  }, [picks, searchQuery, selectedCategory, selectedPricing, sortBy]);
+  }, [picks, searchQuery, selectedCategory, selectedPricing, sortBy, selectedTagIds, toolTagMap, tagGroups]);
 
   // Paginated tools
   const visibleTools = useMemo(() => {
@@ -194,9 +259,9 @@ export default function ToolsListWithComparison({ picks }: { picks: ToolPick[] }
             </select>
 
             {/* Clear Filters */}
-            {(searchQuery || selectedCategory !== 'all' || selectedPricing !== 'all') && (
+            {(searchQuery || selectedCategory !== 'all' || selectedPricing !== 'all' || selectedTagIds.length > 0) && (
               <button
-                onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedPricing('all'); setVisibleCount(ITEMS_PER_PAGE); }}
+                onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedPricing('all'); setSelectedTagIds([]); setVisibleCount(ITEMS_PER_PAGE); }}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold text-brand hover:bg-brand/5 transition-colors font-jakarta"
               >
                 Clear all
@@ -230,6 +295,133 @@ export default function ToolsListWithComparison({ picks }: { picks: ToolPick[] }
           </div>
         </div>
       </div>
+
+      {/* ── TAG FILTERS ── */}
+      {tagGroups.length > 0 && (
+        <div className="mb-4 sm:mb-6">
+          {/* Active tag filters */}
+          {selectedTagIds.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 mb-3">
+              <span className="text-xs text-gray-500 font-jakarta mr-1">Filters ({selectedTagIds.length}):</span>
+              {selectedTagIds.map(tagId => {
+                const tag = tagGroups.flatMap(g => g.tags).find((t: TagItem) => t.id === tagId);
+                if (!tag) return null;
+                return (
+                  <button
+                    key={tagId}
+                    onClick={() => { setSelectedTagIds(prev => prev.filter(id => id !== tagId)); setVisibleCount(ITEMS_PER_PAGE); }}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-brand/10 border border-brand/20 text-brand rounded-full text-[11px] font-jakarta font-semibold hover:bg-brand/20 transition-colors"
+                  >
+                    {tag.name}
+                    <X className="w-3 h-3" />
+                  </button>
+                );
+              })}
+              <button
+                onClick={() => { setSelectedTagIds([]); setVisibleCount(ITEMS_PER_PAGE); }}
+                className="text-[11px] text-red-500 hover:text-red-600 font-semibold font-jakarta ml-1"
+              >
+                Clear tags
+              </button>
+            </div>
+          )}
+
+          {/* Filter toggle button */}
+          <button
+            onClick={() => setShowMoreFilters(!showMoreFilters)}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold font-jakarta border transition-all ${
+              showMoreFilters || selectedTagIds.length > 0
+                ? 'bg-brand/5 border-brand/20 text-brand'
+                : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-brand/30'
+            }`}
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            More Filters
+            {selectedTagIds.length > 0 && (
+              <span className="bg-brand text-white text-[10px] px-1.5 py-0.5 rounded-full ml-0.5">{selectedTagIds.length}</span>
+            )}
+            <ChevronDown className={`w-3 h-3 transition-transform ${showMoreFilters ? 'rotate-180' : ''}`} />
+          </button>
+
+          {/* Expanded filter panel */}
+          {showMoreFilters && (
+            <div className="mt-3 p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl space-y-3 max-h-[400px] overflow-y-auto">
+              {tagGroups.map(group => {
+                const isExpanded = expandedFilterGroups.has(group.slug);
+                const activeTags = group.tags.filter((t: TagItem) => t.tagCount > 0 || selectedTagIds.includes(t.id));
+                const visibleTags = showAllInGroup.has(group.id)
+                  ? activeTags
+                  : activeTags.slice(0, group.maxVisibleDefault);
+                const hasMore = activeTags.length > group.maxVisibleDefault;
+                const selectedInGroup = group.tags.filter((t: TagItem) => selectedTagIds.includes(t.id)).length;
+
+                return (
+                  <div key={group.id} className="border-b border-gray-100 dark:border-gray-800 last:border-0 pb-3 last:pb-0">
+                    <button
+                      onClick={() => {
+                        setExpandedFilterGroups(prev => {
+                          const next = new Set(prev);
+                          if (next.has(group.slug)) next.delete(group.slug);
+                          else next.add(group.slug);
+                          return next;
+                        });
+                      }}
+                      className="w-full flex items-center justify-between py-1"
+                    >
+                      <div className="flex items-center gap-2">
+                        {isExpanded ? <ChevronDown className="w-3 h-3 text-gray-400" /> : <ChevronRight className="w-3 h-3 text-gray-400" />}
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 font-jakarta">{group.name}</span>
+                      </div>
+                      {selectedInGroup > 0 && (
+                        <span className="text-[10px] font-bold bg-brand/10 text-brand px-1.5 py-0.5 rounded-full">{selectedInGroup}</span>
+                      )}
+                    </button>
+                    {isExpanded && (
+                      <div className="flex flex-wrap gap-1.5 mt-2 pl-5">
+                        {visibleTags.map((tag: TagItem) => {
+                          const isSelected = selectedTagIds.includes(tag.id);
+                          return (
+                            <button
+                              key={tag.id}
+                              onClick={() => {
+                                setSelectedTagIds(prev =>
+                                  isSelected ? prev.filter(id => id !== tag.id) : [...prev, tag.id]
+                                );
+                                setVisibleCount(ITEMS_PER_PAGE);
+                              }}
+                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-jakarta transition-all border ${
+                                isSelected
+                                  ? 'bg-brand/10 border-brand/30 text-brand font-semibold'
+                                  : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-brand/30 hover:text-brand'
+                              }`}
+                            >
+                              {tag.name}
+                              {tag.tagCount > 0 && <span className="text-[9px] text-gray-400 ml-0.5">({tag.tagCount})</span>}
+                            </button>
+                          );
+                        })}
+                        {hasMore && (
+                          <button
+                            onClick={() => setShowAllInGroup(prev => {
+                              const next = new Set(prev);
+                              if (next.has(group.id)) next.delete(group.id);
+                              else next.add(group.id);
+                              return next;
+                            })}
+                            className="text-[11px] font-jakarta font-semibold text-brand hover:underline px-2 py-1"
+                          >
+                            {showAllInGroup.has(group.id) ? 'Show less' : `Show all ${activeTags.length}`}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── GRID VIEW ── */}
       {viewMode === 'grid' && (
@@ -376,7 +568,7 @@ export default function ToolsListWithComparison({ picks }: { picks: ToolPick[] }
         <div className="text-center py-16">
           <p className="text-gray-400 font-jakarta text-base mb-2">No tools found matching your criteria.</p>
           <button
-            onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedPricing('all'); }}
+            onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedPricing('all'); setSelectedTagIds([]); }}
             className="text-sm text-brand font-semibold hover:underline"
           >
             Clear all filters

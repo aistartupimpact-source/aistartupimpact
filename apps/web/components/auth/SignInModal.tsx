@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Eye, EyeOff, Loader2, User, Star } from 'lucide-react';
+import { X, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface SignInModalProps {
@@ -13,12 +13,10 @@ interface SignInModalProps {
   fullPage?: boolean;
 }
 
-type TabType = 'user' | 'founder';
 type ModeType = 'signin' | 'signup';
 
 export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', defaultTab = 'user', returnTo, fullPage = false }: SignInModalProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabType>(defaultTab);
   const [mode, setMode] = useState<ModeType>(defaultMode);
   const [formData, setFormData] = useState({
     name: '',
@@ -43,6 +41,12 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
   const [twoFACode, setTwoFACode] = useState('');
   const [useBackupCode, setUseBackupCode] = useState(false);
 
+  // OTP verification state (for signup)
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpCountdown, setOtpCountdown] = useState(0);
+
   if (!isOpen) return null;
 
   const resetForm = () => {
@@ -63,6 +67,8 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
     setRequires2FA(false);
     setTwoFACode('');
     setUserId('');
+    setOtpStep(false);
+    setOtpCode('');
   };
 
   const getPasswordStrength = (password: string) => {
@@ -97,29 +103,83 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
         setError('Please subscribe to the newsletter to create an account');
         return;
       }
-      if (activeTab === 'user' && formData.password !== formData.confirmPassword) {
+      if (formData.password !== formData.confirmPassword) {
         setError('Passwords do not match');
         return;
       }
+
+      // Step 1: Send OTP (if not already in OTP step)
+      if (!otpStep) {
+        setLoading(true);
+        try {
+          const otpRes = await fetch('/api/auth/otp/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: formData.email, purpose: 'signup' }),
+          });
+          const otpData = await otpRes.json();
+          if (!otpRes.ok) throw new Error(otpData.error || 'Failed to send code');
+          setOtpStep(true);
+          setOtpCountdown(60);
+          // Start countdown
+          const timer = setInterval(() => {
+            setOtpCountdown((c) => { if (c <= 1) { clearInterval(timer); return 0; } return c - 1; });
+          }, 1000);
+        } catch (err: any) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
+
+      // Step 2: Verify OTP then create account
+      setLoading(true);
+      try {
+        const verifyRes = await fetch('/api/auth/otp/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: formData.email, code: otpCode, purpose: 'signup' }),
+        });
+        const verifyData = await verifyRes.json();
+        if (!verifyRes.ok) throw new Error(verifyData.error || 'Verification failed');
+
+        // OTP verified — now create the account
+        const signupRes = await fetch('/api/user/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: formData.name, email: formData.email, password: formData.password }),
+        });
+        const signupData = await signupRes.json();
+        if (!signupRes.ok) throw new Error(signupData.error || 'Signup failed');
+
+        // Auto-login after signup
+        const loginRes = await fetch('/api/user/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: formData.email, password: formData.password }),
+        });
+        if (!loginRes.ok) throw new Error('Account created! Please sign in.');
+
+        onClose();
+        resetForm();
+        router.push(returnTo || '/profile');
+        router.refresh();
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+      return;
     }
 
+    // ─── Sign In (no OTP needed) ───
     setLoading(true);
-
     try {
-      const endpoint = mode === 'signin'
-        ? (activeTab === 'user' ? '/api/user/auth/login' : '/api/founder/auth/login')
-        : (activeTab === 'user' ? '/api/user/auth/signup' : '/api/founder/auth/signup');
-
-      const payload = mode === 'signin'
-        ? { email: formData.email, password: formData.password }
-        : activeTab === 'founder'
-          ? { name: formData.name, email: formData.email, password: formData.password, company: formData.company || undefined, subscribeNewsletter: formData.subscribeNewsletter }
-          : { name: formData.name, email: formData.email, password: formData.password, subscribeNewsletter: formData.subscribeNewsletter };
-
-      const res = await fetch(endpoint, {
+      const res = await fetch('/api/user/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ email: formData.email, password: formData.password }),
       });
 
       const data = await res.json();
@@ -128,10 +188,10 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
         if (data.error?.includes('verify your email')) {
           setShowResendVerification(true);
         }
-        throw new Error(data.error || `${mode === 'signin' ? 'Login' : 'Signup'} failed`);
+        throw new Error(data.error || 'Login failed');
       }
 
-      // Check if 2FA is required
+      // Check if 2FA is required (founder accounts)
       if (data.requires2FA) {
         setRequires2FA(true);
         setUserId(data.userId);
@@ -139,41 +199,9 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
         return;
       }
 
-      // Signup success
-      if (mode === 'signup') {
-        if (activeTab === 'founder') {
-          onClose();
-          resetForm();
-          window.dispatchEvent(new CustomEvent('founderSignupSuccess', {
-            detail: { email: formData.email }
-          }));
-          return;
-        } else {
-          // User auto-login
-          const loginRes = await fetch('/api/user/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: formData.email, password: formData.password }),
-          });
-          if (!loginRes.ok) {
-            throw new Error('Account created but login failed. Please try logging in.');
-          }
-          onClose();
-          resetForm();
-          router.push(returnTo || '/profile');
-          router.refresh();
-          return;
-        }
-      }
-
-      // Signin success
       onClose();
       resetForm();
-      if (activeTab === 'founder') {
-        router.push(returnTo || '/founder/dashboard');
-      } else {
-        router.push(returnTo || '/profile');
-      }
+      router.push(returnTo || '/profile');
       router.refresh();
     } catch (err: any) {
       setError(err.message);
@@ -182,11 +210,34 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
     }
   };
 
+  const handleResendOtp = async () => {
+    setOtpSending(true);
+    setError('');
+    try {
+      const res = await fetch('/api/auth/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, purpose: 'signup' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to resend');
+      setOtpCountdown(60);
+      const timer = setInterval(() => {
+        setOtpCountdown((c) => { if (c <= 1) { clearInterval(timer); return 0; } return c - 1; });
+      }, 1000);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
   const handleVerify2FA = async () => {
     setError('');
     setLoading(true);
 
     try {
+      // Verify 2FA through founder endpoint
       const res = await fetch('/api/founder/auth/verify-2fa', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -196,9 +247,21 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || '2FA verification failed');
 
+      // Also create a web user session so navbar works (bridge login)
+      // The founder is now authenticated — create/find their WebUser and set user-token
+      try {
+        await fetch('/api/user/auth/bridge-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ founderId: userId }),
+        });
+      } catch {
+        // Non-critical — founder session still works
+      }
+
       onClose();
       resetForm();
-      router.push(returnTo || '/founder/dashboard');
+      router.push(returnTo || '/profile');
       router.refresh();
     } catch (err: any) {
       setError(err.message);
@@ -232,11 +295,8 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
   };
 
   const handleGoogleSignIn = () => {
-    const returnUrl = returnTo || (activeTab === 'founder' ? '/founder/dashboard' : '/profile');
-    const endpoint = activeTab === 'user'
-      ? `/api/user/auth/google?returnTo=${encodeURIComponent(returnUrl)}`
-      : `/api/founder/auth/google?returnTo=${encodeURIComponent(returnUrl)}`;
-    window.location.href = endpoint;
+    const returnUrl = returnTo || '/profile';
+    window.location.href = `/api/user/auth/google?returnTo=${encodeURIComponent(returnUrl)}`;
   };
 
   const handleForgotPassword = () => {
@@ -327,32 +387,6 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
           </div>
         ) : (
           <>
-            {/* Tabs */}
-            <div className="flex border-b border-gray-200 dark:border-gray-800">
-              <button
-                onClick={() => { setActiveTab('user'); resetForm(); setMode(mode); }}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3.5 font-semibold text-sm transition-colors ${
-                  activeTab === 'user'
-                    ? 'text-brand border-b-2 border-brand bg-brand/5'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                }`}
-              >
-                <User className="w-4 h-4" />
-                User
-              </button>
-              <button
-                onClick={() => { setActiveTab('founder'); resetForm(); setMode(mode); }}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3.5 font-semibold text-sm transition-colors ${
-                  activeTab === 'founder'
-                    ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50 dark:bg-purple-900/20'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                }`}
-              >
-                <Star className="w-4 h-4" />
-                Founder
-              </button>
-            </div>
-
             {/* Content */}
             <div className="p-6">
               {/* Google OAuth */}
@@ -428,7 +462,6 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     Email Address
-                    {mode === 'signup' && activeTab === 'founder' && <span className="text-xs text-gray-400 ml-1">(Company email only)</span>}
                   </label>
                   <input
                     type="email"
@@ -436,23 +469,9 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
-                    placeholder={activeTab === 'founder' ? 'john@yourcompany.com' : 'your@email.com'}
+                    placeholder="your@email.com"
                   />
                 </div>
-
-                {/* Company - founder signup only */}
-                {mode === 'signup' && activeTab === 'founder' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Company (Optional)</label>
-                    <input
-                      type="text"
-                      value={formData.company}
-                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
-                      placeholder="My Startup"
-                    />
-                  </div>
-                )}
 
                 {/* Password */}
                 <div>
@@ -491,8 +510,8 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
                   )}
                 </div>
 
-                {/* Confirm Password - user signup only */}
-                {mode === 'signup' && activeTab === 'user' && (
+                {/* Confirm Password - signup only */}
+                {mode === 'signup' && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Confirm Password</label>
                     <div className="relative">
@@ -519,7 +538,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
                   </div>
                 )}
 
-                {/* Terms - both user and founder signup */}
+                {/* Terms - signup only */}
                 {mode === 'signup' && (
                   <div className="flex items-start gap-2.5" onClick={(e) => e.stopPropagation()}>
                     <input
@@ -538,7 +557,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
                   </div>
                 )}
 
-                {/* Newsletter consent - both user and founder signup */}
+                {/* Newsletter consent - signup only */}
                 {mode === 'signup' && (
                   <div className="flex items-start gap-2.5" onClick={(e) => e.stopPropagation()}>
                     <input
@@ -557,18 +576,55 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
                   </div>
                 )}
 
+                {/* OTP Input (signup only, after form validation) */}
+                {mode === 'signup' && otpStep && (
+                  <div className="space-y-3 border-t border-gray-200 dark:border-gray-700 pt-4 mt-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Enter the 6-digit code sent to {formData.email}
+                      </label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="000000"
+                        maxLength={6}
+                        className="w-full px-4 py-3 text-center text-xl font-mono tracking-[0.3em] border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                        autoFocus
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={handleResendOtp}
+                        disabled={otpCountdown > 0 || otpSending}
+                        className="text-xs text-brand hover:underline disabled:text-gray-400 disabled:no-underline"
+                      >
+                        {otpSending ? 'Sending...' : otpCountdown > 0 ? `Resend in ${otpCountdown}s` : 'Resend code'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setOtpStep(false); setOtpCode(''); setError(''); }}
+                        className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                      >
+                        Change email
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Submit */}
                 <button
                   type="submit"
-                  disabled={loading || (mode === 'signup' && (!formData.agreeToTerms || !formData.subscribeNewsletter))}
+                  disabled={loading || (mode === 'signup' && (!formData.agreeToTerms || !formData.subscribeNewsletter)) || (mode === 'signup' && otpStep && otpCode.length !== 6)}
                   className="w-full bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
                 >
                   {loading ? (
-                    <><Loader2 className="w-4 h-4 animate-spin" /> {mode === 'signin' ? 'Signing in...' : 'Creating account...'}</>
+                    <><Loader2 className="w-4 h-4 animate-spin" /> {mode === 'signin' ? 'Signing in...' : otpStep ? 'Verifying...' : 'Sending code...'}</>
                   ) : (
-                    mode === 'signin'
-                      ? `Sign In as ${activeTab === 'user' ? 'User' : 'Founder'}`
-                      : `Create ${activeTab === 'user' ? 'User' : 'Founder'} Account`
+                    mode === 'signin' ? 'Sign In' : otpStep ? 'Verify & Create Account' : 'Continue'
                   )}
                 </button>
               </form>

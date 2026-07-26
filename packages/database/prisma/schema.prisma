@@ -180,6 +180,7 @@ model AiTool {
   ToolUseCase         ToolUseCase[]
   SavedTool           SavedTool[]
   ToolFeaturedCampaign ToolFeaturedCampaign[]
+  ToolSystemTagMapping ToolSystemTagMapping[]
 
   @@index([avgRating])
   @@index([categoryId])
@@ -479,6 +480,11 @@ model FounderUser {
   twoFactorEnabled                       Boolean                  @default(false)
   twoFactorSecret                        String?
   twoFactorBackupCodes                   String[]
+
+  // Unified identity link
+  unifiedUserId                          String?                  @unique
+  unifiedUser                            UnifiedUser?             @relation("FounderToUnified", fields: [unifiedUserId], references: [id], onDelete: SetNull)
+
   AiTool                                 AiTool[]
   FounderAnalytics                       FounderAnalytics[]
   FounderNotification                    FounderNotification[]
@@ -493,6 +499,7 @@ model FounderUser {
   @@index([googleId])
   @@index([resetToken])
   @@index([status])
+  @@index([unifiedUserId])
   @@index([verifyToken])
 }
 
@@ -1144,16 +1151,24 @@ model TalentStats {
 }
 
 model ToolCategory {
-  id          String   @id
+  id          String           @id
   name        String
-  slug        String   @unique
+  slug        String           @unique
   description String?
   icon        String?
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
+  parentId    String?
+  level       Int              @default(0)
+  sortOrder   Int              @default(0)
+  isActive    Boolean          @default(true)
+  toolCount   Int              @default(0)
+  createdAt   DateTime         @default(now())
+  parent      ToolCategory?    @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    ToolCategory[]   @relation("CategoryHierarchy")
   AiTool      AiTool[]
 
+  @@index([parentId])
   @@index([slug])
+  @@index([level, sortOrder])
 }
 
 model ToolCon {
@@ -1263,6 +1278,9 @@ model WebUser {
   avatar          String?
   twitter         String?
   linkedin        String?
+  instagram       String?
+  facebook        String?
+  github          String?
   isActive        Boolean          @default(true)
   termsAcceptedAt DateTime?        @db.Timestamptz
   lastLoginAt     DateTime?        @db.Timestamptz
@@ -1614,4 +1632,743 @@ enum UserRole {
   WRITER
   AD_MANAGER
   CONTRIBUTOR
+  EVENT_ORGANIZER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+model ContentReport {
+  id            String       @id @default(dbgenerated("gen_random_uuid()"))
+  entityType    String       // STARTUP | TOOL | EVENT
+  entityId      String
+  entityName    String
+  entitySlug    String
+  reportType    String       // incorrect_info | duplicate | trademark | copyright | broken_links | spam | other
+  description   String
+  reporterEmail String?
+  status        ReportStatus @default(PENDING)
+  adminNotes    String?
+  resolvedAt    DateTime?
+  resolvedBy    String?
+  createdAt     DateTime     @default(now())
+
+  @@index([entityType, entityId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+
+// ============================================================
+// EMAIL OTP VERIFICATION
+// ============================================================
+
+model EmailOtp {
+  id          String   @id @default(dbgenerated("gen_random_uuid()"))
+  email       String
+  code        String   // 6-digit hashed code
+  purpose     String   @default("signup") // signup | login | verify | workspace_link
+  attempts    Int      @default(0) // max 3 attempts before code is invalidated
+  verified    Boolean  @default(false)
+  expiresAt   DateTime // 10 minutes from creation
+  createdAt   DateTime @default(now())
+
+  @@index([email, purpose, verified])
+  @@index([expiresAt])
+}
+
+// ============================================================
+// UNIFIED IDENTITY (single sign-in across all workspaces)
+// ============================================================
+
+enum LastWorkspace {
+  COMMUNITY
+  FOUNDER
+  ORGANIZER
+}
+
+model UnifiedUser {
+  id                   String         @id @default(dbgenerated("gen_random_uuid()"))
+  email                String         @unique
+  name                 String
+  passwordHash         String?
+  googleId             String?        @unique
+  avatar               String?
+  emailVerified        Boolean        @default(false)
+  verifyToken          String?        @unique
+
+  // Smart routing
+  lastWorkspace        LastWorkspace  @default(COMMUNITY)
+
+  // 2FA
+  twoFactorEnabled     Boolean        @default(false)
+  twoFactorSecret      String?
+  twoFactorBackupCodes String[]
+  twoFactorInherited   Boolean        @default(false) // true = 2FA was linked from founder account
+
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  sessions             UnifiedSession[]
+  linkLogs             WorkspaceLinkLog[]
+
+  // Inverse relations (workspace profiles point to this user)
+  founderProfile       FounderUser?   @relation("FounderToUnified")
+  organizerProfile     EventOrganizer? @relation("OrganizerToUnified")
+
+  @@index([email])
+  @@index([googleId])
+}
+
+model UnifiedSession {
+  id        String      @id @default(dbgenerated("gen_random_uuid()"))
+  userId    String
+  token     String      @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  source    String      @default("direct") // direct | migrated_founder | migrated_organizer | migrated_web
+  createdAt DateTime    @default(now())
+
+  user      UnifiedUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model WorkspaceLinkLog {
+  id            String      @id @default(dbgenerated("gen_random_uuid()"))
+  userId        String
+  workspace     String      // "founder" | "organizer"
+  action        String      // "created_fresh" | "linked_existing" | "auto_migrated"
+  linkedId      String
+  emailMatch    Boolean     @default(true)
+  verified      Boolean     @default(false)
+  ipAddress     String?
+  createdAt     DateTime    @default(now())
+
+  user          UnifiedUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Pending workspace link requests (for high-value accounts requiring confirmation)
+model WorkspaceLinkRequest {
+  id            String      @id @default(dbgenerated("gen_random_uuid()"))
+  userId        String
+  workspace     String      // "founder" | "organizer"
+  targetId      String      // FounderUser.id or EventOrganizer.id to link
+  token         String      @unique
+  status        String      @default("PENDING") // PENDING | CONFIRMED | EXPIRED | REJECTED
+  expiresAt     DateTime    // 72 hours TTL
+  createdAt     DateTime    @default(now())
+
+  @@index([token])
+  @@index([userId])
+  @@index([status, expiresAt])
+}
+
+// ============================================================
+// EVENT ORGANIZER (separate public auth)
+// ============================================================
+
+enum EventOrganizerStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+enum TeamRole {
+  ADMIN
+  MANAGER
+  STAFF
+  CHECK_IN
+}
+
+enum TeamMemberStatus {
+  PENDING
+  ACTIVE
+  REVOKED
+}
+
+model EventOrganizer {
+  id               String               @id @default(dbgenerated("gen_random_uuid()"))
+  email            String               @unique
+  name             String
+  passwordHash     String?
+  googleId         String?              @unique
+  company          String?
+  phone            String?
+  avatar           String?
+  bio              String?
+  website          String?
+  linkedin         String?
+  emailVerified    Boolean              @default(false)
+  verifyToken      String?              @unique
+  status           EventOrganizerStatus @default(PENDING_VERIFICATION)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  lastLoginAt      DateTime?
+
+  // Unified identity link
+  unifiedUserId    String?              @unique
+  unifiedUser      UnifiedUser?         @relation("OrganizerToUnified", fields: [unifiedUserId], references: [id], onDelete: SetNull)
+
+  // Relations
+  events           Event[]
+  sessions         EventOrganizerSession[]
+  teamMembers      EventTeamMember[]
+
+  @@index([email])
+  @@index([googleId])
+  @@index([status])
+  @@index([unifiedUserId])
+}
+
+model EventOrganizerSession {
+  id          String         @id @default(dbgenerated("gen_random_uuid()"))
+  organizerId String
+  token       String         @unique
+  expiresAt   DateTime
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime       @default(now())
+  organizer   EventOrganizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([organizerId])
+  @@index([expiresAt])
+}
+
+// ============================================================
+// TEAM MANAGEMENT
+// ============================================================
+
+model EventTeamMember {
+  id            String           @id @default(dbgenerated("gen_random_uuid()"))
+  organizerId   String
+  email         String
+  role          TeamRole         @default(STAFF)
+  status        TeamMemberStatus @default(PENDING)
+  inviteToken   String           @unique
+  expiresAt     DateTime
+  passwordHash  String?
+  acceptedAt    DateTime?
+  createdAt     DateTime         @default(now())
+
+  organizer     EventOrganizer   @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  assignments   EventTeamAssignment[]
+  activityLogs  TeamActivityLog[]
+
+  @@unique([organizerId, email])
+  @@index([email])
+  @@index([inviteToken])
+  @@index([organizerId])
+}
+
+model EventTeamAssignment {
+  id            String          @id @default(dbgenerated("gen_random_uuid()"))
+  teamMemberId  String
+  eventId       String
+
+  teamMember    EventTeamMember @relation(fields: [teamMemberId], references: [id], onDelete: Cascade)
+  event         Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([teamMemberId, eventId])
+  @@index([teamMemberId])
+  @@index([eventId])
+}
+
+model TeamActivityLog {
+  id            String          @id @default(dbgenerated("gen_random_uuid()"))
+  teamMemberId  String?
+  organizerId   String?
+  eventId       String?
+  action        String
+  targetName    String?
+  targetEmail   String?
+  metadata      String?
+  createdAt     DateTime        @default(now())
+
+  teamMember    EventTeamMember? @relation(fields: [teamMemberId], references: [id], onDelete: SetNull)
+
+  @@index([teamMemberId, createdAt])
+  @@index([organizerId, createdAt])
+  @@index([eventId, createdAt])
+}
+
+// ============================================================
+// EVENT PLATFORM MODELS
+// ============================================================
+
+enum EventCategory {
+  CONFERENCE
+  HACKATHON
+  SUMMIT
+  WORKSHOP
+  MEETUP
+  DEMO_DAY
+  WEBINAR
+  NETWORKING
+}
+
+enum EventFormat {
+  IN_PERSON
+  VIRTUAL
+  HYBRID
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+enum EventVisibility {
+  PUBLIC
+  UNLISTED
+  INVITE_ONLY
+}
+
+enum RegistrationStatus {
+  CONFIRMED
+  PENDING_PAYMENT
+  WAITLISTED
+  CANCELLED
+  CHECKED_IN
+}
+
+enum TicketTierType {
+  EARLY_BIRD
+  REGULAR
+  VIP
+}
+
+enum EventCustomQuestionType {
+  TEXT
+  SELECT
+  CHECKBOX
+}
+
+enum EventCampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+  FAILED
+}
+
+model Event {
+  id                       String          @id @default(dbgenerated("gen_random_uuid()"))
+  slug                     String          @unique
+  shortCode                String          @unique  // Immutable 6-char code for short URLs (/e/KX7M4P)
+  organizerId              String
+  title                    String
+  subtitle                 String?
+  category                 EventCategory
+  format                   EventFormat
+  status                   EventStatus     @default(DRAFT)
+  // Date & Time
+  startAt                  DateTime
+  endAt                    DateTime
+  timezone                 String          @default("Asia/Kolkata")
+  // Location (in-person/hybrid)
+  venueName                String?
+  address                  String?
+  latitude                 Float?
+  longitude                Float?
+  // Virtual (virtual/hybrid)
+  meetingLink              String?
+  revealLinkAfterRegistration Boolean      @default(false)
+  // Content
+  coverImageUrl            String?
+  galleryImageUrls         String[]        @default([])
+  description              Json?           // Rich text (Tiptap JSON)
+  // Capacity & Registration
+  capacity                 Int?
+  registrationCount        Int             @default(0)
+  visibility               EventVisibility @default(PUBLIC)
+  registrationDeadline     DateTime?
+  approvalRequired         Boolean         @default(false)
+  // SEO & Sharing
+  metaTitle                String?
+  metaDescription          String?
+  socialImageUrl           String?
+  // Publishing
+  publishAt                DateTime?       // Scheduled publish
+  publishedAt              DateTime?
+  // Soft delete
+  deletedAt                DateTime?
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+
+  // Relations
+  organizer                EventOrganizer  @relation(fields: [organizerId], references: [id])
+  speakers                 EventSpeaker[]
+  agendaItems              EventAgendaItem[]
+  ticketTiers              EventTicketTier[]
+  customQuestions           EventCustomQuestion[]
+  registrations            EventRegistration[]
+  tags                     EventTagMapping[]
+  campaigns                EventEmailCampaign[]
+  slugHistory              EventSlugHistory[]
+  teamAssignments          EventTeamAssignment[]
+
+  @@index([slug])
+  @@index([shortCode])
+  @@index([status, visibility])
+  @@index([startAt])
+  @@index([organizerId])
+  @@index([category])
+  @@index([format])
+  @@index([latitude, longitude])
+  @@index([deletedAt])
+}
+
+model EventSlugHistory {
+  id         String   @id @default(dbgenerated("gen_random_uuid()"))
+  eventId    String
+  oldSlug    String   @unique  // Prevents reuse of old slugs by other events
+  newSlug    String
+  changedBy  String             // Organizer ID who made the change
+  changedAt  DateTime @default(now())
+
+  event      Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([oldSlug])
+  @@index([eventId])
+}
+
+model EventSpeaker {
+  id          String   @id @default(dbgenerated("gen_random_uuid()"))
+  eventId     String
+  name        String
+  title       String?
+  company     String?
+  headshotUrl String?
+  bio         String?
+  talkTitle   String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  agendaItems EventAgendaItem[]
+
+  @@index([eventId])
+}
+
+model EventAgendaItem {
+  id          String        @id @default(dbgenerated("gen_random_uuid()"))
+  eventId     String
+  speakerId   String?
+  dayNumber   Int           @default(1)
+  startTime   String        // "09:00" format for flexible time display
+  endTime     String        // "10:00"
+  title       String
+  description String?
+  sortOrder   Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  event       Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  speaker     EventSpeaker? @relation(fields: [speakerId], references: [id], onDelete: SetNull)
+
+  @@index([eventId, dayNumber])
+}
+
+model EventTicketTier {
+  id           String         @id @default(dbgenerated("gen_random_uuid()"))
+  eventId      String
+  name         String
+  priceCents   Int            @default(0) // 0 = free
+  quantity     Int?           // null = unlimited
+  soldCount    Int            @default(0)
+  saleStart    DateTime?
+  saleEnd      DateTime?
+  tierType     TicketTierType @default(REGULAR)
+  description  String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  event        Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  registrations EventRegistration[]
+
+  @@index([eventId])
+}
+
+model EventCustomQuestion {
+  id           String                  @id @default(dbgenerated("gen_random_uuid()"))
+  eventId      String
+  questionText String
+  questionType EventCustomQuestionType @default(TEXT)
+  options      Json?                   // For SELECT type: ["Option A", "Option B"]
+  required     Boolean                 @default(false)
+  sortOrder    Int                     @default(0)
+  createdAt    DateTime                @default(now())
+
+  event        Event                   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  answers      EventRegistrationAnswer[]
+
+  @@index([eventId])
+}
+
+model EventRegistration {
+  id                   String             @id @default(dbgenerated("gen_random_uuid()"))
+  eventId              String
+  userId               String?            // nullable for guest registrations
+  ticketTierId         String?
+  // Guest info (for non-logged-in registrants)
+  guestName            String?
+  guestEmail           String?
+  guestPhone           String?
+  guestCompany         String?
+  guestRole            String?
+  guestOccupation      String?
+  // Consent flags
+  whatsappConsent      Boolean            @default(false)
+  registrationSource   String             @default("WEBSITE") // WEBSITE | EVENT_QR | WALK_IN
+  // Status & tokens
+  status               RegistrationStatus @default(CONFIRMED)
+  qrToken              String             @unique // 16-char base62
+  // Payment (stub for future)
+  stripePaymentIntentId String?
+  razorpayOrderId      String?
+  // Timestamps
+  registeredAt         DateTime           @default(now())
+  checkedInAt          DateTime?
+  cancelledAt          DateTime?
+  deletedAt            DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  // Relations
+  event                Event              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  ticketTier           EventTicketTier?   @relation(fields: [ticketTierId], references: [id], onDelete: SetNull)
+  answers              EventRegistrationAnswer[]
+
+  @@unique([eventId, guestEmail]) // Prevent duplicate registrations by email per event
+  @@index([eventId])
+  @@index([userId])
+  @@index([qrToken])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model EventRegistrationAnswer {
+  id             String              @id @default(dbgenerated("gen_random_uuid()"))
+  registrationId String
+  questionId     String
+  answerText     String
+
+  registration   EventRegistration   @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  question       EventCustomQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([registrationId])
+  @@index([questionId])
+}
+
+// ============================================================
+// EVENT NEWSLETTER & GEO-TARGETING
+// ============================================================
+
+model EventTag {
+  id            String           @id @default(dbgenerated("gen_random_uuid()"))
+  name          String           @unique  // Display name: "LLM"
+  canonicalName String           // Normalized: "large-language-models"
+  category      String?          // "technology", "domain", "format"
+  createdAt     DateTime         @default(now())
+
+  eventMappings  EventTagMapping[]
+  subscriberInterests EventSubscriberInterest[]
+
+  @@index([canonicalName])
+  @@index([category])
+}
+
+model EventTagMapping {
+  eventId  String
+  tagId    String
+
+  event    Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tag      EventTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, tagId])
+}
+
+model EventSubscriber {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()"))
+  email               String    @unique
+  name                String?
+  // Location for geo-targeting
+  locationCity        String?   // "Hyderabad, India"
+  locationLat         Float?
+  locationLng         Float?
+  locationCountryCode String?   // "IN"
+  locationRegion      String?   // "Telangana"
+  // Consent & subscription
+  subscribed          Boolean   @default(true)
+  consentAt           DateTime?
+  consentSource       String?   // "event_registration:<event_id>" or "website_form"
+  consentText         String?   // Exact checkbox copy they agreed to
+  consentVersion      Int       @default(1)
+  unsubscribedAt      DateTime?
+  // Metadata
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  // Relations
+  interests           EventSubscriberInterest[]
+  campaignRecipients  EventCampaignRecipient[]
+
+  @@index([email])
+  @@index([subscribed])
+  @@index([locationLat, locationLng])
+  @@index([locationCountryCode])
+}
+
+model EventSubscriberInterest {
+  subscriberId String
+  tagId        String
+
+  subscriber   EventSubscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  tag          EventTag        @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([subscriberId, tagId])
+}
+
+// ============================================================
+// EVENT EMAIL CAMPAIGNS
+// ============================================================
+
+model EventEmailCampaign {
+  id              String              @id @default(dbgenerated("gen_random_uuid()"))
+  eventId         String?             // null for non-event campaigns
+  subject         String
+  bodyHtml        String?
+  bodyJson        Json?               // React Email template data
+  audienceQuery   Json?               // Stored segmentation filters
+  status          EventCampaignStatus @default(DRAFT)
+  scheduledAt     DateTime?
+  sentAt          DateTime?
+  recipientCount  Int                 @default(0)
+  openCount       Int                 @default(0)
+  clickCount      Int                 @default(0)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  event           Event?              @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  recipients      EventCampaignRecipient[]
+
+  @@index([eventId])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+model EventCampaignRecipient {
+  id           String              @id @default(dbgenerated("gen_random_uuid()"))
+  campaignId   String
+  subscriberId String
+  sentAt       DateTime?
+  openedAt     DateTime?
+  clickedAt    DateTime?
+
+  campaign     EventEmailCampaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  subscriber   EventSubscriber     @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, subscriberId])
+  @@index([campaignId])
+  @@index([subscriberId])
+}
+
+// ============================================================
+// STARTUP BUSINESS CATEGORIES & TYPES (Admin-managed lookup)
+// ============================================================
+
+model StartupBusinessCategory {
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
+  name      String   @unique
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([sortOrder])
+  @@index([isActive])
+}
+
+model StartupBusinessType {
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
+  name      String   @unique
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([sortOrder])
+  @@index([isActive])
+}
+
+// ============================================================
+// AI TOOL TAG SYSTEM (12 Groups, 224 Tags)
+// ============================================================
+
+model ToolTagGroup {
+  id                String   @id @default(dbgenerated("gen_random_uuid()"))
+  name              String   @unique
+  slug              String   @unique
+  icon              String?
+  description       String?
+  sortOrder         Int      @default(0)
+  displayMode       String   @default("expandable") // expandable | searchable | chips
+  maxVisibleDefault Int      @default(6)
+  isAdminOnly       Boolean  @default(false)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  tags ToolSystemTag[]
+
+  @@index([sortOrder])
+  @@index([slug])
+}
+
+model ToolSystemTag {
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
+  name      String
+  slug      String   @unique
+  emoji     String?
+  groupId   String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  tagCount  Int      @default(0) // denormalized count of tools using this tag
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  group    ToolTagGroup         @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  mappings ToolSystemTagMapping[]
+
+  @@unique([groupId, slug])
+  @@index([groupId, sortOrder])
+  @@index([slug])
+  @@index([tagCount(sort: Desc)])
+}
+
+model ToolSystemTagMapping {
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
+  toolId    String
+  tagId     String
+  addedBy   String   @default("admin") // admin | founder | system
+  createdAt DateTime @default(now())
+
+  tool AiTool        @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  tag  ToolSystemTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([toolId, tagId])
+  @@index([tagId, toolId])
+  @@index([toolId, tagId])
 }

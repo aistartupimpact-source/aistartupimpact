@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { Sora, Plus_Jakarta_Sans } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import ThemeProvider from '@/components/ThemeProvider';
+import NavigationProgress from '@/components/NavigationProgress';
 import AnalyticsTracker from '@/components/Analytics';
 import CookieConsent from '@/components/CookieConsent';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
@@ -109,9 +111,12 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
         />
         <ThemeProvider>
+          <Suspense fallback={null}>
+            <NavigationProgress />
+          </Suspense>
           <AnalyticsTracker />
           {children}
-          <NewsletterPopup />
+          {/* <NewsletterPopup /> */}
           <SignupSuccessPopup />
           <CookieConsent />
           <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_ID || 'G-PVL3NC8DQ6'} />

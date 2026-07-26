@@ -8,7 +8,7 @@ import ReviewHelpfulButton from '@/components/ReviewHelpfulButton';
 import ScreenshotGallery from '@/components/ScreenshotGallery';
 import BookmarkButton from '@/components/BookmarkButton';
 import { ToolCTAButton } from '@/components/tools/ToolCTAButton';
-import { getAiToolBySlugDirect, getSimilarToolsDirect } from '@/lib/db';
+import { getAiToolBySlugDirect, getSimilarToolsDirect, getToolTagsGroupedDirect } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import { ToolSchema, FAQSchema } from '@/components/seo';
 import { generateToolFAQs } from '@/lib/seo-utils';
@@ -92,9 +92,10 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
   const userReviews = tool.userReviews || [];
 
   // Fetch similar tools in same category (parallel with page render)
-  const similarTools = tool.categoryId
-    ? await getSimilarToolsDirect(tool.categoryId, tool.slug, 8)
-    : [];
+  const [similarTools, toolTags] = await Promise.all([
+    tool.categoryId ? getSimilarToolsDirect(tool.categoryId, tool.slug, 8) : Promise.resolve([]),
+    getToolTagsGroupedDirect(tool.id),
+  ]);
   
   // Generate FAQs with tool-specific data
   const faqs = generateToolFAQs(tool);
@@ -292,6 +293,31 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
                   <p className="text-sm font-jakarta text-gray-600 dark:text-gray-300 leading-relaxed">{tool.notAFitFor}</p>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Tags & Capabilities */}
+          {toolTags.length > 0 && (
+            <div className="card p-5 sm:p-6">
+              <h2 className="section-title mb-4">Tags & Capabilities</h2>
+              <div className="space-y-4">
+                {toolTags.map((group: any) => (
+                  <div key={group.id}>
+                    <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide font-jakarta mb-2">{group.name}</h3>
+                    <div className="flex flex-wrap gap-1.5">
+                      {group.tags.map((tag: any) => (
+                        <Link
+                          key={tag.id}
+                          href={`/tools?tag=${tag.slug}`}
+                          className="inline-flex items-center px-2.5 py-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-[11px] font-jakarta text-gray-600 dark:text-gray-400 hover:border-brand/30 hover:text-brand hover:bg-brand/5 transition-colors"
+                        >
+                          {tag.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
