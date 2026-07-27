@@ -18,6 +18,7 @@ interface ToolPick {
   logoUrl?: string;
   hasApi?: boolean;
   hasMobileApp?: boolean;
+  freeTrialDays?: number | null;
   launchYear?: number;
   country?: string;
   founderNames?: string[];
@@ -70,6 +71,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(initialTagId ? [initialTagId] : []);
+  const [freeTrialOnly, setFreeTrialOnly] = useState(false);
   const [showMoreFilters, setShowMoreFilters] = useState(!!initialTagId);
   const [expandedFilterGroups, setExpandedFilterGroups] = useState<Set<string>>(
     new Set(PRIMARY_GROUP_SLUGS)
@@ -105,6 +107,9 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
       const matchesCategory = selectedCategory === 'all' || tool.categorySlug === selectedCategory;
       const matchesPricing = selectedPricing === 'all' || tool.pricing === selectedPricing;
 
+      // Free Trial filter
+      const matchesTrial = !freeTrialOnly || (tool.freeTrialDays && tool.freeTrialDays > 0);
+
       // Tag filtering: within a group → OR, across groups → AND
       let matchesTags = true;
       if (selectedTagIds.length > 0) {
@@ -132,7 +137,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
         }
       }
 
-      return matchesSearch && matchesCategory && matchesPricing && matchesTags;
+      return matchesSearch && matchesCategory && matchesPricing && matchesTrial && matchesTags;
     });
 
     // Sort
@@ -149,7 +154,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
     }
 
     return result;
-  }, [picks, searchQuery, selectedCategory, selectedPricing, sortBy, selectedTagIds, toolTagMap, tagGroups]);
+  }, [picks, searchQuery, selectedCategory, selectedPricing, sortBy, selectedTagIds, freeTrialOnly, toolTagMap, tagGroups]);
 
   // Paginated tools
   const visibleTools = useMemo(() => {
@@ -247,6 +252,18 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
               ))}
             </select>
 
+            {/* Free Trial Toggle */}
+            <button
+              onClick={() => { setFreeTrialOnly(!freeTrialOnly); setVisibleCount(ITEMS_PER_PAGE); }}
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg border text-[11px] sm:text-xs font-semibold font-jakarta transition-all ${
+                freeTrialOnly
+                  ? 'bg-teal-50 dark:bg-teal-900/20 border-teal-300 dark:border-teal-700 text-teal-700 dark:text-teal-400'
+                  : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-teal-300'
+              }`}
+            >
+              Free Trial
+            </button>
+
             {/* Sort */}
             <select
               value={sortBy}
@@ -259,9 +276,9 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
             </select>
 
             {/* Clear Filters */}
-            {(searchQuery || selectedCategory !== 'all' || selectedPricing !== 'all' || selectedTagIds.length > 0) && (
+            {(searchQuery || selectedCategory !== 'all' || selectedPricing !== 'all' || selectedTagIds.length > 0 || freeTrialOnly) && (
               <button
-                onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedPricing('all'); setSelectedTagIds([]); setVisibleCount(ITEMS_PER_PAGE); }}
+                onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedPricing('all'); setSelectedTagIds([]); setFreeTrialOnly(false); setVisibleCount(ITEMS_PER_PAGE); }}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold text-brand hover:bg-brand/5 transition-colors font-jakarta"
               >
                 Clear all

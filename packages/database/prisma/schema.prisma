@@ -128,6 +128,7 @@ model AiTool {
   affiliateUrl        String?
   logoUrl             String?
   screenshotUrls      String[]
+  demoVideoUrl        String?
   categoryId          String
   pricingModel        PricingModel             @default(FREEMIUM)
   freeTrialDays       Int?
@@ -181,6 +182,8 @@ model AiTool {
   SavedTool           SavedTool[]
   ToolFeaturedCampaign ToolFeaturedCampaign[]
   ToolSystemTagMapping ToolSystemTagMapping[]
+  ToolAlternatives    ToolAlternative[] @relation("ToolToAlternatives")
+  ToolAlternativeOf   ToolAlternative[] @relation("AlternativeToTools")
 
   @@index([avgRating])
   @@index([categoryId])
@@ -492,6 +495,7 @@ model FounderUser {
   Startup_Startup_claimedByToFounderUser Startup[]                @relation("Startup_claimedByToFounderUser")
   Startup_Startup_ownerIdToFounderUser   Startup[]                @relation("Startup_ownerIdToFounderUser")
   StartupVerificationLog                 StartupVerificationLog[]
+  ToolReviewResponse                     ToolReviewResponse[]
   founder_settings                       founder_settings?
 
   @@index([companyDomain])
@@ -1204,6 +1208,7 @@ model ToolReview {
   helpfulCount       Int          @default(0)
   AiTool             AiTool       @relation(fields: [toolId], references: [id], onDelete: Cascade)
   WebUser            WebUser      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ToolReviewResponse ToolReviewResponse?
 
   @@unique([toolId, userId])
   @@index([status])
@@ -2317,9 +2322,35 @@ model StartupBusinessType {
   @@index([isActive])
 }
 
-// ============================================================
-// AI TOOL TAG SYSTEM (12 Groups, 224 Tags)
-// ============================================================
+model ToolAlternative {
+  id            String   @id @default(dbgenerated("gen_random_uuid()"))
+  toolId        String
+  alternativeId String
+  source        String   @default("admin")
+  createdAt     DateTime @default(now())
+
+  tool        AiTool @relation("ToolToAlternatives", fields: [toolId], references: [id], onDelete: Cascade)
+  alternative AiTool @relation("AlternativeToTools", fields: [alternativeId], references: [id], onDelete: Cascade)
+
+  @@unique([toolId, alternativeId])
+  @@index([toolId])
+  @@index([alternativeId])
+}
+
+model ToolReviewResponse {
+  id         String   @id @default(dbgenerated("gen_random_uuid()"))
+  reviewId   String   @unique
+  founderId  String
+  body       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+
+  review   ToolReview  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  founder  FounderUser @relation(fields: [founderId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId])
+  @@index([founderId])
+}
 
 model ToolTagGroup {
   id                String   @id @default(dbgenerated("gen_random_uuid()"))

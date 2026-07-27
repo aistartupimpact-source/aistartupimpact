@@ -3,11 +3,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Upload, Loader2, Save, Plus, X } from 'lucide-react';
-import { getToolsAction, getToolFAQsAction, updateToolAction, getCategoriesAction } from '../../actions';
+import { getToolsAction, getToolFAQsAction, updateToolAction, getCategoriesAction, getToolProsConsAction, updateToolProsConsAction } from '../../actions';
 import { uploadLogoAction } from '../../../media/actions';
 import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
+import ProsConsManager from '@/components/shared/ProsConsManager';
 import CategoryCascadeSelect from '@/components/shared/CategoryCascadeSelect';
 import ToolTagSelector from '@/components/shared/ToolTagSelector';
+import StartupLinker from '@/components/shared/StartupLinker';
+import AlternativeToolsManager from '@/components/shared/AlternativeToolsManager';
 import { getTagGroupsWithTagsAction, getToolTagsAction, updateToolTagsAction } from '../../tags/actions';
 
 const pricingModels = ['FREE', 'FREEMIUM', 'PAID', 'ENTERPRISE', 'OPEN_SOURCE'];
@@ -26,6 +29,8 @@ interface Tool {
   pricingModel: string;
   pricingUrl?: string;
   startingPrice?: number | null;
+  freeTrialDays?: number | null;
+  demoVideoUrl?: string;
   avgRating: number;
   listingTier: string;
   status: string;
@@ -66,6 +71,8 @@ export default function EditToolPage() {
   const [screenshots, setScreenshots] = useState<string[]>([]);
   const [tagGroups, setTagGroups] = useState<any[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [pros, setPros] = useState<string[]>([]);
+  const [cons, setCons] = useState<string[]>([]);
   
   const [formData, setFormData] = useState<Tool | null>(null);
 
@@ -98,12 +105,15 @@ export default function EditToolPage() {
       // Load FAQs and Tags in parallel
       setLoadingFaqs(true);
       try {
-        const [toolFaqs, toolTags] = await Promise.all([
+        const [toolFaqs, toolTags, prosConsData] = await Promise.all([
           getToolFAQsAction(toolId),
           getToolTagsAction(toolId),
+          getToolProsConsAction(toolId),
         ]);
         setFaqs(toolFaqs as FAQ[]);
         setSelectedTagIds((toolTags as any[]).map((t: any) => t.id));
+        setPros((prosConsData.pros as any[]).map((p: any) => p.text));
+        setCons((prosConsData.cons as any[]).map((c: any) => c.text));
       } catch (faqError) {
         console.error('Error loading FAQs/Tags:', faqError);
         setFaqs([]);
@@ -145,7 +155,7 @@ export default function EditToolPage() {
     
     if (type === 'checkbox') {
       setFormData(prev => prev ? { ...prev, [name]: (e.target as HTMLInputElement).checked } : null);
-    } else if (name === 'startingPrice' || name === 'avgRating' || name === 'launchYear') {
+    } else if (name === 'startingPrice' || name === 'avgRating' || name === 'launchYear' || name === 'freeTrialDays') {
       setFormData(prev => prev ? { ...prev, [name]: value ? parseFloat(value) : null } : null);
     } else {
       setFormData(prev => prev ? { ...prev, [name]: value } : null);
@@ -238,6 +248,8 @@ export default function EditToolPage() {
         pricingModel: formData.pricingModel,
         pricingUrl: formData.pricingUrl,
         startingPrice: formData.startingPrice,
+        freeTrialDays: formData.freeTrialDays,
+        demoVideoUrl: formData.demoVideoUrl,
         hasApi: formData.hasApi,
         hasMobileApp: formData.hasMobileApp,
         launchYear: formData.launchYear,
@@ -251,10 +263,11 @@ export default function EditToolPage() {
       });
       
       if (result.success) {
-        // Save tags separately
-        if (selectedTagIds.length > 0 || true) {
-          await updateToolTagsAction(toolId, selectedTagIds);
-        }
+        // Save tags and pros/cons separately
+        await Promise.all([
+          updateToolTagsAction(toolId, selectedTagIds),
+          updateToolProsConsAction(toolId, { pros, cons }),
+        ]);
         localStorage.removeItem(`draft_admin_edit_tool_${toolId}`);
         router.push('/tools-dir');
         router.refresh();
@@ -409,6 +422,19 @@ export default function EditToolPage() {
           </div>
         </div>
 
+        {/* Pros & Cons */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6">
+          <h2 className="font-sora font-bold text-lg text-navy dark:text-white mb-4">Pros & Cons</h2>
+          <ProsConsManager
+            pros={pros}
+            cons={cons}
+            onChangePros={setPros}
+            onChangeCons={setCons}
+            maxPros={6}
+            maxCons={6}
+          />
+        </div>
+
         {/* Logo & URLs */}
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6 space-y-6">
           <h2 className="font-sora font-bold text-lg text-navy dark:text-white">Logo & URLs</h2>
@@ -485,13 +511,28 @@ export default function EditToolPage() {
               placeholder="https://..."
             />
           </div>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
+              Demo Video URL
+            </label>
+            <input
+              type="url"
+              name="demoVideoUrl"
+              value={formData.demoVideoUrl || ''}
+              onChange={handleChange}
+              className="input-field text-sm"
+              placeholder="YouTube, Vimeo, or Loom URL"
+            />
+            <p className="text-[10px] text-gray-400 font-jakarta mt-1">Accepts YouTube, Vimeo, or Loom links</p>
+          </div>
         </div>
 
         {/* Pricing */}
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6 space-y-6">
           <h2 className="font-sora font-bold text-lg text-navy dark:text-white">Pricing</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
                 Pricing Model
@@ -520,6 +561,21 @@ export default function EditToolPage() {
                 step="0.01"
                 className="input-field text-sm"
                 placeholder="9.99"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
+                Free Trial (Days)
+              </label>
+              <input
+                type="number"
+                name="freeTrialDays"
+                value={formData.freeTrialDays ?? ''}
+                onChange={handleChange}
+                min="0"
+                max="365"
+                className="input-field text-sm"
+                placeholder="14"
               />
             </div>
             <div>
@@ -583,6 +639,16 @@ export default function EditToolPage() {
                 placeholder="USA, India, etc."
               />
             </div>
+          </div>
+
+          {/* Link to Startup */}
+          <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+            <StartupLinker toolId={toolId} />
+          </div>
+
+          {/* Alternative Tools */}
+          <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+            <AlternativeToolsManager toolId={toolId} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
