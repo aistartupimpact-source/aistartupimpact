@@ -50,6 +50,7 @@ export default function UsersPageClient({ initialUsers }: { initialUsers: User[]
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<User | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deleteTyped, setDeleteTyped] = useState('');
   const [isPending, startTransition] = useTransition();
   const [grantModal, setGrantModal] = useState<User | null>(null);
   const [grantHours, setGrantHours] = useState('24');
@@ -481,20 +482,29 @@ export default function UsersPageClient({ initialUsers }: { initialUsers: User[]
             <h3 className="font-sora font-bold text-lg text-navy dark:text-white">
               Remove Member?
             </h3>
-            <p className="text-sm text-gray-500 font-jakarta mt-1">
-              This will revoke their access.
+            <p className="text-sm text-gray-500 font-jakarta mt-2">
+              This will permanently revoke their access.
             </p>
-            <div className="flex gap-3 mt-5">
+            <p className="text-xs text-gray-400 font-jakarta mt-3">Type <span className="font-bold text-red-500">DELETE</span> to confirm:</p>
+            <input
+              type="text"
+              value={deleteTyped}
+              onChange={(e) => setDeleteTyped(e.target.value)}
+              placeholder="Type DELETE"
+              className="w-full mt-2 px-4 py-2 text-center text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent font-mono tracking-widest"
+              autoFocus
+            />
+            <div className="flex gap-3 mt-4">
               <button
-                onClick={() => setDeleteConfirm(null)}
+                onClick={() => { setDeleteConfirm(null); setDeleteTyped(''); }}
                 className="flex-1 px-4 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"
               >
                 Cancel
               </button>
               <button
-                onClick={() => handleDelete(deleteConfirm)}
-                disabled={isPending}
-                className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-xl disabled:opacity-50"
+                onClick={() => { handleDelete(deleteConfirm); setDeleteTyped(''); }}
+                disabled={isPending || deleteTyped !== 'DELETE'}
+                className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
               >
                 {isPending ? "Removing..." : "Remove"}
               </button>
