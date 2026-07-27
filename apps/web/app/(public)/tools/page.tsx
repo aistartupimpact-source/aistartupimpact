@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import { generateItemListSchema, generateCollectionPageSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import ToolsListWithComparison from '@/components/ToolsListWithComparison';
 import FounderActionButton from '@/components/auth/FounderActionButton';
+import DiscoverySections from '@/components/tools/DiscoverySections';
 
 export const revalidate = 60;
 
@@ -28,14 +29,17 @@ export const metadata: Metadata = {
   },
 };
 
-import { getDirectoryToolsDirect, getToolCategoryTreeDirect, getToolTagGroupsForFilterDirect, getToolTagMappingsDirect } from '@/lib/db';
+import { getDirectoryToolsDirect, getToolCategoryTreeDirect, getToolTagGroupsForFilterDirect, getToolTagMappingsDirect, getTrendingToolsDirect, getRecentlyAddedToolsDirect, getEditorPicksDirect } from '@/lib/db';
 
 export default async function ToolsPage({ searchParams }: { searchParams: { category?: string; tag?: string } }) {
-  const [picks, categoryTree, tagGroups, toolTagMap] = await Promise.all([
+  const [picks, categoryTree, tagGroups, toolTagMap, trending, recentlyAdded, editorPicks] = await Promise.all([
     getDirectoryToolsDirect(),
     getToolCategoryTreeDirect(),
     getToolTagGroupsForFilterDirect(),
     getToolTagMappingsDirect(),
+    getTrendingToolsDirect(12),
+    getRecentlyAddedToolsDirect(12),
+    getEditorPicksDirect(12),
   ]);
 
   // Resolve initial tag slug to tag ID if ?tag= query param provided
@@ -98,6 +102,13 @@ export default async function ToolsPage({ searchParams }: { searchParams: { cate
           + Submit Your Tool
         </FounderActionButton>
       </div>
+
+      {/* Discovery Sections */}
+      <DiscoverySections
+        trending={trending as any[]}
+        recentlyAdded={recentlyAdded as any[]}
+        editorPicks={editorPicks as any[]}
+      />
 
       {/* Tools List Component with State */}
       <ToolsListWithComparison picks={picks} tagGroups={tagGroups} toolTagMap={toolTagMap} initialTagId={initialTagId} />

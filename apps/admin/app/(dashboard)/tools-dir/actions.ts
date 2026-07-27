@@ -785,3 +785,85 @@ export async function searchToolsForAlternativeAction(query: string, excludeTool
     return [];
   }
 }
+
+
+// ─── Sprint 4: Bulk Actions ─────────────────────────────────────────────────
+
+export async function bulkApproveToolsAction(ids: string[]) {
+  try {
+    if (ids.length === 0) return { success: false, error: 'No tools selected' };
+    await sql`
+      UPDATE "AiTool"
+      SET status = 'APPROVED'::"ToolApprovalStatus", "claimStatus" = 'CLAIMED', "approvedAt" = NOW(), "updatedAt" = NOW()
+      WHERE id = ANY(${ids}::text[]) AND status = 'PENDING'
+    `;
+    revalidatePath('/tools-dir');
+    await logAuditEvent({ action: 'APPROVE', resourceType: 'AI_TOOL', after: { bulkAction: true, count: ids.length } });
+    return { success: true, count: ids.length };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function bulkArchiveToolsAction(ids: string[]) {
+  try {
+    if (ids.length === 0) return { success: false, error: 'No tools selected' };
+    await sql`
+      UPDATE "AiTool"
+      SET status = 'ARCHIVED'::"ToolApprovalStatus", "updatedAt" = NOW()
+      WHERE id = ANY(${ids}::text[])
+    `;
+    revalidatePath('/tools-dir');
+    await logAuditEvent({ action: 'UPDATE', resourceType: 'AI_TOOL', after: { bulkAction: 'ARCHIVE', count: ids.length } });
+    return { success: true, count: ids.length };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function bulkDeleteToolsAction(ids: string[]) {
+  const { allowed, error } = await canDelete();
+  if (!allowed) return { success: false, error: error || 'Unauthorized' };
+
+  try {
+    if (ids.length === 0) return { success: false, error: 'No tools selected' };
+    await sql`UPDATE "AiTool" SET "deletedAt" = NOW() WHERE id = ANY(${ids}::text[])`;
+    revalidatePath('/tools-dir');
+    await logAuditEvent({ action: 'DELETE', resourceType: 'AI_TOOL', after: { bulkAction: true, count: ids.length } });
+    return { success: true, count: ids.length };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+// ─── Sprint 4.2: Duplicate Detection ────────────────────────────────────────
+
+export async function checkDuplicateToolAction(name: string, websiteUrl: string) {
+  try {
+    const results = await sql`
+      SELECT id, name, slug, "websiteUrl"
+      FROM "AiTool"
+      WHERE "deletedAt" IS NULL
+        AND (
+          LOWER("websiteUrl") = LOWER(${websiteUrl})
+          OR similarity(LOWER(name), LOWER(${name})) > 0.4
+        )
+      LIMIT 5
+    `;
+    return results;
+  } catch (error) {
+    // Fallback: simple exact match if trigram extension not available
+    try {
+      const results = await sql`
+        SELECT id, name, slug, "websiteUrl"
+        FROM "AiTool"
+        WHERE "deletedAt" IS NULL
+          AND (LOWER("websiteUrl") = LOWER(${websiteUrl}) OR LOWER(name) = LOWER(${name}))
+        LIMIT 5
+      `;
+      return results;
+    } catch {
+      return [];
+    }
+  }
+}

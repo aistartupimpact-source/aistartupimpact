@@ -911,3 +911,77 @@ export async function getReviewResponsesDirect(toolId: string) {
     return {};
   }
 }
+
+
+// ─── Discovery Sections ─────────────────────────────────────────────────────
+
+/**
+ * Get trending tools (by click velocity in last 7 days).
+ */
+export async function getTrendingToolsDirect(limit = 12) {
+  try {
+    const rows = await sql`
+      SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel",
+             c.name AS "categoryName", c.slug AS "categorySlug",
+             COUNT(ac.id)::int AS "recentClicks"
+      FROM "AiTool" t
+      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+      LEFT JOIN "AffiliateClick" ac ON ac."toolId" = t.id AND ac."createdAt" >= NOW() - INTERVAL '7 days'
+      WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
+      GROUP BY t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel", c.name, c.slug
+      HAVING COUNT(ac.id) > 0
+      ORDER BY COUNT(ac.id) DESC, t."avgRating" DESC
+      LIMIT ${limit}
+    `;
+    return rows;
+  } catch (e) {
+    console.error('getTrendingToolsDirect error:', e);
+    return [];
+  }
+}
+
+/**
+ * Get recently added tools (last 30 days, approved).
+ */
+export async function getRecentlyAddedToolsDirect(limit = 12) {
+  try {
+    const rows = await sql`
+      SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel",
+             c.name AS "categoryName", c.slug AS "categorySlug"
+      FROM "AiTool" t
+      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+      WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
+        AND t."createdAt" >= NOW() - INTERVAL '30 days'
+      ORDER BY t."createdAt" DESC
+      LIMIT ${limit}
+    `;
+    return rows;
+  } catch (e) {
+    console.error('getRecentlyAddedToolsDirect error:', e);
+    return [];
+  }
+}
+
+/**
+ * Get editor's picks (featured tools with active campaigns).
+ */
+export async function getEditorPicksDirect(limit = 12) {
+  try {
+    const rows = await sql`
+      SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel",
+             c.name AS "categoryName", c.slug AS "categorySlug"
+      FROM "AiTool" t
+      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+      LEFT JOIN "ToolFeaturedCampaign" tfc ON tfc."toolId" = t.id
+        AND tfc."cancelledAt" IS NULL AND tfc."startDate" <= NOW() AND tfc."endDate" >= NOW()
+      WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
+        AND (tfc.tier = 'FEATURED' OR t."listingTier" = 'FEATURED')
+      ORDER BY t."avgRating" DESC
+      LIMIT ${limit}
+    `;
+    return rows;
+  } catch (e) {
+    console.error('getEditorPicksDirect error:', e);
+    return [];
+  }
+}
