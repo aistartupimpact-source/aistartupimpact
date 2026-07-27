@@ -58,6 +58,7 @@ export default function ToolsDirPage() {
   const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
   const [featureModal, setFeatureModal] = useState<Tool | null>(null);
   const [featureTier, setFeatureTier] = useState<'FEATURED' | 'PRIORITY' | 'FREE'>('PRIORITY');
   const [featureStart, setFeatureStart] = useState('');
@@ -109,6 +110,8 @@ export default function ToolsDirPage() {
       const result = await deleteToolAction(id);
       if (result.success) {
         await loadData();
+      } else if (result.error) {
+        setPermissionError(result.error);
       }
       setDeleteConfirm(null);
     } catch (error) {
@@ -343,6 +346,27 @@ export default function ToolsDirPage() {
               <button onClick={() => setDeleteConfirm(null)} className="flex-1 px-4 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300">Cancel</button>
               <button onClick={() => handleDelete(deleteConfirm)} className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-xl">Delete</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Permission Denied Modal */}
+      {permissionError && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl border border-gray-200 dark:border-gray-800 p-6 text-center">
+            <div className="w-14 h-14 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-7 h-7 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+              </svg>
+            </div>
+            <h3 className="font-sora font-bold text-lg text-navy dark:text-white">Permission Denied</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 font-jakarta mt-2 leading-relaxed">{permissionError}</p>
+            <button
+              onClick={() => setPermissionError(null)}
+              className="mt-5 w-full px-4 py-2.5 text-sm font-medium bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 text-white dark:text-gray-900 rounded-xl transition-colors"
+            >
+              Understood
+            </button>
           </div>
         </div>
       )}

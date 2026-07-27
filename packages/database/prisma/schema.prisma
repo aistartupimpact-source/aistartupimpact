@@ -1252,6 +1252,9 @@ model User {
   twitter         String?
   linkedin        String?
   isActive        Boolean           @default(true)
+  canDeleteUntil  DateTime?         // Temporary delete permission granted by SUPER_ADMIN
+  deleteGrantedBy String?           // Who granted delete access
+  deleteGrantedAt DateTime?         // When delete access was granted
   lastLoginAt     DateTime?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
@@ -1263,6 +1266,7 @@ model User {
   MediaAsset      MediaAsset[]
   UserSession     UserSession[]
 
+  @@index([canDeleteUntil])
   @@index([email])
   @@index([role])
   @@index([slug])

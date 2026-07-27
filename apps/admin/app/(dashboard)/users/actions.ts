@@ -247,3 +247,86 @@ export async function deleteUser(id: string) {
     return { success: false, error: "Failed to delete user" };
   }
 }
+
+// ─── Delete Permission Delegation ───────────────────────────────────────────
+
+export async function grantDeleteAccessAction(userId: string, hours: number) {
+  const session: any = await getServerSession(authOptions);
+  if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    return { success: false, error: 'Only Super Admins can grant delete access' };
+  }
+
+  try {
+    const expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000);
+
+    await sql`
+      UPDATE "User"
+      SET "canDeleteUntil" = ${expiresAt.toISOString()}::timestamp,
+          "deleteGrantedBy" = ${session.user.id},
+          "deleteGrantedAt" = NOW()
+      WHERE id = ${userId}
+    `;
+
+    // Audit log
+    await logAuditEvent({
+      action: 'UPDATE',
+      resourceType: 'USER',
+      resourceId: userId,
+      after: { action: 'GRANT_DELETE_ACCESS', hours, expiresAt: expiresAt.toISOString() },
+    });
+
+    revalidatePath("/users");
+    return { success: true, expiresAt: expiresAt.toISOString() };
+  } catch (error: any) {
+    return { success: false, error: error.message || 'Failed to grant access' };
+  }
+}
+
+export async function revokeDeleteAccessAction(userId: string) {
+  const session: any = await getServerSession(authOptions);
+  if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    return { success: false, error: 'Only Super Admins can revoke delete access' };
+  }
+
+  try {
+    await sql`
+      UPDATE "User"
+      SET "canDeleteUntil" = NULL,
+          "deleteGrantedBy" = NULL,
+          "deleteGrantedAt" = NULL
+      WHERE id = ${userId}
+    `;
+
+    // Audit log
+    await logAuditEvent({
+      action: 'UPDATE',
+      resourceType: 'USER',
+      resourceId: userId,
+      after: { action: 'REVOKE_DELETE_ACCESS' },
+    });
+
+    revalidatePath("/users");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message || 'Failed to revoke access' };
+  }
+}
+
+export async function getDeletePermissionsAction() {
+  const session: any = await getServerSession(authOptions);
+  if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    return [];
+  }
+
+  try {
+    const users = await sql`
+      SELECT id, name, email, role, "canDeleteUntil"::text, "deleteGrantedBy", "deleteGrantedAt"::text
+      FROM "User"
+      WHERE "canDeleteUntil" IS NOT NULL
+      ORDER BY "deleteGrantedAt" DESC
+    `;
+    return users;
+  } catch (error) {
+    return [];
+  }
+}

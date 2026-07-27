@@ -375,6 +375,15 @@ export async function updateStartupAction(id: string, data: {
     }
 
     revalidatePath('/startups-dir');
+
+    // Audit log
+    await logAuditEvent({
+      action: 'UPDATE',
+      resourceType: 'STARTUP',
+      resourceId: id,
+      after: { name: data.name, stage: data.stage, category: data.category },
+    });
+
     return { success: true };
   } catch (error: any) {
     console.error('Error updating startup:', error);
