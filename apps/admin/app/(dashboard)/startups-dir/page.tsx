@@ -17,6 +17,9 @@ import {
   scheduleFeaturedCampaignAction,
   cancelFeaturedCampaignAction,
   toggleContentReviewedAction,
+  bulkApproveStartupsAction,
+  bulkArchiveStartupsAction,
+  bulkDeleteStartupsAction,
 } from './actions';
 
 interface Startup {
@@ -54,6 +57,7 @@ export default function StartupsDirPage() {
   const [filterReview, setFilterReview] = useState<'all' | 'reviewed' | 'under_review'>('all');
   const [filterClaim, setFilterClaim] = useState<'all' | 'UNCLAIMED' | 'PENDING' | 'CLAIMED'>('all');
   const [permissionError, setPermissionError] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [featureModal, setFeatureModal] = useState<Startup | null>(null);
   const [featureTier, setFeatureTier] = useState<'PREMIUM' | 'STANDARD' | 'BASIC'>('STANDARD');
   const [featureStart, setFeatureStart] = useState('');
@@ -271,6 +275,17 @@ export default function StartupsDirPage() {
         <table className="w-full">
           <thead>
             <tr className="bg-gray-50 dark:bg-gray-800/50 text-left">
+              <th className="px-3 py-3 w-10">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.size === filtered.length && filtered.length > 0}
+                  onChange={(e) => {
+                    if (e.target.checked) setSelectedIds(new Set(filtered.map((s: any) => s.id)));
+                    else setSelectedIds(new Set());
+                  }}
+                  className="w-4 h-4 text-brand border-gray-300 rounded focus:ring-brand"
+                />
+              </th>
               <th className="px-4 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Startup</th>
               <th className="px-4 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden md:table-cell">Stage</th>
               <th className="px-4 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Review</th>
@@ -284,6 +299,19 @@ export default function StartupsDirPage() {
           <tbody>
             {filtered.map((startup) => (
               <tr key={startup.id} className="border-t border-gray-50 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                <td className="px-3 py-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(startup.id)}
+                    onChange={(e) => {
+                      const next = new Set(selectedIds);
+                      if (e.target.checked) next.add(startup.id);
+                      else next.delete(startup.id);
+                      setSelectedIds(next);
+                    }}
+                    className="w-4 h-4 text-brand border-gray-300 rounded focus:ring-brand"
+                  />
+                </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center overflow-hidden shrink-0">
@@ -424,6 +452,50 @@ export default function StartupsDirPage() {
               <button onClick={() => handleDelete(deleteConfirm)} className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-xl">Delete</button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-gray-900 dark:bg-gray-800 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-4 border border-gray-700">
+          <span className="text-sm font-semibold font-jakarta">{selectedIds.size} selected</span>
+          <div className="w-px h-6 bg-gray-700" />
+          <button
+            onClick={async () => {
+              if (!confirm(`Approve ${selectedIds.size} startups?`)) return;
+              await bulkApproveStartupsAction([...selectedIds]);
+              setSelectedIds(new Set());
+              await loadStartups();
+            }}
+            className="px-3 py-1.5 text-xs font-semibold bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+          >
+            Approve All
+          </button>
+          <button
+            onClick={async () => {
+              if (!confirm(`Archive ${selectedIds.size} startups?`)) return;
+              await bulkArchiveStartupsAction([...selectedIds]);
+              setSelectedIds(new Set());
+              await loadStartups();
+            }}
+            className="px-3 py-1.5 text-xs font-semibold bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors"
+          >
+            Archive All
+          </button>
+          <button
+            onClick={async () => {
+              if (!confirm(`Delete ${selectedIds.size} startups? Only Super Admins can do this.`)) return;
+              const result = await bulkDeleteStartupsAction([...selectedIds]);
+              if (!result.success) setPermissionError(result.error || 'Permission denied');
+              else { setSelectedIds(new Set()); await loadStartups(); }
+            }}
+            className="px-3 py-1.5 text-xs font-semibold bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+          >
+            Delete All
+          </button>
+          <button onClick={() => setSelectedIds(new Set())} className="p-1.5 text-gray-400 hover:text-white">
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
