@@ -90,7 +90,8 @@ const RESOURCE_ICONS: Record<string, any> = {
 };
 
 function formatRelativeTime(dateStr: string) {
-  const date = new Date(dateStr);
+  const normalized = dateStr.endsWith('Z') || dateStr.includes('+') ? dateStr : dateStr.trim() + 'Z';
+  const date = new Date(normalized);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
@@ -101,11 +102,14 @@ function formatRelativeTime(dateStr: string) {
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata' });
 }
 
 function formatFullDateTime(dateStr: string) {
-  const date = new Date(dateStr);
+  // DB returns timestamps without timezone suffix — they are UTC
+  // Append Z to ensure JavaScript parses them as UTC before converting to IST
+  const normalized = dateStr.endsWith('Z') || dateStr.includes('+') ? dateStr : dateStr.trim() + 'Z';
+  const date = new Date(normalized);
   return date.toLocaleDateString('en-IN', {
     day: '2-digit',
     month: 'short',
