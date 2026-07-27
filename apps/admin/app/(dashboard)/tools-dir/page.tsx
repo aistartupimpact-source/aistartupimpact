@@ -61,6 +61,8 @@ export default function ToolsDirPage() {
   const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deleteTyped, setDeleteTyped] = useState('');
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
+  const [bulkDeleteTyped, setBulkDeleteTyped] = useState('');
   const [loading, setLoading] = useState(true);
   const [permissionError, setPermissionError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -392,12 +394,7 @@ export default function ToolsDirPage() {
             Archive All
           </button>
           <button
-            onClick={async () => {
-              if (!confirm(`Delete ${selectedIds.size} tools? Only Super Admins can do this.`)) return;
-              const result = await bulkDeleteToolsAction([...selectedIds]);
-              if (!result.success) setPermissionError(result.error || 'Permission denied');
-              else { setSelectedIds(new Set()); await loadData(); }
-            }}
+            onClick={() => setBulkDeleteConfirm(true)}
             className="px-3 py-1.5 text-xs font-semibold bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
           >
             Delete All
@@ -427,6 +424,42 @@ export default function ToolsDirPage() {
             <div className="flex gap-3 mt-4">
               <button onClick={() => { setDeleteConfirm(null); setDeleteTyped(''); }} className="flex-1 px-4 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300">Cancel</button>
               <button onClick={() => { handleDelete(deleteConfirm); setDeleteTyped(''); }} disabled={deleteTyped !== 'DELETE'} className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-opacity">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation */}
+      {bulkDeleteConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl border border-gray-200 dark:border-gray-800 p-6 text-center">
+            <Trash2 className="w-10 h-10 text-red-500 mx-auto mb-3" />
+            <h3 className="font-sora font-bold text-lg text-navy dark:text-white">Delete {selectedIds.size} Tools?</h3>
+            <p className="text-sm text-gray-500 font-jakarta mt-2">This will permanently delete all selected tools. Only Super Admins can perform this action.</p>
+            <p className="text-xs text-gray-400 font-jakarta mt-3">Type <span className="font-bold text-red-500">DELETE</span> to confirm:</p>
+            <input
+              type="text"
+              value={bulkDeleteTyped}
+              onChange={(e) => setBulkDeleteTyped(e.target.value)}
+              placeholder="Type DELETE"
+              className="w-full mt-2 px-4 py-2 text-center text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent font-mono tracking-widest"
+              autoFocus
+            />
+            <div className="flex gap-3 mt-4">
+              <button onClick={() => { setBulkDeleteConfirm(false); setBulkDeleteTyped(''); }} className="flex-1 px-4 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300">Cancel</button>
+              <button
+                onClick={async () => {
+                  const result = await bulkDeleteToolsAction([...selectedIds]);
+                  if (!result.success) setPermissionError(result.error || 'Permission denied');
+                  else { setSelectedIds(new Set()); await loadData(); }
+                  setBulkDeleteConfirm(false);
+                  setBulkDeleteTyped('');
+                }}
+                disabled={bulkDeleteTyped !== 'DELETE'}
+                className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+              >
+                Delete All
+              </button>
             </div>
           </div>
         </div>
