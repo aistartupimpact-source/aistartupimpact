@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { UserPlus, Shield, Mail, X, Save, Trash2, Edit3 } from "lucide-react";
+import { useState, useTransition, useEffect } from "react";
+import { UserPlus, Shield, Mail, X, Save, Trash2, Edit3, Key, Clock } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { inviteUser, updateUserMode, toggleUserStatus, deleteUser } from "./actions";
+import { inviteUser, updateUserMode, toggleUserStatus, deleteUser, grantDeleteAccessAction, revokeDeleteAccessAction, getDeletePermissionsAction } from "./actions";
 
 interface User {
   id: string;
@@ -51,6 +51,17 @@ export default function UsersPageClient({ initialUsers }: { initialUsers: User[]
   const [editing, setEditing] = useState<User | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [grantModal, setGrantModal] = useState<User | null>(null);
+  const [grantHours, setGrantHours] = useState('24');
+  const [grantSubmitting, setGrantSubmitting] = useState(false);
+  const [activePermissions, setActivePermissions] = useState<any[]>([]);
+
+  // Load active delete permissions
+  useEffect(() => {
+    if (isSuperAdmin) {
+      getDeletePermissionsAction().then(setActivePermissions).catch(() => {});
+    }
+  }, [isSuperAdmin]);
 
   const openCreate = () => {
     setEditing({ ...emptyUser });
@@ -227,6 +238,152 @@ export default function UsersPageClient({ initialUsers }: { initialUsers: User[]
           </tbody>
         </table>
       </div>
+
+      {/* Delete Access Management — SUPER_ADMIN only */}
+      {isSuperAdmin && (
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Key className="w-4 h-4 text-amber-500" />
+              <h2 className="font-sora font-bold text-base text-navy dark:text-white">Delete Access Control</h2>
+            </div>
+            <p className="text-xs text-gray-400 font-jakarta">Grant temporary delete permission to team members</p>
+          </div>
+
+          {/* Active Permissions */}
+          {activePermissions.length > 0 ? (
+            <div className="divide-y divide-gray-50 dark:divide-gray-800">
+              {activePermissions.map((perm: any) => {
+                const isExpired = new Date(perm.canDeleteUntil) < new Date();
+                return (
+                  <div key={perm.id} className="px-6 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center">
+                        <Key className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{perm.name}</p>
+                        <p className="text-xs text-gray-400">{perm.email} · {perm.role?.replace(/_/g, ' ')}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <p className={`text-xs font-semibold ${isExpired ? 'text-gray-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                          {isExpired ? 'Expired' : 'Active'}
+                        </p>
+                        <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          Expires: {new Date(perm.canDeleteUntil).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          await revokeDeleteAccessAction(perm.id);
+                          const updated = await getDeletePermissionsAction();
+                          setActivePermissions(updated);
+                        }}
+                        className="px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                      >
+                        Revoke
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="px-6 py-6 text-center text-sm text-gray-400 font-jakarta">
+              No active delete permissions. Only you (Super Admin) can delete records.
+            </div>
+          )}
+
+          {/* Quick Grant Section */}
+          <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20">
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta mb-3">
+              Grant temporary delete access to a team member. Access auto-expires after the specified duration.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {initialUsers
+                .filter(u => u.role !== 'SUPER_ADMIN' && u.status === 'ACTIVE')
+                .map(u => (
+                  <button
+                    key={u.id}
+                    onClick={() => { setGrantModal(u); setGrantHours('24'); }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-gray-200 dark:border-gray-700 rounded-lg hover:border-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900/10 transition-colors text-gray-600 dark:text-gray-400"
+                  >
+                    <Key className="w-3 h-3" />
+                    {u.name}
+                  </button>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Grant Delete Access Modal */}
+      {grantModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl border border-gray-200 dark:border-gray-800 p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-sora font-bold text-lg text-navy dark:text-white">Grant Delete Access</h3>
+              <button onClick={() => setGrantModal(null)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div className="p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <p className="text-xs text-amber-800 dark:text-amber-300 font-jakarta">
+                  Granting delete access to <strong>{grantModal.name}</strong> ({grantModal.role.replace(/_/g, ' ')}). 
+                  This is temporary and will auto-expire.
+                </p>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 font-jakarta mb-1.5">Duration</label>
+                <select
+                  value={grantHours}
+                  onChange={(e) => setGrantHours(e.target.value)}
+                  className="input-field text-sm w-full"
+                >
+                  <option value="1">1 hour</option>
+                  <option value="2">2 hours</option>
+                  <option value="4">4 hours</option>
+                  <option value="8">8 hours (1 work day)</option>
+                  <option value="24">24 hours</option>
+                  <option value="48">48 hours</option>
+                  <option value="72">72 hours (3 days)</option>
+                  <option value="168">7 days</option>
+                </select>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setGrantModal(null)}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    setGrantSubmitting(true);
+                    const result = await grantDeleteAccessAction(grantModal.id, parseInt(grantHours));
+                    if (result.success) {
+                      setGrantModal(null);
+                      const updated = await getDeletePermissionsAction();
+                      setActivePermissions(updated);
+                    } else {
+                      alert(result.error);
+                    }
+                    setGrantSubmitting(false);
+                  }}
+                  disabled={grantSubmitting}
+                  className="flex-1 px-4 py-2.5 text-sm font-bold bg-amber-500 hover:bg-amber-600 text-white rounded-xl disabled:opacity-50 transition-colors"
+                >
+                  {grantSubmitting ? 'Granting...' : 'Grant Access'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {modalOpen && editing && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">

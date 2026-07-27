@@ -87,15 +87,39 @@ export function snapshot(record: Record<string, any>, fields?: string[]): Record
 
 /**
  * Check if the current user has permission to delete.
- * Only SUPER_ADMIN can hard delete. Others get an error.
+ * SUPER_ADMIN always can. Others can only if they have been granted temporary access
+ * via canDeleteUntil (time-limited delegation from a SUPER_ADMIN).
  */
 export async function canDelete(): Promise<{ allowed: boolean; error?: string; session?: any }> {
   const session: any = await getServerSession(authOptions);
   if (!session?.user) {
     return { allowed: false, error: 'Unauthorized' };
   }
-  if (session.user.role !== 'SUPER_ADMIN') {
-    return { allowed: false, error: 'Only Super Admins can delete records. Please contact your administrator.', session };
+
+  // SUPER_ADMIN always has delete access
+  if (session.user.role === 'SUPER_ADMIN') {
+    return { allowed: true, session };
   }
-  return { allowed: true, session };
+
+  // Check for temporary delegated delete access
+  try {
+    const user = await sql`
+      SELECT "canDeleteUntil" FROM "User" WHERE id = ${session.user.id} LIMIT 1
+    `;
+
+    if (user.length > 0 && user[0].canDeleteUntil) {
+      const expiresAt = new Date(user[0].canDeleteUntil);
+      if (expiresAt > new Date()) {
+        return { allowed: true, session };
+      }
+    }
+  } catch (e) {
+    console.error('[canDelete] Error checking delegated permission:', e);
+  }
+
+  return {
+    allowed: false,
+    error: 'Delete access is restricted to Super Admins. If you need to delete a record, request temporary access from your Super Admin.',
+    session,
+  };
 }

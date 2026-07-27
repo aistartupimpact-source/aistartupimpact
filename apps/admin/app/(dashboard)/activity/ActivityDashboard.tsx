@@ -104,6 +104,19 @@ function formatRelativeTime(dateStr: string) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+function formatFullDateTime(dateStr: string) {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }) + ' at ' + date.toLocaleTimeString('en-IN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
 function getResourceName(log: AuditLog): string {
   if (log.after?.name) return log.after.name;
   if (log.before?.name) return log.before.name;
@@ -253,7 +266,12 @@ export default function ActivityDashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user.userName}</p>
-                    <p className="text-xs text-gray-500 truncate">{user.userRole?.replace(/_/g, ' ')}</p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {user.userRole?.replace(/_/g, ' ')}
+                      {user.lastActivity && (
+                        <span className="text-gray-400"> · Last active: {formatFullDateTime(user.lastActivity)}</span>
+                      )}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {user.creates > 0 && (
@@ -459,7 +477,7 @@ function LogEntry({ log, showDetails = false }: { log: AuditLog; showDetails?: b
             )}
           </p>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-            {log.userRole?.replace(/_/g, ' ')} · {formatRelativeTime(log.createdAt)}
+            {log.userRole?.replace(/_/g, ' ')} · {formatFullDateTime(log.createdAt)} <span className="text-gray-300 dark:text-gray-600">({formatRelativeTime(log.createdAt)})</span>
           </p>
         </div>
 

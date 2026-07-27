@@ -124,6 +124,15 @@ export async function approveToolAction(id: string) {
     }
 
     revalidatePath('/tools-dir');
+
+    // Audit log
+    await logAuditEvent({
+      action: 'APPROVE',
+      resourceType: 'AI_TOOL',
+      resourceId: id,
+      after: { name: tool.name, slug: tool.slug },
+    });
+
     return { success: true };
   } catch (error: any) {
     console.error('approveToolAction error:', error);
@@ -351,6 +360,15 @@ export async function updateToolAction(id: string, data: {
     }
     
     revalidatePath('/tools-dir');
+
+    // Audit log
+    await logAuditEvent({
+      action: 'UPDATE',
+      resourceType: 'AI_TOOL',
+      resourceId: id,
+      after: { name: data.name, pricingModel: data.pricingModel, status: data.status },
+    });
+
     return { success: true };
   } catch (error: any) {
     console.error('updateToolAction error:', error);
