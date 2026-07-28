@@ -17,6 +17,9 @@ import {
   scheduleFeaturedCampaignAction,
   cancelFeaturedCampaignAction,
   toggleContentReviewedAction,
+  bulkApproveStartupsAction,
+  bulkArchiveStartupsAction,
+  bulkDeleteStartupsAction,
 } from './actions';
 
 interface Startup {
@@ -50,10 +53,14 @@ export default function StartupsDirPage() {
   const [startups, setStartups] = useState<Startup[]>([]);
   const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deleteTyped, setDeleteTyped] = useState('');
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
+  const [bulkDeleteTyped, setBulkDeleteTyped] = useState('');
   const [loading, setLoading] = useState(true);
   const [filterReview, setFilterReview] = useState<'all' | 'reviewed' | 'under_review'>('all');
   const [filterClaim, setFilterClaim] = useState<'all' | 'UNCLAIMED' | 'PENDING' | 'CLAIMED'>('all');
   const [permissionError, setPermissionError] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [featureModal, setFeatureModal] = useState<Startup | null>(null);
   const [featureTier, setFeatureTier] = useState<'PREMIUM' | 'STANDARD' | 'BASIC'>('STANDARD');
   const [featureStart, setFeatureStart] = useState('');
@@ -271,6 +278,17 @@ export default function StartupsDirPage() {
         <table className="w-full">
           <thead>
             <tr className="bg-gray-50 dark:bg-gray-800/50 text-left">
+              <th className="px-3 py-3 w-10">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.size === filtered.length && filtered.length > 0}
+                  onChange={(e) => {
+                    if (e.target.checked) setSelectedIds(new Set(filtered.map((s: any) => s.id)));
+                    else setSelectedIds(new Set());
+                  }}
+                  className="w-4 h-4 text-brand border-gray-300 rounded focus:ring-brand"
+                />
+              </th>
               <th className="px-4 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Startup</th>
               <th className="px-4 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden md:table-cell">Stage</th>
               <th className="px-4 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Review</th>
@@ -284,6 +302,19 @@ export default function StartupsDirPage() {
           <tbody>
             {filtered.map((startup) => (
               <tr key={startup.id} className="border-t border-gray-50 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                <td className="px-3 py-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(startup.id)}
+                    onChange={(e) => {
+                      const next = new Set(selectedIds);
+                      if (e.target.checked) next.add(startup.id);
+                      else next.delete(startup.id);
+                      setSelectedIds(next);
+                    }}
+                    className="w-4 h-4 text-brand border-gray-300 rounded focus:ring-brand"
+                  />
+                </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center overflow-hidden shrink-0">
@@ -418,10 +449,94 @@ export default function StartupsDirPage() {
           <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl border border-gray-200 dark:border-gray-800 p-6 text-center">
             <Trash2 className="w-10 h-10 text-red-500 mx-auto mb-3" />
             <h3 className="font-sora font-bold text-lg text-navy dark:text-white">Delete Startup?</h3>
-            <p className="text-sm text-gray-500 font-jakarta mt-1">This action cannot be undone.</p>
-            <div className="flex gap-3 mt-5">
-              <button onClick={() => setDeleteConfirm(null)} className="flex-1 px-4 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300">Cancel</button>
-              <button onClick={() => handleDelete(deleteConfirm)} className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-xl">Delete</button>
+            <p className="text-sm text-gray-500 font-jakarta mt-2">This action is permanent and cannot be undone.</p>
+            <p className="text-xs text-gray-400 font-jakarta mt-3">Type <span className="font-bold text-red-500">DELETE</span> to confirm:</p>
+            <input
+              type="text"
+              value={deleteTyped}
+              onChange={(e) => setDeleteTyped(e.target.value)}
+              placeholder="Type DELETE"
+              className="w-full mt-2 px-4 py-2 text-center text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent font-mono tracking-widest"
+              autoFocus
+            />
+            <div className="flex gap-3 mt-4">
+              <button onClick={() => { setDeleteConfirm(null); setDeleteTyped(''); }} className="flex-1 px-4 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300">Cancel</button>
+              <button onClick={() => { handleDelete(deleteConfirm); setDeleteTyped(''); }} disabled={deleteTyped !== 'DELETE'} className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-opacity">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-gray-900 dark:bg-gray-800 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-4 border border-gray-700">
+          <span className="text-sm font-semibold font-jakarta">{selectedIds.size} selected</span>
+          <div className="w-px h-6 bg-gray-700" />
+          <button
+            onClick={async () => {
+              if (!confirm(`Approve ${selectedIds.size} startups?`)) return;
+              await bulkApproveStartupsAction([...selectedIds]);
+              setSelectedIds(new Set());
+              await loadStartups();
+            }}
+            className="px-3 py-1.5 text-xs font-semibold bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+          >
+            Approve All
+          </button>
+          <button
+            onClick={async () => {
+              if (!confirm(`Archive ${selectedIds.size} startups?`)) return;
+              await bulkArchiveStartupsAction([...selectedIds]);
+              setSelectedIds(new Set());
+              await loadStartups();
+            }}
+            className="px-3 py-1.5 text-xs font-semibold bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors"
+          >
+            Archive All
+          </button>
+          <button
+            onClick={() => setBulkDeleteConfirm(true)}
+            className="px-3 py-1.5 text-xs font-semibold bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+          >
+            Delete All
+          </button>
+          <button onClick={() => setSelectedIds(new Set())} className="p-1.5 text-gray-400 hover:text-white">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation */}
+      {bulkDeleteConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl border border-gray-200 dark:border-gray-800 p-6 text-center">
+            <Trash2 className="w-10 h-10 text-red-500 mx-auto mb-3" />
+            <h3 className="font-sora font-bold text-lg text-navy dark:text-white">Delete {selectedIds.size} Startups?</h3>
+            <p className="text-sm text-gray-500 font-jakarta mt-2">This will permanently delete all selected startups. Only Super Admins can perform this action.</p>
+            <p className="text-xs text-gray-400 font-jakarta mt-3">Type <span className="font-bold text-red-500">DELETE</span> to confirm:</p>
+            <input
+              type="text"
+              value={bulkDeleteTyped}
+              onChange={(e) => setBulkDeleteTyped(e.target.value)}
+              placeholder="Type DELETE"
+              className="w-full mt-2 px-4 py-2 text-center text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent font-mono tracking-widest"
+              autoFocus
+            />
+            <div className="flex gap-3 mt-4">
+              <button onClick={() => { setBulkDeleteConfirm(false); setBulkDeleteTyped(''); }} className="flex-1 px-4 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300">Cancel</button>
+              <button
+                onClick={async () => {
+                  const result = await bulkDeleteStartupsAction([...selectedIds]);
+                  if (!result.success) setPermissionError(result.error || 'Permission denied');
+                  else { setSelectedIds(new Set()); await loadStartups(); }
+                  setBulkDeleteConfirm(false);
+                  setBulkDeleteTyped('');
+                }}
+                disabled={bulkDeleteTyped !== 'DELETE'}
+                className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+              >
+                Delete All
+              </button>
             </div>
           </div>
         </div>

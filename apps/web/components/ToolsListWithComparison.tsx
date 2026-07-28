@@ -4,6 +4,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Star, Zap, ArrowRight, CheckSquare, Square, X, BarChart, Search, Grid3X3, List, Loader2, SlidersHorizontal, ChevronDown, ChevronRight } from 'lucide-react';
 import BookmarkButton from './BookmarkButton';
+import UpvoteButton from './tools/UpvoteButton';
 
 interface ToolPick {
   id: string;
@@ -12,12 +13,16 @@ interface ToolPick {
   tagline: string;
   category: string;
   categorySlug: string;
+  parentCategory?: string | null;
+  parentCategorySlug?: string | null;
   rating: number;
   pricing: string;
   verdict: string;
   logoUrl?: string;
   hasApi?: boolean;
   hasMobileApp?: boolean;
+  freeTrialDays?: number | null;
+  upvoteCount?: number;
   launchYear?: number;
   country?: string;
   founderNames?: string[];
@@ -52,7 +57,7 @@ interface ToolsListProps {
   initialTagId?: string | null;
 }
 
-type SortOption = 'rating' | 'name' | 'newest';
+type SortOption = 'rating' | 'upvotes' | 'name' | 'newest';
 type ViewMode = 'grid' | 'list';
 
 const ITEMS_PER_PAGE = 24;
@@ -65,30 +70,49 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
   const [showComparison, setShowComparison] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedSubcategory, setSelectedSubcategory] = useState('all');
   const [selectedPricing, setSelectedPricing] = useState('all');
   const [sortBy, setSortBy] = useState<SortOption>('rating');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(initialTagId ? [initialTagId] : []);
+  const [freeTrialOnly, setFreeTrialOnly] = useState(false);
   const [showMoreFilters, setShowMoreFilters] = useState(!!initialTagId);
   const [expandedFilterGroups, setExpandedFilterGroups] = useState<Set<string>>(
     new Set(PRIMARY_GROUP_SLUGS)
   );
   const [showAllInGroup, setShowAllInGroup] = useState<Set<string>>(new Set());
 
-  // Get unique categories with counts
-  const categories = useMemo(() => {
+  // Get parent categories with counts
+  const parentCategories = useMemo(() => {
     const catMap = new Map<string, { name: string; slug: string; count: number }>();
     picks.forEach(p => {
-      const existing = catMap.get(p.categorySlug);
+      const slug = p.parentCategorySlug || p.categorySlug;
+      const name = p.parentCategory || p.category;
+      const existing = catMap.get(slug);
       if (existing) {
         existing.count++;
       } else {
-        catMap.set(p.categorySlug, { name: p.category, slug: p.categorySlug, count: 1 });
+        catMap.set(slug, { name, slug, count: 1 });
       }
     });
     return Array.from(catMap.values()).sort((a, b) => b.count - a.count);
   }, [picks]);
+
+  // Get subcategories for selected parent
+  const subcategories = useMemo(() => {
+    if (selectedCategory === 'all') return [];
+    const subMap = new Map<string, { name: string; slug: string; count: number }>();
+    picks.forEach(p => {
+      const parentSlug = p.parentCategorySlug || p.categorySlug;
+      if (parentSlug === selectedCategory) {
+        const existing = subMap.get(p.categorySlug);
+        if (existing) existing.count++;
+        else subMap.set(p.categorySlug, { name: p.category, slug: p.categorySlug, count: 1 });
+      }
+    });
+    return Array.from(subMap.values()).sort((a, b) => b.count - a.count);
+  }, [picks, selectedCategory]);
 
   const pricingModels = useMemo(() => {
     return Array.from(new Set(picks.map(p => p.pricing))).sort();
@@ -102,8 +126,13 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
         tool.tagline.toLowerCase().includes(searchQuery.toLowerCase()) ||
         tool.category.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesCategory = selectedCategory === 'all' || tool.categorySlug === selectedCategory;
+      const matchesCategory = selectedCategory === 'all' || 
+        (tool.parentCategorySlug || tool.categorySlug) === selectedCategory;
+      const matchesSubcategory = selectedSubcategory === 'all' || tool.categorySlug === selectedSubcategory;
       const matchesPricing = selectedPricing === 'all' || tool.pricing === selectedPricing;
+
+      // Free Trial filter
+      const matchesTrial = !freeTrialOnly || (tool.freeTrialDays && tool.freeTrialDays > 0);
 
       // Tag filtering: within a group → OR, across groups → AND
       let matchesTags = true;
@@ -132,13 +161,16 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
         }
       }
 
-      return matchesSearch && matchesCategory && matchesPricing && matchesTags;
+      return matchesSearch && matchesCategory && matchesSubcategory && matchesPricing && matchesTrial && matchesTags;
     });
 
     // Sort
     switch (sortBy) {
       case 'rating':
         result.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'upvotes':
+        result.sort((a, b) => (b.upvoteCount || 0) - (a.upvoteCount || 0));
         break;
       case 'name':
         result.sort((a, b) => a.name.localeCompare(b.name));
@@ -149,7 +181,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
     }
 
     return result;
-  }, [picks, searchQuery, selectedCategory, selectedPricing, sortBy, selectedTagIds, toolTagMap, tagGroups]);
+  }, [picks, searchQuery, selectedCategory, selectedSubcategory, selectedPricing, sortBy, selectedTagIds, freeTrialOnly, toolTagMap, tagGroups]);
 
   // Paginated tools
   const visibleTools = useMemo(() => {
@@ -161,6 +193,12 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
   // Reset pagination when filters change
   const handleCategoryChange = (slug: string) => {
     setSelectedCategory(slug);
+    setSelectedSubcategory('all'); // Reset subcategory when parent changes
+    setVisibleCount(ITEMS_PER_PAGE);
+  };
+
+  const handleSubcategoryChange = (slug: string) => {
+    setSelectedSubcategory(slug);
     setVisibleCount(ITEMS_PER_PAGE);
   };
 
@@ -189,8 +227,9 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
 
   return (
     <div className="relative">
-      {/* ── Sticky Category Pills ── */}
+      {/* ── Sticky Category Pills (Parent Categories) ── */}
       <div className="sticky top-0 z-30 bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-2.5 sm:py-3 border-b border-gray-100 dark:border-gray-800">
+        {/* Parent category pills */}
         <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide pb-1">
           <button
             onClick={() => handleCategoryChange('all')}
@@ -202,7 +241,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
           >
             All ({picks.length})
           </button>
-          {categories.map(cat => (
+          {parentCategories.map(cat => (
             <button
               key={cat.slug}
               onClick={() => handleCategoryChange(cat.slug)}
@@ -216,6 +255,35 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
             </button>
           ))}
         </div>
+
+        {/* Subcategory pills (shown when a parent is selected) */}
+        {selectedCategory !== 'all' && subcategories.length > 1 && (
+          <div className="flex items-center gap-1.5 mt-2 overflow-x-auto scrollbar-hide pb-1">
+            <button
+              onClick={() => handleSubcategoryChange('all')}
+              className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold font-jakarta transition-all ${
+                selectedSubcategory === 'all'
+                  ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                  : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              All in {parentCategories.find(c => c.slug === selectedCategory)?.name || 'category'}
+            </button>
+            {subcategories.map(sub => (
+              <button
+                key={sub.slug}
+                onClick={() => handleSubcategoryChange(sub.slug)}
+                className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold font-jakarta transition-all ${
+                  selectedSubcategory === sub.slug
+                    ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                    : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                {sub.name} ({sub.count})
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── Search + Filters + Sort + View Toggle ── */}
@@ -247,6 +315,18 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
               ))}
             </select>
 
+            {/* Free Trial Toggle */}
+            <button
+              onClick={() => { setFreeTrialOnly(!freeTrialOnly); setVisibleCount(ITEMS_PER_PAGE); }}
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg border text-[11px] sm:text-xs font-semibold font-jakarta transition-all ${
+                freeTrialOnly
+                  ? 'bg-teal-50 dark:bg-teal-900/20 border-teal-300 dark:border-teal-700 text-teal-700 dark:text-teal-400'
+                  : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-teal-300'
+              }`}
+            >
+              Free Trial
+            </button>
+
             {/* Sort */}
             <select
               value={sortBy}
@@ -254,14 +334,15 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
               className="px-2.5 sm:px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-[11px] sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
             >
               <option value="rating">Top Rated</option>
+              <option value="upvotes">Most Upvoted</option>
               <option value="newest">Newest First</option>
               <option value="name">A → Z</option>
             </select>
 
             {/* Clear Filters */}
-            {(searchQuery || selectedCategory !== 'all' || selectedPricing !== 'all' || selectedTagIds.length > 0) && (
+            {(searchQuery || selectedCategory !== 'all' || selectedPricing !== 'all' || selectedTagIds.length > 0 || freeTrialOnly) && (
               <button
-                onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedPricing('all'); setSelectedTagIds([]); setVisibleCount(ITEMS_PER_PAGE); }}
+                onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedSubcategory('all'); setSelectedPricing('all'); setSelectedTagIds([]); setFreeTrialOnly(false); setVisibleCount(ITEMS_PER_PAGE); }}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold text-brand hover:bg-brand/5 transition-colors font-jakarta"
               >
                 Clear all
@@ -336,7 +417,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
             }`}
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
-            More Filters
+            All Filters ({tagGroups.length} groups)
             {selectedTagIds.length > 0 && (
               <span className="bg-brand text-white text-[10px] px-1.5 py-0.5 rounded-full ml-0.5">{selectedTagIds.length}</span>
             )}
@@ -429,6 +510,15 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
           {visibleTools.map((tool, i) => {
             const isSelected = !!selectedTools.find((t) => t.slug === tool.slug);
             const iconUrl = tool.logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(tool.name)}&background=random&color=fff&size=150`;
+            // Get top 2 tag names for this tool
+            const toolTagIds = toolTagMap[tool.id] || [];
+            const toolTagNames = toolTagIds.slice(0, 2).map(tid => {
+              for (const g of tagGroups) {
+                const found = g.tags.find((t: any) => t.id === tid);
+                if (found) return found.name;
+              }
+              return null;
+            }).filter(Boolean);
 
             return (
               <Link
@@ -436,22 +526,23 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                 href={`/tools/${tool.slug}`}
                 className={`group block rounded-2xl transition-all h-full ${isSelected ? 'ring-2 ring-brand ring-offset-2 dark:ring-offset-gray-950' : 'hover:shadow-lg hover:shadow-brand/5'}`}
               >
-                <div className="card p-4 sm:p-5 flex flex-col gap-2.5 sm:gap-3 relative h-full bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+                <div className="card p-4 sm:p-5 flex flex-col gap-2 sm:gap-2.5 relative h-full bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
 
-                  {/* Top Action Icons */}
+                  {/* Top Actions */}
                   <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
                     <BookmarkButton type="tool" itemId={tool.slug} itemName={tool.name} size="sm" />
                     <button
                       onClick={(e) => toggleTool(tool, e)}
-                      className={`transition-colors ${isSelected ? 'text-brand' : 'text-gray-300 hover:text-brand'}`}
-                      title="Select for comparison"
+                      className={`flex items-center gap-0.5 text-[10px] font-jakarta transition-colors ${isSelected ? 'text-brand font-semibold' : 'text-gray-300 hover:text-brand'}`}
+                      title="Compare"
                     >
-                      {isSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                      {isSelected ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
+                      <span className="hidden sm:inline">Compare</span>
                     </button>
                   </div>
 
                   {/* Logo & Title */}
-                  <div className="flex items-start gap-2.5 sm:gap-3 pr-12 sm:pr-14">
+                  <div className="flex items-start gap-2.5 pr-20">
                     <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700/50">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={iconUrl} alt={tool.name} className="w-7 h-7 sm:w-8 sm:h-8 object-contain" />
@@ -461,8 +552,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                         {tool.name}
                       </h2>
                       <p className="text-[11px] text-gray-400 font-jakarta mt-0.5 line-clamp-1">
-                        {tool.category}
-                        {tool.launchYear && <span> · {tool.launchYear}</span>}
+                        {tool.parentCategory || tool.category}
                       </p>
                     </div>
                   </div>
@@ -472,20 +562,39 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                     {tool.tagline}
                   </p>
 
-                  {/* Footer: Rating + Pricing */}
-                  <div className="mt-auto pt-3 flex items-center justify-between border-t border-gray-100 dark:border-gray-800">
-                    <div className="flex items-center gap-1">
-                      <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
-                      <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{tool.rating}</span>
+                  {/* Tag Pills (max 2) + Badges */}
+                  <div className="flex flex-wrap items-center gap-1">
+                    {toolTagNames.map((name, idx) => (
+                      <span key={idx} className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-jakarta">
+                        {name}
+                      </span>
+                    ))}
+                    {tool.freeTrialDays && tool.freeTrialDays > 0 && (
+                      <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400">Trial</span>
+                    )}
+                  </div>
+
+                  {/* Footer: Rating + Upvote + Pricing */}
+                  <div className="mt-auto pt-2.5 flex items-center justify-between border-t border-gray-100 dark:border-gray-800">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{tool.rating}</span>
+                      </div>
+                      <UpvoteButton toolSlug={tool.slug} size="sm" />
                     </div>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
-                      tool.pricing === 'Free' || tool.pricing === 'FREE'
-                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
-                        : tool.pricing === 'Freemium' || tool.pricing === 'FREEMIUM'
+                      tool.pricing === 'FREE' || tool.pricing === 'Free'
+                        ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                        : tool.pricing === 'FREEMIUM' || tool.pricing === 'Freemium'
+                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
+                        : tool.pricing === 'OPEN_SOURCE' || tool.pricing === 'Open Source'
                         ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400'
+                        : tool.pricing === 'ENTERPRISE' || tool.pricing === 'Enterprise'
+                        ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
                         : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
                     }`}>
-                      {tool.pricing}
+                      {tool.pricing === 'OPEN_SOURCE' ? 'Open Source' : tool.pricing}
                     </span>
                   </div>
                 </div>
@@ -544,6 +653,9 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                   {tool.pricing}
                 </span>
 
+                {/* Upvote */}
+                <UpvoteButton toolSlug={tool.slug} size="sm" />
+
                 {/* Compare checkbox */}
                 <button
                   onClick={(e) => toggleTool(tool, e)}
@@ -566,12 +678,16 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
       {/* No Results */}
       {filteredTools.length === 0 && (
         <div className="text-center py-16">
-          <p className="text-gray-400 font-jakarta text-base mb-2">No tools found matching your criteria.</p>
+          <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
+            <Search className="w-6 h-6 text-gray-300 dark:text-gray-600" />
+          </div>
+          <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm mb-1">No tools match these filters.</p>
+          <p className="text-gray-400 dark:text-gray-500 font-jakarta text-xs mb-4">Try broadening your search or removing some filters.</p>
           <button
-            onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedPricing('all'); setSelectedTagIds([]); }}
-            className="text-sm text-brand font-semibold hover:underline"
+            onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedSubcategory('all'); setSelectedPricing('all'); setSelectedTagIds([]); setFreeTrialOnly(false); }}
+            className="px-4 py-2 text-sm font-semibold text-brand bg-brand/5 hover:bg-brand/10 rounded-lg transition-colors"
           >
-            Clear all filters
+            Clear All Filters
           </button>
         </div>
       )}

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Clock, CheckCircle, XCircle, Edit, Shield, AlertCircle } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, Edit, Shield, AlertCircle, BarChart } from 'lucide-react';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 
 interface ListingCardProps {
@@ -87,6 +87,15 @@ export default function ListingCard({ id, slug, name, tagline, logoUrl, status, 
               <Edit className="w-3 h-3" />
               Edit
             </Link>
+            {type === 'tool' && (
+              <Link
+                href={`/founder/tools/${slug}/analytics`}
+                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+              >
+                <BarChart className="w-3 h-3" />
+                Analytics
+              </Link>
+            )}
             {!isVerified && type === 'startup' && (
               <Link
                 href={`/founder/claim/${id}`}

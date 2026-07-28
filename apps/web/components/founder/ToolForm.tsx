@@ -7,6 +7,7 @@ import { submitToolAction, getTagGroupsForFounderAction } from '@/app/founder/to
 import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
 import CategoryCascadeSelect from '@/components/shared/CategoryCascadeSelect';
 import ToolTagSelector from '@/components/shared/ToolTagSelector';
+import ProsConsManager from '@/components/shared/ProsConsManager';
 
 const PRICING_MODELS = [
   'FREE',
@@ -26,6 +27,8 @@ export default function ToolForm() {
   const [success, setSuccess] = useState(false);
   const [tagGroups, setTagGroups] = useState<any[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [pros, setPros] = useState<string[]>([]);
+  const [cons, setCons] = useState<string[]>([]);
 
   const [draftLoaded, setDraftLoaded] = useState(false);
 
@@ -56,10 +59,12 @@ export default function ToolForm() {
     description: '',
     websiteUrl: '',
     affiliateUrl: '',
+    demoVideoUrl: '',
     categoryId: '',
     pricingModel: 'FREEMIUM',
     pricingUrl: '',
     startingPrice: '',
+    freeTrialDays: '',
     hasApi: false,
     hasMobileApp: false,
     launchYear: new Date().getFullYear(),
@@ -249,6 +254,8 @@ export default function ToolForm() {
         pricingModel: formData.pricingModel as any,
         pricingUrl: formData.pricingUrl || undefined,
         startingPrice: formData.startingPrice ? parseFloat(formData.startingPrice) : undefined,
+        freeTrialDays: formData.freeTrialDays ? parseInt(formData.freeTrialDays) : undefined,
+        demoVideoUrl: formData.demoVideoUrl || undefined,
         hasApi: formData.hasApi,
         hasMobileApp: formData.hasMobileApp,
         launchYear: formData.launchYear,
@@ -258,6 +265,8 @@ export default function ToolForm() {
         screenshotUrls: screenshots,
         faqs: faqs.length > 0 ? faqs : undefined,
         tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+        pros: pros.length > 0 ? pros : undefined,
+        cons: cons.length > 0 ? cons : undefined,
       });
 
       if (!result.success) {
@@ -452,6 +461,23 @@ export default function ToolForm() {
         </div>
       </div>
 
+      {/* Demo Video */}
+      <div>
+        <label htmlFor="demoVideoUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Demo Video URL
+        </label>
+        <input
+          type="url"
+          id="demoVideoUrl"
+          name="demoVideoUrl"
+          value={formData.demoVideoUrl}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+          placeholder="YouTube, Vimeo, or Loom link"
+        />
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Add a demo or walkthrough video of your tool</p>
+      </div>
+
       {/* Pricing */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
@@ -487,6 +513,23 @@ export default function ToolForm() {
             step="0.01"
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
             placeholder="e.g. 9.99"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="freeTrialDays" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Free Trial (Days)
+          </label>
+          <input
+            type="number"
+            id="freeTrialDays"
+            name="freeTrialDays"
+            value={formData.freeTrialDays}
+            onChange={handleChange}
+            min="0"
+            max="365"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+            placeholder="e.g. 14"
           />
         </div>
 
@@ -680,6 +723,7 @@ export default function ToolForm() {
       </div>
 
       {/* Tags */}
+      {/* Tags */}
       <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
         {tagGroups.length > 0 ? (
           <ToolTagSelector
@@ -689,6 +733,18 @@ export default function ToolForm() {
             maxTags={30}
           />
         ) : null}
+      </div>
+
+      {/* Pros & Cons */}
+      <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
+        <ProsConsManager
+          pros={pros}
+          cons={cons}
+          onChangePros={setPros}
+          onChangeCons={setCons}
+          maxPros={6}
+          maxCons={3}
+        />
       </div>
 
       {/* FAQs Section */}

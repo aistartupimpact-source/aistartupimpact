@@ -13,7 +13,7 @@ export async function getToolsAction() {
         t.id, t.name, t.slug, t.tagline, t.description, t."websiteUrl", t."logoUrl",
         t."pricingModel", t."avgRating", t."listingTier", t.status, t."claimStatus",
         t."founderNames", t."headquartersCountry", t."hasApi", t."hasMobileApp",
-        t."pricingUrl", t."startingPrice", t."ownerId",
+        t."pricingUrl", t."startingPrice", t."freeTrialDays", t."demoVideoUrl", t."ownerId",
         t."createdAt", t."updatedAt",
         c.name AS "categoryName", c.id AS "categoryId",
         u.name AS "ownerName", u.email AS "ownerEmail"
@@ -305,6 +305,8 @@ export async function updateToolAction(id: string, data: {
   pricingModel: string;
   pricingUrl?: string;
   startingPrice?: number | null;
+  freeTrialDays?: number | null;
+  demoVideoUrl?: string;
   hasApi?: boolean;
   hasMobileApp?: boolean;
   launchYear?: number;
@@ -330,6 +332,8 @@ export async function updateToolAction(id: string, data: {
         "pricingModel" = ${data.pricingModel}::"PricingModel",
         "pricingUrl" = ${data.pricingUrl || null},
         "startingPrice" = ${data.startingPrice ? Math.round(data.startingPrice * 8300 * 100) : null},
+        "freeTrialDays" = ${data.freeTrialDays || null},
+        "demoVideoUrl" = ${data.demoVideoUrl || null},
         "hasApi" = ${data.hasApi ?? false},
         "hasMobileApp" = ${data.hasMobileApp ?? false},
         "launchYear" = ${data.launchYear || new Date().getFullYear()},
@@ -438,6 +442,50 @@ export async function getToolFAQsAction(toolId: string) {
   } catch (error) {
     console.error('getToolFAQsAction error:', error);
     return [];
+  }
+}
+
+export async function getToolProsConsAction(toolId: string) {
+  try {
+    const [pros, cons] = await Promise.all([
+      sql`SELECT id, text FROM "ToolPro" WHERE "toolId" = ${toolId} ORDER BY id ASC`,
+      sql`SELECT id, text FROM "ToolCon" WHERE "toolId" = ${toolId} ORDER BY id ASC`,
+    ]);
+    return {
+      pros: pros.map((p: any) => ({ id: p.id, text: p.text })),
+      cons: cons.map((c: any) => ({ id: c.id, text: c.text })),
+    };
+  } catch (error) {
+    console.error('getToolProsConsAction error:', error);
+    return { pros: [], cons: [] };
+  }
+}
+
+export async function updateToolProsConsAction(toolId: string, data: { pros: string[]; cons: string[] }) {
+  try {
+    // Delete existing
+    await sql`DELETE FROM "ToolPro" WHERE "toolId" = ${toolId}`;
+    await sql`DELETE FROM "ToolCon" WHERE "toolId" = ${toolId}`;
+
+    // Insert new pros
+    for (const text of data.pros) {
+      if (text.trim()) {
+        await sql`INSERT INTO "ToolPro" (id, "toolId", text) VALUES (gen_random_uuid(), ${toolId}, ${text.trim()})`;
+      }
+    }
+
+    // Insert new cons
+    for (const text of data.cons) {
+      if (text.trim()) {
+        await sql`INSERT INTO "ToolCon" (id, "toolId", text) VALUES (gen_random_uuid(), ${toolId}, ${text.trim()})`;
+      }
+    }
+
+    revalidatePath('/tools-dir');
+    return { success: true };
+  } catch (error: any) {
+    console.error('updateToolProsConsAction error:', error);
+    return { success: false, error: error.message };
   }
 }
 
@@ -577,5 +625,245 @@ export async function cancelToolFeaturedCampaignAction(campaignId: string) {
   } catch (error: any) {
     console.error('Error cancelling tool featured campaign:', error);
     return { success: false, error: error.message || 'Failed to cancel campaign' };
+  }
+}
+
+
+// ─── Startup Linking ────────────────────────────────────────────────────────
+
+export async function searchStartupsForLinkAction(query: string) {
+  try {
+    if (!query || query.length < 2) return [];
+    const results = await sql`
+      SELECT id, name, slug, "logoUrl", stage, "headquartersCity"
+      FROM "Startup"
+      WHERE "deletedAt" IS NULL
+        AND (LOWER(name) LIKE ${'%' + query.toLowerCase() + '%'} OR LOWER(slug) LIKE ${'%' + query.toLowerCase() + '%'})
+      ORDER BY name ASC
+      LIMIT 10
+    `;
+    return results;
+  } catch (error) {
+    console.error('searchStartupsForLinkAction error:', error);
+    return [];
+  }
+}
+
+export async function linkToolToStartupAction(toolId: string, startupId: string | null) {
+  try {
+    await sql`
+      UPDATE "AiTool" SET "startupId" = ${startupId}, "updatedAt" = NOW()
+      WHERE id = ${toolId}
+    `;
+    revalidatePath('/tools-dir');
+    return { success: true };
+  } catch (error: any) {
+    console.error('linkToolToStartupAction error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getLinkedStartupAction(toolId: string) {
+  try {
+    const rows = await sql`
+      SELECT s.id, s.name, s.slug, s."logoUrl", s.stage, s."headquartersCity", s."totalFundingInr", s."employeeCount", s."foundedYear"
+      FROM "AiTool" t
+      JOIN "Startup" s ON s.id = t."startupId"
+      WHERE t.id = ${toolId} AND s."deletedAt" IS NULL
+      LIMIT 1
+    `;
+    return rows.length > 0 ? rows[0] : null;
+  } catch (error) {
+    console.error('getLinkedStartupAction error:', error);
+    return null;
+  }
+}
+
+
+export async function verifyToolManuallyAction(id: string) {
+  try {
+    await sql`
+      UPDATE "AiTool"
+      SET "isUrlVerified" = true, "claimStatus" = 'VERIFIED'::"ClaimStatus", "updatedAt" = NOW()
+      WHERE id = ${id}
+    `;
+    revalidatePath('/tools-dir');
+
+    await logAuditEvent({
+      action: 'APPROVE',
+      resourceType: 'AI_TOOL',
+      resourceId: id,
+      after: { action: 'MANUAL_VERIFICATION' },
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function unverifyToolAction(id: string) {
+  try {
+    await sql`
+      UPDATE "AiTool"
+      SET "isUrlVerified" = false, "claimStatus" = 'CLAIMED'::"ClaimStatus", "updatedAt" = NOW()
+      WHERE id = ${id}
+    `;
+    revalidatePath('/tools-dir');
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+
+// ─── Tool Alternatives ───────────────────────────────────────────────────────
+
+export async function getToolAlternativesAction(toolId: string) {
+  try {
+    const rows = await sql`
+      SELECT a.id, a."alternativeId", a.source,
+             t.name, t.slug, t."logoUrl", t.tagline, t."avgRating", t."pricingModel"
+      FROM "ToolAlternative" a
+      JOIN "AiTool" t ON t.id = a."alternativeId"
+      WHERE a."toolId" = ${toolId} AND t."deletedAt" IS NULL
+      ORDER BY a."createdAt" DESC
+    `;
+    return rows;
+  } catch (error) {
+    console.error('getToolAlternativesAction error:', error);
+    return [];
+  }
+}
+
+export async function addToolAlternativeAction(toolId: string, alternativeId: string) {
+  try {
+    if (toolId === alternativeId) return { success: false, error: 'A tool cannot be its own alternative' };
+
+    // Check if already linked
+    const existing = await sql`SELECT id FROM "ToolAlternative" WHERE "toolId" = ${toolId} AND "alternativeId" = ${alternativeId} LIMIT 1`;
+    if (existing.length > 0) return { success: false, error: 'Already linked as alternative' };
+
+    // Insert bidirectional: A→B and B→A
+    await sql`INSERT INTO "ToolAlternative" (id, "toolId", "alternativeId", source) VALUES (gen_random_uuid(), ${toolId}, ${alternativeId}, 'admin') ON CONFLICT DO NOTHING`;
+    await sql`INSERT INTO "ToolAlternative" (id, "toolId", "alternativeId", source) VALUES (gen_random_uuid(), ${alternativeId}, ${toolId}, 'admin') ON CONFLICT DO NOTHING`;
+
+    revalidatePath('/tools-dir');
+    return { success: true };
+  } catch (error: any) {
+    console.error('addToolAlternativeAction error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function removeToolAlternativeAction(toolId: string, alternativeId: string) {
+  try {
+    // Remove both directions
+    await sql`DELETE FROM "ToolAlternative" WHERE ("toolId" = ${toolId} AND "alternativeId" = ${alternativeId}) OR ("toolId" = ${alternativeId} AND "alternativeId" = ${toolId})`;
+    revalidatePath('/tools-dir');
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function searchToolsForAlternativeAction(query: string, excludeToolId: string) {
+  try {
+    if (!query || query.length < 2) return [];
+    const results = await sql`
+      SELECT id, name, slug, "logoUrl", "pricingModel", "avgRating"
+      FROM "AiTool"
+      WHERE "deletedAt" IS NULL AND status = 'APPROVED'
+        AND id != ${excludeToolId}
+        AND (LOWER(name) LIKE ${'%' + query.toLowerCase() + '%'} OR LOWER(slug) LIKE ${'%' + query.toLowerCase() + '%'})
+      ORDER BY name ASC
+      LIMIT 10
+    `;
+    return results;
+  } catch (error) {
+    console.error('searchToolsForAlternativeAction error:', error);
+    return [];
+  }
+}
+
+
+// ─── Sprint 4: Bulk Actions ─────────────────────────────────────────────────
+
+export async function bulkApproveToolsAction(ids: string[]) {
+  try {
+    if (ids.length === 0) return { success: false, error: 'No tools selected' };
+    await sql`
+      UPDATE "AiTool"
+      SET status = 'APPROVED'::"ToolApprovalStatus", "claimStatus" = 'CLAIMED', "approvedAt" = NOW(), "updatedAt" = NOW()
+      WHERE id = ANY(${ids}::text[]) AND status = 'PENDING'
+    `;
+    revalidatePath('/tools-dir');
+    await logAuditEvent({ action: 'APPROVE', resourceType: 'AI_TOOL', after: { bulkAction: true, count: ids.length } });
+    return { success: true, count: ids.length };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function bulkArchiveToolsAction(ids: string[]) {
+  try {
+    if (ids.length === 0) return { success: false, error: 'No tools selected' };
+    await sql`
+      UPDATE "AiTool"
+      SET status = 'ARCHIVED'::"ToolApprovalStatus", "updatedAt" = NOW()
+      WHERE id = ANY(${ids}::text[])
+    `;
+    revalidatePath('/tools-dir');
+    await logAuditEvent({ action: 'UPDATE', resourceType: 'AI_TOOL', after: { bulkAction: 'ARCHIVE', count: ids.length } });
+    return { success: true, count: ids.length };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function bulkDeleteToolsAction(ids: string[]) {
+  const { allowed, error } = await canDelete();
+  if (!allowed) return { success: false, error: error || 'Unauthorized' };
+
+  try {
+    if (ids.length === 0) return { success: false, error: 'No tools selected' };
+    await sql`UPDATE "AiTool" SET "deletedAt" = NOW() WHERE id = ANY(${ids}::text[])`;
+    revalidatePath('/tools-dir');
+    await logAuditEvent({ action: 'DELETE', resourceType: 'AI_TOOL', after: { bulkAction: true, count: ids.length } });
+    return { success: true, count: ids.length };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+// ─── Sprint 4.2: Duplicate Detection ────────────────────────────────────────
+
+export async function checkDuplicateToolAction(name: string, websiteUrl: string) {
+  try {
+    const results = await sql`
+      SELECT id, name, slug, "websiteUrl"
+      FROM "AiTool"
+      WHERE "deletedAt" IS NULL
+        AND (
+          LOWER("websiteUrl") = LOWER(${websiteUrl})
+          OR similarity(LOWER(name), LOWER(${name})) > 0.4
+        )
+      LIMIT 5
+    `;
+    return results;
+  } catch (error) {
+    // Fallback: simple exact match if trigram extension not available
+    try {
+      const results = await sql`
+        SELECT id, name, slug, "websiteUrl"
+        FROM "AiTool"
+        WHERE "deletedAt" IS NULL
+          AND (LOWER("websiteUrl") = LOWER(${websiteUrl}) OR LOWER(name) = LOWER(${name}))
+        LIMIT 5
+      `;
+      return results;
+    } catch {
+      return [];
+    }
   }
 }

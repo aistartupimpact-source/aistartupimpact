@@ -429,3 +429,33 @@ export async function updateStartupAction(id: string, data: StartupSubmission) {
     };
   }
 }
+
+// ─── Startup Categories & Types (fetched from canonical tables) ─────────────
+
+export async function getStartupCategoriesAction() {
+  try {
+    const rows = await prisma.$queryRaw<any[]>`
+      SELECT name FROM "StartupBusinessCategory"
+      WHERE "isActive" = true
+      ORDER BY "sortOrder" ASC, name ASC
+    `;
+    return rows.map((r: any) => r.name);
+  } catch (error) {
+    console.error('getStartupCategoriesAction error:', error);
+    return [];
+  }
+}
+
+export async function getStartupTypesAction() {
+  try {
+    const rows = await prisma.$queryRaw<any[]>`
+      SELECT name FROM "StartupBusinessType"
+      WHERE "isActive" = true
+      ORDER BY "sortOrder" ASC, name ASC
+    `;
+    return rows.map((r: any) => r.name);
+  } catch (error) {
+    console.error('getStartupTypesAction error:', error);
+    return [];
+  }
+}

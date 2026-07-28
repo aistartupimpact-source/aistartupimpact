@@ -19,7 +19,7 @@ export default async function EditToolPage({ params }: PageProps) {
       "pricingModel", "startingPrice", "pricingUrl", "affiliateUrl",
       "categoryId", status, "claimStatus", "ownerId",
       "hasApi", "hasMobileApp", "launchYear", "founderNames", "headquartersCountry",
-      "screenshotUrls"
+      "screenshotUrls", "isUrlVerified"
     FROM "AiTool"
     WHERE slug = ${params.slug}
     LIMIT 1
@@ -119,6 +119,35 @@ export default async function EditToolPage({ params }: PageProps) {
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
           <p className="text-sm text-green-800 dark:text-green-400">
             ✅ This tool is live. You can edit anytime without needing re-approval.
+          </p>
+        </div>
+      )}
+
+      {/* Domain Verification CTA */}
+      {(tool.claimStatus === 'CLAIMED' || tool.claimStatus === 'VERIFIED') && !tool.isUrlVerified && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">Verify your domain</p>
+              <p className="text-xs text-blue-700/70 dark:text-blue-400/70 mt-1">
+                Add a DNS TXT record to prove you own this tool. Verified tools get a badge and higher visibility.
+              </p>
+            </div>
+            <a
+              href={`/api/founder/tools/${tool.id}/verify`}
+              target="_blank"
+              className="shrink-0 px-3 py-1.5 text-xs font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Get Instructions
+            </a>
+          </div>
+        </div>
+      )}
+
+      {tool.isUrlVerified && (
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+          <p className="text-sm text-emerald-800 dark:text-emerald-400">
+            ✓ Domain verified. Your tool has the Verified badge.
           </p>
         </div>
       )}

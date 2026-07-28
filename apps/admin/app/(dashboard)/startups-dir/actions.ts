@@ -779,3 +779,86 @@ export async function approveStartupAction(id: string) {
     return { success: false, error: error.message || 'Failed to approve startup' };
   }
 }
+
+
+// ─── Bulk Actions ────────────────────────────────────────────────────────────
+
+export async function bulkApproveStartupsAction(ids: string[]) {
+  try {
+    if (ids.length === 0) return { success: false, error: 'No startups selected' };
+    await sql`
+      UPDATE "Startup"
+      SET "isApproved" = true, "approvedAt" = NOW(), "updatedAt" = NOW()
+      WHERE id = ANY(${ids}::text[]) AND "isApproved" = false
+    `;
+    revalidatePath('/startups-dir');
+    await logAuditEvent({ action: 'APPROVE', resourceType: 'STARTUP', after: { bulkAction: true, count: ids.length } });
+    return { success: true, count: ids.length };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function bulkArchiveStartupsAction(ids: string[]) {
+  try {
+    if (ids.length === 0) return { success: false, error: 'No startups selected' };
+    await sql`
+      UPDATE "Startup"
+      SET status = 'INACTIVE'::"CompanyStatus", "updatedAt" = NOW()
+      WHERE id = ANY(${ids}::text[])
+    `;
+    revalidatePath('/startups-dir');
+    await logAuditEvent({ action: 'UPDATE', resourceType: 'STARTUP', after: { bulkAction: 'ARCHIVE', count: ids.length } });
+    return { success: true, count: ids.length };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function bulkDeleteStartupsAction(ids: string[]) {
+  const { allowed, error } = await canDelete();
+  if (!allowed) return { success: false, error: error || 'Unauthorized' };
+
+  try {
+    if (ids.length === 0) return { success: false, error: 'No startups selected' };
+    await sql`UPDATE "Startup" SET "deletedAt" = NOW() WHERE id = ANY(${ids}::text[])`;
+    revalidatePath('/startups-dir');
+    await logAuditEvent({ action: 'DELETE', resourceType: 'STARTUP', after: { bulkAction: true, count: ids.length } });
+    return { success: true, count: ids.length };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+// ─── Duplicate Detection ─────────────────────────────────────────────────────
+
+export async function checkDuplicateStartupAction(name: string, websiteUrl: string) {
+  try {
+    // Try with trigram similarity first
+    const results = await sql`
+      SELECT id, name, slug, "websiteUrl"
+      FROM "Startup"
+      WHERE "deletedAt" IS NULL
+        AND (
+          LOWER("websiteUrl") = LOWER(${websiteUrl})
+          OR similarity(LOWER(name), LOWER(${name})) > 0.4
+        )
+      LIMIT 5
+    `;
+    return results;
+  } catch (error) {
+    // Fallback: simple exact match if trigram not available
+    try {
+      const results = await sql`
+        SELECT id, name, slug, "websiteUrl"
+        FROM "Startup"
+        WHERE "deletedAt" IS NULL
+          AND (LOWER("websiteUrl") = LOWER(${websiteUrl}) OR LOWER(name) = LOWER(${name}))
+        LIMIT 5
+      `;
+      return results;
+    } catch {
+      return [];
+    }
+  }
+}

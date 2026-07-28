@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import { generateItemListSchema, generateCollectionPageSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import ToolsListWithComparison from '@/components/ToolsListWithComparison';
 import FounderActionButton from '@/components/auth/FounderActionButton';
+import DiscoverySections from '@/components/tools/DiscoverySections';
 
 export const revalidate = 60;
 
@@ -28,14 +29,18 @@ export const metadata: Metadata = {
   },
 };
 
-import { getDirectoryToolsDirect, getToolCategoryTreeDirect, getToolTagGroupsForFilterDirect, getToolTagMappingsDirect } from '@/lib/db';
+import { getDirectoryToolsDirect, getToolCategoryTreeDirect, getToolTagGroupsForFilterDirect, getToolTagMappingsDirect, getTrendingToolsDirect, getRecentlyAddedToolsDirect, getEditorPicksDirect, getMostUpvotedThisMonthDirect } from '@/lib/db';
 
 export default async function ToolsPage({ searchParams }: { searchParams: { category?: string; tag?: string } }) {
-  const [picks, categoryTree, tagGroups, toolTagMap] = await Promise.all([
+  const [picks, categoryTree, tagGroups, toolTagMap, trending, recentlyAdded, editorPicks, mostUpvoted] = await Promise.all([
     getDirectoryToolsDirect(),
     getToolCategoryTreeDirect(),
     getToolTagGroupsForFilterDirect(),
     getToolTagMappingsDirect(),
+    getTrendingToolsDirect(12),
+    getRecentlyAddedToolsDirect(12),
+    getEditorPicksDirect(12),
+    getMostUpvotedThisMonthDirect(12),
   ]);
 
   // Resolve initial tag slug to tag ID if ?tag= query param provided
@@ -75,29 +80,75 @@ export default async function ToolsPage({ searchParams }: { searchParams: { cate
     { name: 'Home', url: siteUrl },
     { name: 'AI Tools', url: `${siteUrl}/tools` },
   ]);
+
+  // Get category tree for browse grid
+  const parentCategoriesForGrid = (categoryTree as any[]).filter((c: any) => c.toolCount > 0);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-      {/* Header */}
-      <div className="mb-5 sm:mb-8 flex flex-col md:flex-row md:items-end justify-between gap-3 sm:gap-4">
-        <div>
-          <h1 className="font-sora font-extrabold text-xl sm:text-2xl md:text-3xl lg:text-4xl text-navy dark:text-white leading-tight tracking-tight">
-            Find the right AI tool.{' '}
-            <span className="text-brand">Not just the most popular one.</span>
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 font-jakarta text-xs sm:text-sm max-w-2xl mt-1.5 sm:mt-2">
-            Browse, filter, and compare {picks.length}+ AI tools — tested by real users, ranked by what actually works.
-          </p>
+
+      {/* Hero Section */}
+      <div className="mb-8 sm:mb-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 sm:gap-4 mb-4">
+          <div>
+            <h1 className="font-sora font-extrabold text-xl sm:text-2xl md:text-3xl lg:text-4xl text-navy dark:text-white leading-tight tracking-tight">
+              Find the right AI tool.{' '}
+              <span className="text-brand">Not just the most popular one.</span>
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 font-jakarta text-xs sm:text-sm max-w-2xl mt-1.5 sm:mt-2">
+              Browse {picks.length}+ AI tools across {parentCategoriesForGrid.length} categories. Filter by platform, pricing, integrations, and more — powered by real user reviews.
+            </p>
+          </div>
+          <FounderActionButton
+            href="/founder/tools/new"
+            className="bg-brand text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold font-jakarta text-xs sm:text-sm hover:scale-105 transition-transform shadow-lg shadow-brand/20 whitespace-nowrap text-center shrink-0"
+          >
+            + Submit Your Tool
+          </FounderActionButton>
         </div>
-        <FounderActionButton
-          href="/founder/tools/new"
-          className="bg-brand text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold font-jakarta text-xs sm:text-sm hover:scale-105 transition-transform shadow-lg shadow-brand/20 whitespace-nowrap text-center shrink-0"
-        >
-          + Submit Your Tool
-        </FounderActionButton>
+
+        {/* Search Suggestions as Filter Shortcuts */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-gray-400 font-jakarta">Popular:</span>
+          <Link href="/tools/category/writing-content" className="px-3 py-1 rounded-full text-[11px] font-semibold font-jakarta bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-brand/10 hover:text-brand transition-colors">Write blog posts</Link>
+          <Link href="/tools/category/image-generation-editing" className="px-3 py-1 rounded-full text-[11px] font-semibold font-jakarta bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-brand/10 hover:text-brand transition-colors">Generate images</Link>
+          <Link href="/tools/category/code-development" className="px-3 py-1 rounded-full text-[11px] font-semibold font-jakarta bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-brand/10 hover:text-brand transition-colors">Code assistant</Link>
+          <Link href="/tools?tag=completely-free" className="px-3 py-1 rounded-full text-[11px] font-semibold font-jakarta bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-100 transition-colors">Free tools</Link>
+          <Link href="/tools/category/customer-experience" className="px-3 py-1 rounded-full text-[11px] font-semibold font-jakarta bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-brand/10 hover:text-brand transition-colors">AI chatbots</Link>
+          <Link href="/tools/category/video" className="px-3 py-1 rounded-full text-[11px] font-semibold font-jakarta bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-brand/10 hover:text-brand transition-colors">Video creation</Link>
+        </div>
       </div>
+
+      {/* Discovery Sections */}
+      <DiscoverySections
+        trending={trending as any[]}
+        recentlyAdded={recentlyAdded as any[]}
+        editorPicks={editorPicks as any[]}
+        mostUpvoted={mostUpvoted as any[]}
+      />
+
+      {/* Browse by Category Grid */}
+      {parentCategoriesForGrid.length > 0 && (
+        <div className="mb-8">
+          <h2 className="font-sora font-bold text-base sm:text-lg text-navy dark:text-white mb-4">Browse by Category</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
+            {parentCategoriesForGrid.map((cat: any) => (
+              <Link
+                key={cat.slug}
+                href={`/tools/category/${cat.slug}`}
+                className="p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-brand/30 hover:shadow-sm transition-all group text-center"
+              >
+                {cat.icon && <span className="text-lg block mb-1">{cat.icon}</span>}
+                <p className="font-sora font-semibold text-xs text-navy dark:text-white group-hover:text-brand transition-colors leading-tight">{cat.name}</p>
+                <p className="text-[10px] text-gray-400 font-jakarta mt-0.5">{cat.toolCount} tools</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Tools List Component with State */}
       <ToolsListWithComparison picks={picks} tagGroups={tagGroups} toolTagMap={toolTagMap} initialTagId={initialTagId} />

@@ -10,26 +10,25 @@ import FundingRoundsManager, { FundingRound, convertToSaveFormat } from '@/compo
 import FoundersDetailsManager, { FounderDetail } from '@/components/shared/FoundersDetailsManager';
 import SocialLinksManager, { SocialLink } from '@/components/shared/SocialLinksManager';
 import CityCombobox from '@/components/shared/CityCombobox';
+import { getCanonicalCategoriesAction, getCanonicalTypesAction } from '../manage/actions';
 
 const stages = ['BOOTSTRAPPED', 'IDEA', 'PRE_SEED', 'SEED', 'PRE_SERIES_A', 'SERIES_A', 'SERIES_B', 'SERIES_C', 'GROWTH', 'PUBLIC'];
-
-const STARTUP_CATEGORIES = [
-  'FinTech', 'HealthTech', 'BioTech & Life Sciences', 'EdTech', 'E-Commerce & Retail',
-  'SaaS', 'AI/ML', 'Enterprise & B2B Software', 'Developer Tools', 'Cybersecurity',
-  'Consumer Apps & Social', 'DeepTech & Hardware', 'CleanTech & Energy', 'AgriTech',
-  'Logistics & Supply Chain', 'HRTech', 'MarTech & AdTech', 'PropTech',
-  'FoodTech & Restaurant', 'Mobility & Transportation', 'Gaming & eSports',
-  'Media & Entertainment', 'Creator Economy', 'Web3 & Blockchain', 'InsurTech',
-  'LegalTech', 'Robotics & Drones', 'SpaceTech & Aerospace', 'Defense & GovTech',
-  'Travel & Hospitality', 'Construction & InfraTech', 'Telecom & Connectivity',
-  'Fashion & Beauty', 'Sports & Fitness', 'Other',
-];
-
-const BUSINESS_TYPES = ['B2B', 'B2C', 'B2B2C', 'B2G', 'D2C', 'Marketplace', 'Platform'];
 
 export default function NewStartupPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [startupCategories, setStartupCategories] = useState<string[]>([]);
+  const [businessTypes, setBusinessTypes] = useState<string[]>([]);
+
+  useEffect(() => {
+    Promise.all([
+      getCanonicalCategoriesAction(),
+      getCanonicalTypesAction(),
+    ]).then(([cats, types]) => {
+      setStartupCategories((cats as any[]).filter(c => c.isActive).map(c => c.name));
+      setBusinessTypes((types as any[]).filter(t => t.isActive).map(t => t.name));
+    });
+  }, []);
   
   const [saving, setSaving] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
@@ -274,7 +273,7 @@ export default function NewStartupPage() {
                 className="input-field text-sm"
               >
                 <option value="">Select category</option>
-                {STARTUP_CATEGORIES.map(c => (
+                {startupCategories.map(c => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
@@ -291,7 +290,7 @@ export default function NewStartupPage() {
                 className="input-field text-sm"
               >
                 <option value="">Select business type</option>
-                {BUSINESS_TYPES.map(bt => (
+                {businessTypes.map(bt => (
                   <option key={bt} value={bt}>{bt}</option>
                 ))}
               </select>

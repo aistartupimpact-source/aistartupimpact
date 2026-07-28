@@ -95,7 +95,7 @@ export async function getAiToolBySlugDirect(slug: string) {
         pc.name AS "parentCategoryName",
         pc.slug AS "parentCategorySlug",
         pc.icon AS "parentCategoryIcon",
-        s.id AS "startupId", s.name AS "startupName", s."totalFundingInr"
+        s.id AS "startupId", s.name AS "startupName", s.slug AS "startupSlug", s."logoUrl" AS "startupLogoUrl", s."totalFundingInr"
       FROM "AiTool" t
       LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
       LEFT JOIN "ToolCategory" pc ON pc.id = c."parentId"
@@ -437,7 +437,7 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
       // Check if slug is a parent category or subcategory
       rows = await sql`
         SELECT t.id, t.name, t.slug, t.tagline, t.description, t."pricingModel", t."logoUrl", t."avgRating", 
-               t."hasApi", t."hasMobileApp", t."launchYear", t."headquartersCountry", t."founderNames",
+               t."hasApi", t."hasMobileApp", t."freeTrialDays", t."upvoteCount", t."launchYear", t."headquartersCountry", t."founderNames",
                c.name AS "categoryName", c.slug AS "categorySlug",
                pc.name AS "parentCategoryName", pc.slug AS "parentCategorySlug",
                tfc.tier AS "campaignTier"
@@ -463,7 +463,7 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
     } else {
       rows = await sql`
         SELECT t.id, t.name, t.slug, t.tagline, t.description, t."pricingModel", t."logoUrl", t."avgRating",
-               t."hasApi", t."hasMobileApp", t."launchYear", t."headquartersCountry", t."founderNames",
+               t."hasApi", t."hasMobileApp", t."freeTrialDays", t."upvoteCount", t."launchYear", t."headquartersCountry", t."founderNames",
                c.name AS "categoryName", c.slug AS "categorySlug",
                pc.name AS "parentCategoryName", pc.slug AS "parentCategorySlug",
                tfc.tier AS "campaignTier"
@@ -499,6 +499,8 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
       verdict: t.description ? t.description.substring(0, 120) + '...' : 'An excellent AI tool optimized for productivity.',
       hasApi: t.hasApi || false,
       hasMobileApp: t.hasMobileApp || false,
+      freeTrialDays: t.freeTrialDays || null,
+      upvoteCount: parseInt(t.upvoteCount) || 0,
       launchYear: t.launchYear || null,
       country: t.headquartersCountry || null,
       founderNames: t.founderNames || []
@@ -845,3 +847,167 @@ export const db = {
     return { rows: result as any[] };
   }
 };
+
+
+/**
+ * Get pros and cons for a tool (for detail page display).
+ */
+export async function getToolProsConsDirect(toolId: string) {
+  try {
+    const [pros, cons] = await Promise.all([
+      sql`SELECT id, text FROM "ToolPro" WHERE "toolId" = ${toolId} ORDER BY id`,
+      sql`SELECT id, text FROM "ToolCon" WHERE "toolId" = ${toolId} ORDER BY id`,
+    ]);
+    return { pros, cons };
+  } catch (e) {
+    console.error('getToolProsConsDirect error:', e);
+    return { pros: [], cons: [] };
+  }
+}
+
+
+/**
+ * Get alternative tools for a tool (for detail page).
+ */
+export async function getToolAlternativesDirect(toolId: string) {
+  try {
+    const rows = await sql`
+      SELECT t.id, t.name, t.slug, t."logoUrl", t.tagline, t."avgRating", t."pricingModel",
+             c.name AS "categoryName"
+      FROM "ToolAlternative" a
+      JOIN "AiTool" t ON t.id = a."alternativeId"
+      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+      WHERE a."toolId" = ${toolId} AND t."deletedAt" IS NULL AND t.status = 'APPROVED'
+      ORDER BY t."avgRating" DESC
+      LIMIT 10
+    `;
+    return rows;
+  } catch (e) {
+    console.error('getToolAlternativesDirect error:', e);
+    return [];
+  }
+}
+
+
+/**
+ * Get founder responses to reviews for display on the detail page.
+ * Returns a map: { reviewId -> { body, founderName, createdAt } }
+ */
+export async function getReviewResponsesDirect(toolId: string) {
+  try {
+    const rows = await sql`
+      SELECT rr."reviewId", rr.body, rr."createdAt", fu.name AS "founderName"
+      FROM "ToolReviewResponse" rr
+      JOIN "FounderUser" fu ON fu.id = rr."founderId"
+      JOIN "ToolReview" tr ON tr.id = rr."reviewId"
+      WHERE tr."toolId" = ${toolId}
+    `;
+    const map: Record<string, any> = {};
+    for (const r of rows) {
+      map[(r as any).reviewId] = { body: (r as any).body, founderName: (r as any).founderName, createdAt: (r as any).createdAt };
+    }
+    return map;
+  } catch (e) {
+    console.error('getReviewResponsesDirect error:', e);
+    return {};
+  }
+}
+
+
+// ─── Discovery Sections ─────────────────────────────────────────────────────
+
+/**
+ * Get trending tools (by click velocity in last 7 days).
+ */
+export async function getTrendingToolsDirect(limit = 12) {
+  try {
+    const rows = await sql`
+      SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel",
+             c.name AS "categoryName", c.slug AS "categorySlug",
+             COUNT(ac.id)::int AS "recentClicks"
+      FROM "AiTool" t
+      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+      LEFT JOIN "AffiliateClick" ac ON ac."toolId" = t.id AND ac."createdAt" >= NOW() - INTERVAL '7 days'
+      WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
+      GROUP BY t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel", c.name, c.slug
+      HAVING COUNT(ac.id) > 0
+      ORDER BY COUNT(ac.id) DESC, t."avgRating" DESC
+      LIMIT ${limit}
+    `;
+    return rows;
+  } catch (e) {
+    console.error('getTrendingToolsDirect error:', e);
+    return [];
+  }
+}
+
+/**
+ * Get recently added tools (last 30 days, approved).
+ */
+export async function getRecentlyAddedToolsDirect(limit = 12) {
+  try {
+    const rows = await sql`
+      SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel",
+             c.name AS "categoryName", c.slug AS "categorySlug"
+      FROM "AiTool" t
+      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+      WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
+        AND t."createdAt" >= NOW() - INTERVAL '30 days'
+      ORDER BY t."createdAt" DESC
+      LIMIT ${limit}
+    `;
+    return rows;
+  } catch (e) {
+    console.error('getRecentlyAddedToolsDirect error:', e);
+    return [];
+  }
+}
+
+/**
+ * Get editor's picks (featured tools with active campaigns).
+ */
+export async function getEditorPicksDirect(limit = 12) {
+  try {
+    const rows = await sql`
+      SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel",
+             c.name AS "categoryName", c.slug AS "categorySlug"
+      FROM "AiTool" t
+      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+      LEFT JOIN "ToolFeaturedCampaign" tfc ON tfc."toolId" = t.id
+        AND tfc."cancelledAt" IS NULL AND tfc."startDate" <= NOW() AND tfc."endDate" >= NOW()
+      WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
+        AND (tfc.tier = 'FEATURED' OR t."listingTier" = 'FEATURED')
+      ORDER BY t."avgRating" DESC
+      LIMIT ${limit}
+    `;
+    return rows;
+  } catch (e) {
+    console.error('getEditorPicksDirect error:', e);
+    return [];
+  }
+}
+
+
+/**
+ * Get most upvoted tools this month (30-day window for time decay).
+ */
+export async function getMostUpvotedThisMonthDirect(limit = 12) {
+  try {
+    const rows = await sql`
+      SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel",
+             c.name AS "categoryName", c.slug AS "categorySlug",
+             COUNT(u.id)::int AS "monthlyUpvotes"
+      FROM "AiTool" t
+      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+      JOIN "ToolUpvote" u ON u."toolId" = t.id AND u."createdAt" >= NOW() - INTERVAL '30 days'
+      WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
+      GROUP BY t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel", c.name, c.slug
+      ORDER BY COUNT(u.id) DESC
+      LIMIT ${limit}
+    `;
+    return rows;
+  } catch (e) {
+    console.error('getMostUpvotedThisMonthDirect error:', e);
+    return [];
+  }
+}

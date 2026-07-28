@@ -14,6 +14,8 @@ interface ToolSubmission {
   pricingModel: string;
   pricingUrl?: string;
   startingPrice?: number;
+  freeTrialDays?: number;
+  demoVideoUrl?: string;
   hasApi: boolean;
   hasMobileApp: boolean;
   launchYear: number;
@@ -25,6 +27,8 @@ interface ToolSubmission {
   screenshotUrls: string[];
   faqs?: Array<{ question: string; answer: string; order: number }>;
   tagIds?: string[];
+  pros?: string[];
+  cons?: string[];
 }
 
 export async function submitToolAction(data: ToolSubmission) {
@@ -95,13 +99,15 @@ export async function submitToolAction(data: ToolSubmission) {
     const tools = await prisma.$queryRaw<any[]>`
       INSERT INTO "AiTool" (
         id, name, slug, tagline, description, "websiteUrl", "affiliateUrl",
-        "pricingModel", "pricingUrl", "startingPrice", "hasApi", "hasMobileApp",
+        "pricingModel", "pricingUrl", "startingPrice", "freeTrialDays", "demoVideoUrl", "hasApi", "hasMobileApp",
         "launchYear", "founderNames", "headquartersCountry", "logoUrl", "screenshotUrls",
         "categoryId", "ownerId", "claimStatus", status, "submittedBy", "createdAt", "updatedAt"
       ) VALUES (
         gen_random_uuid(), ${data.name}, ${slug}, ${data.tagline}, ${data.description},
         ${data.websiteUrl}, ${data.affiliateUrl || null},
         ${data.pricingModel}, ${data.pricingUrl || null}, ${startingPricePaise},
+        ${data.freeTrialDays || null},
+        ${data.demoVideoUrl || null},
         ${data.hasApi}, ${data.hasMobileApp}, ${data.launchYear},
         ${data.founderNames || []}::text[], ${data.headquartersCountry || null},
         ${data.logoUrl || null}, ${data.screenshotUrls}::text[],
@@ -161,6 +167,24 @@ export async function submitToolAction(data: ToolSubmission) {
         SET "tagCount" = "tagCount" + 1, "updatedAt" = NOW()
         WHERE id = ANY(${cappedTagIds}::text[])
       `;
+    }
+
+    // Create pros
+    if (data.pros && data.pros.length > 0) {
+      for (const text of data.pros) {
+        if (text.trim()) {
+          await prisma.$queryRaw`INSERT INTO "ToolPro" (id, "toolId", text) VALUES (gen_random_uuid(), ${toolId}, ${text.trim()})`;
+        }
+      }
+    }
+
+    // Create cons
+    if (data.cons && data.cons.length > 0) {
+      for (const text of data.cons) {
+        if (text.trim()) {
+          await prisma.$queryRaw`INSERT INTO "ToolCon" (id, "toolId", text) VALUES (gen_random_uuid(), ${toolId}, ${text.trim()})`;
+        }
+      }
     }
 
     // TODO: Send notification to admin
@@ -413,5 +437,118 @@ export async function getToolTagIdsAction(toolId: string) {
   } catch (error) {
     console.error('getToolTagIdsAction error:', error);
     return [];
+  }
+}
+
+// ─── Review Responses ───────────────────────────────────────────────────────
+
+export async function respondToReviewAction(reviewId: string, body: string) {
+  try {
+    const session = await requireFounderAuth();
+
+    if (!body.trim() || body.length > 1000) {
+      return { success: false, error: 'Response must be 1-1000 characters' };
+    }
+
+    // Verify the review exists and the founder owns the tool
+    const reviews = await prisma.$queryRaw<any[]>`
+      SELECT r.id, r."toolId", t."ownerId"
+      FROM "ToolReview" r
+      JOIN "AiTool" t ON t.id = r."toolId"
+      WHERE r.id = ${reviewId}
+      LIMIT 1
+    `;
+
+    if (reviews.length === 0) return { success: false, error: 'Review not found' };
+    if (reviews[0].ownerId !== session.userId) return { success: false, error: 'Not authorized' };
+
+    // Check if response already exists
+    const existing = await prisma.$queryRaw<any[]>`
+      SELECT id FROM "ToolReviewResponse" WHERE "reviewId" = ${reviewId} LIMIT 1
+    `;
+    if (existing.length > 0) return { success: false, error: 'Already responded to this review' };
+
+    // Insert response
+    await prisma.$queryRaw`
+      INSERT INTO "ToolReviewResponse" (id, "reviewId", "founderId", body, "createdAt", "updatedAt")
+      VALUES (gen_random_uuid(), ${reviewId}, ${session.userId}, ${body.trim()}, NOW(), NOW())
+    `;
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('respondToReviewAction error:', error);
+    return { success: false, error: error.message || 'Failed to respond' };
+  }
+}
+
+export async function getReviewResponsesAction(toolId: string) {
+  try {
+    const responses = await prisma.$queryRaw<any[]>`
+      SELECT rr.id, rr."reviewId", rr.body, rr."createdAt",
+             fu.name AS "founderName"
+      FROM "ToolReviewResponse" rr
+      JOIN "FounderUser" fu ON fu.id = rr."founderId"
+      JOIN "ToolReview" tr ON tr.id = rr."reviewId"
+      WHERE tr."toolId" = ${toolId}
+    `;
+    return responses;
+  } catch (error) {
+    console.error('getReviewResponsesAction error:', error);
+    return [];
+  }
+}
+
+// ─── Referral System ────────────────────────────────────────────────────────
+
+export async function getFounderReferralCodeAction() {
+  try {
+    const session = await requireFounderAuth();
+
+    // Check if founder has any tools with referral codes
+    const tools = await prisma.$queryRaw<any[]>`
+      SELECT id, name, "referralCode"
+      FROM "AiTool"
+      WHERE "ownerId" = ${session.userId} AND "deletedAt" IS NULL AND "referralCode" IS NOT NULL
+      LIMIT 1
+    `;
+
+    if (tools.length > 0) {
+      return { code: tools[0].referralCode, toolName: tools[0].name };
+    }
+
+    // Generate a referral code for the founder's first tool
+    const allTools = await prisma.$queryRaw<any[]>`
+      SELECT id, name FROM "AiTool"
+      WHERE "ownerId" = ${session.userId} AND "deletedAt" IS NULL
+      ORDER BY "createdAt" ASC LIMIT 1
+    `;
+
+    if (allTools.length === 0) return { code: null };
+
+    const code = 'REF_' + session.userId.substring(0, 6).toUpperCase() + '_' + Math.random().toString(36).substring(2, 6).toUpperCase();
+    await prisma.$queryRaw`
+      UPDATE "AiTool" SET "referralCode" = ${code} WHERE id = ${allTools[0].id}
+    `;
+
+    return { code, toolName: allTools[0].name };
+  } catch (error) {
+    console.error('getFounderReferralCodeAction error:', error);
+    return { code: null };
+  }
+}
+
+export async function getReferralStatsAction() {
+  try {
+    const session = await requireFounderAuth();
+
+    const referred = await prisma.$queryRaw<any[]>`
+      SELECT COUNT(*)::int AS count
+      FROM "AiTool"
+      WHERE "referredBy" = ${session.userId} AND "deletedAt" IS NULL
+    `;
+
+    return { referredCount: referred[0]?.count || 0 };
+  } catch (error) {
+    return { referredCount: 0 };
   }
 }

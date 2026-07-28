@@ -8,7 +8,8 @@ import ReviewHelpfulButton from '@/components/ReviewHelpfulButton';
 import ScreenshotGallery from '@/components/ScreenshotGallery';
 import BookmarkButton from '@/components/BookmarkButton';
 import { ToolCTAButton } from '@/components/tools/ToolCTAButton';
-import { getAiToolBySlugDirect, getSimilarToolsDirect, getToolTagsGroupedDirect } from '@/lib/db';
+import UpvoteButton from '@/components/tools/UpvoteButton';
+import { getAiToolBySlugDirect, getSimilarToolsDirect, getToolTagsGroupedDirect, getToolProsConsDirect, getToolAlternativesDirect, getReviewResponsesDirect } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import { ToolSchema, FAQSchema } from '@/components/seo';
 import { generateToolFAQs } from '@/lib/seo-utils';
@@ -83,6 +84,20 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
+function getEmbedUrl(url: string): string {
+  // YouTube
+  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/);
+  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+  // Vimeo
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  // Loom
+  const loomMatch = url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/);
+  if (loomMatch) return `https://www.loom.com/embed/${loomMatch[1]}`;
+  // Fallback: return as-is (user might have pasted embed URL directly)
+  return url;
+}
+
 export default async function ToolDetailPage({ params }: { params: { slug: string } }) {
   const tool = await getAiToolBySlugDirect(params.slug) as any;
   if (!tool) notFound();
@@ -92,10 +107,17 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
   const userReviews = tool.userReviews || [];
 
   // Fetch similar tools in same category (parallel with page render)
-  const [similarTools, toolTags] = await Promise.all([
+  const [similarTools, toolTags, prosConsData] = await Promise.all([
     tool.categoryId ? getSimilarToolsDirect(tool.categoryId, tool.slug, 8) : Promise.resolve([]),
     getToolTagsGroupedDirect(tool.id),
+    getToolProsConsDirect(tool.id),
   ]);
+  
+  const toolPros = (prosConsData.pros as any[]) || [];
+  const toolCons = (prosConsData.cons as any[]) || [];
+
+  const toolAlternatives = await getToolAlternativesDirect(tool.id);
+  const reviewResponses = await getReviewResponsesDirect(tool.id);
   
   // Generate FAQs with tool-specific data
   const faqs = generateToolFAQs(tool);
@@ -166,6 +188,11 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
                 {userReviews.length > 0 && <span className="text-xs text-gray-400 ml-1">({userReviews.length} reviews)</span>}
               </div>
             )}
+            {(tool.upvoteCount || 0) >= 5 && (
+              <span className="text-[10px] font-bold bg-brand/10 text-brand px-2.5 py-1 rounded-full">
+                {tool.upvoteCount} upvotes
+              </span>
+            )}
             {tool.categoryName && <span className="badge-category">{tool.categoryName}</span>}
             {tool.pricingModel && (
               <span className="text-[10px] font-bold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2.5 py-1 rounded-full uppercase">
@@ -180,6 +207,16 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
             {tool.hasMobileApp && (
               <span className="flex items-center gap-1 text-[10px] font-bold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2.5 py-1 rounded-full">
                 <Smartphone className="w-3 h-3" /> Mobile App
+              </span>
+            )}
+            {tool.freeTrialDays && tool.freeTrialDays > 0 && (
+              <span className="text-[10px] font-bold bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 px-2.5 py-1 rounded-full">
+                {tool.freeTrialDays}-Day Free Trial
+              </span>
+            )}
+            {tool.isUrlVerified && (
+              <span className="flex items-center gap-1 text-[10px] font-bold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-full">
+                <Check className="w-3 h-3" /> Verified
               </span>
             )}
           </div>
@@ -205,6 +242,7 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
               variant="button" 
               size="md" 
             />
+            <UpvoteButton toolSlug={tool.slug} initialCount={tool.upvoteCount || 0} size="md" />
           </div>
         </div>
       </div>
@@ -235,9 +273,56 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
             </div>
           </div>
 
+          {/* Demo Video */}
+          {tool.demoVideoUrl && (
+            <div className="card p-0 overflow-hidden">
+              <div className="aspect-video">
+                <iframe
+                  src={getEmbedUrl(tool.demoVideoUrl)}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title={`${tool.name} Demo`}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Screenshots */}
           {tool.screenshotUrls && tool.screenshotUrls.length > 0 && (
             <ScreenshotGallery screenshots={tool.screenshotUrls} toolName={tool.name} />
+          )}
+
+          {/* Pros & Cons */}
+          {(toolPros.length > 0 || toolCons.length > 0) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {toolPros.length > 0 && (
+                <div className="card p-5">
+                  <h3 className="font-sora font-bold text-sm text-green-700 dark:text-green-400 mb-3">Strengths</h3>
+                  <div className="space-y-2">
+                    {toolPros.map((pro: any) => (
+                      <div key={pro.id} className="flex items-start gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 mt-1.5 shrink-0" />
+                        <p className="text-sm text-gray-600 dark:text-gray-300 font-jakarta">{pro.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {toolCons.length > 0 && (
+                <div className="card p-5">
+                  <h3 className="font-sora font-bold text-sm text-orange-600 dark:text-orange-400 mb-3">Limitations</h3>
+                  <div className="space-y-2">
+                    {toolCons.map((con: any) => (
+                      <div key={con.id} className="flex items-start gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1.5 shrink-0" />
+                        <p className="text-sm text-gray-600 dark:text-gray-300 font-jakarta">{con.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Key Features */}
@@ -321,6 +406,40 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
             </div>
           )}
 
+          {/* Alternatives */}
+          {toolAlternatives.length > 0 && (
+            <div className="card p-5 sm:p-6">
+              <h2 className="section-title mb-4">Alternatives to {tool.name}</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {toolAlternatives.map((alt: any) => (
+                  <Link
+                    key={alt.id}
+                    href={`/tools/${alt.slug}`}
+                    className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 dark:border-gray-800 hover:border-brand/30 hover:bg-brand/5 transition-colors group"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700">
+                      {alt.logoUrl ? (
+                        <img src={alt.logoUrl} alt={alt.name} className="w-7 h-7 object-contain" />
+                      ) : (
+                        <span className="text-xs font-bold text-brand">{alt.name.charAt(0)}</span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-navy dark:text-white group-hover:text-brand transition-colors truncate">{alt.name}</p>
+                      <p className="text-[11px] text-gray-400 font-jakarta truncate">{alt.tagline}</p>
+                    </div>
+                    {alt.avgRating > 0 && (
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                        <span className="text-xs font-bold text-gray-600 dark:text-gray-400">{parseFloat(alt.avgRating).toFixed(1)}</span>
+                      </div>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* User Reviews */}
           <div>
             <div className="flex items-center justify-between mb-6">
@@ -351,6 +470,17 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
                   <div className="flex items-center justify-end border-t border-gray-100 dark:border-gray-800 pt-3">
                     <ReviewHelpfulButton reviewId={rev.id} toolSlug={tool.slug} initialCount={rev.helpfulCount || 0} />
                   </div>
+                  {/* Founder Response */}
+                  {reviewResponses[rev.id] && (
+                    <div className="mt-3 ml-4 pl-4 border-l-2 border-brand/30 py-2">
+                      <p className="text-[11px] font-semibold text-brand mb-1">
+                        Founder Response — {reviewResponses[rev.id].founderName}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 font-jakarta leading-relaxed">
+                        {reviewResponses[rev.id].body}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )) : (
                 <div className="card p-8 text-center text-gray-500 text-sm font-jakarta">
@@ -367,6 +497,28 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
         {/* Sidebar */}
         <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-6">
           <EmbedBadge urlSlug={tool.slug} type="tools" />
+
+          {/* Built by Startup */}
+          {tool.startupId && tool.startupName && (
+            <Link href={`/startups/${tool.startupSlug || tool.startupId}`} className="card p-5 block hover:border-brand/30 transition-colors group">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider font-jakarta mb-3">Built by</p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200 dark:border-gray-700">
+                  {tool.startupLogoUrl ? (
+                    <img src={tool.startupLogoUrl} alt={tool.startupName} className="w-8 h-8 object-contain" />
+                  ) : (
+                    <span className="text-sm font-bold text-brand">{tool.startupName.charAt(0)}</span>
+                  )}
+                </div>
+                <div>
+                  <p className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand transition-colors">{tool.startupName}</p>
+                  {tool.totalFundingInr && Number(tool.totalFundingInr) > 0 && (
+                    <p className="text-[10px] text-gray-400 font-jakarta">₹{(Number(tool.totalFundingInr) / 10000000).toFixed(1)}Cr raised</p>
+                  )}
+                </div>
+              </div>
+            </Link>
+          )}
 
           {/* Similar Tools in Same Category */}
           {similarTools.length > 0 && (

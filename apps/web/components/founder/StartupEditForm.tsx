@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Upload, X, Loader2 } from 'lucide-react';
-import { updateStartupAction } from '@/app/founder/startups/actions';
+import { updateStartupAction, getStartupCategoriesAction, getStartupTypesAction } from '@/app/founder/startups/actions';
 import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
 import FundingRoundsManager, { FundingRound, convertToSaveFormat, convertFromDbFormat } from '@/components/shared/FundingRoundsManager';
 import FoundersDetailsManager, { FounderDetail } from '@/components/shared/FoundersDetailsManager';
@@ -43,28 +43,6 @@ const STARTUP_STAGES = [
   'PUBLIC',
 ];
 
-const STARTUP_CATEGORIES = [
-  'FinTech', 'HealthTech', 'BioTech & Life Sciences', 'EdTech', 'E-Commerce & Retail',
-  'SaaS', 'AI/ML', 'Enterprise & B2B Software', 'Developer Tools', 'Cybersecurity',
-  'Consumer Apps & Social', 'DeepTech & Hardware', 'CleanTech & Energy', 'AgriTech',
-  'Logistics & Supply Chain', 'HRTech', 'MarTech & AdTech', 'PropTech',
-  'FoodTech & Restaurant', 'Mobility & Transportation', 'Gaming & eSports',
-  'Media & Entertainment', 'Creator Economy', 'Web3 & Blockchain', 'InsurTech',
-  'LegalTech', 'Robotics & Drones', 'SpaceTech & Aerospace', 'Defense & GovTech',
-  'Travel & Hospitality', 'Construction & InfraTech', 'Telecom & Connectivity',
-  'Fashion & Beauty', 'Sports & Fitness', 'Other',
-];
-
-const BUSINESS_TYPES = [
-  'B2B',
-  'B2C',
-  'B2B2C',
-  'B2G',
-  'D2C',
-  'Marketplace',
-  'Platform',
-];
-
 interface StartupEditFormProps {
   startup: Startup;
   existingFaqs?: any[];
@@ -76,6 +54,19 @@ export default function StartupEditForm({ startup, existingFaqs = [], existingFu
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [logoPreview, setLogoPreview] = useState(startup.logoUrl || '');
+  const [startupCategories, setStartupCategories] = useState<string[]>([]);
+  const [businessTypesOptions, setBusinessTypesOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    Promise.all([
+      getStartupCategoriesAction(),
+      getStartupTypesAction(),
+    ]).then(([cats, types]) => {
+      setStartupCategories(cats as string[]);
+      setBusinessTypesOptions(types as string[]);
+    });
+  }, []);
+
   const [faqs, setFaqs] = useState<FAQ[]>(
     existingFaqs.map((faq, index) => ({
       id: faq.id,
@@ -418,7 +409,7 @@ export default function StartupEditForm({ startup, existingFaqs = [], existingFu
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
         >
           <option value="">Select a category</option>
-          {STARTUP_CATEGORIES.map(category => (
+          {startupCategories.map(category => (
             <option key={category} value={category}>
               {category}
             </option>
@@ -443,7 +434,7 @@ export default function StartupEditForm({ startup, existingFaqs = [], existingFu
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
         >
           <option value="">Select business model</option>
-          {BUSINESS_TYPES.map(type => (
+          {businessTypesOptions.map(type => (
             <option key={type} value={type}>
               {type}
             </option>
