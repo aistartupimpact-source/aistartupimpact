@@ -417,7 +417,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
             }`}
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
-            More Filters
+            All Filters ({tagGroups.length} groups)
             {selectedTagIds.length > 0 && (
               <span className="bg-brand text-white text-[10px] px-1.5 py-0.5 rounded-full ml-0.5">{selectedTagIds.length}</span>
             )}
@@ -510,6 +510,15 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
           {visibleTools.map((tool, i) => {
             const isSelected = !!selectedTools.find((t) => t.slug === tool.slug);
             const iconUrl = tool.logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(tool.name)}&background=random&color=fff&size=150`;
+            // Get top 2 tag names for this tool
+            const toolTagIds = toolTagMap[tool.id] || [];
+            const toolTagNames = toolTagIds.slice(0, 2).map(tid => {
+              for (const g of tagGroups) {
+                const found = g.tags.find((t: any) => t.id === tid);
+                if (found) return found.name;
+              }
+              return null;
+            }).filter(Boolean);
 
             return (
               <Link
@@ -517,22 +526,23 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                 href={`/tools/${tool.slug}`}
                 className={`group block rounded-2xl transition-all h-full ${isSelected ? 'ring-2 ring-brand ring-offset-2 dark:ring-offset-gray-950' : 'hover:shadow-lg hover:shadow-brand/5'}`}
               >
-                <div className="card p-4 sm:p-5 flex flex-col gap-2.5 sm:gap-3 relative h-full bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+                <div className="card p-4 sm:p-5 flex flex-col gap-2 sm:gap-2.5 relative h-full bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
 
-                  {/* Top Action Icons */}
+                  {/* Top Actions */}
                   <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
                     <BookmarkButton type="tool" itemId={tool.slug} itemName={tool.name} size="sm" />
                     <button
                       onClick={(e) => toggleTool(tool, e)}
-                      className={`transition-colors ${isSelected ? 'text-brand' : 'text-gray-300 hover:text-brand'}`}
-                      title="Select for comparison"
+                      className={`flex items-center gap-0.5 text-[10px] font-jakarta transition-colors ${isSelected ? 'text-brand font-semibold' : 'text-gray-300 hover:text-brand'}`}
+                      title="Compare"
                     >
-                      {isSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                      {isSelected ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
+                      <span className="hidden sm:inline">Compare</span>
                     </button>
                   </div>
 
                   {/* Logo & Title */}
-                  <div className="flex items-start gap-2.5 sm:gap-3 pr-12 sm:pr-14">
+                  <div className="flex items-start gap-2.5 pr-20">
                     <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700/50">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={iconUrl} alt={tool.name} className="w-7 h-7 sm:w-8 sm:h-8 object-contain" />
@@ -542,8 +552,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                         {tool.name}
                       </h2>
                       <p className="text-[11px] text-gray-400 font-jakarta mt-0.5 line-clamp-1">
-                        {tool.category}
-                        {tool.launchYear && <span> · {tool.launchYear}</span>}
+                        {tool.parentCategory || tool.category}
                       </p>
                     </div>
                   </div>
@@ -553,8 +562,20 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                     {tool.tagline}
                   </p>
 
+                  {/* Tag Pills (max 2) + Badges */}
+                  <div className="flex flex-wrap items-center gap-1">
+                    {toolTagNames.map((name, idx) => (
+                      <span key={idx} className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-jakarta">
+                        {name}
+                      </span>
+                    ))}
+                    {tool.freeTrialDays && tool.freeTrialDays > 0 && (
+                      <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400">Trial</span>
+                    )}
+                  </div>
+
                   {/* Footer: Rating + Upvote + Pricing */}
-                  <div className="mt-auto pt-3 flex items-center justify-between border-t border-gray-100 dark:border-gray-800">
+                  <div className="mt-auto pt-2.5 flex items-center justify-between border-t border-gray-100 dark:border-gray-800">
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1">
                         <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
@@ -563,13 +584,17 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                       <UpvoteButton toolSlug={tool.slug} size="sm" />
                     </div>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
-                      tool.pricing === 'Free' || tool.pricing === 'FREE'
-                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
-                        : tool.pricing === 'Freemium' || tool.pricing === 'FREEMIUM'
+                      tool.pricing === 'FREE' || tool.pricing === 'Free'
+                        ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                        : tool.pricing === 'FREEMIUM' || tool.pricing === 'Freemium'
+                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
+                        : tool.pricing === 'OPEN_SOURCE' || tool.pricing === 'Open Source'
                         ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400'
+                        : tool.pricing === 'ENTERPRISE' || tool.pricing === 'Enterprise'
+                        ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
                         : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
                     }`}>
-                      {tool.pricing}
+                      {tool.pricing === 'OPEN_SOURCE' ? 'Open Source' : tool.pricing}
                     </span>
                   </div>
                 </div>
@@ -653,12 +678,16 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
       {/* No Results */}
       {filteredTools.length === 0 && (
         <div className="text-center py-16">
-          <p className="text-gray-400 font-jakarta text-base mb-2">No tools found matching your criteria.</p>
+          <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
+            <Search className="w-6 h-6 text-gray-300 dark:text-gray-600" />
+          </div>
+          <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm mb-1">No tools match these filters.</p>
+          <p className="text-gray-400 dark:text-gray-500 font-jakarta text-xs mb-4">Try broadening your search or removing some filters.</p>
           <button
-            onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedSubcategory('all'); setSelectedPricing('all'); setSelectedTagIds([]); }}
-            className="text-sm text-brand font-semibold hover:underline"
+            onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedSubcategory('all'); setSelectedPricing('all'); setSelectedTagIds([]); setFreeTrialOnly(false); }}
+            className="px-4 py-2 text-sm font-semibold text-brand bg-brand/5 hover:bg-brand/10 rounded-lg transition-colors"
           >
-            Clear all filters
+            Clear All Filters
           </button>
         </div>
       )}
