@@ -4,6 +4,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Star, Zap, ArrowRight, CheckSquare, Square, X, BarChart, Search, Grid3X3, List, Loader2, SlidersHorizontal, ChevronDown, ChevronRight } from 'lucide-react';
 import BookmarkButton from './BookmarkButton';
+import UpvoteButton from './tools/UpvoteButton';
 
 interface ToolPick {
   id: string;
@@ -12,6 +13,8 @@ interface ToolPick {
   tagline: string;
   category: string;
   categorySlug: string;
+  parentCategory?: string | null;
+  parentCategorySlug?: string | null;
   rating: number;
   pricing: string;
   verdict: string;
@@ -19,6 +22,7 @@ interface ToolPick {
   hasApi?: boolean;
   hasMobileApp?: boolean;
   freeTrialDays?: number | null;
+  upvoteCount?: number;
   launchYear?: number;
   country?: string;
   founderNames?: string[];
@@ -53,7 +57,7 @@ interface ToolsListProps {
   initialTagId?: string | null;
 }
 
-type SortOption = 'rating' | 'name' | 'newest';
+type SortOption = 'rating' | 'upvotes' | 'name' | 'newest';
 type ViewMode = 'grid' | 'list';
 
 const ITEMS_PER_PAGE = 24;
@@ -66,6 +70,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
   const [showComparison, setShowComparison] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedSubcategory, setSelectedSubcategory] = useState('all');
   const [selectedPricing, setSelectedPricing] = useState('all');
   const [sortBy, setSortBy] = useState<SortOption>('rating');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -78,19 +83,36 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
   );
   const [showAllInGroup, setShowAllInGroup] = useState<Set<string>>(new Set());
 
-  // Get unique categories with counts
-  const categories = useMemo(() => {
+  // Get parent categories with counts
+  const parentCategories = useMemo(() => {
     const catMap = new Map<string, { name: string; slug: string; count: number }>();
     picks.forEach(p => {
-      const existing = catMap.get(p.categorySlug);
+      const slug = p.parentCategorySlug || p.categorySlug;
+      const name = p.parentCategory || p.category;
+      const existing = catMap.get(slug);
       if (existing) {
         existing.count++;
       } else {
-        catMap.set(p.categorySlug, { name: p.category, slug: p.categorySlug, count: 1 });
+        catMap.set(slug, { name, slug, count: 1 });
       }
     });
     return Array.from(catMap.values()).sort((a, b) => b.count - a.count);
   }, [picks]);
+
+  // Get subcategories for selected parent
+  const subcategories = useMemo(() => {
+    if (selectedCategory === 'all') return [];
+    const subMap = new Map<string, { name: string; slug: string; count: number }>();
+    picks.forEach(p => {
+      const parentSlug = p.parentCategorySlug || p.categorySlug;
+      if (parentSlug === selectedCategory) {
+        const existing = subMap.get(p.categorySlug);
+        if (existing) existing.count++;
+        else subMap.set(p.categorySlug, { name: p.category, slug: p.categorySlug, count: 1 });
+      }
+    });
+    return Array.from(subMap.values()).sort((a, b) => b.count - a.count);
+  }, [picks, selectedCategory]);
 
   const pricingModels = useMemo(() => {
     return Array.from(new Set(picks.map(p => p.pricing))).sort();
@@ -104,7 +126,9 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
         tool.tagline.toLowerCase().includes(searchQuery.toLowerCase()) ||
         tool.category.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesCategory = selectedCategory === 'all' || tool.categorySlug === selectedCategory;
+      const matchesCategory = selectedCategory === 'all' || 
+        (tool.parentCategorySlug || tool.categorySlug) === selectedCategory;
+      const matchesSubcategory = selectedSubcategory === 'all' || tool.categorySlug === selectedSubcategory;
       const matchesPricing = selectedPricing === 'all' || tool.pricing === selectedPricing;
 
       // Free Trial filter
@@ -137,13 +161,16 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
         }
       }
 
-      return matchesSearch && matchesCategory && matchesPricing && matchesTrial && matchesTags;
+      return matchesSearch && matchesCategory && matchesSubcategory && matchesPricing && matchesTrial && matchesTags;
     });
 
     // Sort
     switch (sortBy) {
       case 'rating':
         result.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'upvotes':
+        result.sort((a, b) => (b.upvoteCount || 0) - (a.upvoteCount || 0));
         break;
       case 'name':
         result.sort((a, b) => a.name.localeCompare(b.name));
@@ -154,7 +181,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
     }
 
     return result;
-  }, [picks, searchQuery, selectedCategory, selectedPricing, sortBy, selectedTagIds, freeTrialOnly, toolTagMap, tagGroups]);
+  }, [picks, searchQuery, selectedCategory, selectedSubcategory, selectedPricing, sortBy, selectedTagIds, freeTrialOnly, toolTagMap, tagGroups]);
 
   // Paginated tools
   const visibleTools = useMemo(() => {
@@ -166,6 +193,12 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
   // Reset pagination when filters change
   const handleCategoryChange = (slug: string) => {
     setSelectedCategory(slug);
+    setSelectedSubcategory('all'); // Reset subcategory when parent changes
+    setVisibleCount(ITEMS_PER_PAGE);
+  };
+
+  const handleSubcategoryChange = (slug: string) => {
+    setSelectedSubcategory(slug);
     setVisibleCount(ITEMS_PER_PAGE);
   };
 
@@ -194,8 +227,9 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
 
   return (
     <div className="relative">
-      {/* ── Sticky Category Pills ── */}
+      {/* ── Sticky Category Pills (Parent Categories) ── */}
       <div className="sticky top-0 z-30 bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-2.5 sm:py-3 border-b border-gray-100 dark:border-gray-800">
+        {/* Parent category pills */}
         <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide pb-1">
           <button
             onClick={() => handleCategoryChange('all')}
@@ -207,7 +241,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
           >
             All ({picks.length})
           </button>
-          {categories.map(cat => (
+          {parentCategories.map(cat => (
             <button
               key={cat.slug}
               onClick={() => handleCategoryChange(cat.slug)}
@@ -221,6 +255,35 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
             </button>
           ))}
         </div>
+
+        {/* Subcategory pills (shown when a parent is selected) */}
+        {selectedCategory !== 'all' && subcategories.length > 1 && (
+          <div className="flex items-center gap-1.5 mt-2 overflow-x-auto scrollbar-hide pb-1">
+            <button
+              onClick={() => handleSubcategoryChange('all')}
+              className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold font-jakarta transition-all ${
+                selectedSubcategory === 'all'
+                  ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                  : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              All in {parentCategories.find(c => c.slug === selectedCategory)?.name || 'category'}
+            </button>
+            {subcategories.map(sub => (
+              <button
+                key={sub.slug}
+                onClick={() => handleSubcategoryChange(sub.slug)}
+                className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold font-jakarta transition-all ${
+                  selectedSubcategory === sub.slug
+                    ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                    : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                {sub.name} ({sub.count})
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── Search + Filters + Sort + View Toggle ── */}
@@ -271,6 +334,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
               className="px-2.5 sm:px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-[11px] sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
             >
               <option value="rating">Top Rated</option>
+              <option value="upvotes">Most Upvoted</option>
               <option value="newest">Newest First</option>
               <option value="name">A → Z</option>
             </select>
@@ -278,7 +342,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
             {/* Clear Filters */}
             {(searchQuery || selectedCategory !== 'all' || selectedPricing !== 'all' || selectedTagIds.length > 0 || freeTrialOnly) && (
               <button
-                onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedPricing('all'); setSelectedTagIds([]); setFreeTrialOnly(false); setVisibleCount(ITEMS_PER_PAGE); }}
+                onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedSubcategory('all'); setSelectedPricing('all'); setSelectedTagIds([]); setFreeTrialOnly(false); setVisibleCount(ITEMS_PER_PAGE); }}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold text-brand hover:bg-brand/5 transition-colors font-jakarta"
               >
                 Clear all
@@ -489,11 +553,14 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                     {tool.tagline}
                   </p>
 
-                  {/* Footer: Rating + Pricing */}
+                  {/* Footer: Rating + Upvote + Pricing */}
                   <div className="mt-auto pt-3 flex items-center justify-between border-t border-gray-100 dark:border-gray-800">
-                    <div className="flex items-center gap-1">
-                      <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
-                      <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{tool.rating}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{tool.rating}</span>
+                      </div>
+                      <UpvoteButton toolSlug={tool.slug} size="sm" />
                     </div>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
                       tool.pricing === 'Free' || tool.pricing === 'FREE'
@@ -561,6 +628,9 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                   {tool.pricing}
                 </span>
 
+                {/* Upvote */}
+                <UpvoteButton toolSlug={tool.slug} size="sm" />
+
                 {/* Compare checkbox */}
                 <button
                   onClick={(e) => toggleTool(tool, e)}
@@ -585,7 +655,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
         <div className="text-center py-16">
           <p className="text-gray-400 font-jakarta text-base mb-2">No tools found matching your criteria.</p>
           <button
-            onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedPricing('all'); setSelectedTagIds([]); }}
+            onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedSubcategory('all'); setSelectedPricing('all'); setSelectedTagIds([]); }}
             className="text-sm text-brand font-semibold hover:underline"
           >
             Clear all filters

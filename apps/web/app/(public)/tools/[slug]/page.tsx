@@ -8,6 +8,7 @@ import ReviewHelpfulButton from '@/components/ReviewHelpfulButton';
 import ScreenshotGallery from '@/components/ScreenshotGallery';
 import BookmarkButton from '@/components/BookmarkButton';
 import { ToolCTAButton } from '@/components/tools/ToolCTAButton';
+import UpvoteButton from '@/components/tools/UpvoteButton';
 import { getAiToolBySlugDirect, getSimilarToolsDirect, getToolTagsGroupedDirect, getToolProsConsDirect, getToolAlternativesDirect, getReviewResponsesDirect } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import { ToolSchema, FAQSchema } from '@/components/seo';
@@ -187,6 +188,11 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
                 {userReviews.length > 0 && <span className="text-xs text-gray-400 ml-1">({userReviews.length} reviews)</span>}
               </div>
             )}
+            {(tool.upvoteCount || 0) >= 5 && (
+              <span className="text-[10px] font-bold bg-brand/10 text-brand px-2.5 py-1 rounded-full">
+                {tool.upvoteCount} upvotes
+              </span>
+            )}
             {tool.categoryName && <span className="badge-category">{tool.categoryName}</span>}
             {tool.pricingModel && (
               <span className="text-[10px] font-bold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2.5 py-1 rounded-full uppercase">
@@ -236,6 +242,7 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
               variant="button" 
               size="md" 
             />
+            <UpvoteButton toolSlug={tool.slug} initialCount={tool.upvoteCount || 0} size="md" />
           </div>
         </div>
       </div>

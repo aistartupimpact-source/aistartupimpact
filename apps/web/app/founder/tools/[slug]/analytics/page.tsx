@@ -31,6 +31,9 @@ export default async function ToolAnalyticsPage({ params }: { params: { slug: st
     savedCount,
     reviewCount,
     dailyClicks,
+    upvotesTotal,
+    upvotesThisMonth,
+    upvotesLastMonth,
   ] = await Promise.all([
     // Current month clicks
     prisma.$queryRaw<any[]>`
@@ -70,6 +73,18 @@ export default async function ToolAnalyticsPage({ params }: { params: { slug: st
       GROUP BY DATE("createdAt")
       ORDER BY date ASC
     `,
+    // Upvotes: total
+    prisma.$queryRaw<any[]>`
+      SELECT COUNT(*)::int AS count FROM "ToolUpvote" WHERE "toolId" = ${tool.id}
+    `,
+    // Upvotes: this month
+    prisma.$queryRaw<any[]>`
+      SELECT COUNT(*)::int AS count FROM "ToolUpvote" WHERE "toolId" = ${tool.id} AND "createdAt" >= ${startOfMonth}
+    `,
+    // Upvotes: last month
+    prisma.$queryRaw<any[]>`
+      SELECT COUNT(*)::int AS count FROM "ToolUpvote" WHERE "toolId" = ${tool.id} AND "createdAt" >= ${startOfLastMonth} AND "createdAt" < ${startOfMonth}
+    `,
   ]);
 
   const currentClicks = currentMonthClicks[0]?.count || 0;
@@ -78,6 +93,12 @@ export default async function ToolAnalyticsPage({ params }: { params: { slug: st
   const saves = savedCount[0]?.count || 0;
   const reviews = reviewCount[0]?.count || 0;
   const avgRating = parseFloat(reviewCount[0]?.avg || '0');
+  const upvotes = upvotesTotal[0]?.count || 0;
+  const upvotesCurrentMonth = upvotesThisMonth[0]?.count || 0;
+  const upvotesPrevMonth = upvotesLastMonth[0]?.count || 0;
+  const upvoteChange = upvotesPrevMonth > 0
+    ? Math.round(((upvotesCurrentMonth - upvotesPrevMonth) / upvotesPrevMonth) * 100)
+    : upvotesCurrentMonth > 0 ? 100 : 0;
 
   const clickChange = lastClicks > 0
     ? Math.round(((currentClicks - lastClicks) / lastClicks) * 100)
@@ -105,13 +126,20 @@ export default async function ToolAnalyticsPage({ params }: { params: { slug: st
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           label="Website Clicks"
           value={totalClicks}
           sublabel={`${currentClicks} this month`}
           change={clickChange}
           icon={MousePointerClick}
+        />
+        <StatCard
+          label="Upvotes"
+          value={upvotes}
+          sublabel={`${upvotesCurrentMonth} this month`}
+          change={upvoteChange}
+          icon={TrendingUp}
         />
         <StatCard
           label="Bookmarks"

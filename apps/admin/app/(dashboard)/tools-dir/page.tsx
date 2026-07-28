@@ -219,6 +219,9 @@ export default function ToolsDirPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={() => router.push('/tools-dir/collections')} className="btn-outline text-sm flex items-center gap-2">
+            Collections
+          </button>
           <button onClick={() => router.push('/tools-dir/categories')} className="btn-outline text-sm flex items-center gap-2">
             Categories
           </button>

@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@aistartupimpact/database";
 
-const ALLOWED = ["SUPER_ADMIN", "EDITOR_IN_CHIEF", "AD_MANAGER"];
+const ALLOWED = ["SUPER_ADMIN", "EDITOR_IN_CHIEF", "SENIOR_WRITER", "AD_MANAGER"];
 
 export async function getAnalyticsDataAction(period: string = '7 days') {
   const session: any = await getServerSession(authOptions);

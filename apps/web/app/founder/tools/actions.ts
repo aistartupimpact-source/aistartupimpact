@@ -497,3 +497,58 @@ export async function getReviewResponsesAction(toolId: string) {
     return [];
   }
 }
+
+// ─── Referral System ────────────────────────────────────────────────────────
+
+export async function getFounderReferralCodeAction() {
+  try {
+    const session = await requireFounderAuth();
+
+    // Check if founder has any tools with referral codes
+    const tools = await prisma.$queryRaw<any[]>`
+      SELECT id, name, "referralCode"
+      FROM "AiTool"
+      WHERE "ownerId" = ${session.userId} AND "deletedAt" IS NULL AND "referralCode" IS NOT NULL
+      LIMIT 1
+    `;
+
+    if (tools.length > 0) {
+      return { code: tools[0].referralCode, toolName: tools[0].name };
+    }
+
+    // Generate a referral code for the founder's first tool
+    const allTools = await prisma.$queryRaw<any[]>`
+      SELECT id, name FROM "AiTool"
+      WHERE "ownerId" = ${session.userId} AND "deletedAt" IS NULL
+      ORDER BY "createdAt" ASC LIMIT 1
+    `;
+
+    if (allTools.length === 0) return { code: null };
+
+    const code = 'REF_' + session.userId.substring(0, 6).toUpperCase() + '_' + Math.random().toString(36).substring(2, 6).toUpperCase();
+    await prisma.$queryRaw`
+      UPDATE "AiTool" SET "referralCode" = ${code} WHERE id = ${allTools[0].id}
+    `;
+
+    return { code, toolName: allTools[0].name };
+  } catch (error) {
+    console.error('getFounderReferralCodeAction error:', error);
+    return { code: null };
+  }
+}
+
+export async function getReferralStatsAction() {
+  try {
+    const session = await requireFounderAuth();
+
+    const referred = await prisma.$queryRaw<any[]>`
+      SELECT COUNT(*)::int AS count
+      FROM "AiTool"
+      WHERE "referredBy" = ${session.userId} AND "deletedAt" IS NULL
+    `;
+
+    return { referredCount: referred[0]?.count || 0 };
+  } catch (error) {
+    return { referredCount: 0 };
+  }
+}

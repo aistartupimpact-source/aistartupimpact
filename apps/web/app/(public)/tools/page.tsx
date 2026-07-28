@@ -29,10 +29,10 @@ export const metadata: Metadata = {
   },
 };
 
-import { getDirectoryToolsDirect, getToolCategoryTreeDirect, getToolTagGroupsForFilterDirect, getToolTagMappingsDirect, getTrendingToolsDirect, getRecentlyAddedToolsDirect, getEditorPicksDirect } from '@/lib/db';
+import { getDirectoryToolsDirect, getToolCategoryTreeDirect, getToolTagGroupsForFilterDirect, getToolTagMappingsDirect, getTrendingToolsDirect, getRecentlyAddedToolsDirect, getEditorPicksDirect, getMostUpvotedThisMonthDirect } from '@/lib/db';
 
 export default async function ToolsPage({ searchParams }: { searchParams: { category?: string; tag?: string } }) {
-  const [picks, categoryTree, tagGroups, toolTagMap, trending, recentlyAdded, editorPicks] = await Promise.all([
+  const [picks, categoryTree, tagGroups, toolTagMap, trending, recentlyAdded, editorPicks, mostUpvoted] = await Promise.all([
     getDirectoryToolsDirect(),
     getToolCategoryTreeDirect(),
     getToolTagGroupsForFilterDirect(),
@@ -40,6 +40,7 @@ export default async function ToolsPage({ searchParams }: { searchParams: { cate
     getTrendingToolsDirect(12),
     getRecentlyAddedToolsDirect(12),
     getEditorPicksDirect(12),
+    getMostUpvotedThisMonthDirect(12),
   ]);
 
   // Resolve initial tag slug to tag ID if ?tag= query param provided
@@ -108,6 +109,7 @@ export default async function ToolsPage({ searchParams }: { searchParams: { cate
         trending={trending as any[]}
         recentlyAdded={recentlyAdded as any[]}
         editorPicks={editorPicks as any[]}
+        mostUpvoted={mostUpvoted as any[]}
       />
 
       {/* Tools List Component with State */}

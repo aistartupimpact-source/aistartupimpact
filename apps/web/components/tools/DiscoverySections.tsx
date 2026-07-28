@@ -18,10 +18,11 @@ interface DiscoverySectionsProps {
   trending: ToolCard[];
   recentlyAdded: ToolCard[];
   editorPicks: ToolCard[];
+  mostUpvoted: ToolCard[];
 }
 
-export default function DiscoverySections({ trending, recentlyAdded, editorPicks }: DiscoverySectionsProps) {
-  const hasContent = trending.length > 0 || recentlyAdded.length > 0 || editorPicks.length > 0;
+export default function DiscoverySections({ trending, recentlyAdded, editorPicks, mostUpvoted }: DiscoverySectionsProps) {
+  const hasContent = trending.length > 0 || recentlyAdded.length > 0 || editorPicks.length > 0 || mostUpvoted.length > 0;
   if (!hasContent) return null;
 
   return (
@@ -30,6 +31,13 @@ export default function DiscoverySections({ trending, recentlyAdded, editorPicks
       {trending.length > 0 && (
         <Section title="Trending This Week" badge="Trending" badgeColor="text-orange-600 bg-orange-50 dark:bg-orange-900/20 dark:text-orange-400">
           {trending.map(tool => <MiniToolCard key={tool.id} tool={tool} />)}
+        </Section>
+      )}
+
+      {/* Most Upvoted This Month */}
+      {mostUpvoted.length > 0 && (
+        <Section title="Most Upvoted This Month" badge="Popular" badgeColor="text-brand bg-brand/10 dark:bg-brand/20 dark:text-brand">
+          {mostUpvoted.map(tool => <MiniToolCard key={tool.id} tool={tool} />)}
         </Section>
       )}
 

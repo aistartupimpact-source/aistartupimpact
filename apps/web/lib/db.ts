@@ -437,7 +437,7 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
       // Check if slug is a parent category or subcategory
       rows = await sql`
         SELECT t.id, t.name, t.slug, t.tagline, t.description, t."pricingModel", t."logoUrl", t."avgRating", 
-               t."hasApi", t."hasMobileApp", t."freeTrialDays", t."launchYear", t."headquartersCountry", t."founderNames",
+               t."hasApi", t."hasMobileApp", t."freeTrialDays", t."upvoteCount", t."launchYear", t."headquartersCountry", t."founderNames",
                c.name AS "categoryName", c.slug AS "categorySlug",
                pc.name AS "parentCategoryName", pc.slug AS "parentCategorySlug",
                tfc.tier AS "campaignTier"
@@ -463,7 +463,7 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
     } else {
       rows = await sql`
         SELECT t.id, t.name, t.slug, t.tagline, t.description, t."pricingModel", t."logoUrl", t."avgRating",
-               t."hasApi", t."hasMobileApp", t."freeTrialDays", t."launchYear", t."headquartersCountry", t."founderNames",
+               t."hasApi", t."hasMobileApp", t."freeTrialDays", t."upvoteCount", t."launchYear", t."headquartersCountry", t."founderNames",
                c.name AS "categoryName", c.slug AS "categorySlug",
                pc.name AS "parentCategoryName", pc.slug AS "parentCategorySlug",
                tfc.tier AS "campaignTier"
@@ -500,6 +500,7 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
       hasApi: t.hasApi || false,
       hasMobileApp: t.hasMobileApp || false,
       freeTrialDays: t.freeTrialDays || null,
+      upvoteCount: parseInt(t.upvoteCount) || 0,
       launchYear: t.launchYear || null,
       country: t.headquartersCountry || null,
       founderNames: t.founderNames || []
@@ -982,6 +983,31 @@ export async function getEditorPicksDirect(limit = 12) {
     return rows;
   } catch (e) {
     console.error('getEditorPicksDirect error:', e);
+    return [];
+  }
+}
+
+
+/**
+ * Get most upvoted tools this month (30-day window for time decay).
+ */
+export async function getMostUpvotedThisMonthDirect(limit = 12) {
+  try {
+    const rows = await sql`
+      SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel",
+             c.name AS "categoryName", c.slug AS "categorySlug",
+             COUNT(u.id)::int AS "monthlyUpvotes"
+      FROM "AiTool" t
+      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+      JOIN "ToolUpvote" u ON u."toolId" = t.id AND u."createdAt" >= NOW() - INTERVAL '30 days'
+      WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
+      GROUP BY t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel", c.name, c.slug
+      ORDER BY COUNT(u.id) DESC
+      LIMIT ${limit}
+    `;
+    return rows;
+  } catch (e) {
+    console.error('getMostUpvotedThisMonthDirect error:', e);
     return [];
   }
 }
