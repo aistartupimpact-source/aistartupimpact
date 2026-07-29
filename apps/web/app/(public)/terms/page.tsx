@@ -1,10 +1,10 @@
 export default function TermsPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
-      <h1 className="font-sora font-extrabold text-3xl sm:text-5xl text-navy dark:text-white mb-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <h1 className="font-sora font-extrabold text-2xl sm:text-3xl text-navy dark:text-white mb-6">
         Terms & Conditions
       </h1>
-      <div className="prose prose-lg dark:prose-invert prose-blue max-w-none">
+      <div className="prose prose-sm sm:prose-base dark:prose-invert prose-blue max-w-none">
         <p className="text-sm text-gray-500 mb-8"><strong>Last updated:</strong> {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
 
         <p>
@@ -60,7 +60,7 @@ export default function TermsPage() {
 
         <h2>9. Governing Law & Jurisdiction</h2>
         <p>
-          These Terms & Conditions shall be strictly governed by the laws of India. Any disputes arising from the use of our services shall fall under the exclusive jurisdiction of the state courts situated in Bengaluru, Karnataka.
+          These Terms & Conditions shall be strictly governed by the laws of India. Any disputes arising from the use of our services shall fall under the exclusive jurisdiction of the courts situated in Hyderabad, Telangana.
         </p>
 
         <h2>10. Modifications</h2>

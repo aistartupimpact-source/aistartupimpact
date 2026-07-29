@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { prisma } from '@aistartupimpact/database';
 import {
-  Mail, BookOpen, Building2, Wrench, TrendingUp,
+  Mail, BookOpen, Building2, Wrench, TrendingUp, Calendar,
   MapPin, Eye, ShieldCheck, Users, Unlock, ChevronRight, Handshake,
 } from 'lucide-react';
 
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
 async function getLiveCounts() {
   try {
     const [startups, tools, subscribers, pageViewData] = await Promise.all([
-      prisma.startup.count(),
+      prisma.startup.count({ where: { isApproved: true, deletedAt: null } }),
       prisma.aiTool.count({ where: { status: 'APPROVED' } }),
       prisma.newsletterSubscriber.count({ where: { isActive: true } }),
       // Unique sessions in the last 30 days as "monthly visitors"
@@ -76,6 +77,12 @@ const sections = [
     href: '/funding',
   },
   {
+    icon: Calendar,
+    title: 'AI Events',
+    desc: 'Conferences, hackathons, meetups, and workshops — discover upcoming AI events, register, and connect with the community in person.',
+    href: '/events',
+  },
+  {
     icon: MapPin,
     title: 'IndiaAI',
     desc: "A dedicated hub for India's AI landscape — policy, government schemes, support programs, and resources that founders and operators need to know.",
@@ -111,7 +118,7 @@ export default async function AboutPage() {
   const counts = await getLiveCounts();
 
   const stats = [
-    { value: '25K+', label: 'LinkedIn Followers' },
+    { value: '45K+', label: 'LinkedIn Followers' },
     {
       value: counts.monthlyVisitors > 0 ? fmt(counts.monthlyVisitors) : '50K+',
       label: 'Monthly Visitors',
@@ -278,7 +285,7 @@ export default async function AboutPage() {
           <p>
             We&apos;ve built a strong presence where the AI community already is — most notably a
             LinkedIn community with{' '}
-            <strong className="text-navy dark:text-white">25,000+ members</strong>, where we
+            <strong className="text-navy dark:text-white">45,000+ members</strong>, where we
             regularly share founder stories, funding rounds, and updates on AI startups.
           </p>
           <p>
@@ -324,32 +331,45 @@ export default async function AboutPage() {
           The Founder
         </h2>
         <div className="card p-6 sm:p-8 flex flex-col sm:flex-row items-start gap-6">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center text-2xl font-extrabold text-brand font-sora shrink-0">
-            L
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden shrink-0 bg-brand/10 dark:bg-brand/20">
+            <Image
+              src="/founder-venkatesh.jpg"
+              alt="Lahori Venkatesh — Founder & CEO, AI Startup Impact"
+              width={96}
+              height={96}
+              className="w-full h-full object-cover"
+            />
           </div>
           <div>
             <h3 className="font-sora font-extrabold text-lg sm:text-xl text-navy dark:text-white">
               Lahori Venkatesh
             </h3>
             <p className="text-brand font-jakarta font-semibold text-sm mt-0.5">
-              Founder, AIStartupImpact
+              Founder & CEO, AI Startup Impact
             </p>
             <p className="text-xs text-gray-400 dark:text-gray-500 font-jakarta mt-1 mb-4">
-              NIT Jaipur
+              MNIT Jaipur
             </p>
             <div className="space-y-3 font-jakarta text-gray-600 dark:text-gray-400 text-sm sm:text-base leading-relaxed">
               <p>
-                Lahori Venkatesh is the Founder of AI Startup Impact, a leading platform dedicated
-                to showcasing AI startups, founders, tools, and ecosystem developments.
+                Lahori Venkatesh is the Founder & CEO of AI Startup Impact, a global AI startup media and ecosystem platform dedicated to showcasing AI startups, founders, AI tools, industry news, funding, and events.
               </p>
               <p>
-                A graduate of NIT Jaipur, he is building a global AI ecosystem that helps startups
-                gain visibility, credibility, and meaningful industry connections.
+                With a vision to build one of the world&apos;s leading AI ecosystem platforms, he helps AI companies increase visibility, build credibility, and connect with customers, investors, partners, and talent through trusted media, community, and strategic partnerships.
               </p>
               <p>
-                Through AI Startup Impact, he has reached millions of professionals worldwide and
-                continues to support innovation through media, community, and strategic partnerships.
+                A graduate of Malaviya National Institute of Technology (MNIT) Jaipur, Lahori is passionate about accelerating AI innovation and making emerging technologies more discoverable through high-quality content and ecosystem building. Under his leadership, AI Startup Impact reaches millions of professionals worldwide and continues to support the growth of the global AI ecosystem.
               </p>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {['Artificial Intelligence', 'AI Startups', 'AI Founders', 'AI Tools', 'Startup Ecosystem', 'AI News', 'Founder Stories', 'AI Events', 'Technology Media', 'Innovation'].map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-block text-[11px] font-jakarta font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-full"
+                >
+                  {tag}
+                </span>
+              ))}
             </div>
           </div>
         </div>
@@ -369,7 +389,7 @@ export default async function AboutPage() {
                 Feature Your Startup
               </h3>
               <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-1 leading-relaxed">
-                Get your startup in front of 25K+ founders, investors, and operators who follow the AI ecosystem.
+                Get your startup in front of 45K+ founders, investors, and operators who follow the AI ecosystem.
               </p>
             </div>
             <a

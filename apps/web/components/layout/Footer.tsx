@@ -368,6 +368,9 @@ export default function Footer() {
               India&apos;s definitive source for AI startup news, tools, funding data,
               and ecosystem intelligence.
             </p>
+            <p className="text-gray-500 text-[11px] font-jakarta mt-3">
+              Hyderabad, Telangana, India
+            </p>
           </div>
  
           {/* Link Columns */}

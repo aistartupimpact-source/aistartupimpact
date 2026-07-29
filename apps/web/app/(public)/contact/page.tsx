@@ -34,6 +34,19 @@ export default function ContactPage() {
           <button type="submit" className="btn-brand w-full sm:w-auto">Send Message</button>
         </form>
       </div>
+
+      {/* Office Address */}
+      <div className="mt-8 card p-5 sm:p-6">
+        <h2 className="font-sora font-bold text-base text-navy dark:text-white mb-3">Our Office</h2>
+        <div className="text-sm text-gray-600 dark:text-gray-400 font-jakarta space-y-1">
+          <p className="font-semibold text-gray-800 dark:text-gray-200">AI Startup Impact</p>
+          <p>Hyderabad, Telangana, India</p>
+          <p className="mt-3">
+            <span className="font-medium text-gray-700 dark:text-gray-300">Email:</span>{' '}
+            <a href="mailto:hello@aistartupimpact.com" className="text-brand hover:underline">hello@aistartupimpact.com</a>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

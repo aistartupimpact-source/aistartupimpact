@@ -1,10 +1,10 @@
 export default function PrivacyPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
-      <h1 className="font-sora font-extrabold text-3xl sm:text-5xl text-navy dark:text-white mb-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <h1 className="font-sora font-extrabold text-2xl sm:text-3xl text-navy dark:text-white mb-6">
         Privacy Policy
       </h1>
-      <div className="prose prose-lg dark:prose-invert prose-blue max-w-none">
+      <div className="prose prose-sm sm:prose-base dark:prose-invert prose-blue max-w-none">
         <p className="text-sm text-gray-500 mb-8"><strong>Last updated:</strong> {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
 
         <p>
@@ -51,7 +51,7 @@ export default function PrivacyPage() {
 
         <h2>7. Contact Us</h2>
         <p>If you have questions, concerns, or requests relating to this Privacy Policy, please contact our Data Protection Officer at:</p>
-        <p><strong>Email:</strong> privacy@aistartupimpact.com<br /><strong>Address:</strong> Bengaluru, Karnataka, India</p>
+        <p><strong>Email:</strong> privacy@aistartupimpact.com<br /><strong>Address:</strong> Hyderabad, Telangana, India</p>
       </div>
     </div>
   );
