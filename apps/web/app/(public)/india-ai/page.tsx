@@ -25,7 +25,7 @@ import PolicyLiveFeedHardcoded from '@/components/india-ai/PolicyLiveFeedHardcod
 
 // Force dynamic rendering for this page
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 300;
 
 // SEO Metadata with target keywords
 export const metadata: Metadata = {

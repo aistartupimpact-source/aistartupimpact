@@ -1,5 +1,6 @@
 // Direct DB queries for server components — bypasses the need for the API server
 import { neon, NeonQueryFunction } from '@neondatabase/serverless';
+import { cached, CACHE_KEYS } from './cache';
 
 // Lazy sql client — not instantiated at module load time (avoids build-time DATABASE_URL errors)
 let _sql: NeonQueryFunction<false, false> | undefined;
@@ -294,36 +295,37 @@ export async function getToolCategoriesDirect() {
  * Get hierarchical tool categories: parents with nested subcategories.
  */
 export async function getToolCategoryTreeDirect() {
-  try {
-    const parents = await sql`
-      SELECT id, name, slug, icon, description, "toolCount", "sortOrder"
-      FROM "ToolCategory"
-      WHERE level = 0 AND "isActive" = true
-      ORDER BY "sortOrder" ASC
-    `;
-    const subcategories = await sql`
-      SELECT id, name, slug, description, "parentId", "toolCount", "sortOrder"
-      FROM "ToolCategory"
-      WHERE level = 1 AND "isActive" = true
-      ORDER BY "sortOrder" ASC, name ASC
-    `;
+  return cached(CACHE_KEYS.TOOL_CATEGORIES, { ttl: 900, staleTtl: 1800 }, async () => {
+    try {
+      const parents = await sql`
+        SELECT id, name, slug, icon, description, "toolCount", "sortOrder"
+        FROM "ToolCategory"
+        WHERE level = 0 AND "isActive" = true
+        ORDER BY "sortOrder" ASC
+      `;
+      const subcategories = await sql`
+        SELECT id, name, slug, description, "parentId", "toolCount", "sortOrder"
+        FROM "ToolCategory"
+        WHERE level = 1 AND "isActive" = true
+        ORDER BY "sortOrder" ASC, name ASC
+      `;
 
-    // Build tree
-    const subsByParent = new Map<string, any[]>();
-    for (const sub of subcategories) {
-      const parentId = sub.parentId;
-      if (!subsByParent.has(parentId)) subsByParent.set(parentId, []);
-      subsByParent.get(parentId)!.push(sub);
+      const subsByParent = new Map<string, any[]>();
+      for (const sub of subcategories) {
+        const parentId = sub.parentId;
+        if (!subsByParent.has(parentId)) subsByParent.set(parentId, []);
+        subsByParent.get(parentId)!.push(sub);
+      }
+
+      return parents.map((p: any) => ({
+        ...p,
+        subcategories: subsByParent.get(p.id) || [],
+      }));
+    } catch (e) {
+      console.error('getToolCategoryTreeDirect error:', e);
+      return [];
     }
-
-    return parents.map((p: any) => ({
-      ...p,
-      subcategories: subsByParent.get(p.id) || [],
-    }));
-  } catch (e) {
-    console.error('getToolCategoryTreeDirect error:', e);
-    return [];
-  }
+  });
 }
 
 /**
@@ -331,36 +333,38 @@ export async function getToolCategoryTreeDirect() {
  * Only returns active, non-admin-only groups with active tags that have tagCount > 0 OR are commonly needed.
  */
 export async function getToolTagGroupsForFilterDirect() {
-  try {
-    const groups = await sql`
-      SELECT id, name, slug, icon, description, "sortOrder", "displayMode", "maxVisibleDefault"
-      FROM "ToolTagGroup"
-      WHERE "isActive" = true AND "isAdminOnly" = false
-      ORDER BY "sortOrder" ASC
-    `;
+  return cached(CACHE_KEYS.TAG_GROUPS, { ttl: 900, staleTtl: 1800 }, async () => {
+    try {
+      const groups = await sql`
+        SELECT id, name, slug, icon, description, "sortOrder", "displayMode", "maxVisibleDefault"
+        FROM "ToolTagGroup"
+        WHERE "isActive" = true AND "isAdminOnly" = false
+        ORDER BY "sortOrder" ASC
+      `;
 
-    const tags = await sql`
-      SELECT id, name, slug, emoji, "groupId", "sortOrder", "tagCount"
-      FROM "ToolSystemTag"
-      WHERE "isActive" = true
-      ORDER BY "sortOrder" ASC, name ASC
-    `;
+      const tags = await sql`
+        SELECT id, name, slug, emoji, "groupId", "sortOrder", "tagCount"
+        FROM "ToolSystemTag"
+        WHERE "isActive" = true
+        ORDER BY "sortOrder" ASC, name ASC
+      `;
 
-    const tagsByGroup: Record<string, any[]> = {};
-    for (const tag of tags) {
-      const gid = (tag as any).groupId;
-      if (!tagsByGroup[gid]) tagsByGroup[gid] = [];
-      tagsByGroup[gid].push(tag);
+      const tagsByGroup: Record<string, any[]> = {};
+      for (const tag of tags) {
+        const gid = (tag as any).groupId;
+        if (!tagsByGroup[gid]) tagsByGroup[gid] = [];
+        tagsByGroup[gid].push(tag);
+      }
+
+      return groups.map((g: any) => ({
+        ...g,
+        tags: tagsByGroup[g.id] || [],
+      }));
+    } catch (e) {
+      console.error('getToolTagGroupsForFilterDirect error:', e);
+      return [];
     }
-
-    return groups.map((g: any) => ({
-      ...g,
-      tags: tagsByGroup[g.id] || [],
-    }));
-  } catch (e) {
-    console.error('getToolTagGroupsForFilterDirect error:', e);
-    return [];
-  }
+  });
 }
 
 /**
@@ -368,22 +372,24 @@ export async function getToolTagGroupsForFilterDirect() {
  * Returns a map: { toolId -> [tagId, tagId, ...] }
  */
 export async function getToolTagMappingsDirect() {
-  try {
-    const mappings = await sql`
-      SELECT "toolId", "tagId"
-      FROM "ToolSystemTagMapping"
-    `;
-    const map: Record<string, string[]> = {};
-    for (const m of mappings) {
-      const tid = (m as any).toolId;
-      if (!map[tid]) map[tid] = [];
-      map[tid].push((m as any).tagId);
+  return cached(CACHE_KEYS.TOOL_TAG_MAP, { ttl: 300, staleTtl: 600 }, async () => {
+    try {
+      const mappings = await sql`
+        SELECT "toolId", "tagId"
+        FROM "ToolSystemTagMapping"
+      `;
+      const map: Record<string, string[]> = {};
+      for (const m of mappings) {
+        const tid = (m as any).toolId;
+        if (!map[tid]) map[tid] = [];
+        map[tid].push((m as any).tagId);
+      }
+      return map;
+    } catch (e) {
+      console.error('getToolTagMappingsDirect error:', e);
+      return {};
     }
-    return map;
-  } catch (e) {
-    console.error('getToolTagMappingsDirect error:', e);
-    return {};
-  }
+  });
 }
 
 /**
@@ -920,25 +926,27 @@ export async function getReviewResponsesDirect(toolId: string) {
  * Get trending tools (by click velocity in last 7 days).
  */
 export async function getTrendingToolsDirect(limit = 12) {
-  try {
-    const rows = await sql`
-      SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel",
-             c.name AS "categoryName", c.slug AS "categorySlug",
-             COUNT(ac.id)::int AS "recentClicks"
-      FROM "AiTool" t
-      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
-      LEFT JOIN "AffiliateClick" ac ON ac."toolId" = t.id AND ac."createdAt" >= NOW() - INTERVAL '7 days'
-      WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
-      GROUP BY t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel", c.name, c.slug
-      HAVING COUNT(ac.id) > 0
-      ORDER BY COUNT(ac.id) DESC, t."avgRating" DESC
-      LIMIT ${limit}
-    `;
-    return rows;
-  } catch (e) {
-    console.error('getTrendingToolsDirect error:', e);
-    return [];
-  }
+  return cached(CACHE_KEYS.TRENDING_TOOLS, { ttl: 600, staleTtl: 1200 }, async () => {
+    try {
+      const rows = await sql`
+        SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel",
+               c.name AS "categoryName", c.slug AS "categorySlug",
+               COUNT(ac.id)::int AS "recentClicks"
+        FROM "AiTool" t
+        LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+        LEFT JOIN "AffiliateClick" ac ON ac."toolId" = t.id AND ac."createdAt" >= NOW() - INTERVAL '7 days'
+        WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
+        GROUP BY t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel", c.name, c.slug
+        HAVING COUNT(ac.id) > 0
+        ORDER BY COUNT(ac.id) DESC, t."avgRating" DESC
+        LIMIT ${limit}
+      `;
+      return rows;
+    } catch (e) {
+      console.error('getTrendingToolsDirect error:', e);
+      return [];
+    }
+  });
 }
 
 /**

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, CalendarDays, Plus, Users, BarChart3,
-  Settings, ChevronRight, Send, QrCode,
+  Settings, ChevronRight, Send, QrCode, Lock,
 } from "lucide-react";
 
 interface Props {
@@ -20,7 +20,7 @@ const NAV_ITEMS = [
   { label: "Attendees", href: "/organizer/attendees", icon: Users },
   { label: "Check-in", href: "/organizer/check-in", icon: QrCode },
   { label: "On-Site", href: "/organizer/on-site", icon: Users },
-  { label: "Promote", href: "/organizer/promote", icon: Send },
+  { label: "Promote", href: "/organizer/promote", icon: Send, locked: true },
   { label: "Analytics", href: "/organizer/analytics", icon: BarChart3 },
   { type: "divider", label: "Account" },
   { label: "Team", href: "/organizer/team", icon: Users },
@@ -60,6 +60,27 @@ export default function OrganizerSidebar({ organizer }: Props) {
           }
           const Icon = item.icon!;
           const active = isActive(item.href!, item.exact);
+
+          // Locked items (premium)
+          if (item.locked) {
+            return (
+              <div
+                key={item.href}
+                className="flex items-center justify-between px-3 py-2 rounded-lg text-[13px] font-jakarta font-medium text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-60"
+                title="Premium feature — coming soon"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Icon className="w-[18px] h-[18px] text-gray-300 dark:text-gray-600" />
+                  <span>{item.label}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Lock className="w-3 h-3" />
+                  <span className="text-[9px] font-bold uppercase tracking-wide">Pro</span>
+                </div>
+              </div>
+            );
+          }
+
           return (
             <Link
               key={item.href}
