@@ -1,6 +1,6 @@
 // Direct DB queries for server components — bypasses the need for the API server
 import { neon, NeonQueryFunction } from '@neondatabase/serverless';
-import { cached, CACHE_KEYS } from './cache';
+import { cached, CK } from './cache';
 
 // Lazy sql client — not instantiated at module load time (avoids build-time DATABASE_URL errors)
 let _sql: NeonQueryFunction<false, false> | undefined;
@@ -295,7 +295,7 @@ export async function getToolCategoriesDirect() {
  * Get hierarchical tool categories: parents with nested subcategories.
  */
 export async function getToolCategoryTreeDirect() {
-  return cached(CACHE_KEYS.TOOL_CATEGORIES, { ttl: 900, staleTtl: 1800 }, async () => {
+  return cached(CK.TOOL_CATEGORIES, { ttl: 900, staleTtl: 1800 }, async () => {
     try {
       const parents = await sql`
         SELECT id, name, slug, icon, description, "toolCount", "sortOrder"
@@ -333,7 +333,7 @@ export async function getToolCategoryTreeDirect() {
  * Only returns active, non-admin-only groups with active tags that have tagCount > 0 OR are commonly needed.
  */
 export async function getToolTagGroupsForFilterDirect() {
-  return cached(CACHE_KEYS.TAG_GROUPS, { ttl: 900, staleTtl: 1800 }, async () => {
+  return cached(CK.TAG_GROUPS, { ttl: 900, staleTtl: 1800 }, async () => {
     try {
       const groups = await sql`
         SELECT id, name, slug, icon, description, "sortOrder", "displayMode", "maxVisibleDefault"
@@ -372,7 +372,7 @@ export async function getToolTagGroupsForFilterDirect() {
  * Returns a map: { toolId -> [tagId, tagId, ...] }
  */
 export async function getToolTagMappingsDirect() {
-  return cached(CACHE_KEYS.TOOL_TAG_MAP, { ttl: 300, staleTtl: 600 }, async () => {
+  return cached(CK.TOOL_TAG_MAP, { ttl: 300, staleTtl: 600 }, async () => {
     try {
       const mappings = await sql`
         SELECT "toolId", "tagId"
@@ -926,7 +926,7 @@ export async function getReviewResponsesDirect(toolId: string) {
  * Get trending tools (by click velocity in last 7 days).
  */
 export async function getTrendingToolsDirect(limit = 12) {
-  return cached(CACHE_KEYS.TRENDING_TOOLS, { ttl: 600, staleTtl: 1200 }, async () => {
+  return cached(CK.TRENDING, { ttl: 600, staleTtl: 1200 }, async () => {
     try {
       const rows = await sql`
         SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel",
@@ -953,46 +953,50 @@ export async function getTrendingToolsDirect(limit = 12) {
  * Get recently added tools (last 30 days, approved).
  */
 export async function getRecentlyAddedToolsDirect(limit = 12) {
-  try {
-    const rows = await sql`
-      SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel",
-             c.name AS "categoryName", c.slug AS "categorySlug"
-      FROM "AiTool" t
-      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
-      WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
-        AND t."createdAt" >= NOW() - INTERVAL '30 days'
-      ORDER BY t."createdAt" DESC
-      LIMIT ${limit}
-    `;
-    return rows;
-  } catch (e) {
-    console.error('getRecentlyAddedToolsDirect error:', e);
-    return [];
-  }
+  return cached(CK.RECENT_TOOLS, { ttl: 300, staleTtl: 600 }, async () => {
+    try {
+      const rows = await sql`
+        SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel",
+               c.name AS "categoryName", c.slug AS "categorySlug"
+        FROM "AiTool" t
+        LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+        WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
+          AND t."createdAt" >= NOW() - INTERVAL '30 days'
+        ORDER BY t."createdAt" DESC
+        LIMIT ${limit}
+      `;
+      return rows;
+    } catch (e) {
+      console.error('getRecentlyAddedToolsDirect error:', e);
+      return [];
+    }
+  });
 }
 
 /**
  * Get editor's picks (featured tools with active campaigns).
  */
 export async function getEditorPicksDirect(limit = 12) {
-  try {
-    const rows = await sql`
-      SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel",
-             c.name AS "categoryName", c.slug AS "categorySlug"
-      FROM "AiTool" t
-      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
-      LEFT JOIN "ToolFeaturedCampaign" tfc ON tfc."toolId" = t.id
-        AND tfc."cancelledAt" IS NULL AND tfc."startDate" <= NOW() AND tfc."endDate" >= NOW()
-      WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
-        AND (tfc.tier = 'FEATURED' OR t."listingTier" = 'FEATURED')
-      ORDER BY t."avgRating" DESC
-      LIMIT ${limit}
-    `;
-    return rows;
-  } catch (e) {
-    console.error('getEditorPicksDirect error:', e);
-    return [];
-  }
+  return cached(CK.EDITORS_PICKS, { ttl: 900, staleTtl: 1800 }, async () => {
+    try {
+      const rows = await sql`
+        SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel",
+               c.name AS "categoryName", c.slug AS "categorySlug"
+        FROM "AiTool" t
+        LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+        LEFT JOIN "ToolFeaturedCampaign" tfc ON tfc."toolId" = t.id
+          AND tfc."cancelledAt" IS NULL AND tfc."startDate" <= NOW() AND tfc."endDate" >= NOW()
+        WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
+          AND (tfc.tier = 'FEATURED' OR t."listingTier" = 'FEATURED')
+        ORDER BY t."avgRating" DESC
+        LIMIT ${limit}
+      `;
+      return rows;
+    } catch (e) {
+      console.error('getEditorPicksDirect error:', e);
+      return [];
+    }
+  });
 }
 
 
@@ -1000,22 +1004,49 @@ export async function getEditorPicksDirect(limit = 12) {
  * Get most upvoted tools this month (30-day window for time decay).
  */
 export async function getMostUpvotedThisMonthDirect(limit = 12) {
-  try {
-    const rows = await sql`
-      SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel",
-             c.name AS "categoryName", c.slug AS "categorySlug",
-             COUNT(u.id)::int AS "monthlyUpvotes"
-      FROM "AiTool" t
-      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
-      JOIN "ToolUpvote" u ON u."toolId" = t.id AND u."createdAt" >= NOW() - INTERVAL '30 days'
-      WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
-      GROUP BY t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel", c.name, c.slug
-      ORDER BY COUNT(u.id) DESC
-      LIMIT ${limit}
-    `;
-    return rows;
-  } catch (e) {
-    console.error('getMostUpvotedThisMonthDirect error:', e);
-    return [];
-  }
+  return cached(CK.UPVOTED_MONTH, { ttl: 600, staleTtl: 1200 }, async () => {
+    try {
+      const rows = await sql`
+        SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel",
+               c.name AS "categoryName", c.slug AS "categorySlug",
+               COUNT(u.id)::int AS "monthlyUpvotes"
+        FROM "AiTool" t
+        LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+        JOIN "ToolUpvote" u ON u."toolId" = t.id AND u."createdAt" >= NOW() - INTERVAL '30 days'
+        WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
+        GROUP BY t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel", c.name, c.slug
+        ORDER BY COUNT(u.id) DESC
+        LIMIT ${limit}
+      `;
+      return rows;
+    } catch (e) {
+      console.error('getMostUpvotedThisMonthDirect error:', e);
+      return [];
+    }
+  });
+}
+
+
+// ─── Homepage Statistics (PostgreSQL = source of truth, Redis = cache) ───────
+
+export async function getHomepageStatsDirect() {
+  return cached(CK.HOMEPAGE_STATS, { ttl: 300, staleTtl: 600 }, async () => {
+    try {
+      const [tools, startups, events, funding] = await Promise.all([
+        sql`SELECT COUNT(*)::int AS c FROM "AiTool" WHERE status = 'APPROVED' AND "deletedAt" IS NULL`,
+        sql`SELECT COUNT(*)::int AS c FROM "Startup" WHERE "isApproved" = true AND "deletedAt" IS NULL`,
+        sql`SELECT COUNT(*)::int AS c FROM "Event" WHERE status = 'PUBLISHED' AND "deletedAt" IS NULL`,
+        sql`SELECT COUNT(*)::int AS c FROM "FundingRound"`,
+      ]);
+      return {
+        toolCount: tools[0]?.c || 0,
+        startupCount: startups[0]?.c || 0,
+        eventCount: events[0]?.c || 0,
+        fundingCount: funding[0]?.c || 0,
+      };
+    } catch (e) {
+      console.error('getHomepageStatsDirect error:', e);
+      return { toolCount: 0, startupCount: 0, eventCount: 0, fundingCount: 0 };
+    }
+  });
 }

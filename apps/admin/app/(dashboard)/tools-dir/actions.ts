@@ -3,6 +3,7 @@
 import { neon } from '@neondatabase/serverless';
 import { revalidatePath } from 'next/cache';
 import { logAuditEvent, canDelete } from '@/lib/audit-log';
+import { invalidateToolCache, invalidateTaxonomyCache } from '@/lib/cache-invalidate';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -124,6 +125,7 @@ export async function approveToolAction(id: string) {
     }
 
     revalidatePath('/tools-dir');
+    invalidateToolCache();
 
     // Audit log
     await logAuditEvent({
@@ -151,6 +153,7 @@ export async function rejectToolAction(id: string, reason?: string) {
       WHERE id = ${id}
     `;
     revalidatePath('/tools-dir');
+    invalidateToolCache();
     return { success: true };
   } catch (error: any) {
     console.error('rejectToolAction error:', error);
@@ -278,6 +281,7 @@ export async function createToolAction(data: {
     }
     
     revalidatePath('/tools-dir');
+    invalidateToolCache();
 
     // Audit log
     await logAuditEvent({
@@ -364,6 +368,7 @@ export async function updateToolAction(id: string, data: {
     }
     
     revalidatePath('/tools-dir');
+    invalidateToolCache();
 
     // Audit log
     await logAuditEvent({
@@ -394,6 +399,7 @@ export async function deleteToolAction(id: string) {
 
     await sql`UPDATE "AiTool" SET "deletedAt" = NOW() WHERE id = ${id}`;
     revalidatePath('/tools-dir');
+    invalidateToolCache();
 
     // Audit log
     await logAuditEvent({
@@ -418,6 +424,7 @@ export async function setListingTierAction(id: string, tier: string) {
       WHERE id = ${id}
     `;
     revalidatePath('/tools-dir');
+    invalidateToolCache();
     return { success: true };
   } catch (error: any) {
     console.error('setListingTierAction error:', error);
@@ -482,6 +489,7 @@ export async function updateToolProsConsAction(toolId: string, data: { pros: str
     }
 
     revalidatePath('/tools-dir');
+    invalidateToolCache();
     return { success: true };
   } catch (error: any) {
     console.error('updateToolProsConsAction error:', error);
@@ -591,6 +599,7 @@ export async function scheduleToolFeaturedCampaignAction(data: {
     }
 
     revalidatePath('/tools-dir');
+    invalidateToolCache();
     return { success: true };
   } catch (error: any) {
     console.error('Error scheduling tool featured campaign:', error);
@@ -621,6 +630,7 @@ export async function cancelToolFeaturedCampaignAction(campaignId: string) {
     }
 
     revalidatePath('/tools-dir');
+    invalidateToolCache();
     return { success: true };
   } catch (error: any) {
     console.error('Error cancelling tool featured campaign:', error);
@@ -656,6 +666,7 @@ export async function linkToolToStartupAction(toolId: string, startupId: string 
       WHERE id = ${toolId}
     `;
     revalidatePath('/tools-dir');
+    invalidateToolCache();
     return { success: true };
   } catch (error: any) {
     console.error('linkToolToStartupAction error:', error);
@@ -688,6 +699,7 @@ export async function verifyToolManuallyAction(id: string) {
       WHERE id = ${id}
     `;
     revalidatePath('/tools-dir');
+    invalidateToolCache();
 
     await logAuditEvent({
       action: 'APPROVE',
@@ -710,6 +722,7 @@ export async function unverifyToolAction(id: string) {
       WHERE id = ${id}
     `;
     revalidatePath('/tools-dir');
+    invalidateToolCache();
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -749,6 +762,7 @@ export async function addToolAlternativeAction(toolId: string, alternativeId: st
     await sql`INSERT INTO "ToolAlternative" (id, "toolId", "alternativeId", source) VALUES (gen_random_uuid(), ${alternativeId}, ${toolId}, 'admin') ON CONFLICT DO NOTHING`;
 
     revalidatePath('/tools-dir');
+    invalidateToolCache();
     return { success: true };
   } catch (error: any) {
     console.error('addToolAlternativeAction error:', error);
@@ -761,6 +775,7 @@ export async function removeToolAlternativeAction(toolId: string, alternativeId:
     // Remove both directions
     await sql`DELETE FROM "ToolAlternative" WHERE ("toolId" = ${toolId} AND "alternativeId" = ${alternativeId}) OR ("toolId" = ${alternativeId} AND "alternativeId" = ${toolId})`;
     revalidatePath('/tools-dir');
+    invalidateToolCache();
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -798,6 +813,7 @@ export async function bulkApproveToolsAction(ids: string[]) {
       WHERE id = ANY(${ids}::text[]) AND status = 'PENDING'
     `;
     revalidatePath('/tools-dir');
+    invalidateToolCache();
     await logAuditEvent({ action: 'APPROVE', resourceType: 'AI_TOOL', after: { bulkAction: true, count: ids.length } });
     return { success: true, count: ids.length };
   } catch (error: any) {
@@ -814,6 +830,7 @@ export async function bulkArchiveToolsAction(ids: string[]) {
       WHERE id = ANY(${ids}::text[])
     `;
     revalidatePath('/tools-dir');
+    invalidateToolCache();
     await logAuditEvent({ action: 'UPDATE', resourceType: 'AI_TOOL', after: { bulkAction: 'ARCHIVE', count: ids.length } });
     return { success: true, count: ids.length };
   } catch (error: any) {
@@ -829,6 +846,7 @@ export async function bulkDeleteToolsAction(ids: string[]) {
     if (ids.length === 0) return { success: false, error: 'No tools selected' };
     await sql`UPDATE "AiTool" SET "deletedAt" = NOW() WHERE id = ANY(${ids}::text[])`;
     revalidatePath('/tools-dir');
+    invalidateToolCache();
     await logAuditEvent({ action: 'DELETE', resourceType: 'AI_TOOL', after: { bulkAction: true, count: ids.length } });
     return { success: true, count: ids.length };
   } catch (error: any) {
