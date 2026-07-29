@@ -20,7 +20,7 @@ import ShareButton from '@/components/ShareButton';
 import ReportButton from '@/components/ReportButton';
 import SubscribeForm from '@/components/SubscribeForm';
 
-export const revalidate = 0; // Disable cache for debugging
+export const revalidate = 120;
 export const dynamic = 'force-dynamic'; // Force dynamic rendering
 
 async function getStartup(slug: string) {

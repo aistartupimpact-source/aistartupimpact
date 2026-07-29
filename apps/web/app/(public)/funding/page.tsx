@@ -1,3 +1,5 @@
+export const revalidate = 120;
+
 import Link from 'next/link';
 import { Metadata } from 'next';
 import { IndianRupee, TrendingUp, Calendar, ArrowRight, Clock, Building2, Megaphone } from 'lucide-react';
