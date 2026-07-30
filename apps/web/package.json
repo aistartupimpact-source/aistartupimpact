@@ -6,7 +6,11 @@
     "dev": "npx --yes dotenv-cli -e ../../.env -- next dev --port 3000",
     "build": "prisma generate --schema=../../packages/database/prisma/schema.prisma && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest --run --coverage",
+    "test:smoke": "vitest --run --config vitest.config.ts __tests__/smoke/"
   },
   "dependencies": {
     "@aistartupimpact/database": "*",
@@ -45,6 +49,8 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.14.0",
     "@types/react": "^18.3.0",
@@ -53,7 +59,10 @@
     "@types/speakeasy": "^2.0.10",
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.0",
+    "jsdom": "^27.0.1",
+    "msw": "^2.15.0",
     "prisma": "^5.20.0",
-    "typescript": "^5.5.0"
+    "typescript": "^5.5.0",
+    "vitest": "^2.1.9"
   }
 }
