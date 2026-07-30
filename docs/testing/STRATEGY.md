@@ -24,24 +24,26 @@ Testing approach and goals for AI Startup Impact.
 
 | Type | Status | Coverage |
 |------|--------|----------|
-| Unit tests | Not yet implemented | 0% |
-| Integration tests | Not yet implemented | 0% |
-| E2E tests | Not yet implemented | 0% |
+| Unit tests | ✅ Implemented | 30 tests (cache, seo, seo-utils) |
+| Integration tests | Planned (Milestone 2) | 0% |
+| E2E tests | Planned (Milestone 3) | 0% |
+| Smoke tests | ✅ Written (post-deploy) | 6 checks |
 | Manual QA | Active | Ad-hoc before deploys |
-| Type checking | ✓ Active | 100% (TypeScript strict) |
-| Lint | ✓ Active | 100% (ESLint on CI) |
-| Build verification | ✓ Active | 100% (CI builds on every PR) |
+| Type checking | ✅ Active | 100% (TypeScript strict) |
+| Lint | ✅ Active | 100% (ESLint on CI) |
+| Build verification | ✅ Active | 100% (CI builds on every PR) |
+| Security scan | ✅ Active | npm audit in CI |
 
 ---
 
 ## Recommended Test Stack
 
-| Tool | Purpose |
-|------|---------|
-| Vitest | Unit + integration testing (fast, TS-native) |
-| Playwright | E2E browser testing |
-| MSW | API mocking for component tests |
-| Prisma (test DB) | Integration tests with real schema |
+| Tool | Purpose | Status |
+|------|---------|--------|
+| Vitest 2.x | Unit + integration testing (fast, TS-native) | ✅ Installed |
+| Playwright | E2E browser testing | Planned |
+| MSW | API mocking for component tests | Installed |
+| Testing Library | Component testing | Installed |
 
 ---
 
@@ -87,17 +89,17 @@ apps/web/
 ## Running Tests
 
 ```bash
-# Unit + Integration
-npx vitest
+# Unit + Integration (from root)
+npm test
 
-# E2E
-npx playwright test
+# From web app directly
+cd apps/web && npx vitest --run
 
-# Type checking (already in CI)
-npx tsc --noEmit
+# Watch mode (during development)
+cd apps/web && npx vitest
 
-# Lint (already in CI)
-npx turbo run lint
+# Smoke tests (requires running server)
+cd apps/web && npm run test:smoke
 ```
 
 ---
@@ -105,10 +107,11 @@ npx turbo run lint
 ## CI Integration
 
 Current CI (`.github/workflows/ci.yml`):
-- ✓ Lint & type check
-- ✓ Build all apps
-- TODO: Add vitest run step
-- TODO: Add Playwright step (on main branch only)
+- ✅ Lint & type check
+- ✅ Unit & Integration tests (`npm test`)
+- ✅ Security scan (`npm audit`)
+- ✅ Build all apps
+- Tests must pass before build job runs
 
 ---
 

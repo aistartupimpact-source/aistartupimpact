@@ -211,16 +211,35 @@ async function getStartup(slug: string) {
       }
     }
 
-    // Fetch startup jobs
+    // Fetch startup jobs (from new JobBoardListing + fallback to legacy Job model)
     let jobs: any[] = [];
     try {
-      jobs = await sql`
-        SELECT id, title, location, type, "salaryRangeMin", "salaryRangeMax", "createdAt"::text AS "createdAt"
-        FROM "Job"
-        WHERE "startupId" = ${s.id} AND "isActive" = true AND "deletedAt" IS NULL
-        ORDER BY "createdAt" DESC
+      // Try new job board listings first
+      const boardJobs = await sql`
+        SELECT jl.id, jl.title, jl.slug, jl.city AS location, jl."workType" AS type,
+               jl."salaryMin" AS "salaryRangeMin", jl."salaryMax" AS "salaryRangeMax",
+               jl."publishedAt"::text AS "createdAt", 'board' AS source
+        FROM "JobBoardListing" jl
+        LEFT JOIN "JobBoardEmployer" e ON e.id = jl."employerId"
+        WHERE (jl."startupId" = ${s.id} OR e."startupId" = ${s.id})
+          AND jl."isActive" = true AND jl."deletedAt" IS NULL
+          AND (jl."expiresAt" IS NULL OR jl."expiresAt" > NOW())
+        ORDER BY jl."publishedAt" DESC
         LIMIT 10
       `;
+
+      if (boardJobs.length > 0) {
+        jobs = boardJobs;
+      } else {
+        // Fallback: legacy Job model
+        jobs = await sql`
+          SELECT id, title, location, type, "salaryRangeMin", "salaryRangeMax", "createdAt"::text AS "createdAt"
+          FROM "Job"
+          WHERE "startupId" = ${s.id} AND "isActive" = true AND "deletedAt" IS NULL
+          ORDER BY "createdAt" DESC
+          LIMIT 10
+        `;
+      }
     } catch (jobError) {
       console.error('[getStartup] Error fetching jobs:', jobError);
     }
@@ -848,7 +867,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                   <div key={job.id} className="py-4 first:pt-0 last:pb-0 flex items-center justify-between gap-4 font-jakarta">
                     <div>
                       <Link 
-                        href={`/jobs/${job.id}`} 
+                        href={job.slug ? `/jobs/${job.slug}` : `/jobs/${job.id}`} 
                         className="text-[15px] font-bold text-[#1B75E6] dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline leading-snug"
                       >
                         {job.title}
@@ -868,7 +887,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                       </div>
                     </div>
                     <Link 
-                      href={`/jobs/${job.id}`} 
+                      href={job.slug ? `/jobs/${job.slug}` : `/jobs/${job.id}`} 
                       className="btn-brand py-1.5 px-4 text-xs font-bold tracking-wide flex items-center justify-center shrink-0 shadow-sm transition-all hover:scale-105"
                     >
                       Apply Now &rsaquo;
@@ -879,7 +898,10 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
             ) : (
               <div className="p-6 text-center border border-dashed border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50/50 dark:bg-gray-900/20">
                 <Briefcase className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-xs text-gray-400 font-jakarta">No open roles currently listed.</p>
+                <p className="text-xs text-gray-400 font-jakarta mb-2">No open roles currently listed.</p>
+                <Link href="/employer/signup" className="text-[11px] text-brand font-semibold font-jakarta hover:underline">
+                  Hiring for this company? Post jobs →
+                </Link>
               </div>
             )}
           </div>

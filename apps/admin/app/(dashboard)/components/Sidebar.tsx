@@ -31,6 +31,7 @@ import {
   CalendarDays,
   Flag,
   Activity,
+  Briefcase,
 } from 'lucide-react';
 
 const sidebarItems = [
@@ -60,6 +61,10 @@ const sidebarItems = [
   { type: 'divider' as const, label: 'Events', roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'EVENT_ORGANIZER'] },
   { label: 'Events', href: '/events', icon: CalendarDays, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'EVENT_ORGANIZER'] },
   { label: 'Event Subscribers', href: '/events/subscribers', icon: Users, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
+
+  { type: 'divider' as const, label: 'Job Board', roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
+  { label: 'Job Listings', href: '/jobs-board', icon: Briefcase, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
+  { label: 'Employers', href: '/employers', icon: Building2, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
 
   { type: 'divider' as const, label: 'Marketing', roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'AD_MANAGER'] },
   { label: 'Subscribers', href: '/subscribers', icon: Users, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'AD_MANAGER'] },

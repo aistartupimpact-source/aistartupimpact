@@ -74,21 +74,16 @@ export default async function FounderLayout({
   `;
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gray-50 dark:bg-gray-950">
-      {/* Sticky Header - Fixed at top */}
-      <div className="flex-none">
-        <FounderNav session={session} />
+    <div className="flex h-screen bg-[#F9FAFB] dark:bg-gray-950 overflow-hidden">
+      {/* Sidebar */}
+      <div className="hidden md:block">
+        <FounderSidebar />
       </div>
       
-      {/* Content Area with Sidebar */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Fixed Sidebar */}
-        <div className="flex-none">
-          <FounderSidebar />
-        </div>
-        
-        {/* Scrollable Main Content */}
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8">
+      {/* Main area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <FounderNav session={session} />
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 pb-20 md:pb-6">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
