@@ -228,6 +228,34 @@ export default async function DashboardPage() {
           <p>Analytics chart coming soon...</p>
         </div>
       </div>
+
+      {/* Also from AI Startup Impact */}
+      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <a
+          href="/employer/login"
+          className="card p-4 flex items-center gap-3 hover:border-brand/30 transition-colors group"
+        >
+          <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg>
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-navy dark:text-white font-jakarta group-hover:text-brand transition-colors">Hiring? Post a job</p>
+            <p className="text-[10px] text-gray-400 font-jakarta">Reach 45K+ AI professionals</p>
+          </div>
+        </a>
+        <a
+          href="/organizer/login"
+          className="card p-4 flex items-center gap-3 hover:border-brand/30 transition-colors group"
+        >
+          <div className="w-9 h-9 rounded-lg bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center shrink-0 group-hover:bg-purple-100 dark:group-hover:bg-purple-900/30 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-purple-600 dark:text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-navy dark:text-white font-jakarta group-hover:text-brand transition-colors">Hosting an event? Create one</p>
+            <p className="text-[10px] text-gray-400 font-jakarta">List your AI event for free</p>
+          </div>
+        </a>
+      </div>
     </div>
   );
 }

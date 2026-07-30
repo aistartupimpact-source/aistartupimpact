@@ -1,19 +1,38 @@
 # Unit Testing
 
-Patterns and guidelines for unit tests.
+Patterns and guidelines for unit tests. **Status: ✅ Implemented (30 tests passing)**
 
 ---
 
-## Setup (Vitest)
+## Setup
+
+Vitest 2.x is installed and configured.
 
 ```bash
-# Install
-npm install -D vitest @testing-library/react @testing-library/jest-dom
+# Run all unit tests
+cd apps/web && npx vitest --run
 
-# Run
-npx vitest         # Watch mode
-npx vitest --run   # Single run (for CI)
+# Watch mode during development
+cd apps/web && npx vitest
+
+# From root (via turbo)
+npm test
 ```
+
+**Config**: `apps/web/vitest.config.ts`
+**Setup**: `apps/web/setupTests.ts` (mocks env vars)
+
+---
+
+## Current Tests
+
+| File | Tests | Module Tested |
+|------|-------|---------------|
+| `__tests__/unit/cache.test.ts` | 12 | `buildFilterHash()`, `CK` constants |
+| `__tests__/unit/seo.test.ts` | 8 | Schema generators (WebSite, Organization, Breadcrumb) |
+| `__tests__/unit/seo-utils.test.ts` | 10 | `formatUsd()`, `getCityContext()` |
+
+**Total**: 30 tests, ~500ms execution
 
 ---
 

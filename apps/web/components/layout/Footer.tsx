@@ -16,6 +16,7 @@ const footerLinks = [
       { label: 'Founder Stories', href: '/stories' },
       { label: 'AI Tools', href: '/tools' },
       { label: 'Startups', href: '/startups' },
+      { label: 'AI Jobs', href: '/jobs' },
       { label: 'Funding Digest', href: '/funding' },
       { label: 'India AI', href: '/india-ai' },
     ],
@@ -36,6 +37,8 @@ const footerLinks = [
       { label: 'Submit Startup', href: '/submit-startup' },
       { label: 'Submit AI Tool', href: '/submit-tool' },
       { label: 'Create Event', href: '/events' },
+      { label: 'Post a Job', href: '/employer/signup' },
+      { label: 'Employer Login', href: '/employer/login' },
     ],
   },
   {

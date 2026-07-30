@@ -1051,6 +1051,8 @@ model Startup {
   City                                       City?                    @relation(fields: [cityId], references: [id])
   StartupVerificationLog                     StartupVerificationLog[]
   FeaturedCampaign                           FeaturedCampaign[]
+  JobBoardEmployer                           JobBoardEmployer?
+  JobBoardListings                           JobBoardListing[]
 
   @@index([category])
   @@index([cityId])
@@ -1300,6 +1302,7 @@ model WebUser {
   WebUserSession  WebUserSession[]
   SavedTool       SavedTool[]
   SavedStartup    SavedStartup[]
+  JobBoardSaved   JobBoardSaved[]
 
   @@index([email])
   @@index([slug])
@@ -2406,4 +2409,203 @@ model ToolSystemTagMapping {
   @@unique([toolId, tagId])
   @@index([tagId, toolId])
   @@index([toolId, tagId])
+}
+
+// ============================================================
+// AI JOB BOARD — Employer Platform
+// Separate from /careers (internal hiring) and old Job model
+// ============================================================
+
+enum JobBoardWorkType {
+  REMOTE
+  HYBRID
+  ONSITE
+}
+
+enum JobBoardCategory {
+  AI_ENGINEER
+  ML_ENGINEER
+  LLM_ENGINEER
+  AI_RESEARCH_SCIENTIST
+  DATA_SCIENTIST
+  DATA_ENGINEER
+  PROMPT_ENGINEER
+  AI_PRODUCT_MANAGER
+  AI_DESIGNER
+  AI_SALES
+  AI_MARKETING
+  AI_DEVREL
+  AI_SOLUTIONS_ARCHITECT
+  AI_ETHICS
+  ROBOTICS_ENGINEER
+  COMPUTER_VISION
+  NLP_ENGINEER
+  AI_INFRASTRUCTURE
+  OTHER
+}
+
+enum JobBoardTier {
+  FREE
+  FEATURED
+  PREMIUM
+}
+
+enum JobBoardApplyType {
+  INTERNAL
+  EXTERNAL
+}
+
+enum JobBoardAppStatus {
+  APPLIED
+  REVIEWED
+  SHORTLISTED
+  INTERVIEW
+  OFFER
+  HIRED
+  REJECTED
+}
+
+enum JobBoardPlan {
+  FREE
+  FEATURED
+  PREMIUM
+}
+
+model JobBoardEmployer {
+  id              String            @id @default(cuid())
+  companyName     String
+  slug            String            @unique
+  email           String            @unique
+  passwordHash    String
+  logoUrl         String?
+  websiteUrl      String?
+  description     String?
+  industry        String?
+  companySize     String?
+  location        String?
+  country         String?
+  linkedinUrl     String?
+  twitterUrl      String?
+  startupId       String?           @unique
+  plan            JobBoardPlan      @default(FREE)
+  planExpiresAt   DateTime?
+  maxActiveJobs   Int               @default(1)
+  isVerified      Boolean           @default(false)
+  isActive        Boolean           @default(true)
+  emailVerified   Boolean           @default(false)
+  resetToken      String?
+  resetTokenExpiry DateTime?
+  failedLoginAttempts Int           @default(0)
+  lockedUntil     DateTime?
+  lastLoginAt     DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  Listings        JobBoardListing[]
+  Startup         Startup?          @relation(fields: [startupId], references: [id], onDelete: SetNull)
+
+  @@index([slug])
+  @@index([startupId])
+  @@index([isActive])
+  @@index([plan])
+  @@index([email])
+}
+
+model JobBoardListing {
+  id                String              @id @default(cuid())
+  slug              String              @unique
+  title             String
+  description       String
+  shortDescription  String?
+  location          String?
+  city              String?
+  country           String?
+  workType          JobBoardWorkType    @default(REMOTE)
+  visaSponsorship   Boolean             @default(false)
+  salaryMin         Int?
+  salaryMax         Int?
+  salaryCurrency    String              @default("USD")
+  salaryPeriod      String              @default("yearly")
+  showSalary        Boolean             @default(true)
+  equity            String?
+  category          JobBoardCategory    @default(AI_ENGINEER)
+  experienceMin     Int?
+  experienceMax     Int?
+  skills            String[]            @default([])
+  department        String?
+  listingTier       JobBoardTier        @default(FREE)
+  isFeatured        Boolean             @default(false)
+  featuredUntil     DateTime?
+  isActive          Boolean             @default(true)
+  expiresAt         DateTime?
+  applicationUrl    String?
+  applicationEmail  String?
+  applicationType   JobBoardApplyType   @default(INTERNAL)
+  applicationsCount Int                 @default(0)
+  viewsCount        Int                 @default(0)
+  clicksCount       Int                 @default(0)
+  savedCount        Int                 @default(0)
+  employerId        String
+  startupId         String?
+  searchVector      Unsupported("tsvector")?
+  publishedAt       DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  deletedAt         DateTime?
+
+  Employer          JobBoardEmployer    @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  Startup           Startup?            @relation(fields: [startupId], references: [id], onDelete: SetNull)
+  Applications      JobBoardApplication[]
+  SavedBy           JobBoardSaved[]
+
+  @@index([isActive, category])
+  @@index([isActive, workType])
+  @@index([isActive, listingTier])
+  @@index([employerId])
+  @@index([startupId])
+  @@index([slug])
+  @@index([publishedAt])
+  @@index([expiresAt])
+  @@index([searchVector], type: Gin)
+}
+
+model JobBoardApplication {
+  id              String              @id @default(cuid())
+  listingId       String
+  fullName        String
+  email           String
+  phone           String?
+  linkedinUrl     String?
+  portfolioUrl    String?
+  githubUrl       String?
+  resumeUrl       String
+  coverLetter     String?
+  status          JobBoardAppStatus   @default(APPLIED)
+  notes           String?
+  rating          Int?
+  appliedAt       DateTime            @default(now())
+  reviewedAt      DateTime?
+  statusChangedAt DateTime?
+
+  Listing         JobBoardListing     @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, email])
+  @@index([listingId, status])
+  @@index([email])
+  @@index([appliedAt])
+  @@index([status])
+}
+
+model JobBoardSaved {
+  id        String          @id @default(cuid())
+  listingId String
+  userId    String
+  createdAt DateTime        @default(now())
+
+  Listing   JobBoardListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  WebUser   WebUser         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, userId])
+  @@index([userId])
+  @@index([listingId])
 }

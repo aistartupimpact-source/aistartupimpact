@@ -18,6 +18,7 @@ const mainNav = [
   { label: 'Founder Stories', href: '/stories' },
   { label: 'AI Tools', href: '/tools' },
   { label: 'AI Startups', href: '/startups' },
+  { label: 'AI Jobs', href: '/jobs' },
   { label: 'Events', href: '/events' },
   { label: 'Funding', href: '/funding' },
   { label: 'India AI', href: '/india-ai' },
