@@ -7,6 +7,13 @@ export const revalidate = 3600;
 const SITE_URL = 'https://aistartupimpact.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const listingPage: MetadataRoute.Sitemap[0] = {
+    url: `${SITE_URL}/tools`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.8,
+  };
+
   try {
     const sql = neon(process.env.DATABASE_URL!);
 
@@ -17,14 +24,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ORDER BY "updatedAt" DESC
     `;
 
-    return (tools as any[]).map((tool) => ({
+    const toolRoutes: MetadataRoute.Sitemap = (tools as any[]).map((tool) => ({
       url: `${SITE_URL}/tools/${tool.slug}`,
       lastModified: new Date(tool.updatedAt),
       changeFrequency: 'weekly' as const,
       priority: 0.7,
     }));
+
+    return [listingPage, ...toolRoutes];
   } catch (error) {
     console.error('Error generating tools sitemap:', error);
-    return [];
+    return [listingPage];
   }
 }

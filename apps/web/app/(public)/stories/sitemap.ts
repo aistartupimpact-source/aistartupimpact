@@ -7,6 +7,13 @@ export const revalidate = 3600;
 const SITE_URL = 'https://aistartupimpact.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const listingPage: MetadataRoute.Sitemap[0] = {
+    url: `${SITE_URL}/stories`,
+    lastModified: new Date(),
+    changeFrequency: 'daily',
+    priority: 0.8,
+  };
+
   try {
     const sql = neon(process.env.DATABASE_URL!);
 
@@ -19,14 +26,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       LIMIT 5000
     `;
 
-    return (stories as any[]).map((s) => ({
+    const storyRoutes: MetadataRoute.Sitemap = (stories as any[]).map((s) => ({
       url: `${SITE_URL}/stories/${s.slug}`,
       lastModified: new Date(s.updatedAt || s.publishedAt),
       changeFrequency: 'weekly' as const,
       priority: 0.7,
     }));
+
+    return [listingPage, ...storyRoutes];
   } catch (error) {
     console.error('Error generating stories sitemap:', error);
-    return [];
+    return [listingPage];
   }
 }

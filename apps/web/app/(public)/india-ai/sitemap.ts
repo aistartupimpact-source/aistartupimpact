@@ -7,6 +7,13 @@ export const revalidate = 3600;
 const SITE_URL = 'https://aistartupimpact.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const listingPage: MetadataRoute.Sitemap[0] = {
+    url: `${SITE_URL}/india-ai`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.8,
+  };
+
   try {
     const sql = neon(process.env.DATABASE_URL!);
 
@@ -17,14 +24,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ORDER BY "displayOrder" ASC
     `;
 
-    return (cities as any[]).map((c) => ({
+    const cityRoutes: MetadataRoute.Sitemap = (cities as any[]).map((c) => ({
       url: `${SITE_URL}/india-ai/cities/${c.slug}`,
       lastModified: new Date(c.updatedAt || new Date()),
       changeFrequency: 'weekly' as const,
       priority: 0.6,
     }));
+
+    return [listingPage, ...cityRoutes];
   } catch (error) {
     console.error('Error generating india-ai sitemap:', error);
-    return [];
+    return [listingPage];
   }
 }

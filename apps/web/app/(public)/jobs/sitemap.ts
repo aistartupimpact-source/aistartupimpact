@@ -7,6 +7,13 @@ export const revalidate = 3600;
 const SITE_URL = 'https://aistartupimpact.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const listingPage: MetadataRoute.Sitemap[0] = {
+    url: `${SITE_URL}/jobs`,
+    lastModified: new Date(),
+    changeFrequency: 'daily',
+    priority: 0.8,
+  };
+
   try {
     const sql = neon(process.env.DATABASE_URL!);
 
@@ -19,14 +26,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       LIMIT 1000
     `;
 
-    return (jobs as any[]).map((j) => ({
+    const jobRoutes: MetadataRoute.Sitemap = (jobs as any[]).map((j) => ({
       url: `${SITE_URL}/jobs/${j.slug}`,
       lastModified: new Date(j.updatedAt || j.createdAt),
       changeFrequency: 'daily' as const,
       priority: 0.7,
     }));
+
+    return [listingPage, ...jobRoutes];
   } catch (error) {
     console.error('Error generating jobs sitemap:', error);
-    return [];
+    return [listingPage];
   }
 }
