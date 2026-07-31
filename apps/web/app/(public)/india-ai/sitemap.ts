@@ -10,21 +10,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const sql = neon(process.env.DATABASE_URL!);
 
-    const tools = await sql`
+    const cities = await sql`
       SELECT slug, "updatedAt"
-      FROM "AiTool"
-      WHERE (status = 'APPROVED' OR status = 'FEATURED') AND "deletedAt" IS NULL
-      ORDER BY "updatedAt" DESC
+      FROM "IndiaAICity"
+      WHERE "isActive" = true
+      ORDER BY "displayOrder" ASC
     `;
 
-    return (tools as any[]).map((tool) => ({
-      url: `${SITE_URL}/tools/${tool.slug}`,
-      lastModified: new Date(tool.updatedAt),
+    return (cities as any[]).map((c) => ({
+      url: `${SITE_URL}/india-ai/cities/${c.slug}`,
+      lastModified: new Date(c.updatedAt || new Date()),
       changeFrequency: 'weekly' as const,
-      priority: 0.7,
+      priority: 0.6,
     }));
   } catch (error) {
-    console.error('Error generating tools sitemap:', error);
+    console.error('Error generating india-ai sitemap:', error);
     return [];
   }
 }
