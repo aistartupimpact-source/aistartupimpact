@@ -57,10 +57,11 @@ const YEARS = ['All Years', '2024-2026', '2021-2023', '2018-2020', 'Before 2018'
 
 function formatCurrency(paise: string): string {
   const amount = Number(paise);
-  const crores = amount / 10000000000;
-  if (crores >= 1) return `₹${crores.toFixed(0)}Cr`;
-  const lakhs = amount / 1000000000;
-  if (lakhs >= 1) return `₹${lakhs.toFixed(1)}L`;
+  const inr = amount / 100;
+  const crores = inr / 10000000;
+  if (crores >= 1) return `₹${Math.round(crores).toLocaleString('en-IN')}Cr`;
+  const lakhs = inr / 100000;
+  if (lakhs >= 1) return `₹${Math.round(lakhs)}L`;
   return '—';
 }
 

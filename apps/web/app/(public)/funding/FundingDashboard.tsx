@@ -480,7 +480,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
           <h3 className="section-title">Funding by City</h3>
         </div>
         <div className="space-y-3">
-          {cityData.slice(0, 5).map((city, idx) => {
+          {cityData.slice(0, 10).map((city, idx) => {
             const maxAmount = cityData[0]?.amount || 1;
             const percentage = (city.amount / maxAmount) * 100;
             return (
