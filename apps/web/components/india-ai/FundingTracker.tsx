@@ -20,14 +20,23 @@ interface FundingTrackerProps {
 
 function formatAmount(paise: string): string {
   const amount = Number(paise);
-  const crores = amount / 10000000000;
-  
+  // amountInr is stored in PAISE (1 INR = 100 paise)
+  const inr = amount / 100;
+  const crores = inr / 10000000; // 1 Cr = 10,000,000
+
+  if (crores >= 1000) {
+    return `₹${(crores / 1000).toFixed(1)}K Cr`;
+  }
   if (crores >= 1) {
-    return `₹${crores.toFixed(0)}Cr`;
+    return `₹${Math.round(crores).toLocaleString('en-IN')}Cr`;
   }
   
-  const lakhs = amount / 1000000000;
-  return `₹${lakhs.toFixed(1)}L`;
+  const lakhs = inr / 100000; // 1 Lakh = 100,000
+  if (lakhs >= 1) {
+    return `₹${Math.round(lakhs).toLocaleString('en-IN')}L`;
+  }
+  
+  return `₹${Math.round(inr).toLocaleString('en-IN')}`;
 }
 
 function formatDate(dateString: string): string {

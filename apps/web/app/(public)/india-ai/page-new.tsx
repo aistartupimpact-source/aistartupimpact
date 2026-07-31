@@ -49,8 +49,12 @@ async function getIndiaAIData() {
 }
 
 function formatCurrency(paise: number): string {
-  const crores = paise / 10000000000;
-  return `₹${crores.toLocaleString()}Cr`;
+  const inr = paise / 100;
+  const crores = inr / 10000000;
+  if (crores >= 1) return `₹${Math.round(crores).toLocaleString('en-IN')}Cr`;
+  const lakhs = inr / 100000;
+  if (lakhs >= 1) return `₹${Math.round(lakhs)}L`;
+  return `₹${Math.round(inr).toLocaleString('en-IN')}`;
 }
 
 function formatBudget(paise: number): string {
