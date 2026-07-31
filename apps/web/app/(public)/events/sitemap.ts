@@ -10,21 +10,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const sql = neon(process.env.DATABASE_URL!);
 
-    const tools = await sql`
-      SELECT slug, "updatedAt"
-      FROM "AiTool"
-      WHERE (status = 'APPROVED' OR status = 'FEATURED') AND "deletedAt" IS NULL
-      ORDER BY "updatedAt" DESC
+    const events = await sql`
+      SELECT slug, "updatedAt", "createdAt"
+      FROM "Event"
+      WHERE "deletedAt" IS NULL AND status != 'CANCELLED'
+      ORDER BY "createdAt" DESC
+      LIMIT 1000
     `;
 
-    return (tools as any[]).map((tool) => ({
-      url: `${SITE_URL}/tools/${tool.slug}`,
-      lastModified: new Date(tool.updatedAt),
+    return (events as any[]).map((e) => ({
+      url: `${SITE_URL}/events/${e.slug}`,
+      lastModified: new Date(e.updatedAt || e.createdAt),
       changeFrequency: 'weekly' as const,
       priority: 0.7,
     }));
   } catch (error) {
-    console.error('Error generating tools sitemap:', error);
+    console.error('Error generating events sitemap:', error);
     return [];
   }
 }

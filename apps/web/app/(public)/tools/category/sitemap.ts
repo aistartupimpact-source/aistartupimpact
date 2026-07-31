@@ -1,27 +1,27 @@
-/**
- * Tool Categories Sitemap Generator
- * Generates XML sitemap for all active category landing pages
- */
-
 import { MetadataRoute } from 'next';
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon(process.env.DATABASE_URL!);
+export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
+
+const SITE_URL = 'https://aistartupimpact.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
+    const sql = neon(process.env.DATABASE_URL!);
+
     const categories = await sql`
-      SELECT slug, "createdAt"
+      SELECT slug, "updatedAt", "createdAt"
       FROM "ToolCategory"
       WHERE "isActive" = true
       ORDER BY level ASC, "sortOrder" ASC
     `;
 
-    return categories.map((cat: any) => ({
-      url: `https://aistartupimpact.com/tools/category/${cat.slug}`,
-      lastModified: new Date(cat.createdAt),
+    return (categories as any[]).map((cat) => ({
+      url: `${SITE_URL}/tools/category/${cat.slug}`,
+      lastModified: new Date(cat.updatedAt || cat.createdAt),
       changeFrequency: 'weekly' as const,
-      priority: 0.7,
+      priority: 0.6,
     }));
   } catch (error) {
     console.error('Error generating category sitemap:', error);
