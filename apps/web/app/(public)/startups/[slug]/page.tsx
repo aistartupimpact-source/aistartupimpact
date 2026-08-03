@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { cache } from 'react';
 import { Metadata } from 'next';
 import { Building2, MapPin, IndianRupee, TrendingUp, ExternalLink, ChevronRight, Globe, Users, Calendar, Star, ArrowUpRight, Tag, ThumbsUp, Shield, BookOpen, Cpu, Briefcase, Clock } from 'lucide-react';
 import { sql } from '@/lib/db';
@@ -21,12 +22,9 @@ import ReportButton from '@/components/ReportButton';
 import SubscribeForm from '@/components/SubscribeForm';
 
 export const revalidate = 120;
-export const dynamic = 'force-dynamic'; // Force dynamic rendering
 
-async function getStartup(slug: string) {
-  console.log(`[getStartup] START - Fetching startup with slug: "${slug}"`);
+const getStartup = cache(async (slug: string) => {
   try {
-    // Try to fetch with category and businessType columns, but handle if they don't exist
     let rows;
     try {
       rows = await sql`
@@ -43,9 +41,7 @@ async function getStartup(slug: string) {
         LIMIT 1
       `;
     } catch (columnError: any) {
-      // If category or businessType column doesn't exist, fetch without them
       if (columnError.message?.includes('category') || columnError.message?.includes('businessType') || columnError.message?.includes('column')) {
-        console.log('[getStartup] Category or businessType column not found, fetching without them');
         rows = await sql`
           SELECT id, name, slug, tagline,
                  LEFT(description, 2500) AS description,
@@ -63,159 +59,79 @@ async function getStartup(slug: string) {
         throw columnError;
       }
     }
-    
-    console.log(`[getStartup] Query returned ${rows.length} rows`);
-    if (!rows.length) {
-      console.log(`[getStartup] No startup found with slug: "${slug}"`);
-      return null;
-    }
+
+    if (!rows.length) return null;
     const s = rows[0] as any;
-    console.log(`[getStartup] Found startup: ${s.name} (id: ${s.id})`);
-
-
-    const rounds = await sql`
-      SELECT "roundType", "amountUsd", "amountInr",
-             "announcedAt"::text AS "announcedAt",
-             "leadInvestors", "allInvestors"
-      FROM "FundingRound"
-      WHERE "startupId" = ${s.id}
-      ORDER BY "announcedAt" DESC
-    `;
 
     const namePattern = `%${s.name}%`;
-    const news = await sql`
-      SELECT title, slug, "publishedAt"::text AS "publishedAt"
-      FROM "Article"
-      WHERE status = 'PUBLISHED' AND "deletedAt" IS NULL
-        AND title ILIKE ${namePattern}
-      ORDER BY "publishedAt" DESC
-      LIMIT 4
-    `;
+    const category = s.category || '';
+    const city = s.headquartersCity || '';
 
-    const stories = await sql`
-      SELECT title, slug, excerpt, "publishedAt"::text AS "publishedAt"
-      FROM "Article"
-      WHERE status = 'PUBLISHED' AND "deletedAt" IS NULL
-        AND type = 'STORY'
-        AND ("startupId" = ${s.id} OR title ILIKE ${namePattern})
-      ORDER BY "publishedAt" DESC
-      LIMIT 3
-    `;
-
-    const products = await sql`
-      SELECT name, slug, tagline, "logoUrl", "pricingModel", "avgRating"
-      FROM "AiTool"
-      WHERE status = 'APPROVED' AND "deletedAt" IS NULL
-        AND "startupId" = ${s.id}
-      ORDER BY "createdAt" DESC
-    `;
-
-    // Smart similar startups: priority-based matching (8 results for carousel)
-    // Priority 1: same category + same stage
-    const sameCategoryStage = await sql`
-      SELECT name, slug, tagline, "logoUrl", stage, "headquartersCity", category, "businessType"
-      FROM "Startup"
-      WHERE "deletedAt" IS NULL AND "isApproved" = true AND slug != ${slug}
-        AND category = ${s.category || ''} AND stage = ${s.stage}
-      ORDER BY "impactScore" DESC NULLS LAST LIMIT 3
-    `;
-
-    // Priority 2: same category, any stage
-    const sameCategoryOnly = await sql`
-      SELECT name, slug, tagline, "logoUrl", stage, "headquartersCity", category, "businessType"
-      FROM "Startup"
-      WHERE "deletedAt" IS NULL AND "isApproved" = true AND slug != ${slug}
-        AND category = ${s.category || ''}
-        AND slug NOT IN (${sameCategoryStage.length > 0 ? sameCategoryStage.map((r: any) => r.slug) : ['__none__']})
-      ORDER BY "impactScore" DESC NULLS LAST LIMIT 3
-    `;
-
-    // Priority 3: same city
-    const sameCity = await sql`
-      SELECT name, slug, tagline, "logoUrl", stage, "headquartersCity", category, "businessType"
-      FROM "Startup"
-      WHERE "deletedAt" IS NULL AND "isApproved" = true AND slug != ${slug}
-        AND "headquartersCity" = ${s.headquartersCity || ''}
-        AND "headquartersCity" IS NOT NULL AND "headquartersCity" != ''
-      ORDER BY "impactScore" DESC NULLS LAST LIMIT 2
-    `;
-
-    // Priority 4: same stage fallback
-    const sameStage = await sql`
-      SELECT name, slug, tagline, "logoUrl", stage, "headquartersCity", category, "businessType"
-      FROM "Startup"
-      WHERE "deletedAt" IS NULL AND "isApproved" = true AND slug != ${slug}
-        AND stage = ${s.stage}
-      ORDER BY "impactScore" DESC NULLS LAST LIMIT 3
-    `;
-
-    // Merge and deduplicate, max 8
-    const seenSlugs = new Set<string>();
-    const similar: any[] = [];
-    const addWithReason = (rows: any[], reason: string) => {
-      for (const r of rows) {
-        if (!seenSlugs.has(r.slug) && similar.length < 8) {
-          seenSlugs.add(r.slug);
-          similar.push({ ...r, matchReason: reason });
-        }
-      }
-    };
-    addWithReason(sameCategoryStage, s.category || '');
-    addWithReason(sameCategoryOnly, s.category || '');
-    addWithReason(sameCity, s.headquartersCity ? `In ${s.headquartersCity}` : '');
-    addWithReason(sameStage, '');
-
-    // Reviews feature not yet implemented - return empty arrays
-    const reviews: any[] = [];
-    const avgRating = 0;
-
-    // Enrich foundersData with FounderUser profile information if startup is claimed
-    let enrichedFoundersData = s.foundersData || [];
-    if (s.claimedBy) {
-      try {
-        const founderProfile = await sql`
-          SELECT name, role, bio, avatar, linkedin, twitter, website
-          FROM "FounderUser"
-          WHERE id = ${s.claimedBy}
-          LIMIT 1
-        `;
-        
-        if (founderProfile.length > 0) {
-          const profile = founderProfile[0];
-          
-          // If foundersData exists, update the first founder with profile data
-          if (enrichedFoundersData.length > 0) {
-            enrichedFoundersData[0] = {
-              ...enrichedFoundersData[0],
-              bio: profile.bio || enrichedFoundersData[0].bio,
-              avatar: profile.avatar || enrichedFoundersData[0].avatar,
-              linkedin: profile.linkedin || enrichedFoundersData[0].linkedin,
-              twitter: profile.twitter || enrichedFoundersData[0].twitter,
-              website: profile.website || enrichedFoundersData[0].website,
-            };
-          } else {
-            // If no foundersData, create from profile
-            enrichedFoundersData = [{
-              name: profile.name,
-              role: profile.role || 'Founder',
-              bio: profile.bio,
-              avatar: profile.avatar,
-              linkedin: profile.linkedin,
-              twitter: profile.twitter,
-              website: profile.website,
-            }];
-          }
-        }
-      } catch (error) {
-        console.error('[getStartup] Error enriching founder data:', error);
-      }
-    }
-
-    // Fetch startup jobs (from new JobBoardListing + fallback to legacy Job model)
-    let jobs: any[] = [];
-    try {
-      // Try new job board listings first
-      const boardJobs = await sql`
+    // Fetch all dependent data in parallel
+    const [rounds, news, stories, products, similarCandidates, founderProfile, boardJobs] = await Promise.all([
+      sql`
+        SELECT "roundType", "amountUsd", "amountInr",
+               "announcedAt"::text AS "announcedAt",
+               "leadInvestors", "allInvestors"
+        FROM "FundingRound"
+        WHERE "startupId" = ${s.id}
+        ORDER BY "announcedAt" DESC
+      `,
+      sql`
+        SELECT title, slug, "publishedAt"::text AS "publishedAt"
+        FROM "Article"
+        WHERE status = 'PUBLISHED' AND "deletedAt" IS NULL
+          AND title ILIKE ${namePattern}
+        ORDER BY "publishedAt" DESC
+        LIMIT 4
+      `,
+      sql`
+        SELECT title, slug, excerpt, "publishedAt"::text AS "publishedAt"
+        FROM "Article"
+        WHERE status = 'PUBLISHED' AND "deletedAt" IS NULL
+          AND type = 'STORY'
+          AND ("startupId" = ${s.id} OR title ILIKE ${namePattern})
+        ORDER BY "publishedAt" DESC
+        LIMIT 3
+      `,
+      sql`
+        SELECT name, slug, tagline, "logoUrl", "pricingModel", "avgRating"
+        FROM "AiTool"
+        WHERE status = 'APPROVED' AND "deletedAt" IS NULL
+          AND "startupId" = ${s.id}
+        ORDER BY "createdAt" DESC
+      `,
+      // Single UNION ALL query for similar startups instead of 4 sequential queries
+      sql`
+        (SELECT name, slug, tagline, "logoUrl", stage, "headquartersCity", category, "businessType", 1 AS priority
+         FROM "Startup"
+         WHERE "deletedAt" IS NULL AND "isApproved" = true AND slug != ${slug}
+           AND category = ${category} AND stage = ${s.stage}
+         ORDER BY "impactScore" DESC NULLS LAST LIMIT 3)
+        UNION ALL
+        (SELECT name, slug, tagline, "logoUrl", stage, "headquartersCity", category, "businessType", 2 AS priority
+         FROM "Startup"
+         WHERE "deletedAt" IS NULL AND "isApproved" = true AND slug != ${slug}
+           AND category = ${category}
+         ORDER BY "impactScore" DESC NULLS LAST LIMIT 6)
+        UNION ALL
+        (SELECT name, slug, tagline, "logoUrl", stage, "headquartersCity", category, "businessType", 3 AS priority
+         FROM "Startup"
+         WHERE "deletedAt" IS NULL AND "isApproved" = true AND slug != ${slug}
+           AND "headquartersCity" = ${city}
+           AND "headquartersCity" IS NOT NULL AND "headquartersCity" != ''
+         ORDER BY "impactScore" DESC NULLS LAST LIMIT 2)
+        UNION ALL
+        (SELECT name, slug, tagline, "logoUrl", stage, "headquartersCity", category, "businessType", 4 AS priority
+         FROM "Startup"
+         WHERE "deletedAt" IS NULL AND "isApproved" = true AND slug != ${slug}
+           AND stage = ${s.stage}
+         ORDER BY "impactScore" DESC NULLS LAST LIMIT 3)
+      `,
+      s.claimedBy
+        ? sql`SELECT name, role, bio, avatar, linkedin, twitter, website FROM "FounderUser" WHERE id = ${s.claimedBy} LIMIT 1`
+        : Promise.resolve([]),
+      sql`
         SELECT jl.id, jl.title, jl.slug, jl.city AS location, jl."workType" AS type,
                jl."salaryMin" AS "salaryRangeMin", jl."salaryMax" AS "salaryRangeMax",
                jl."publishedAt"::text AS "createdAt", 'board' AS source
@@ -226,12 +142,49 @@ async function getStartup(slug: string) {
           AND (jl."expiresAt" IS NULL OR jl."expiresAt" > NOW())
         ORDER BY jl."publishedAt" DESC
         LIMIT 10
-      `;
+      `,
+    ]);
 
-      if (boardJobs.length > 0) {
-        jobs = boardJobs;
+    // Deduplicate similar startups by priority order (same logic, single pass)
+    const seenSlugs = new Set<string>();
+    const similar: any[] = [];
+    const priorityReasons: Record<number, string> = {
+      1: category, 2: category,
+      3: city ? `In ${city}` : '', 4: '',
+    };
+    for (const r of (similarCandidates as any[])) {
+      if (!seenSlugs.has(r.slug) && similar.length < 8) {
+        seenSlugs.add(r.slug);
+        similar.push({ ...r, matchReason: priorityReasons[r.priority] || '' });
+      }
+    }
+
+    // Enrich foundersData with FounderUser profile
+    let enrichedFoundersData = s.foundersData || [];
+    if (founderProfile.length > 0) {
+      const profile = founderProfile[0] as any;
+      if (enrichedFoundersData.length > 0) {
+        enrichedFoundersData[0] = {
+          ...enrichedFoundersData[0],
+          bio: profile.bio || enrichedFoundersData[0].bio,
+          avatar: profile.avatar || enrichedFoundersData[0].avatar,
+          linkedin: profile.linkedin || enrichedFoundersData[0].linkedin,
+          twitter: profile.twitter || enrichedFoundersData[0].twitter,
+          website: profile.website || enrichedFoundersData[0].website,
+        };
       } else {
-        // Fallback: legacy Job model
+        enrichedFoundersData = [{
+          name: profile.name, role: profile.role || 'Founder',
+          bio: profile.bio, avatar: profile.avatar,
+          linkedin: profile.linkedin, twitter: profile.twitter, website: profile.website,
+        }];
+      }
+    }
+
+    // Jobs: use board jobs, fallback to legacy
+    let jobs: any[] = boardJobs as any[];
+    if (jobs.length === 0) {
+      try {
         jobs = await sql`
           SELECT id, title, location, type, "salaryRangeMin", "salaryRangeMax", "createdAt"::text AS "createdAt"
           FROM "Job"
@@ -239,18 +192,16 @@ async function getStartup(slug: string) {
           ORDER BY "createdAt" DESC
           LIMIT 10
         `;
-      }
-    } catch (jobError) {
-      console.error('[getStartup] Error fetching jobs:', jobError);
+      } catch { jobs = []; }
     }
 
-    return { 
-      ...s, 
+    return {
+      ...s,
       foundersData: enrichedFoundersData,
-      fundingRounds: rounds, 
-      relatedNews: news, 
+      fundingRounds: rounds,
+      relatedNews: news,
       similarStartups: similar,
-      reviews,
+      reviews: [],
       avgRating: null,
       reviewCount: 0,
       founderStories: stories,
@@ -261,7 +212,7 @@ async function getStartup(slug: string) {
     console.error('[getStartup] ERROR:', e);
     return null;
   }
-}
+});
 
 function formatUsd(usd: number | null) {
   if (!usd || Number(usd) === 0) return null;
@@ -321,9 +272,7 @@ function getIndustryTag(startup: any): string | null {
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  console.log('[generateMetadata] Called with slug:', params.slug);
   const s = await getStartup(params.slug) as any;
-  console.log('[generateMetadata] getStartup returned:', s ? `${s.name} (${s.id})` : 'null');
   if (!s) return { title: 'Startup Not Found' };
   
   const title = `${s.name} - ${s.tagline || 'AI Startup'} | AI Startup Impact`;
@@ -390,12 +339,27 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 export default async function StartupDetailPage({ params }: { params: { slug: string } }) {
-  console.log('[StartupDetailPage] Called with slug:', params.slug);
-  const startup = await getStartup(params.slug) as any;
-  console.log('[StartupDetailPage] getStartup returned:', startup ? `${startup.name} (${startup.id})` : 'null');
-  const session = await getUserSession();
+  const [startup, session] = await Promise.all([
+    getStartup(params.slug) as Promise<any>,
+    getUserSession(),
+  ]);
 
   if (!startup) {
+    // Check if this is an old slug that was changed — redirect to new URL
+    try {
+      const redirectCheck = await sql`
+        SELECT slug FROM "Startup"
+        WHERE ${params.slug} = ANY("previousSlugs") AND "deletedAt" IS NULL
+        LIMIT 1
+      `;
+      if (redirectCheck.length > 0) {
+        const { redirect } = await import('next/navigation');
+        redirect(`/startups/${(redirectCheck[0] as any).slug}`);
+      }
+    } catch (e: any) {
+      if (e?.digest?.startsWith('NEXT_REDIRECT')) throw e;
+    }
+
     return (
       <div className="max-w-2xl mx-auto px-4 py-20 text-center">
         <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />

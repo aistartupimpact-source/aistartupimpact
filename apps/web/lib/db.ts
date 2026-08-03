@@ -5,7 +5,7 @@ import { cached, CK } from './cache';
 // Lazy sql client — not instantiated at module load time (avoids build-time DATABASE_URL errors)
 let _sql: NeonQueryFunction<false, false> | undefined;
 function getSql(): NeonQueryFunction<false, false> {
-  if (!_sql) _sql = neon(process.env.DATABASE_URL!, { fetchOptions: { cache: 'no-store' } });
+  if (!_sql) _sql = neon(process.env.DATABASE_URL!);
   return _sql;
 }
 // sql is used as a tagged template literal throughout this file
@@ -87,68 +87,65 @@ export async function getArticleBySlugDirect(slug: string) {
 // ── Directory Entities ─────────────────────────────────────────────────────────
 
 export async function getAiToolBySlugDirect(slug: string) {
-  try {
-    const rows = await sql`
-      SELECT 
-        t.*,
-        c.name AS "categoryName",
-        c.slug AS "categorySlug",
-        pc.name AS "parentCategoryName",
-        pc.slug AS "parentCategorySlug",
-        pc.icon AS "parentCategoryIcon",
-        s.id AS "startupId", s.name AS "startupName", s.slug AS "startupSlug", s."logoUrl" AS "startupLogoUrl", s."totalFundingInr"
-      FROM "AiTool" t
-      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
-      LEFT JOIN "ToolCategory" pc ON pc.id = c."parentId"
-      LEFT JOIN "Startup" s ON s.id = t."startupId"
-      WHERE t.slug = ${slug} AND t."deletedAt" IS NULL
-      LIMIT 1
-    `;
-    if (!rows.length) return null;
-    const tool = rows[0];
-
-    // Cross-link: Fetch Founder Stories for this tool
-    const stories = await sql`
-      SELECT id, title, slug, excerpt, "coverImage", "publishedAt"::text AS "publishedAt"
-      FROM "Article"
-      WHERE "toolId" = ${tool.id} AND status = 'PUBLISHED' AND "deletedAt" IS NULL
-      ORDER BY "publishedAt" DESC
-    `;
-
-    // Cross-link: Fetch Funding Rounds if part of a Startup
-    let fundingRounds: any[] = [];
-    if (tool.startupId) {
-      fundingRounds = await sql`
-        SELECT "roundType", "amountInr", "amountUsd", "announcedAt"::text AS "announcedAt", "leadInvestors", sourceUrl
-        FROM "FundingRound"
-        WHERE "startupId" = ${tool.startupId}
-        ORDER BY "announcedAt" DESC
+  return cached(CK.tool(slug), { ttl: 120, staleTtl: 300 }, async () => {
+    try {
+      const rows = await sql`
+        SELECT
+          t.*,
+          c.name AS "categoryName",
+          c.slug AS "categorySlug",
+          pc.name AS "parentCategoryName",
+          pc.slug AS "parentCategorySlug",
+          pc.icon AS "parentCategoryIcon",
+          s.id AS "startupId", s.name AS "startupName", s.slug AS "startupSlug", s."logoUrl" AS "startupLogoUrl", s."totalFundingInr"
+        FROM "AiTool" t
+        LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+        LEFT JOIN "ToolCategory" pc ON pc.id = c."parentId"
+        LEFT JOIN "Startup" s ON s.id = t."startupId"
+        WHERE t.slug = ${slug} AND t."deletedAt" IS NULL
+        LIMIT 1
       `;
+      if (!rows.length) return null;
+      const tool = rows[0];
+
+      // Fetch all cross-linked data in parallel
+      const [stories, fundingRounds, userReviews, useCases] = await Promise.all([
+        sql`
+          SELECT id, title, slug, excerpt, "coverImage", "publishedAt"::text AS "publishedAt"
+          FROM "Article"
+          WHERE "toolId" = ${tool.id} AND status = 'PUBLISHED' AND "deletedAt" IS NULL
+          ORDER BY "publishedAt" DESC
+        `,
+        tool.startupId
+          ? sql`
+              SELECT "roundType", "amountInr", "amountUsd", "announcedAt"::text AS "announcedAt", "leadInvestors", sourceUrl
+              FROM "FundingRound"
+              WHERE "startupId" = ${tool.startupId}
+              ORDER BY "announcedAt" DESC
+            `
+          : Promise.resolve([]),
+        sql`
+          SELECT r.id, r.rating, r.title, r.body, r."publishedAt"::text AS "publishedAt", r."helpfulCount",
+                 u.name AS "authorName", u.role AS "authorRole"
+          FROM "ToolReview" r
+          JOIN "User" u ON u.id = r."userId"
+          WHERE r."toolId" = ${tool.id} AND r.status = 'APPROVED'
+          ORDER BY r."helpfulCount" DESC, r."publishedAt" DESC
+        `,
+        sql`
+          SELECT id, text
+          FROM "ToolUseCase"
+          WHERE "toolId" = ${tool.id}
+          ORDER BY id
+        `,
+      ]);
+
+      return { ...tool, stories, fundingRounds, userReviews, useCases, category: tool.categoryName };
+    } catch (e) {
+      console.error('getAiToolBySlugDirect error:', e);
+      return null;
     }
-
-    // Cross-link: Fetch Approved Tool Reviews
-    const userReviews = await sql`
-      SELECT r.id, r.rating, r.title, r.body, r."publishedAt"::text AS "publishedAt", r."helpfulCount",
-             u.name AS "authorName", u.role AS "authorRole"
-      FROM "ToolReview" r
-      JOIN "User" u ON u.id = r."userId"
-      WHERE r."toolId" = ${tool.id} AND r.status = 'APPROVED'
-      ORDER BY r."helpfulCount" DESC, r."publishedAt" DESC
-    `;
-
-    // Fetch Tool Use Cases (features and use cases)
-    const useCases = await sql`
-      SELECT id, text
-      FROM "ToolUseCase"
-      WHERE "toolId" = ${tool.id}
-      ORDER BY id
-    `;
-
-    return { ...tool, stories, fundingRounds, userReviews, useCases, category: tool.categoryName };
-  } catch (e) {
-    console.error('getAiToolBySlugDirect error:', e);
-    return null;
-  }
+  });
 }
 
 export async function getSimilarToolsDirect(categoryId: string, excludeSlug: string, limit = 8) {
@@ -237,43 +234,47 @@ export async function getSimilarToolsDirect(categoryId: string, excludeSlug: str
 }
 
 export async function getFeaturedToolsDirect(limit = 4) {
-  try {
-    const rows: any[] = await sql`
-      SELECT t.id, t.name, t.slug, t.tagline, t.description, t."logoUrl", t."websiteUrl", t."avgRating", c.name AS "categoryName"
-      FROM "AiTool" t
-      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
-      WHERE t."listingTier" = 'FEATURED' AND t.status = 'APPROVED' AND t."deletedAt" IS NULL
-      ORDER BY t."updatedAt" DESC
-      LIMIT ${limit}
-    `;
-    return rows.map((t: any) => ({
-      ...t,
-      category: { name: t.categoryName }
-    }));
-  } catch (e) {
-    console.error('getFeaturedToolsDirect error:', e);
-    return [];
-  }
+  return cached(CK.FEATURED_TOOLS, { ttl: 300, staleTtl: 600 }, async () => {
+    try {
+      const rows: any[] = await sql`
+        SELECT t.id, t.name, t.slug, t.tagline, t.description, t."logoUrl", t."websiteUrl", t."avgRating", c.name AS "categoryName"
+        FROM "AiTool" t
+        LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+        WHERE t."listingTier" = 'FEATURED' AND t.status = 'APPROVED' AND t."deletedAt" IS NULL
+        ORDER BY t."updatedAt" DESC
+        LIMIT ${limit}
+      `;
+      return rows.map((t: any) => ({
+        ...t,
+        category: { name: t.categoryName }
+      }));
+    } catch (e) {
+      console.error('getFeaturedToolsDirect error:', e);
+      return [];
+    }
+  });
 }
 
 export async function getPriorityToolsDirect(limit = 6) {
-  try {
-    const rows: any[] = await sql`
-      SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", c.name AS "categoryName"
-      FROM "AiTool" t
-      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
-      WHERE t."listingTier" = 'PRIORITY' AND t.status = 'APPROVED' AND t."deletedAt" IS NULL
-      ORDER BY RANDOM()
-      LIMIT ${limit}
-    `;
-    return rows.map((t: any) => ({
-      ...t,
-      category: { name: t.categoryName }
-    }));
-  } catch (e) {
-    console.error('getPriorityToolsDirect error:', e);
-    return [];
-  }
+  return cached(CK.PRIORITY_TOOLS, { ttl: 300, staleTtl: 600 }, async () => {
+    try {
+      const rows: any[] = await sql`
+        SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", c.name AS "categoryName"
+        FROM "AiTool" t
+        LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+        WHERE t."listingTier" = 'PRIORITY' AND t.status = 'APPROVED' AND t."deletedAt" IS NULL
+        ORDER BY md5(t.id || (EXTRACT(EPOCH FROM NOW())::bigint / 300)::text)
+        LIMIT ${limit}
+      `;
+      return rows.map((t: any) => ({
+        ...t,
+        category: { name: t.categoryName }
+      }));
+    } catch (e) {
+      console.error('getPriorityToolsDirect error:', e);
+      return [];
+    }
+  });
 }
 
 export async function getToolCategoriesDirect() {
@@ -397,6 +398,7 @@ export async function getToolTagMappingsDirect() {
  * Used on tool detail pages.
  */
 export async function getToolTagsGroupedDirect(toolId: string) {
+  return cached(CK.toolTags(toolId), { ttl: 300, staleTtl: 600 }, async () => {
   try {
     const rows = await sql`
       SELECT t.id, t.name, t.slug, t.emoji, 
@@ -434,9 +436,11 @@ export async function getToolTagsGroupedDirect(toolId: string) {
     console.error('getToolTagsGroupedDirect error:', e);
     return [];
   }
+  });
 }
 
 export async function getDirectoryToolsDirect(categorySlug?: string) {
+  return cached(CK.toolDirectory(categorySlug || ''), { ttl: 60, staleTtl: 120 }, async () => {
   try {
     let rows: any[];
     if (categorySlug && categorySlug !== 'all') {
@@ -515,6 +519,7 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
     console.error('getDirectoryToolsDirect error:', e);
     return [];
   }
+  });
 }
 
 export async function getArticlesDirect(params: { type?: string; limit?: number; isFeatured?: boolean } = {}) {
@@ -610,23 +615,31 @@ export async function getArticlesDirect(params: { type?: string; limit?: number;
 }
 
 export async function getHeroArticleDirect() {
-  const rows = await getArticlesDirect({ isFeatured: true, limit: 1 });
-  if (rows.length) return rows[0];
-  const latest = await getArticlesDirect({ limit: 1 });
-  return latest.length ? latest[0] : null;
+  return cached(CK.HERO_ARTICLE, { ttl: 120, staleTtl: 300 }, async () => {
+    const rows = await getArticlesDirect({ isFeatured: true, limit: 1 });
+    if (rows.length) return rows[0];
+    const latest = await getArticlesDirect({ limit: 1 });
+    return latest.length ? latest[0] : null;
+  });
 }
 
 export async function getLatestStoriesDirect(limit = 3) {
-  return getArticlesDirect({ limit });
+  return cached(CK.LATEST_STORIES, { ttl: 60, staleTtl: 120 }, async () => {
+    return getArticlesDirect({ limit });
+  });
 }
 
 export async function getFounderSpotlightDirect(limit = 5) {
-  const rows = await getArticlesDirect({ type: 'STORY', limit });
-  return rows.length ? rows : null;
+  return cached(CK.FOUNDER_SPOTLIGHTS, { ttl: 120, staleTtl: 300 }, async () => {
+    const rows = await getArticlesDirect({ type: 'STORY', limit });
+    return rows.length ? rows : null;
+  });
 }
 
 export async function getIndiaAIEcosystemDirect(limit = 4) {
-  return getArticlesDirect({ limit });
+  return cached(CK.INDIA_AI_ECOSYSTEM, { ttl: 120, staleTtl: 300 }, async () => {
+    return getArticlesDirect({ limit });
+  });
 }
 
 // ── Ad Zones ──────────────────────────────────────────────────────────────────
@@ -644,7 +657,7 @@ export async function getActiveCreativeForZone(zone: string) {
         AND c.status = 'ACTIVE'
         AND c."startDate" <= NOW()
         AND c."endDate" >= NOW()
-      ORDER BY RANDOM()
+      ORDER BY md5(cr.id || (EXTRACT(EPOCH FROM NOW())::bigint / 300)::text)
       LIMIT 1
     `;
     return rows.length ? rows[0] : null;
@@ -671,70 +684,76 @@ export async function getActiveBreakingTickers() {
 }
 
 export async function getActiveLiveTickers() {
-  try {
-    const tickers = await sql`
-      SELECT text
-      FROM "LiveTicker"
-      WHERE "isActive" = true
-      ORDER BY "sortOrder" ASC, "createdAt" DESC
-    `;
-    return (tickers as any[]).map(t => t.text);
-  } catch (error) {
-    console.error('Error fetching live tickers:', error);
-    return [];
-  }
+  return cached(CK.LIVE_TICKERS, { ttl: 60, staleTtl: 120 }, async () => {
+    try {
+      const tickers = await sql`
+        SELECT text
+        FROM "LiveTicker"
+        WHERE "isActive" = true
+        ORDER BY "sortOrder" ASC, "createdAt" DESC
+      `;
+      return (tickers as any[]).map(t => t.text);
+    } catch (error) {
+      console.error('Error fetching live tickers:', error);
+      return [];
+    }
+  });
 }
 
 // ── Featured Startups ──────────────────────────────────────────────────────────────────
 
 export async function getFeaturedStartupDirect() {
-  try {
-    const startups = await sql`
-      SELECT id, name, tagline, description, "websiteUrl", "logoUrl", "statValue", "statLabel"
-      FROM "Startup" 
-      WHERE "isFeatured" = true AND "deletedAt" IS NULL
-      ORDER BY "createdAt" DESC
-    `;
-    if (!startups.length) return null;
-    return startups.map((s: any) => ({
-      name: s.name,
-      tagline: s.tagline,
-      description: s.description,
-      ctaUrl: s.websiteUrl || '#',
-      logoUrl: s.logoUrl,
-      statValue: s.statValue || null,
-      statLabel: s.statLabel || null,
-    }));
-  } catch (error) {
-    console.error('getFeaturedStartupDirect: Error fetching featured startups:', error);
-    return null;
-  }
+  return cached(CK.FEATURED_STARTUPS, { ttl: 300, staleTtl: 600 }, async () => {
+    try {
+      const startups = await sql`
+        SELECT id, name, tagline, description, "websiteUrl", "logoUrl", "statValue", "statLabel"
+        FROM "Startup"
+        WHERE "isFeatured" = true AND "deletedAt" IS NULL
+        ORDER BY "createdAt" DESC
+      `;
+      if (!startups.length) return null;
+      return startups.map((s: any) => ({
+        name: s.name,
+        tagline: s.tagline,
+        description: s.description,
+        ctaUrl: s.websiteUrl || '#',
+        logoUrl: s.logoUrl,
+        statValue: s.statValue || null,
+        statLabel: s.statLabel || null,
+      }));
+    } catch (error) {
+      console.error('getFeaturedStartupDirect: Error fetching featured startups:', error);
+      return null;
+    }
+  });
 }
 
 // ── Funding Digests ──────────────────────────────────────────────────────────────────
 
 export async function getFundingDigestsDirect(limit = 3) {
-  try {
-    const digests = await sql`
-      SELECT 
-        id, title, date, status, "dealsCount", "totalRaised", deals
-      FROM "FundingDigest"
-      WHERE status = 'PUBLISHED'
-      ORDER BY date DESC
-      LIMIT ${limit}
-    `;
-    return digests.map((digest: any) => ({
-      slug: `week-${digest.id.substring(0, 8)}`,
-      title: digest.title,
-      date: digest.date,
-      dealsCount: digest.dealsCount,
-      totalRaised: digest.totalRaised,
-      deals: typeof digest.deals === 'string' ? JSON.parse(digest.deals) : digest.deals || [],
-    }));
-  } catch (error) {
-    console.error('getFundingDigestsDirect error:', error);
-    return [];
-  }
+  return cached(CK.FUNDING_DIGESTS, { ttl: 120, staleTtl: 300 }, async () => {
+    try {
+      const digests = await sql`
+        SELECT
+          id, title, date, status, "dealsCount", "totalRaised", deals
+        FROM "FundingDigest"
+        WHERE status = 'PUBLISHED'
+        ORDER BY date DESC
+        LIMIT ${limit}
+      `;
+      return digests.map((digest: any) => ({
+        slug: `week-${digest.id.substring(0, 8)}`,
+        title: digest.title,
+        date: digest.date,
+        dealsCount: digest.dealsCount,
+        totalRaised: digest.totalRaised,
+        deals: typeof digest.deals === 'string' ? JSON.parse(digest.deals) : digest.deals || [],
+      }));
+    } catch (error) {
+      console.error('getFundingDigestsDirect error:', error);
+      return [];
+    }
+  });
 }
 
 export async function getAllFundingRoundsDirect() {
@@ -770,43 +789,47 @@ function formatRupeesFromPaise(paise: number): string {
 // ── Hero Slots ──────────────────────────────────────────────────────────────────
 
 export async function getActiveHeroSlotsDirect() {
-  try {
-    const rows: any[] = await sql`
-      SELECT id, title, excerpt, "coverImage", "ctaUrl", "ctaLabel",
-             "badgeText", "authorName", "readTimeMinutes",
-             "startDate"::text AS "startDate", "endDate"::text AS "endDate",
-             "sortOrder"
-      FROM "HeroSlot"
-      WHERE "isActive" = true
-        AND ("startDate" IS NULL OR "startDate" <= NOW())
-        AND ("endDate" IS NULL OR "endDate" >= NOW())
-      ORDER BY "sortOrder" ASC, "createdAt" DESC
-      LIMIT 5
-    `;
-    return rows;
-  } catch (e) {
-    console.error('getActiveHeroSlotsDirect error:', e);
-    return [];
-  }
+  return cached(CK.HERO_SLOTS, { ttl: 300, staleTtl: 600 }, async () => {
+    try {
+      const rows: any[] = await sql`
+        SELECT id, title, excerpt, "coverImage", "ctaUrl", "ctaLabel",
+               "badgeText", "authorName", "readTimeMinutes",
+               "startDate"::text AS "startDate", "endDate"::text AS "endDate",
+               "sortOrder"
+        FROM "HeroSlot"
+        WHERE "isActive" = true
+          AND ("startDate" IS NULL OR "startDate" <= NOW())
+          AND ("endDate" IS NULL OR "endDate" >= NOW())
+        ORDER BY "sortOrder" ASC, "createdAt" DESC
+        LIMIT 5
+      `;
+      return rows;
+    } catch (e) {
+      console.error('getActiveHeroSlotsDirect error:', e);
+      return [];
+    }
+  });
 }
 
 // ── Sponsors ──────────────────────────────────────────────────────────────────
 
 export async function getActiveSponsorsDirect() {
-  try {
-    const sponsors = await sql`
-      SELECT brand, tagline, "ctaUrl", "logoUrl"
-      FROM "Sponsor"
-      WHERE "isActive" = true
-        AND ("startDate" IS NULL OR "startDate" <= NOW())
-        AND ("endDate" IS NULL OR "endDate" >= NOW())
-      ORDER BY "sortOrder" ASC, "createdAt" DESC
-    `;
-    return sponsors.length > 0 ? sponsors : null;
-  } catch (error) {
-    console.error('Error fetching active sponsors:', error);
-    return null;
-  }
+  return cached(CK.ACTIVE_SPONSORS, { ttl: 300, staleTtl: 600 }, async () => {
+    try {
+      const sponsors = await sql`
+        SELECT brand, tagline, "ctaUrl", "logoUrl"
+        FROM "Sponsor"
+        WHERE "isActive" = true
+          AND ("startDate" IS NULL OR "startDate" <= NOW())
+          AND ("endDate" IS NULL OR "endDate" >= NOW())
+        ORDER BY "sortOrder" ASC, "createdAt" DESC
+      `;
+      return sponsors.length > 0 ? sponsors : null;
+    } catch (error) {
+      console.error('Error fetching active sponsors:', error);
+      return null;
+    }
+  });
 }
 
 export async function getActiveSponsorDirect() {
@@ -859,16 +882,18 @@ export const db = {
  * Get pros and cons for a tool (for detail page display).
  */
 export async function getToolProsConsDirect(toolId: string) {
-  try {
-    const [pros, cons] = await Promise.all([
-      sql`SELECT id, text FROM "ToolPro" WHERE "toolId" = ${toolId} ORDER BY id`,
-      sql`SELECT id, text FROM "ToolCon" WHERE "toolId" = ${toolId} ORDER BY id`,
-    ]);
-    return { pros, cons };
-  } catch (e) {
-    console.error('getToolProsConsDirect error:', e);
-    return { pros: [], cons: [] };
-  }
+  return cached(CK.toolProsCons(toolId), { ttl: 300, staleTtl: 600 }, async () => {
+    try {
+      const [pros, cons] = await Promise.all([
+        sql`SELECT id, text FROM "ToolPro" WHERE "toolId" = ${toolId} ORDER BY id`,
+        sql`SELECT id, text FROM "ToolCon" WHERE "toolId" = ${toolId} ORDER BY id`,
+      ]);
+      return { pros, cons };
+    } catch (e) {
+      console.error('getToolProsConsDirect error:', e);
+      return { pros: [], cons: [] };
+    }
+  });
 }
 
 
@@ -876,22 +901,24 @@ export async function getToolProsConsDirect(toolId: string) {
  * Get alternative tools for a tool (for detail page).
  */
 export async function getToolAlternativesDirect(toolId: string) {
-  try {
-    const rows = await sql`
-      SELECT t.id, t.name, t.slug, t."logoUrl", t.tagline, t."avgRating", t."pricingModel",
-             c.name AS "categoryName"
-      FROM "ToolAlternative" a
-      JOIN "AiTool" t ON t.id = a."alternativeId"
-      LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
-      WHERE a."toolId" = ${toolId} AND t."deletedAt" IS NULL AND t.status = 'APPROVED'
-      ORDER BY t."avgRating" DESC
-      LIMIT 10
-    `;
-    return rows;
-  } catch (e) {
-    console.error('getToolAlternativesDirect error:', e);
-    return [];
-  }
+  return cached(CK.toolAlternatives(toolId), { ttl: 300, staleTtl: 600 }, async () => {
+    try {
+      const rows = await sql`
+        SELECT t.id, t.name, t.slug, t."logoUrl", t.tagline, t."avgRating", t."pricingModel",
+               c.name AS "categoryName"
+        FROM "ToolAlternative" a
+        JOIN "AiTool" t ON t.id = a."alternativeId"
+        LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
+        WHERE a."toolId" = ${toolId} AND t."deletedAt" IS NULL AND t.status = 'APPROVED'
+        ORDER BY t."avgRating" DESC
+        LIMIT 10
+      `;
+      return rows;
+    } catch (e) {
+      console.error('getToolAlternativesDirect error:', e);
+      return [];
+    }
+  });
 }
 
 
@@ -900,23 +927,25 @@ export async function getToolAlternativesDirect(toolId: string) {
  * Returns a map: { reviewId -> { body, founderName, createdAt } }
  */
 export async function getReviewResponsesDirect(toolId: string) {
-  try {
-    const rows = await sql`
-      SELECT rr."reviewId", rr.body, rr."createdAt", fu.name AS "founderName"
-      FROM "ToolReviewResponse" rr
-      JOIN "FounderUser" fu ON fu.id = rr."founderId"
-      JOIN "ToolReview" tr ON tr.id = rr."reviewId"
-      WHERE tr."toolId" = ${toolId}
-    `;
-    const map: Record<string, any> = {};
-    for (const r of rows) {
-      map[(r as any).reviewId] = { body: (r as any).body, founderName: (r as any).founderName, createdAt: (r as any).createdAt };
+  return cached(CK.toolReviewResponses(toolId), { ttl: 120, staleTtl: 300 }, async () => {
+    try {
+      const rows = await sql`
+        SELECT rr."reviewId", rr.body, rr."createdAt", fu.name AS "founderName"
+        FROM "ToolReviewResponse" rr
+        JOIN "FounderUser" fu ON fu.id = rr."founderId"
+        JOIN "ToolReview" tr ON tr.id = rr."reviewId"
+        WHERE tr."toolId" = ${toolId}
+      `;
+      const map: Record<string, any> = {};
+      for (const r of rows) {
+        map[(r as any).reviewId] = { body: (r as any).body, founderName: (r as any).founderName, createdAt: (r as any).createdAt };
+      }
+      return map;
+    } catch (e) {
+      console.error('getReviewResponsesDirect error:', e);
+      return {};
     }
-    return map;
-  } catch (e) {
-    console.error('getReviewResponsesDirect error:', e);
-    return {};
-  }
+  });
 }
 
 

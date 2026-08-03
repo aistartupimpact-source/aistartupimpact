@@ -199,9 +199,27 @@ export const CK = {
 
   // Homepage
   HOMEPAGE_STATS: 'homepage:stats',
+  HERO_ARTICLE: 'homepage:hero',
+  LATEST_STORIES: 'homepage:latest-stories',
+  FOUNDER_SPOTLIGHTS: 'homepage:founder-spotlights',
+  FUNDING_DIGESTS: 'homepage:funding-digests',
+  INDIA_AI_ECOSYSTEM: 'homepage:india-ai',
+  LIVE_TICKERS: 'homepage:live-tickers',
+  ACTIVE_SPONSORS: 'homepage:sponsors',
+  HERO_SLOTS: 'homepage:hero-slots',
+  PRIORITY_TOOLS: 'homepage:priority-tools',
 
   // Search
   SEARCH_SUGGESTIONS: 'search:suggestions',
+
+  // Detail pages (parameterized)
+  tool: (slug: string) => `tool:detail:${slug}`,
+  toolSimilar: (catId: string, slug: string) => `tool:similar:${catId}:${slug}`,
+  toolTags: (toolId: string) => `tool:tags:${toolId}`,
+  toolProsCons: (toolId: string) => `tool:proscons:${toolId}`,
+  toolAlternatives: (toolId: string) => `tool:alts:${toolId}`,
+  toolReviewResponses: (toolId: string) => `tool:responses:${toolId}`,
+  toolDirectory: (catSlug: string) => `tool:directory:${catSlug || 'all'}`,
 
   // Parameterized (functions)
   toolsPage: (hash: string, page: number) => `tools:${hash}:p${page}`,
