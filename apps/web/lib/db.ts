@@ -446,7 +446,7 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
     if (categorySlug && categorySlug !== 'all') {
       // Check if slug is a parent category or subcategory
       rows = await sql`
-        SELECT t.id, t.name, t.slug, t.tagline, t.description, t."pricingModel", t."logoUrl", t."avgRating", 
+        SELECT t.id, t.name, t.slug, t.tagline, LEFT(t.description, 130) AS description, t."pricingModel", t."logoUrl", t."avgRating",
                t."hasApi", t."hasMobileApp", t."freeTrialDays", t."upvoteCount", t."launchYear", t."headquartersCountry", t."founderNames",
                c.name AS "categoryName", c.slug AS "categorySlug",
                pc.name AS "parentCategoryName", pc.slug AS "parentCategorySlug",
@@ -462,7 +462,7 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
             c.slug = ${categorySlug}
             OR c."parentId" IN (SELECT id FROM "ToolCategory" WHERE slug = ${categorySlug})
           )
-        ORDER BY 
+        ORDER BY
           CASE WHEN tfc.tier = 'FEATURED' THEN 1
                WHEN tfc.tier = 'PRIORITY' THEN 2
                WHEN t."listingTier" = 'FEATURED' THEN 1
@@ -472,7 +472,7 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
       `;
     } else {
       rows = await sql`
-        SELECT t.id, t.name, t.slug, t.tagline, t.description, t."pricingModel", t."logoUrl", t."avgRating",
+        SELECT t.id, t.name, t.slug, t.tagline, LEFT(t.description, 130) AS description, t."pricingModel", t."logoUrl", t."avgRating",
                t."hasApi", t."hasMobileApp", t."freeTrialDays", t."upvoteCount", t."launchYear", t."headquartersCountry", t."founderNames",
                c.name AS "categoryName", c.slug AS "categorySlug",
                pc.name AS "parentCategoryName", pc.slug AS "parentCategorySlug",
@@ -484,7 +484,7 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
           AND tfc."cancelledAt" IS NULL
           AND tfc."startDate" <= NOW() AND tfc."endDate" >= NOW()
         WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
-        ORDER BY 
+        ORDER BY
           CASE WHEN tfc.tier = 'FEATURED' THEN 1
                WHEN tfc.tier = 'PRIORITY' THEN 2
                WHEN t."listingTier" = 'FEATURED' THEN 1
@@ -506,7 +506,7 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
       parentCategorySlug: t.parentCategorySlug || null,
       rating: parseFloat(t.avgRating || '4.0'),
       pricing: t.pricingModel || 'Free',
-      verdict: t.description ? t.description.substring(0, 120) + '...' : 'An excellent AI tool optimized for productivity.',
+      verdict: t.description || 'An excellent AI tool optimized for productivity.',
       hasApi: t.hasApi || false,
       hasMobileApp: t.hasMobileApp || false,
       freeTrialDays: t.freeTrialDays || null,
