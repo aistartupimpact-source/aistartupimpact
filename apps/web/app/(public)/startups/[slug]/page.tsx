@@ -24,13 +24,17 @@ import SubscribeForm from '@/components/SubscribeForm';
 export const revalidate = 300;
 
 export async function generateStaticParams() {
-  const rows = await sql`
-    SELECT slug FROM "Startup"
-    WHERE "isApproved" = true AND "deletedAt" IS NULL
-    ORDER BY "impactScore" DESC NULLS LAST
-    LIMIT 200
-  `;
-  return rows.map((r: any) => ({ slug: r.slug }));
+  try {
+    const rows = await sql`
+      SELECT slug FROM "Startup"
+      WHERE "isApproved" = true AND "deletedAt" IS NULL
+      ORDER BY "impactScore" DESC NULLS LAST
+      LIMIT 200
+    `;
+    return rows.map((r: any) => ({ slug: r.slug }));
+  } catch {
+    return [];
+  }
 }
 
 const getStartup = cache(async (slug: string) => {
