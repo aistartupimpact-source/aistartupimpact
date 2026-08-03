@@ -1,7 +1,9 @@
 import Link from 'next/link';
+import { cache } from 'react';
 import { Metadata } from 'next';
 import { Star, ExternalLink, ChevronRight, Check, X as XIcon, ThumbsUp, ThumbsDown, IndianRupee, ArrowRight, Sparkles, Globe, Cpu, Smartphone } from 'lucide-react';
 import { generateToolSchema } from '@/lib/seo';
+import { sql } from '@/lib/db';
 import EmbedBadge from '@/components/EmbedBadge';
 import WriteReviewClient from '@/components/WriteReviewClient';
 import ReviewHelpfulButton from '@/components/ReviewHelpfulButton';
@@ -19,8 +21,10 @@ import SimilarToolsCarousel from '@/components/tools/SimilarToolsCarousel';
 
 export const revalidate = 60;
 
+const getToolCached = cache((slug: string) => getAiToolBySlugDirect(slug));
+
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const tool = await getAiToolBySlugDirect(params.slug) as any;
+  const tool = await getToolCached(params.slug) as any;
   if (!tool) return { title: 'Tool Not Found' };
   
   const title = `${tool.name} - ${tool.tagline} | AI Startup Impact`;
@@ -99,25 +103,40 @@ function getEmbedUrl(url: string): string {
 }
 
 export default async function ToolDetailPage({ params }: { params: { slug: string } }) {
-  const tool = await getAiToolBySlugDirect(params.slug) as any;
-  if (!tool) notFound();
+  const tool = await getToolCached(params.slug) as any;
+
+  if (!tool) {
+    try {
+      const redirectCheck = await sql`
+        SELECT slug FROM "AiTool"
+        WHERE ${params.slug} = ANY("previousSlugs") AND "deletedAt" IS NULL
+        LIMIT 1
+      `;
+      if (redirectCheck.length > 0) {
+        const { redirect } = await import('next/navigation');
+        redirect(`/tools/${(redirectCheck[0] as any).slug}`);
+      }
+    } catch (e: any) {
+      if (e?.digest?.startsWith('NEXT_REDIRECT')) throw e;
+    }
+    notFound();
+  }
 
   const stories = tool.stories || [];
   const fundingRounds = tool.fundingRounds || [];
   const userReviews = tool.userReviews || [];
 
-  // Fetch similar tools in same category (parallel with page render)
-  const [similarTools, toolTags, prosConsData] = await Promise.all([
+  // Fetch all supplementary data in parallel
+  const [similarTools, toolTags, prosConsData, toolAlternatives, reviewResponses] = await Promise.all([
     tool.categoryId ? getSimilarToolsDirect(tool.categoryId, tool.slug, 8) : Promise.resolve([]),
     getToolTagsGroupedDirect(tool.id),
     getToolProsConsDirect(tool.id),
+    getToolAlternativesDirect(tool.id),
+    getReviewResponsesDirect(tool.id),
   ]);
-  
+
   const toolPros = (prosConsData.pros as any[]) || [];
   const toolCons = (prosConsData.cons as any[]) || [];
-
-  const toolAlternatives = await getToolAlternativesDirect(tool.id);
-  const reviewResponses = await getReviewResponsesDirect(tool.id);
   
   // Generate FAQs with tool-specific data
   const faqs = generateToolFAQs(tool);
