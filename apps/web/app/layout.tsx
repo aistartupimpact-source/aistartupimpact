@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { Sora, Plus_Jakarta_Sans } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import ThemeProvider from '@/components/ThemeProvider';
 import NavigationProgress from '@/components/NavigationProgress';
 import AnalyticsTracker from '@/components/Analytics';
@@ -123,6 +124,7 @@ export default function RootLayout({
           <ClearConsentButton />
         </ThemeProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
