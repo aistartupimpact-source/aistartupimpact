@@ -21,7 +21,21 @@ import ShareButton from '@/components/ShareButton';
 import ReportButton from '@/components/ReportButton';
 import SubscribeForm from '@/components/SubscribeForm';
 
-export const revalidate = 120;
+export const revalidate = 300;
+
+export async function generateStaticParams() {
+  try {
+    const rows = await sql`
+      SELECT slug FROM "Startup"
+      WHERE "isApproved" = true AND "deletedAt" IS NULL
+      ORDER BY "impactScore" DESC NULLS LAST
+      LIMIT 200
+    `;
+    return rows.map((r: any) => ({ slug: r.slug }));
+  } catch {
+    return [];
+  }
+}
 
 const getStartup = cache(async (slug: string) => {
   try {
@@ -63,7 +77,6 @@ const getStartup = cache(async (slug: string) => {
     if (!rows.length) return null;
     const s = rows[0] as any;
 
-    const namePattern = `%${s.name}%`;
     const category = s.category || '';
     const city = s.headquartersCity || '';
 
@@ -81,7 +94,7 @@ const getStartup = cache(async (slug: string) => {
         SELECT title, slug, "publishedAt"::text AS "publishedAt"
         FROM "Article"
         WHERE status = 'PUBLISHED' AND "deletedAt" IS NULL
-          AND title ILIKE ${namePattern}
+          AND "startupId" = ${s.id}
         ORDER BY "publishedAt" DESC
         LIMIT 4
       `,
@@ -90,7 +103,7 @@ const getStartup = cache(async (slug: string) => {
         FROM "Article"
         WHERE status = 'PUBLISHED' AND "deletedAt" IS NULL
           AND type = 'STORY'
-          AND ("startupId" = ${s.id} OR title ILIKE ${namePattern})
+          AND "startupId" = ${s.id}
         ORDER BY "publishedAt" DESC
         LIMIT 3
       `,

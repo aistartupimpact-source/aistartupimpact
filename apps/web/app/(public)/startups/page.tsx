@@ -1,9 +1,11 @@
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { Metadata } from 'next';
 import { sql } from '@/lib/db';
 import { Suspense } from 'react';
-import StartupSearch from '@/components/StartupSearch';
 import FounderActionButton from '@/components/auth/FounderActionButton';
+
+const StartupSearch = dynamic(() => import('@/components/StartupSearch'));
 
 export const revalidate = 60;
 

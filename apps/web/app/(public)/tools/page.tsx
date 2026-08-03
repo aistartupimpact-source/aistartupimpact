@@ -1,9 +1,11 @@
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { Metadata } from 'next';
 import { generateItemListSchema, generateCollectionPageSchema, generateBreadcrumbSchema } from '@/lib/seo';
-import ToolsListWithComparison from '@/components/ToolsListWithComparison';
 import FounderActionButton from '@/components/auth/FounderActionButton';
-import DiscoverySections from '@/components/tools/DiscoverySections';
+
+const ToolsListWithComparison = dynamic(() => import('@/components/ToolsListWithComparison'));
+const DiscoverySections = dynamic(() => import('@/components/tools/DiscoverySections'));
 
 export const revalidate = 60;
 

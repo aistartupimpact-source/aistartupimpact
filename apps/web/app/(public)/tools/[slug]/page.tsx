@@ -19,7 +19,22 @@ import FAQSection from '@/components/FAQSection';
 import SimilarTools from '@/components/tools/SimilarTools';
 import SimilarToolsCarousel from '@/components/tools/SimilarToolsCarousel';
 
-export const revalidate = 60;
+export const revalidate = 300;
+
+export async function generateStaticParams() {
+  try {
+    const { sql } = await import('@/lib/db');
+    const rows = await sql`
+      SELECT slug FROM "AiTool"
+      WHERE status = 'APPROVED' AND "deletedAt" IS NULL
+      ORDER BY "upvoteCount" DESC NULLS LAST
+      LIMIT 200
+    `;
+    return rows.map((r: any) => ({ slug: r.slug }));
+  } catch {
+    return [];
+  }
+}
 
 const getToolCached = cache((slug: string) => getAiToolBySlugDirect(slug));
 
