@@ -30,7 +30,7 @@ const nextConfig = {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https:",
-      "connect-src 'self' https://aistartupimpact.com https://www.google-analytics.com https://ep-restless-shadow-a1jxwm0a.ap-southeast-1.aws.neon.tech",
+      "connect-src 'self' https://aistartupimpact.com https://www.google-analytics.com https://vitals.vercel-insights.com https://ep-restless-shadow-a1jxwm0a.ap-southeast-1.aws.neon.tech",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
