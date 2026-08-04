@@ -3,6 +3,8 @@ import { neon } from '@neondatabase/serverless';
 import { getFounderSession } from '@/lib/founder-auth';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const sql = neon(process.env.DATABASE_URL!);
 
 const updateProfileSchema = z.object({

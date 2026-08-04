@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { clearEmployerSession } from '@/lib/employer-auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST() {
   try {
     await clearEmployerSession();

@@ -5,6 +5,8 @@ import { randomBytes } from 'crypto';
 import { authRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { signupSchema, validateInput } from '@/lib/validation';
 
+export const dynamic = 'force-dynamic';
+
 const sql = neon(process.env.DATABASE_URL!);
 
 function generateId(): string {

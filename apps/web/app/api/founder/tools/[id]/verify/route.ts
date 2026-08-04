@@ -3,6 +3,8 @@ import { requireFounderAuth } from '@/lib/founder-auth';
 import { prisma } from '@aistartupimpact/database';
 import { verifyDNS } from '@aistartupimpact/utils';
 
+export const dynamic = 'force-dynamic';
+
 function generateToken(): string {
   return 'aisitool_' + Math.random().toString(36).substring(2, 12);
 }

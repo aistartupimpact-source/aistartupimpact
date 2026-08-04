@@ -3,6 +3,8 @@ import { neon } from '@neondatabase/serverless';
 import { setFounderSession } from '@/lib/founder-auth';
 import { verifyTOTPToken, decryptSecret, verifyBackupCode } from '@/lib/two-factor';
 
+export const dynamic = 'force-dynamic';
+
 const sql = neon(process.env.DATABASE_URL!);
 
 /**

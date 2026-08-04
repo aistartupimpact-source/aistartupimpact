@@ -4,6 +4,8 @@ import { verifyPassword, setFounderSession } from '@/lib/founder-auth';
 import { authRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { loginSchema, validateInput } from '@/lib/validation';
 
+export const dynamic = 'force-dynamic';
+
 const sql = neon(process.env.DATABASE_URL!);
 
 export async function POST(request: NextRequest) {
