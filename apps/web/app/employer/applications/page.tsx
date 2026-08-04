@@ -1,10 +1,7 @@
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import { getEmployerSession } from '@/lib/employer-auth';
 import { redirect } from 'next/navigation';
 import { Users } from 'lucide-react';
-
-const sql = neon(process.env.DATABASE_URL!);
-
 export default async function EmployerApplicationsPage() {
   const session = await getEmployerSession();
   if (!session) redirect('/employer/login');

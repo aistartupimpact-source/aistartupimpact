@@ -1,11 +1,8 @@
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { MapPin, DollarSign, Clock, Building2, Globe, Linkedin, ExternalLink, Briefcase, Users, CheckCircle2 } from 'lucide-react';
-
-const sql = neon(process.env.DATABASE_URL!);
-
 interface PageProps {
   params: { slug: string };
 }

@@ -3,10 +3,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Star, ChevronRight } from 'lucide-react';
 import { getDirectoryToolsDirect } from '@/lib/db';
-import { neon } from '@neondatabase/serverless';
-
-const sql = neon(process.env.DATABASE_URL!);
-
+import { sql } from '@/lib/db';
 export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
