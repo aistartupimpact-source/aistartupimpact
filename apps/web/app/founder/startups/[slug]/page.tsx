@@ -2,10 +2,8 @@ import { requireFounderAuth } from '@/lib/founder-auth';
 import { prisma } from '@aistartupimpact/database';
 import { notFound, redirect } from 'next/navigation';
 import StartupEditForm from '@/components/founder/StartupEditForm';
-import { neon } from '@neondatabase/serverless';
-
-const sql = neon(process.env.DATABASE_URL!);
-
+import SlugEditor from '@/components/shared/SlugEditor';
+import { sql } from '@/lib/db';
 interface PageProps {
   params: {
     slug: string;
@@ -23,7 +21,8 @@ export default async function EditStartupPage({ params }: PageProps) {
         id, name, slug, tagline, description, "websiteUrl", "logoUrl",
         stage, "totalFundingInr", "foundedYear",
         "linkedinUrl", "twitterUrl", "claimStatus",
-        "headquartersCity", "employeeCount", founders, "foundersData", "ownerId", category, "businessType"
+        "headquartersCity", "employeeCount", founders, "foundersData", "ownerId", category, "businessType",
+        "slugChangedAt"::text AS "slugChangedAt"
       FROM "Startup"
       WHERE slug = ${params.slug}
       LIMIT 1
@@ -116,6 +115,19 @@ export default async function EditStartupPage({ params }: PageProps) {
         existingFaqs={faqs}
         existingFundingRounds={fundingRounds}
       />
+
+      {/* Profile URL Editor — LinkedIn-style, 45-day cooldown */}
+      <div className="card p-5 sm:p-6">
+        <h2 className="font-sora font-bold text-sm text-navy dark:text-white mb-4">Profile URL</h2>
+        <SlugEditor
+          currentSlug={startup.slug}
+          slugChangedAt={startup.slugChangedAt}
+          entityType="startup"
+          entityId={startup.id}
+          baseUrl="https://aistartupimpact.com/startups"
+          isAdmin={false}
+        />
+      </div>
     </div>
   );
 }

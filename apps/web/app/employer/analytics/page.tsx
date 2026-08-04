@@ -1,10 +1,7 @@
 import { getEmployerSession } from '@/lib/employer-auth';
 import { redirect } from 'next/navigation';
 import { BarChart3, Eye, Users, Briefcase, BookmarkCheck, MousePointerClick, TrendingUp } from 'lucide-react';
-import { neon } from '@neondatabase/serverless';
-
-const sql = neon(process.env.DATABASE_URL!);
-
+import { sql } from '@/lib/db';
 export default async function EmployerAnalyticsPage() {
   const session = await getEmployerSession();
   if (!session) redirect('/employer/login');

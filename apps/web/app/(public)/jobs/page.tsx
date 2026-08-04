@@ -1,4 +1,4 @@
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Briefcase, MapPin, DollarSign, Clock, Building2 } from 'lucide-react';
@@ -9,9 +9,6 @@ export const metadata: Metadata = {
   description: 'Browse 100+ AI jobs — ML Engineer, LLM Engineer, AI Product Manager, Data Scientist, and more. Remote, hybrid, and on-site roles at top AI companies.',
   alternates: { canonical: '/jobs' },
 };
-
-const sql = neon(process.env.DATABASE_URL!);
-
 interface PageProps {
   searchParams: {
     category?: string;
