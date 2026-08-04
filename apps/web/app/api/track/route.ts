@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
-
-const sql = neon(process.env.DATABASE_URL!);
-
 /**
  * POST /api/track
  * Track views and clicks for tools and startups

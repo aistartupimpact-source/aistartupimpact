@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserSession } from '@/lib/user-session';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
-
-const sql = neon(process.env.DATABASE_URL!);
-
 // GET - Get all saved tools for current user
 export async function GET(request: NextRequest) {
   try {

@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import { getFounderSession } from '@/lib/founder-auth';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
-
-const sql = neon(process.env.DATABASE_URL!);
-
 const updateProfileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100),
   company: z.string().max(100).optional(),
