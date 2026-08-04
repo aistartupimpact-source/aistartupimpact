@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
 import { neon } from '@neondatabase/serverless';
 
+export const dynamic = 'force-dynamic';
+
 const sql = neon(process.env.DATABASE_URL!);
 
 const JWT_SECRET = new TextEncoder().encode(

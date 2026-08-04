@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@aistartupimpact/database";
 
+export const dynamic = 'force-dynamic';
+
 // 1x1 transparent tracking pixel
 const PIXEL = Buffer.from(
   "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",

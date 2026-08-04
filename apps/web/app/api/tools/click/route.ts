@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@aistartupimpact/database';
 import { createHash } from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 function hashValue(value: string): string {
   return createHash('sha256').update(value).digest('hex').substring(0, 16);
 }

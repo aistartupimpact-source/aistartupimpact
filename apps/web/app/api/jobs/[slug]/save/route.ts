@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 import { jwtVerify } from 'jose';
 
+export const dynamic = 'force-dynamic';
+
 const sql = neon(process.env.DATABASE_URL!);
 const JWT_SECRET = new TextEncoder().encode(
   process.env.USER_JWT_SECRET || 'user-secret-change-in-production'

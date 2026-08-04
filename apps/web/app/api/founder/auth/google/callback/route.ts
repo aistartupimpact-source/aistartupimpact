@@ -3,6 +3,8 @@ import { neon } from '@neondatabase/serverless';
 import { verifyGoogleToken, isCompanyEmail, extractCompanyDomain, getCompanyNameFromDomain } from '@/lib/google-oauth';
 import { setFounderSession } from '@/lib/founder-auth';
 
+export const dynamic = 'force-dynamic';
+
 const sql = neon(process.env.DATABASE_URL!);
 
 export async function GET(request: NextRequest) {
