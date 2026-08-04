@@ -5,7 +5,7 @@ import { getFounderSession } from '@/lib/founder-auth';
 import { getUnifiedSession } from '@/lib/unified-auth';
 import FounderNav from '@/components/founder/FounderNav';
 import FounderSidebar from '@/components/founder/FounderSidebar';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import DNSVerificationModal from '@/components/founder/DNSVerificationModal';
 
 const USER_JWT_SECRET = new TextEncoder().encode(
@@ -18,7 +18,6 @@ export default async function FounderLayout({
   children: React.ReactNode;
 }) {
   let session: any = null;
-  const sql = neon(process.env.DATABASE_URL!);
 
   // Try unified session first (user has founderId linked)
   const unifiedSession = await getUnifiedSession();
