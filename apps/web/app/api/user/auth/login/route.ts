@@ -6,6 +6,8 @@ import { randomBytes } from 'crypto';
 import { authRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { loginSchema, validateInput } from '@/lib/validation';
 
+export const dynamic = 'force-dynamic';
+
 const sql = neon(process.env.DATABASE_URL!);
 
 const JWT_SECRET = new TextEncoder().encode(

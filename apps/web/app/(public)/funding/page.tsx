@@ -1,12 +1,14 @@
 export const revalidate = 120;
 
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { Metadata } from 'next';
 import { IndianRupee, TrendingUp, Calendar, ArrowRight, Clock, Building2, Megaphone } from 'lucide-react';
 import { FundingDashboardSchema } from '@/components/seo';
 
 import { getAllFundingRoundsDirect } from '@/lib/db';
-import FundingDashboard from './FundingDashboard';
+
+const FundingDashboard = dynamic(() => import('./FundingDashboard'));
 
 export const metadata: Metadata = {
   title: 'Funding Dashboard — AI Startups Funding Rounds Tracker',

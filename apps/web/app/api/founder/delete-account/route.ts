@@ -3,6 +3,8 @@ import { prisma } from '@aistartupimpact/database';
 import { requireFounderAuth } from '@/lib/founder-auth';
 import { clearFounderSession } from '@/lib/founder-auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function DELETE(request: NextRequest) {
   try {
     const session = await requireFounderAuth();

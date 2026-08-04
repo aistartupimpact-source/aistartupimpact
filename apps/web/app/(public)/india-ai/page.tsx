@@ -1,8 +1,9 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { 
-  Flag, 
-  MapPin, 
+import dynamic from 'next/dynamic';
+import {
+  Flag,
+  MapPin,
   Rocket,
   Trophy,
   IndianRupee,
@@ -15,16 +16,15 @@ import {
   FileText,
   Newspaper
 } from 'lucide-react';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import IndiaAIHero from '@/components/india-ai/IndiaAIHero';
 import FundingTracker from '@/components/india-ai/FundingTracker';
 import NewsletterCapture from '@/components/india-ai/NewsletterCapture';
-import RealIndiaMap from '@/components/india-ai/RealIndiaMap';
 import GovernmentSchemesHardcoded from '@/components/india-ai/GovernmentSchemesHardcoded';
 import PolicyLiveFeedHardcoded from '@/components/india-ai/PolicyLiveFeedHardcoded';
 
-// Force dynamic rendering for this page
-export const dynamic = 'force-dynamic';
+const RealIndiaMap = dynamic(() => import('@/components/india-ai/RealIndiaMap'), { ssr: false });
+
 export const revalidate = 300;
 
 // SEO Metadata with target keywords
@@ -72,8 +72,6 @@ export const metadata: Metadata = {
 
 // Fetch all data server-side
 async function getIndiaAIData() {
-  const sql = neon(process.env.DATABASE_URL!);
-
   const [computedStartupCount, thisMonthStartups, totalFundingResult, thisMonthFundingResult, manualStats, cities, mission, researchHubs, recentFunding, allStartups] = await Promise.all([
     // Live computed: total startups
     sql`

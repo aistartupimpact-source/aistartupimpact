@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { trackPageView } from '@/lib/analytics';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * POST /api/track/pageview
  * Track page views for analytics

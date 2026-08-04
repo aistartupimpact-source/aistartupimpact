@@ -3,6 +3,8 @@ import { neon } from '@neondatabase/serverless';
 import bcrypt from 'bcryptjs';
 import { setEmployerSession } from '@/lib/employer-auth';
 
+export const dynamic = 'force-dynamic';
+
 const sql = neon(process.env.DATABASE_URL!);
 
 const MAX_FAILED_ATTEMPTS = 5;

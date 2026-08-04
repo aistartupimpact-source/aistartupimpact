@@ -3,6 +3,8 @@ import { prisma } from '@aistartupimpact/database';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 function generateId(): string {
   return randomBytes(16).toString('hex');
 }

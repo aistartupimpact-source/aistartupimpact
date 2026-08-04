@@ -3,6 +3,8 @@ import { neon } from '@neondatabase/serverless';
 import { SignJWT } from 'jose';
 import { randomBytes } from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 const sql = neon(process.env.DATABASE_URL!);
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;

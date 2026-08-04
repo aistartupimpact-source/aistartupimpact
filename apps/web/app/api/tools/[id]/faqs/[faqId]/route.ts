@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 // PUT /api/tools/[id]/faqs/[faqId] - Update an FAQ
 export async function PUT(
   request: NextRequest,

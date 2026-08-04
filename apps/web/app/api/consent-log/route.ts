@@ -4,6 +4,8 @@ import { createHash } from 'crypto';
 import { sql } from '@/lib/db';
 import { ConsentLogPayload } from '@/types/consent';
 
+export const dynamic = 'force-dynamic';
+
 const IP_HASH_SALT = process.env.IP_HASH_SALT || 'default-salt-change-in-production';
 
 function hashIp(ip: string): string {
