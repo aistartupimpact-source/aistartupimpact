@@ -14,11 +14,10 @@ import {
   Briefcase,
   ArrowRight
 } from 'lucide-react';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 
 // Fetch all data server-side
 async function getIndiaAIData() {
-  const sql = neon(process.env.DATABASE_URL!);
 
   const [stats, cities, mission, researchHubs] = await Promise.all([
     sql`

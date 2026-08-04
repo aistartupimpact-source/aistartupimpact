@@ -9,7 +9,7 @@
  * Manual stats (AI Engineers, Global Rank) are preserved as-is.
  */
 
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 
 interface ComputedStat {
   metricKey: string;
@@ -70,7 +70,6 @@ function formatCompactNumber(num: number): string {
 }
 
 export async function computeEcosystemStats(): Promise<ComputedStat[]> {
-  const sql = neon(process.env.DATABASE_URL!);
 
   const [
     totalStartupsResult,
@@ -171,7 +170,6 @@ export async function computeEcosystemStats(): Promise<ComputedStat[]> {
  * Call this from a cron endpoint or admin trigger.
  */
 export async function refreshStatsInDatabase(): Promise<void> {
-  const sql = neon(process.env.DATABASE_URL!);
   const stats = await computeEcosystemStats();
 
   for (const stat of stats) {

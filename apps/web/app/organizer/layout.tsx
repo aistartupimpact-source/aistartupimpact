@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
-import { neon } from "@neondatabase/serverless";
+import { sql } from '@/lib/db';
 import { getOrganizerSession } from "@/lib/organizer-auth";
 import { getUnifiedSession } from "@/lib/unified-auth";
 import OrganizerSidebar from "@/components/organizer/OrganizerSidebar";
@@ -44,7 +44,6 @@ export default async function OrganizerWorkspaceLayout({
         const { payload } = await jwtVerify(userToken, USER_JWT_SECRET);
         const email = (payload as any).email;
         if (email) {
-          const sql = neon(process.env.DATABASE_URL!);
           const organizers = await sql`
             SELECT id, email, name, avatar FROM "EventOrganizer"
             WHERE email = ${email.toLowerCase()} AND status != 'SUSPENDED'

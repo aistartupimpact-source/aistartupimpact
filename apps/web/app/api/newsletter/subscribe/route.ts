@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import { apiRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { newsletterSchema, validateInput } from '@/lib/validation';
 
@@ -46,9 +46,6 @@ export async function POST(request: Request) {
 
     const { email, source, name } = validation.data;
     const tags = body.tags; // Optional field
-
-    const sql = neon(process.env.DATABASE_URL!);
-
     // Check if email already exists
     const existing = await sql`
       SELECT id, "isActive" FROM "NewsletterSubscriber"

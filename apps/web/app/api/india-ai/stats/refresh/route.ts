@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,9 +29,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
     }
-
-    const sql = neon(process.env.DATABASE_URL!);
-
     // Compute real stats
     const [
       totalStartupsResult,

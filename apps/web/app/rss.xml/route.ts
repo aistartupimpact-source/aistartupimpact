@@ -1,10 +1,9 @@
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 
 export const revalidate = 3600;
 
 export async function GET() {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
     const articles: any[] = await sql`
       SELECT title, slug, excerpt, type, "publishedAt"
       FROM "Article"

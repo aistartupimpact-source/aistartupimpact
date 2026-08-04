@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 
 export const runtime = 'edge';
 export const revalidate = 3600; // Revalidate every hour
@@ -9,7 +9,6 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const spotlight = searchParams.get('spotlight') === 'true';
     
-    const sql = neon(process.env.DATABASE_URL!);
     
     let researchers;
     if (spotlight) {
