@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import { generateToken } from '@/lib/founder-auth';
 import { sendVerificationEmail } from '@/lib/founder-email';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
-
-const sql = neon(process.env.DATABASE_URL!);
-
 const resendSchema = z.object({
   email: z.string().email('Invalid email address'),
 });

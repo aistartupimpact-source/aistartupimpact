@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 import { authRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { signupSchema, validateInput } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
-
-const sql = neon(process.env.DATABASE_URL!);
-
 function generateId(): string {
   return randomBytes(16).toString('hex');
 }

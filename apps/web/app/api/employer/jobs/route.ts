@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import { getEmployerSession } from '@/lib/employer-auth';
 
 export const dynamic = 'force-dynamic';
-
-const sql = neon(process.env.DATABASE_URL!);
-
 // GET: List employer's own jobs
 export async function GET() {
   try {
