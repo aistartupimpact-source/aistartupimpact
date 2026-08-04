@@ -7,9 +7,10 @@ let _sql: NeonQueryFunction<false, false> | undefined;
 function getSql(): NeonQueryFunction<false, false> {
   if (!_sql) {
     if (!process.env.DATABASE_URL) {
-      // Build-time: return a stub that resolves to empty arrays so static pages can pre-render
+      console.warn('[db] DATABASE_URL not set — returning empty stub');
       return ((() => Promise.resolve([])) as unknown) as NeonQueryFunction<false, false>;
     }
+    console.log('[db] Initializing neon client');
     _sql = neon(process.env.DATABASE_URL);
   }
   return _sql;
