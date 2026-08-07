@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { cache } from 'react';
 import { Metadata } from 'next';
 import { Star, ExternalLink, ChevronRight, Check, X as XIcon, ThumbsUp, ThumbsDown, IndianRupee, ArrowRight, Sparkles, Globe, Cpu, Smartphone } from 'lucide-react';
@@ -204,10 +205,11 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 mb-8">
         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700/50">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={tool.logoUrl || `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${tool.websiteUrl}&size=128`}
             alt={tool.name}
+            width={56}
+            height={56}
             className="w-14 h-14 object-contain"
           />
         </div>
@@ -453,7 +455,7 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
                   >
                     <div className="w-9 h-9 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700">
                       {alt.logoUrl ? (
-                        <img src={alt.logoUrl} alt={alt.name} className="w-7 h-7 object-contain" />
+                        <Image src={alt.logoUrl} alt={alt.name} width={28} height={28} className="w-7 h-7 object-contain" />
                       ) : (
                         <span className="text-xs font-bold text-brand">{alt.name.charAt(0)}</span>
                       )}
@@ -539,7 +541,7 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200 dark:border-gray-700">
                   {tool.startupLogoUrl ? (
-                    <img src={tool.startupLogoUrl} alt={tool.startupName} className="w-8 h-8 object-contain" />
+                    <Image src={tool.startupLogoUrl} alt={tool.startupName} width={32} height={32} className="w-8 h-8 object-contain" />
                   ) : (
                     <span className="text-sm font-bold text-brand">{tool.startupName.charAt(0)}</span>
                   )}

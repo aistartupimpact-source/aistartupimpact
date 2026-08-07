@@ -3,6 +3,8 @@ import { sql } from '@/lib/db';
 import { detectCategory } from '@/lib/categories';
 import { standardizeCityName } from '@aistartupimpact/utils/src/cities';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();

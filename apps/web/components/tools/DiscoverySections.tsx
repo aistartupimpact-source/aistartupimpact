@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Star } from 'lucide-react';
 
 interface ToolCard {
@@ -81,7 +82,7 @@ function MiniToolCard({ tool }: { tool: ToolCard }) {
       <div className="flex items-center gap-2.5 mb-2">
         <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700">
           {tool.logoUrl ? (
-            <img src={tool.logoUrl} alt={tool.name} className="w-6 h-6 object-contain" />
+            <Image src={tool.logoUrl} alt={tool.name} className="w-6 h-6 object-contain" width={24} height={24} />
           ) : (
             <span className="text-xs font-bold text-brand">{tool.name.charAt(0)}</span>
           )}

@@ -2,6 +2,7 @@ import { requireFounderAuth } from '@/lib/founder-auth';
 import { prisma } from '@aistartupimpact/database';
 import { notFound, redirect } from 'next/navigation';
 import ToolEditForm from '@/components/founder/ToolEditForm';
+import SlugEditor from '@/components/shared/SlugEditor';
 
 interface PageProps {
   params: {
@@ -19,7 +20,8 @@ export default async function EditToolPage({ params }: PageProps) {
       "pricingModel", "startingPrice", "pricingUrl", "affiliateUrl",
       "categoryId", status, "claimStatus", "ownerId",
       "hasApi", "hasMobileApp", "launchYear", "founderNames", "headquartersCountry",
-      "screenshotUrls", "isUrlVerified"
+      "screenshotUrls", "isUrlVerified",
+      "slugChangedAt"::text AS "slugChangedAt"
     FROM "AiTool"
     WHERE slug = ${params.slug}
     LIMIT 1
@@ -154,6 +156,16 @@ export default async function EditToolPage({ params }: PageProps) {
 
       {/* Form */}
       <ToolEditForm tool={serializedTool} />
+
+      {/* Profile URL Editor */}
+      <SlugEditor
+        currentSlug={tool.slug}
+        slugChangedAt={tool.slugChangedAt || null}
+        entityType="tool"
+        entityId={tool.id}
+        baseUrl="https://aistartupimpact.com/tools"
+        isAdmin={false}
+      />
     </div>
   );
 }

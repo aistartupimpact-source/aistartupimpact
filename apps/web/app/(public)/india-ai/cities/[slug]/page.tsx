@@ -11,7 +11,7 @@ import {
   ArrowLeft,
   ExternalLink
 } from 'lucide-react';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 
 interface CityPageProps {
   params: {
@@ -20,7 +20,6 @@ interface CityPageProps {
 }
 
 async function getCityData(slug: string) {
-  const sql = neon(process.env.DATABASE_URL!);
 
   const [city] = await sql`
     SELECT * FROM "IndiaAICity"

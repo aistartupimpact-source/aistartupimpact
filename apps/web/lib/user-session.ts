@@ -1,8 +1,6 @@
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
-import { neon } from '@neondatabase/serverless';
-
-const sql = neon(process.env.DATABASE_URL!);
+import { sql } from '@/lib/db';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.USER_JWT_SECRET || 'user-secret-change-in-production'

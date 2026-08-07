@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserSession } from '@/lib/user-session';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 
-const sql = neon(process.env.DATABASE_URL!);
-
+export const dynamic = 'force-dynamic';
 // GET - Get all saved startups for current user
 export async function GET(request: NextRequest) {
   try {

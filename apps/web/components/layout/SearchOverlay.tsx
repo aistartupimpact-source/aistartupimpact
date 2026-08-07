@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Search, X, Loader2, TrendingUp, Clock, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -147,8 +148,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                   {/* Icon/Logo */}
                   <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden">
                     {result.logoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={result.logoUrl} alt="" className="w-8 h-8 object-contain" />
+                      <Image src={result.logoUrl} alt="" className="w-8 h-8 object-contain" width={32} height={32} />
                     ) : (
                       <Sparkles className="w-5 h-5 text-brand" />
                     )}

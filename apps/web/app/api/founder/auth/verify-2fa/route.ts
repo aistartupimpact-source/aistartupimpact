@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import { setFounderSession } from '@/lib/founder-auth';
 import { verifyTOTPToken, decryptSecret, verifyBackupCode } from '@/lib/two-factor';
 
-const sql = neon(process.env.DATABASE_URL!);
-
+export const dynamic = 'force-dynamic';
 /**
  * POST /api/founder/auth/verify-2fa
  * Verify 2FA code during login

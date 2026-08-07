@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Star, ChevronRight, ExternalLink } from 'lucide-react';
@@ -51,7 +52,7 @@ export default async function AlternativesPage({ params }: { params: { slug: str
       <div className="card p-5 mb-8 border-brand/20 bg-brand/5">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200 dark:border-gray-700">
-            {tool.logoUrl ? <img src={tool.logoUrl} alt={tool.name} className="w-10 h-10 object-contain" /> : <span className="text-lg font-bold text-brand">{tool.name.charAt(0)}</span>}
+            {tool.logoUrl ? <Image src={tool.logoUrl} alt={tool.name} width={40} height={40} className="w-10 h-10 object-contain" /> : <span className="text-lg font-bold text-brand">{tool.name.charAt(0)}</span>}
           </div>
           <div className="flex-1">
             <h2 className="font-sora font-bold text-lg text-navy dark:text-white">{tool.name}</h2>
@@ -76,7 +77,7 @@ export default async function AlternativesPage({ params }: { params: { slug: str
                 {i + 1}
               </span>
               <div className="w-10 h-10 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700">
-                {alt.logoUrl ? <img src={alt.logoUrl} alt={alt.name} className="w-8 h-8 object-contain" /> : <span className="text-sm font-bold text-brand">{alt.name.charAt(0)}</span>}
+                {alt.logoUrl ? <Image src={alt.logoUrl} alt={alt.name} width={32} height={32} className="w-8 h-8 object-contain" /> : <span className="text-sm font-bold text-brand">{alt.name.charAt(0)}</span>}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">

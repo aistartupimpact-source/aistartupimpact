@@ -3,6 +3,8 @@ import { requireFounderAuth } from '@/lib/founder-auth';
 import { prisma } from '@aistartupimpact/database';
 import { verifyDNS } from '@aistartupimpact/utils';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }

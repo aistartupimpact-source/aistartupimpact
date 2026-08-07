@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeft, Loader2, Calendar, MapPin, Video, X, Upload, Clock,
@@ -177,7 +178,7 @@ export default function OrganizerEventForm({ organizerId }: { organizerId: strin
               <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1 font-jakarta">Event Cover * <span className="normal-case">Square · JPG/PNG/WebP · 5MB</span></label>
               {coverImageUrl ? (
                 <div className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <img src={coverImageUrl} alt="" className="w-14 h-14 object-cover rounded"/>
+                  <Image src={coverImageUrl} alt="" width={56} height={56} unoptimized className="w-14 h-14 object-cover rounded"/>
                   <span className="text-[10px] text-green-600 font-jakarta font-medium flex-1">✓ Uploaded</span>
                   <button type="button" onClick={()=>fileRef.current?.click()} className="text-[10px] text-brand font-jakarta hover:underline">Change</button>
                   <button type="button" onClick={()=>setCoverImageUrl("")} className="text-[10px] text-red-500 font-jakarta hover:underline">Remove</button>
@@ -303,7 +304,7 @@ export default function OrganizerEventForm({ organizerId }: { organizerId: strin
                     <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1 font-jakarta">Photo <span className="normal-case text-gray-400">JPG/PNG/WebP · Max 2MB · Square recommended</span></label>
                     <div className="flex items-center gap-3">
                       <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 border-2 border-dashed border-gray-300 dark:border-gray-600 overflow-hidden flex items-center justify-center shrink-0">
-                        {s.photo ? <img src={s.photo} alt="" className="w-full h-full object-cover"/> : <User className="w-6 h-6 text-gray-400"/>}
+                        {s.photo ? <Image src={s.photo} alt="" width={64} height={64} unoptimized className="w-full h-full object-cover"/> : <User className="w-6 h-6 text-gray-400"/>}
                       </div>
                       <div>
                         <input type="file" accept="image/jpeg,image/png,image/webp" id={`speaker-photo-${i}`} className="hidden" onChange={async e=>{
@@ -384,7 +385,7 @@ export default function OrganizerEventForm({ organizerId }: { organizerId: strin
             <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
               <p className="text-[9px] font-bold text-gray-400 uppercase mb-1 font-jakarta">Social Preview</p>
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900">
-                {coverImageUrl?<img src={coverImageUrl} alt="" className="w-full h-20 object-cover"/>:<div className="w-full h-20 bg-gray-100 dark:bg-gray-800"/>}
+                {coverImageUrl?<Image src={coverImageUrl} alt="" width={400} height={80} unoptimized className="w-full h-20 object-cover"/>:<div className="w-full h-20 bg-gray-100 dark:bg-gray-800"/>}
                 <div className="p-2"><p className="text-[11px] font-semibold text-gray-800 dark:text-gray-200 truncate">{seoTitle||title||"Event Title"}</p><p className="text-[9px] text-gray-400 truncate">{seoDescription||subtitle||"aistartupimpact.com"}</p></div>
               </div>
             </div>
@@ -404,7 +405,7 @@ export default function OrganizerEventForm({ organizerId }: { organizerId: strin
           <div className="sticky top-6">
             <p className="text-[9px] font-bold uppercase text-gray-400 font-jakarta mb-2 tracking-wider">Live Preview</p>
             <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
-              <div className="relative" style={{aspectRatio:"1/1"}}>{coverImageUrl?<img src={coverImageUrl} alt="" className="w-full h-full object-cover"/>:<div className="w-full h-full bg-gradient-to-br from-brand/5 to-brand/10 flex items-center justify-center"><ImageIcon className="w-7 h-7 text-gray-200"/></div>}<span className="absolute top-2 left-2 text-[8px] font-bold uppercase bg-white/90 text-brand px-1.5 py-0.5 rounded-full">{CATEGORIES[CATEGORY_VALUES.indexOf(category)]}</span></div>
+              <div className="relative" style={{aspectRatio:"1/1"}}>{coverImageUrl?<Image src={coverImageUrl} alt="" width={400} height={400} unoptimized className="w-full h-full object-cover"/>:<div className="w-full h-full bg-gradient-to-br from-brand/5 to-brand/10 flex items-center justify-center"><ImageIcon className="w-7 h-7 text-gray-200"/></div>}<span className="absolute top-2 left-2 text-[8px] font-bold uppercase bg-white/90 text-brand px-1.5 py-0.5 rounded-full">{CATEGORIES[CATEGORY_VALUES.indexOf(category)]}</span></div>
               <div className="p-3 space-y-1.5">
                 <h3 className="font-sora font-bold text-sm text-navy dark:text-white leading-tight">{title||<span className="text-gray-300">Title</span>}</h3>
                 {subtitle&&<p className="text-[10px] text-gray-500 font-jakarta">{subtitle}</p>}

@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 
 export const runtime = 'edge';
 export const revalidate = 300; // Revalidate every 5 minutes
 
 export async function GET() {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
 
     // Compute real-time stats from actual data
     const [
@@ -125,7 +124,6 @@ export async function GET() {
     
     // Fallback: return static DB values if computation fails
     try {
-      const sql = neon(process.env.DATABASE_URL!);
       const stats = await sql`
         SELECT "metricKey", "metricLabel", "metricValue", "metricChange", "metricIcon", "displayOrder", "lastUpdated"
         FROM "IndiaAIStats"

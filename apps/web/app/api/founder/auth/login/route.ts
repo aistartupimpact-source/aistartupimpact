@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import { verifyPassword, setFounderSession } from '@/lib/founder-auth';
 import { authRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { loginSchema, validateInput } from '@/lib/validation';
 
-const sql = neon(process.env.DATABASE_URL!);
-
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting (with fallback)

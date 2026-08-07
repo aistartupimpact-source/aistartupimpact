@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Building2, Save, Link2, Unlink, Search, ExternalLink, CheckCircle2, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
@@ -145,7 +146,7 @@ export default function EmployerCompanyPage() {
             <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
               <div className="w-11 h-11 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center overflow-hidden shrink-0">
                 {company.startupLogo ? (
-                  <img src={company.startupLogo} alt="" className="w-full h-full object-cover" />
+                  <Image src={company.startupLogo} alt="" width={44} height={44} className="w-full h-full object-cover" />
                 ) : (
                   <Building2 className="w-5 h-5 text-gray-400" />
                 )}
@@ -200,7 +201,7 @@ export default function EmployerCompanyPage() {
                     className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 text-left transition-colors disabled:opacity-50 border-b border-gray-100 dark:border-gray-800 last:border-0"
                   >
                     <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
-                      {s.logoUrl ? <img src={s.logoUrl} alt="" className="w-full h-full object-cover" /> : <Building2 className="w-4 h-4 text-gray-400" />}
+                      {s.logoUrl ? <Image src={s.logoUrl} alt="" width={32} height={32} className="w-full h-full object-cover" /> : <Building2 className="w-4 h-4 text-gray-400" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-navy dark:text-white font-jakarta truncate">{s.name}</p>

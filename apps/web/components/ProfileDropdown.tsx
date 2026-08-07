@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 
 interface ProfileDropdownProps {
@@ -64,7 +65,7 @@ export default function ProfileDropdown({ user: propUser }: ProfileDropdownProps
         aria-label="Account menu"
       >
         {user.avatar ? (
-          <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+          <Image src={user.avatar} alt="" className="w-full h-full object-cover" width={32} height={32} />
         ) : (
           <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">{initials}</span>
         )}

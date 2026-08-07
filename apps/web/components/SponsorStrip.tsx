@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { ArrowUpRight } from 'lucide-react';
 
 interface Sponsor {
@@ -45,8 +46,7 @@ export default function SponsorStrip({ sponsors }: { sponsors: Sponsor[] }) {
           Powered by
         </span>
         {s.logoUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={s.logoUrl} alt={s.brand} className="h-4 w-auto object-contain" />
+          <Image src={s.logoUrl} alt={s.brand} className="h-4 w-auto object-contain" width={64} height={16} />
         )}
         <span className="font-sora font-bold text-brand text-xs sm:text-sm group-hover:underline">{s.brand}</span>
         <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-brand opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />

@@ -5,7 +5,13 @@ import { cached, CK } from './cache';
 // Lazy sql client — not instantiated at module load time (avoids build-time DATABASE_URL errors)
 let _sql: NeonQueryFunction<false, false> | undefined;
 function getSql(): NeonQueryFunction<false, false> {
-  if (!_sql) _sql = neon(process.env.DATABASE_URL!);
+  if (!_sql) {
+    if (!process.env.DATABASE_URL) {
+      // Build-time: return a stub that resolves to empty arrays so static pages can pre-render
+      return ((() => Promise.resolve([])) as unknown) as NeonQueryFunction<false, false>;
+    }
+    _sql = neon(process.env.DATABASE_URL);
+  }
   return _sql;
 }
 // sql is used as a tagged template literal throughout this file

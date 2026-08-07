@@ -1,6 +1,7 @@
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Briefcase, MapPin, DollarSign, Clock, Building2 } from 'lucide-react';
 import JobFilters from '@/components/jobs/JobFilters';
 
@@ -9,9 +10,6 @@ export const metadata: Metadata = {
   description: 'Browse 100+ AI jobs — ML Engineer, LLM Engineer, AI Product Manager, Data Scientist, and more. Remote, hybrid, and on-site roles at top AI companies.',
   alternates: { canonical: '/jobs' },
 };
-
-const sql = neon(process.env.DATABASE_URL!);
-
 interface PageProps {
   searchParams: {
     category?: string;
@@ -145,7 +143,7 @@ export default async function JobsPage({ searchParams }: PageProps) {
               {/* Company Logo */}
               <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden">
                 {job.logoUrl ? (
-                  <img src={job.logoUrl} alt={job.companyName} className="w-full h-full object-cover" />
+                  <Image src={job.logoUrl} alt={job.companyName} width={48} height={48} className="w-full h-full object-cover" />
                 ) : (
                   <Building2 className="w-5 h-5 text-gray-400" />
                 )}

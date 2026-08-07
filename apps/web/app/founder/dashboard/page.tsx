@@ -1,12 +1,9 @@
 import { requireFounderAuth } from '@/lib/founder-auth';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import { Rocket, Wrench, Eye, MousePointerClick, Plus, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import StatCard from '@/components/founder/StatCard';
 import ListingCard from '@/components/founder/ListingCard';
-
-const sql = neon(process.env.DATABASE_URL!);
-
 // Revalidate every 10 seconds to show fresh data
 export const revalidate = 10;
 
