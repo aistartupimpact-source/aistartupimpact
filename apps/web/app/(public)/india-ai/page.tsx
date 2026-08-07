@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
+import nextDynamic from 'next/dynamic';
 import {
   Flag,
   MapPin,
@@ -23,9 +23,9 @@ import NewsletterCapture from '@/components/india-ai/NewsletterCapture';
 import GovernmentSchemesHardcoded from '@/components/india-ai/GovernmentSchemesHardcoded';
 import PolicyLiveFeedHardcoded from '@/components/india-ai/PolicyLiveFeedHardcoded';
 
-const RealIndiaMap = dynamic(() => import('@/components/india-ai/RealIndiaMap'), { ssr: false });
+const RealIndiaMap = nextDynamic(() => import('@/components/india-ai/RealIndiaMap'), { ssr: false });
 
-export const revalidate = 300;
+export const dynamic = 'force-dynamic';
 
 // SEO Metadata with target keywords
 export const metadata: Metadata = {

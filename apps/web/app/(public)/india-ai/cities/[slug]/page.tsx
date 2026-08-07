@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { sql } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 interface CityPageProps {
   params: {
     slug: string;

@@ -215,15 +215,79 @@ export default async function EventDetailPage({
       getSimilarEvents(event.id, event.category),
     ]);
 
+  const eventUrl = `https://aistartupimpact.com/events/${event.slug}`;
+  const descriptionText = typeof event.description === 'string'
+    ? event.description.slice(0, 300)
+    : (event.subtitle || event.title);
+
+  const eventSchema: Record<string, any> = {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    "name": event.title,
+    "description": descriptionText,
+    "startDate": event.startAt,
+    "url": eventUrl,
+    "eventStatus": "https://schema.org/EventScheduled",
+    "eventAttendanceMode": event.format === "VIRTUAL"
+      ? "https://schema.org/OnlineEventAttendanceMode"
+      : event.format === "HYBRID"
+        ? "https://schema.org/MixedEventAttendanceMode"
+        : "https://schema.org/OfflineEventAttendanceMode",
+  };
+
+  if (event.endAt) eventSchema.endDate = event.endAt;
+  if (event.coverImageUrl) eventSchema.image = event.coverImageUrl;
+  if (event.capacity) eventSchema.maximumAttendeeCapacity = event.capacity;
+
+  if (event.format === "VIRTUAL") {
+    eventSchema.location = {
+      "@type": "VirtualLocation",
+      "url": event.meetingLink || eventUrl,
+    };
+  } else if (event.venueName) {
+    eventSchema.location = {
+      "@type": "Place",
+      "name": event.venueName,
+      ...(event.address ? { "address": event.address } : {}),
+    };
+  }
+
+  if (event.organizerName) {
+    eventSchema.organizer = {
+      "@type": "Organization",
+      "name": event.organizerName,
+    };
+  }
+
+  // Include ticket pricing as offers
+  if (ticketTiers && (ticketTiers as any[]).length > 0) {
+    eventSchema.offers = (ticketTiers as any[]).map((tier: any) => ({
+      "@type": "Offer",
+      "name": tier.name,
+      "price": tier.priceCents != null ? (tier.priceCents / 100).toFixed(2) : "0",
+      "priceCurrency": "INR",
+      "url": eventUrl,
+      "availability": tier.quantity && tier.soldCount >= tier.quantity
+        ? "https://schema.org/SoldOut"
+        : "https://schema.org/InStock",
+    }));
+  }
+
   return (
-    <EventDetailClient
-      event={event}
-      speakers={speakers as any}
-      agenda={agenda as any}
-      tags={tags as any}
-      ticketTiers={ticketTiers as any}
-      customQuestions={customQuestions as any}
-      similarEvents={similarEvents as any}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(eventSchema) }}
+      />
+      <EventDetailClient
+        event={event}
+        speakers={speakers as any}
+        agenda={agenda as any}
+        tags={tags as any}
+        ticketTiers={ticketTiers as any}
+        customQuestions={customQuestions as any}
+        similarEvents={similarEvents as any}
+      />
+    </>
   );
 }

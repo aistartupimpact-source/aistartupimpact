@@ -59,8 +59,73 @@ export default async function JobDetailPage({ params }: PageProps) {
     ? (job.applicationUrl || `mailto:${job.applicationEmail}`)
     : `/jobs/${job.slug}/apply`;
 
+  const jobUrl = `https://aistartupimpact.com/jobs/${job.slug}`;
+  const jobSchema: Record<string, any> = {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    "title": job.title,
+    "description": job.description || job.shortDescription || '',
+    "url": jobUrl,
+    "hiringOrganization": {
+      "@type": "Organization",
+      "name": job.companyName,
+      ...(job.logoUrl ? { "logo": job.logoUrl } : {}),
+      ...(job.websiteUrl ? { "sameAs": job.websiteUrl } : {}),
+    },
+  };
+
+  if (job.publishedAt) {
+    jobSchema.datePosted = new Date(job.publishedAt + 'Z').toISOString().split('T')[0];
+  }
+  if (job.expiresAt) {
+    jobSchema.validThrough = new Date(job.expiresAt + 'Z').toISOString();
+  }
+
+  if (job.workType === 'REMOTE') {
+    jobSchema.jobLocationType = "TELECOMMUTE";
+  } else if (job.city || job.country) {
+    jobSchema.jobLocation = {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        ...(job.city ? { "addressLocality": job.city } : {}),
+        ...(job.country ? { "addressCountry": job.country } : {}),
+      },
+    };
+  }
+
+  if (job.showSalary && job.salaryMin) {
+    jobSchema.baseSalary = {
+      "@type": "MonetaryAmount",
+      "currency": job.salaryCurrency || "INR",
+      "value": {
+        "@type": "QuantitativeValue",
+        "minValue": job.salaryMin,
+        "maxValue": job.salaryMax,
+        "unitText": "YEAR",
+      },
+    };
+  }
+
+  if (job.skills?.length > 0) {
+    jobSchema.skills = job.skills.join(', ');
+  }
+  if (job.category) {
+    jobSchema.occupationalCategory = job.category.replace(/_/g, ' ');
+  }
+  if (job.experienceMin != null) {
+    jobSchema.experienceRequirements = `${job.experienceMin}-${job.experienceMax || '10+'} years`;
+  }
+  if (job.industry) {
+    jobSchema.industry = job.industry;
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jobSchema) }}
+      />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
