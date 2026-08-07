@@ -87,7 +87,7 @@ export default function ShareButton({ title, text, url, iconOnly = false, size =
             {/* Preview Card */}
             <div className="px-5 py-4">
               <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden mb-4">
-                {image && <Image src={image} alt="" className="w-full h-32 object-cover" width={400} height={128} />}
+                {image && <Image src={image} alt="" className="w-full h-32 object-cover" width={400} height={128} sizes="(max-width: 768px) 100vw, 50vw" />}
                 <div className="p-3">
                   <p className="text-sm font-semibold text-gray-800 dark:text-white font-jakarta line-clamp-1">{title}</p>
                   <p className="text-[10px] text-gray-400 font-jakarta mt-0.5 truncate">{shareUrl}</p>

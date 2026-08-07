@@ -138,12 +138,13 @@ export default async function JobsPage({ searchParams }: PageProps) {
             <Link
               key={job.id}
               href={`/jobs/${job.slug}`}
+              prefetch={false}
               className="card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 hover:border-brand/30 transition-colors group"
             >
               {/* Company Logo */}
               <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden">
                 {job.logoUrl ? (
-                  <Image src={job.logoUrl} alt={job.companyName} width={48} height={48} className="w-full h-full object-cover" />
+                  <Image src={job.logoUrl} alt={job.companyName} width={48} height={48} sizes="48px" className="w-full h-full object-cover" />
                 ) : (
                   <Building2 className="w-5 h-5 text-gray-400" />
                 )}

@@ -55,8 +55,8 @@ export default function EmployerHeader({ employer }: Props) {
       {/* Left: Mobile logo + Page title */}
       <div className="flex items-center gap-3">
         <Link href="/employer/dashboard" className="md:hidden flex items-center gap-2">
-          <Image src="/logo-light.svg" alt="AI Startup Impact" width={24} height={24} className="h-6 w-auto dark:hidden" />
-          <Image src="/logo-dark.svg" alt="AI Startup Impact" width={24} height={24} className="h-6 w-auto hidden dark:block" />
+          <Image src="/logo-light.svg" alt="AI Startup Impact" width={24} height={24} sizes="24px" className="h-6 w-auto dark:hidden" />
+          <Image src="/logo-dark.svg" alt="AI Startup Impact" width={24} height={24} sizes="24px" className="h-6 w-auto hidden dark:block" />
         </Link>
         <h1 className="hidden md:block text-sm font-sora font-bold text-navy dark:text-white">
           {getPageTitle()}

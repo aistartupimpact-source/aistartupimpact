@@ -41,8 +41,8 @@ export default function OrganizerSidebar({ organizer }: Props) {
       {/* Logo */}
       <div className="h-14 flex items-center px-4 border-b border-gray-100 dark:border-gray-800">
         <Link href="/organizer" className="flex items-center gap-2.5">
-          <Image src="/logo-light.svg" alt="AI Startup Impact" width={64} height={64} className="h-16 w-auto dark:hidden" />
-          <Image src="/logo-dark.svg" alt="AI Startup Impact" width={64} height={64} className="h-16 w-auto hidden dark:block" />
+          <Image src="/logo-light.svg" alt="AI Startup Impact" width={64} height={64} sizes="64px" className="h-16 w-auto dark:hidden" />
+          <Image src="/logo-dark.svg" alt="AI Startup Impact" width={64} height={64} sizes="64px" className="h-16 w-auto hidden dark:block" />
           <span className="font-sora font-bold text-[13px] text-navy dark:text-white">
             AI Startup <span className="text-brand">Impact</span>
           </span>

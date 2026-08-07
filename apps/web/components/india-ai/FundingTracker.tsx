@@ -116,6 +116,7 @@ export default function FundingTracker({ recentFunding }: FundingTrackerProps) {
                         alt={funding.startupName}
                         width={64}
                         height={64}
+                        sizes="64px"
                         className="object-contain"
                       />
                     ) : (

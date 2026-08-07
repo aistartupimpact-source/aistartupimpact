@@ -148,7 +148,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                   {/* Icon/Logo */}
                   <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden">
                     {result.logoUrl ? (
-                      <Image src={result.logoUrl} alt="" className="w-8 h-8 object-contain" width={32} height={32} />
+                      <Image src={result.logoUrl} alt="" className="w-8 h-8 object-contain" width={32} height={32} sizes="32px" />
                     ) : (
                       <Sparkles className="w-5 h-5 text-brand" />
                     )}

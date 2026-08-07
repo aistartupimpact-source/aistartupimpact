@@ -246,7 +246,7 @@ function EventTimelineCard({ event }: { event: Event }) {
   const city = extractCity(event.address || event.venueName || "");
 
   return (
-    <Link href={`/events/${event.slug}`} className="group block">
+    <Link href={`/events/${event.slug}`} prefetch={false} className="group block">
       <div className="flex gap-3 sm:gap-4 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 active:scale-[0.99] hover:border-gray-200 dark:hover:border-gray-700 transition-all">
         {/* Content */}
         <div className="flex-1 min-w-0">
@@ -308,7 +308,7 @@ function EventTimelineCard({ event }: { event: Event }) {
         <div className="shrink-0 self-start">
           {event.coverImageUrl ? (
             <div className="w-[110px] h-[110px] sm:w-[140px] sm:h-[140px] rounded-[10px] overflow-hidden bg-gray-100 dark:bg-gray-800">
-              <Image src={event.coverImageUrl} alt="" className="w-full h-full object-cover" width={140} height={140} />
+              <Image src={event.coverImageUrl} alt="" className="w-full h-full object-cover" width={140} height={140} sizes="140px" />
             </div>
           ) : (
             <div className="w-[110px] h-[110px] sm:w-[140px] sm:h-[140px] rounded-[10px] bg-gradient-to-br from-brand/5 to-brand/10 flex items-center justify-center">

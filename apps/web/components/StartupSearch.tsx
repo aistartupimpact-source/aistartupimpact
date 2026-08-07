@@ -508,14 +508,14 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
       ) : (
         <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 transition-opacity duration-150 ${loading ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
           {visibleStartups.map(s => (
-            <Link key={s.slug} href={`/startups/${s.slug}`} className="group">
+            <Link key={s.slug} href={`/startups/${s.slug}`} prefetch={false} className="group">
               <div className="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:border-brand/30 dark:hover:border-brand/30 transition-all duration-300 h-full">
                 {/* Header Section */}
                 <div className="flex items-start gap-2.5 sm:gap-3 mb-3 sm:mb-4">
                   {/* Logo */}
                   <div className="relative w-11 h-11 sm:w-14 sm:h-14 rounded-xl bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
                     {s.logoUrl ? (
-                      <Image src={s.logoUrl} alt={s.name} className="w-8 h-8 sm:w-11 sm:h-11 object-contain" width={44} height={44} />
+                      <Image src={s.logoUrl} alt={s.name} className="w-8 h-8 sm:w-11 sm:h-11 object-contain" width={44} height={44} sizes="44px" />
                     ) : (
                       <Building2 className="w-5 h-5 sm:w-7 sm:h-7 text-brand" />
                     )}

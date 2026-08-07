@@ -246,6 +246,7 @@ export default function GlobalSearch() {
                               src={result.logoUrl || result.coverImage || ''}
                               alt={result.title}
                               fill
+                              sizes="40px"
                               className="object-cover"
                             />
                           </div>

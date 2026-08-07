@@ -440,7 +440,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
           {/* Logo */}
           <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center shrink-0 shadow-sm border border-brand/10">
             {startup.logoUrl ? (
-              <Image src={startup.logoUrl} alt={startup.name} width={80} height={80} className="w-full h-full object-cover rounded-xl sm:rounded-2xl" />
+              <Image src={startup.logoUrl} alt={startup.name} width={80} height={80} sizes="80px" className="w-full h-full object-cover rounded-xl sm:rounded-2xl" />
             ) : (
               <Building2 className="w-8 h-8 text-brand" />
             )}
@@ -798,7 +798,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                   <Link key={product.slug} href={`/tools/${product.slug}`} className="group p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-brand/30 transition-all flex items-start gap-3">
                     <div className="w-12 h-12 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
                       {product.logoUrl ? (
-                        <Image src={product.logoUrl} alt={product.name} width={48} height={48} className="w-full h-full object-cover" />
+                        <Image src={product.logoUrl} alt={product.name} width={48} height={48} sizes="48px" className="w-full h-full object-cover" />
                       ) : (
                         <Cpu className="w-5 h-5 text-brand" />
                       )}

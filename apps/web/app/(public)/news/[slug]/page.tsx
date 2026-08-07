@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Clock, Calendar, Bookmark, ChevronRight } from 'lucide-react';
-import { getArticleBySlugDirect, getArticlesDirect } from '@/lib/db';
+import { sql, getArticleBySlugDirect, getArticlesDirect } from '@/lib/db';
 import { defaultHeroArticle, defaultLatestStories, defaultIndiaAI } from '@/lib/fallbacks';
 import { buildArticleMetadata, generateArticleSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import { sanitizeHtml } from '@/lib/sanitize';
@@ -17,6 +17,20 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const article = await getArticleBySlugDirect(params.slug);
   if (!article) return { title: 'Article Not Found' };
   return buildArticleMetadata(article);
+}
+
+export async function generateStaticParams() {
+  try {
+    const rows = await sql`
+      SELECT slug FROM "Article"
+      WHERE type = 'NEWS' AND status = 'PUBLISHED' AND "deletedAt" IS NULL
+      ORDER BY "publishedAt" DESC NULLS LAST
+      LIMIT 50
+    `;
+    return rows.map((r: any) => ({ slug: r.slug }));
+  } catch {
+    return [];
+  }
 }
 
 export default async function ArticlePage({ params }: { params: { slug: string } }) {
@@ -120,7 +134,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
 
           {article.coverImage ? (
             <div className="relative aspect-[16/9] rounded-xl overflow-hidden my-6 sm:my-8">
-              <Image src={article.coverImage} alt={article.title} fill className="object-cover" />
+              <Image src={article.coverImage} alt={article.title} fill sizes="100vw" className="object-cover" />
             </div>
           ) : (
             <div className="aspect-[16/9] bg-gradient-to-br from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl my-6 sm:my-8" />
@@ -160,7 +174,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-800 flex flex-shrink-0 items-center justify-center shadow-sm">
                   {article.linkedTool.logoUrl ? (
-                    <Image src={article.linkedTool.logoUrl} alt={article.linkedTool.name} width={24} height={24} className="w-6 h-6 object-contain" />
+                    <Image src={article.linkedTool.logoUrl} alt={article.linkedTool.name} width={24} height={24} sizes="24px" className="w-6 h-6 object-contain" />
                   ) : (
                     <span className="font-sora font-bold text-brand">{article.linkedTool.name.charAt(0)}</span>
                   )}

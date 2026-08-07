@@ -46,7 +46,7 @@ export default async function OrganizerEventsPage() {
                 {/* Thumbnail */}
                 <div className="w-20 h-12 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 shrink-0" style={{ aspectRatio: "16/9" }}>
                   {event.coverImageUrl ? (
-                    <Image src={event.coverImageUrl} alt="" width={80} height={48} className="w-full h-full object-cover" />
+                    <Image src={event.coverImageUrl} alt="" width={80} height={48} sizes="80px" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center"><Calendar className="w-4 h-4 text-gray-300" /></div>
                   )}

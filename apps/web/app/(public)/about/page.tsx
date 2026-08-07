@@ -337,6 +337,7 @@ export default async function AboutPage() {
               alt="Lahori Venkatesh — Founder & CEO, AI Startup Impact"
               width={96}
               height={96}
+              sizes="96px"
               className="w-full h-full object-cover"
             />
           </div>

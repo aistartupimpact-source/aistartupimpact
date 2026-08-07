@@ -31,6 +31,7 @@ export default function Logo({
         width={0}
         height={height}
         priority={priority}
+        sizes="200px"
         style={{ width: 'auto', height: `${height}px` }}
         className={`block ${className}`}
       />
@@ -46,6 +47,7 @@ export default function Logo({
         width={0}
         height={height}
         priority={priority}
+        sizes="200px"
         style={{ width: 'auto', height: `${height}px` }}
         className={`block dark:hidden ${className}`}
       />
@@ -56,6 +58,7 @@ export default function Logo({
         width={0}
         height={height}
         priority={priority}
+        sizes="200px"
         style={{ width: 'auto', height: `${height}px` }}
         className={`hidden dark:block ${className}`}
       />

@@ -206,7 +206,7 @@ export default function ArticlesListClient({ articles }: { articles: Article[] }
       ) : (
         <div className="divide-y divide-gray-100 dark:divide-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
           {shown.map((article, idx) => (
-            <Link key={article.slug} href={`/news/${article.slug}`} className="group block">
+            <Link key={article.slug} href={`/news/${article.slug}`} prefetch={false} className="group block">
               <div className="flex gap-4 sm:gap-5 p-4 sm:p-5 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 relative">
                 {/* Left accent bar on hover */}
                 <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-brand scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-top" />

@@ -52,7 +52,7 @@ export default function ListingCard({ id, slug, name, tagline, logoUrl, status, 
         {/* Logo */}
         <div className="relative w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
           {logoUrl ? (
-            <Image src={logoUrl} alt={name} width={40} height={40} className="w-full h-full object-cover rounded-lg" />
+            <Image src={logoUrl} alt={name} width={40} height={40} sizes="40px" className="w-full h-full object-cover rounded-lg" />
           ) : (
             <span className="text-base font-bold text-gray-400 dark:text-gray-600">
               {name.charAt(0)}
