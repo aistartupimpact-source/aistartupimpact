@@ -11,7 +11,7 @@ export async function getToolsAction() {
   try {
     const tools = await sql`
       SELECT
-        t.id, t.name, t.slug, t.tagline, t.description, t."websiteUrl", t."logoUrl",
+        t.id, t.name, t.slug, t."slugChangedAt", t."previousSlugs", t.tagline, t.description, t."websiteUrl", t."logoUrl",
         t."pricingModel", t."avgRating", t."listingTier", t.status, t."claimStatus",
         t."founderNames", t."headquartersCountry", t."hasApi", t."hasMobileApp",
         t."pricingUrl", t."startingPrice", t."freeTrialDays", t."demoVideoUrl", t."ownerId",

@@ -12,6 +12,7 @@ import ToolTagSelector from '@/components/shared/ToolTagSelector';
 import StartupLinker from '@/components/shared/StartupLinker';
 import AlternativeToolsManager from '@/components/shared/AlternativeToolsManager';
 import { getTagGroupsWithTagsAction, getToolTagsAction, updateToolTagsAction } from '../../tags/actions';
+import SlugEditor from '@/components/shared/SlugEditor';
 
 const pricingModels = ['FREE', 'FREEMIUM', 'PAID', 'ENTERPRISE', 'OPEN_SOURCE'];
 const listingTiers = ['STANDARD', 'PRIORITY', 'FEATURED'];
@@ -21,6 +22,7 @@ interface Tool {
   id: string;
   name: string;
   slug: string;
+  slugChangedAt?: string | null;
   tagline: string;
   description: string;
   logoUrl?: string;
@@ -341,18 +343,17 @@ export default function EditToolPage() {
               />
             </div>
 
-            <div>
-              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
-                Slug
-              </label>
-              <input
-                type="text"
-                name="slug"
-                value={formData.slug}
-                onChange={handleChange}
-                disabled
-                className="input-field text-sm bg-gray-50 dark:bg-gray-800"
-                placeholder="e.g. chatgpt"
+            <div className="md:col-span-2 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-150 dark:border-gray-800">
+              <SlugEditor
+                currentSlug={formData.slug}
+                slugChangedAt={formData.slugChangedAt}
+                entityType="tool"
+                entityId={formData.id}
+                baseUrl="https://aistartupimpact.com/tools"
+                isAdmin={true}
+                onSuccess={(newSlug) => {
+                  setFormData(prev => prev ? { ...prev, slug: newSlug } : null);
+                }}
               />
             </div>
 

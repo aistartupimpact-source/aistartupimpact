@@ -122,6 +122,8 @@ model AiTool {
   id                  String                   @id
   name                String
   slug                String                   @unique
+  slugChangedAt       DateTime?
+  previousSlugs       String[]                 @default([])
   tagline             String
   description         String
   websiteUrl          String
@@ -1001,6 +1003,8 @@ model Startup {
   id                                         String                   @id
   name                                       String
   slug                                       String                   @unique
+  slugChangedAt                              DateTime?
+  previousSlugs                              String[]                 @default([])
   tagline                                    String
   description                                String
   logoUrl                                    String?

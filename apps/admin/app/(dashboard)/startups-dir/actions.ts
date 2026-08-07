@@ -12,7 +12,7 @@ export async function getStartupsAction() {
   try {
     const startups = await sql`
       SELECT 
-        id, name, tagline, description, "logoUrl", "websiteUrl", "linkedinUrl", "twitterUrl",
+        id, name, slug, "slugChangedAt", "previousSlugs", tagline, description, "logoUrl", "websiteUrl", "linkedinUrl", "twitterUrl",
         "foundedYear", "headquartersCity", stage, status, "totalFundingInr", "employeeCount",
         "isFeatured", "featuredUntil", "impactScore", "isApproved", "approvedAt",
         "isVerified", "claimStatus", "contentReviewed",
