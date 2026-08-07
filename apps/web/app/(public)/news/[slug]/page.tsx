@@ -160,7 +160,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-800 flex flex-shrink-0 items-center justify-center shadow-sm">
                   {article.linkedTool.logoUrl ? (
-                    <img src={article.linkedTool.logoUrl} alt={article.linkedTool.name} className="w-6 h-6 object-contain" />
+                    <Image src={article.linkedTool.logoUrl} alt={article.linkedTool.name} width={24} height={24} className="w-6 h-6 object-contain" />
                   ) : (
                     <span className="font-sora font-bold text-brand">{article.linkedTool.name.charAt(0)}</span>
                   )}

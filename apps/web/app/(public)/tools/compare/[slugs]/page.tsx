@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Star, Check, X as XIcon, ChevronRight } from 'lucide-react';
@@ -68,13 +69,13 @@ export default async function ComparePage({ params }: { params: { slugs: string 
           </div>
           <div className="p-4 border-b border-r border-gray-100 dark:border-gray-800 text-center">
             <div className="flex flex-col items-center gap-2">
-              {t1.logoUrl && <img src={t1.logoUrl} alt="" className="w-10 h-10 rounded-lg object-contain border border-gray-100 dark:border-gray-700 p-1" />}
+              {t1.logoUrl && <Image src={t1.logoUrl} alt="" width={40} height={40} className="w-10 h-10 rounded-lg object-contain border border-gray-100 dark:border-gray-700 p-1" />}
               <Link href={`/tools/${t1.slug}`} className="font-sora font-bold text-sm text-navy dark:text-white hover:text-brand">{t1.name}</Link>
             </div>
           </div>
           <div className="p-4 border-b border-gray-100 dark:border-gray-800 text-center">
             <div className="flex flex-col items-center gap-2">
-              {t2.logoUrl && <img src={t2.logoUrl} alt="" className="w-10 h-10 rounded-lg object-contain border border-gray-100 dark:border-gray-700 p-1" />}
+              {t2.logoUrl && <Image src={t2.logoUrl} alt="" width={40} height={40} className="w-10 h-10 rounded-lg object-contain border border-gray-100 dark:border-gray-700 p-1" />}
               <Link href={`/tools/${t2.slug}`} className="font-sora font-bold text-sm text-navy dark:text-white hover:text-brand">{t2.name}</Link>
             </div>
           </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { User, Mail, Building2, Briefcase, Phone, Globe, Linkedin, Twitter, Save, Loader2, Upload, Camera, Plus, Trash2, Users } from 'lucide-react';
 
 interface ProfileFormProps {
@@ -192,7 +193,7 @@ export default function ProfileForm({ founder }: ProfileFormProps) {
           <div className="relative">
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-brand to-brand/80 flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
               {avatarPreview ? (
-                <img src={avatarPreview} alt="Profile" className="w-full h-full object-cover" />
+                <Image src={avatarPreview} alt="Profile" width={96} height={96} unoptimized className="w-full h-full object-cover" />
               ) : (
                 <span>{formData.name.charAt(0).toUpperCase()}</span>
               )}

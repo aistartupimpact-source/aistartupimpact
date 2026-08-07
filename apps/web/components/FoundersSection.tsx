@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import FounderProfileModal from './FounderProfileModal';
 
 interface Founder {
@@ -35,10 +36,12 @@ export default function FoundersSection({ founders, startupName }: FoundersSecti
             >
               <div className="w-14 h-14 rounded-2xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center text-brand font-bold font-sora text-xl shrink-0 overflow-hidden group-hover:scale-105 transition-transform">
                 {founder.avatar ? (
-                  <img 
-                    src={founder.avatar} 
-                    alt={founder.name} 
+                  <Image
+                    src={founder.avatar}
+                    alt={founder.name}
                     className="w-full h-full object-cover"
+                    width={56}
+                    height={56}
                   />
                 ) : (
                   <span>{founder.name.charAt(0).toUpperCase()}</span>

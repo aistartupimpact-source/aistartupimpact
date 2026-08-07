@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   Eye, FileText, Crown, Zap, TrendingUp, ArrowUpRight,
@@ -142,11 +143,9 @@ export default async function ClientPortalPage() {
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center overflow-hidden shrink-0">
                       {(cr as any).imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={(cr as any).imageUrl} alt={cr.headline || 'Brand'} className="w-full h-full object-cover" />
+                        <Image src={(cr as any).imageUrl} alt={cr.headline || 'Brand'} width={32} height={32} className="w-full h-full object-cover" />
                       ) : (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(companyName)}&background=random&color=fff&size=150`} alt={companyName} className="w-full h-full object-cover" />
+                        <Image src={`https://ui-avatars.com/api/?name=${encodeURIComponent(companyName)}&background=random&color=fff&size=150`} alt={companyName} width={32} height={32} unoptimized className="w-full h-full object-cover" />
                       )}
                     </div>
                     <div>

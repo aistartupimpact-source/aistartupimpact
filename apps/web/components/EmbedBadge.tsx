@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Copy, Check, Code } from 'lucide-react';
 
 interface EmbedBadgeProps {
@@ -37,8 +38,7 @@ export default function EmbedBadge({ urlSlug, type }: EmbedBadgeProps) {
 
       {/* Badge Preview */}
       <div className="flex justify-center mb-4 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src="/featured-badge.svg"
           alt="Featured on AIStartupImpact"
           width={220}

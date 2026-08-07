@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Star, ChevronRight } from 'lucide-react';
@@ -98,7 +99,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
               <div className="flex items-start gap-3 mb-2">
                 <div className="w-9 h-9 rounded-lg bg-gray-50 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700">
                   {tool.logoUrl ? (
-                    <img src={tool.logoUrl} alt={tool.name} className="w-7 h-7 object-contain" />
+                    <Image src={tool.logoUrl} alt={tool.name} width={28} height={28} className="w-7 h-7 object-contain" />
                   ) : (
                     <span className="text-xs font-bold text-brand">{tool.name.charAt(0)}</span>
                   )}

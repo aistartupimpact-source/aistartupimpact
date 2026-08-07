@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Search, Building2, MapPin, X, Loader2, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { VerifiedBadge } from './VerifiedBadge';
@@ -514,8 +515,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
                   {/* Logo */}
                   <div className="relative w-11 h-11 sm:w-14 sm:h-14 rounded-xl bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
                     {s.logoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={s.logoUrl} alt={s.name} className="w-8 h-8 sm:w-11 sm:h-11 object-contain" />
+                      <Image src={s.logoUrl} alt={s.name} className="w-8 h-8 sm:w-11 sm:h-11 object-contain" width={44} height={44} />
                     ) : (
                       <Building2 className="w-5 h-5 sm:w-7 sm:h-7 text-brand" />
                     )}
