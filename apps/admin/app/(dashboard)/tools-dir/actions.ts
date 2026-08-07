@@ -218,10 +218,12 @@ export async function createToolAction(data: {
   websiteUrl: string;
   logoUrl?: string;
   affiliateUrl?: string;
+  demoVideoUrl?: string;
   categoryId: string;
   pricingModel: string;
   pricingUrl?: string;
   startingPrice?: number | null;
+  freeTrialDays?: number | null;
   hasApi?: boolean;
   hasMobileApp?: boolean;
   launchYear?: number;
@@ -232,6 +234,8 @@ export async function createToolAction(data: {
   status?: string;
   screenshotUrls?: string[];
   faqs?: Array<{ question: string; answer: string; order: number }>;
+  features?: string[];
+  useCases?: string[];
 }) {
   try {
     // Check for duplicate name or slug
@@ -247,22 +251,24 @@ export async function createToolAction(data: {
     const result = await sql`
       INSERT INTO "AiTool" (
         id, name, slug, tagline, description, "websiteUrl", "logoUrl", "affiliateUrl",
-        "categoryId", "pricingModel", "pricingUrl", "startingPrice",
-        "hasApi", "hasMobileApp", "launchYear", "founderNames", "headquartersCountry",
-        "avgRating", "listingTier", status, "screenshotUrls", "aiSuggestedEdits",
+        "demoVideoUrl", "categoryId", "pricingModel", "pricingUrl", "startingPrice",
+        "freeTrialDays", "hasApi", "hasMobileApp", "launchYear", "founderNames",
+        "headquartersCountry", "avgRating", "listingTier", status, "screenshotUrls",
+        features, "useCases", "aiSuggestedEdits",
         "createdAt", "updatedAt"
       ) VALUES (
         gen_random_uuid(),
         ${data.name}, ${data.slug}, ${data.tagline}, ${data.description},
         ${data.websiteUrl}, ${data.logoUrl || null}, ${data.affiliateUrl || null},
-        ${data.categoryId}, ${data.pricingModel}::"PricingModel",
+        ${data.demoVideoUrl || null}, ${data.categoryId}, ${data.pricingModel}::"PricingModel",
         ${data.pricingUrl || null}, ${data.startingPrice ? Math.round(data.startingPrice * 8300 * 100) : null},
-        ${data.hasApi ?? false}, ${data.hasMobileApp ?? false},
+        ${data.freeTrialDays || null}, ${data.hasApi ?? false}, ${data.hasMobileApp ?? false},
         ${data.launchYear || new Date().getFullYear()},
         ${data.founderNames || []}, ${data.headquartersCountry || null},
         ${data.avgRating}, ${data.listingTier || 'STANDARD'}::"ListingTier",
         ${data.status || 'APPROVED'}::"ToolApprovalStatus",
-        ${data.screenshotUrls || []}, ARRAY[]::text[],
+        ${data.screenshotUrls || []},
+        ${data.features || []}, ${data.useCases || []}, ARRAY[]::text[],
         NOW(), NOW()
       )
       RETURNING id

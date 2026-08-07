@@ -3,11 +3,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Upload, Loader2, Save, Plus, X } from 'lucide-react';
-import { createToolAction, getCategoriesAction } from '../actions';
+import { createToolAction, getCategoriesAction, updateToolProsConsAction } from '../actions';
 import { uploadLogoAction } from '../../media/actions';
 import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
 import CategoryCascadeSelect from '@/components/shared/CategoryCascadeSelect';
 import ToolTagSelector from '@/components/shared/ToolTagSelector';
+import ProsConsManager from '@/components/shared/ProsConsManager';
 import { getTagGroupsWithTagsAction, updateToolTagsAction } from '../tags/actions';
 
 const pricingModels = ['FREE', 'FREEMIUM', 'PAID', 'ENTERPRISE', 'OPEN_SOURCE'];
@@ -36,7 +37,9 @@ export default function NewToolPage() {
   const [screenshots, setScreenshots] = useState<string[]>([]);
   const [tagGroups, setTagGroups] = useState<any[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
-  
+  const [pros, setPros] = useState<string[]>([]);
+  const [cons, setCons] = useState<string[]>([]);
+
   const [draftLoaded, setDraftLoaded] = useState(false);
 
   // Load draft from localStorage on mount
@@ -63,16 +66,20 @@ export default function NewToolPage() {
     logoUrl: '',
     websiteUrl: '',
     affiliateUrl: '',
+    demoVideoUrl: '',
     categoryId: '',
     pricingModel: 'FREEMIUM',
     pricingUrl: '',
     startingPrice: null as number | null,
+    freeTrialDays: null as number | null,
     hasApi: false,
     hasMobileApp: false,
     launchYear: new Date().getFullYear(),
     founderNames: '',
     headquartersCountry: '',
     avgRating: 0,
+    features: '',
+    useCases: '',
   });
 
   // Save draft to localStorage on changes
@@ -103,7 +110,7 @@ export default function NewToolPage() {
     
     if (type === 'checkbox') {
       setFormData(prev => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
-    } else if (name === 'startingPrice' || name === 'avgRating' || name === 'launchYear') {
+    } else if (name === 'startingPrice' || name === 'avgRating' || name === 'launchYear' || name === 'freeTrialDays') {
       setFormData(prev => ({ ...prev, [name]: value ? parseFloat(value) : null }));
     } else if (name === 'name') {
       // Auto-generate slug from name
@@ -179,13 +186,23 @@ export default function NewToolPage() {
       alert('Please fill in all required fields');
       return;
     }
-    
+
     setSaving(true);
-    
+
     try {
       const founderNamesArray = formData.founderNames
         .split(',')
         .map(f => f.trim())
+        .filter(Boolean);
+
+      const featuresArray = formData.features
+        .split('\n')
+        .map(f => f.replace(/^[•\-*]\s*/, '').trim())
+        .filter(Boolean);
+
+      const useCasesArray = formData.useCases
+        .split('\n')
+        .map(u => u.replace(/^[•\-*]\s*/, '').trim())
         .filter(Boolean);
 
       const result = await createToolAction({
@@ -196,10 +213,12 @@ export default function NewToolPage() {
         logoUrl: formData.logoUrl,
         websiteUrl: formData.websiteUrl,
         affiliateUrl: formData.affiliateUrl || undefined,
+        demoVideoUrl: formData.demoVideoUrl || undefined,
         categoryId: formData.categoryId,
         pricingModel: formData.pricingModel,
         pricingUrl: formData.pricingUrl || undefined,
         startingPrice: formData.startingPrice,
+        freeTrialDays: formData.freeTrialDays,
         hasApi: formData.hasApi,
         hasMobileApp: formData.hasMobileApp,
         launchYear: formData.launchYear,
@@ -208,13 +227,20 @@ export default function NewToolPage() {
         avgRating: formData.avgRating,
         screenshotUrls: screenshots,
         faqs: faqs.length > 0 ? faqs : undefined,
+        features: featuresArray.length > 0 ? featuresArray : undefined,
+        useCases: useCasesArray.length > 0 ? useCasesArray : undefined,
       });
-      
+
       if (result.success) {
-        // Save tags if any selected
+        // Save tags, pros/cons if any
+        const promises: Promise<any>[] = [];
         if (selectedTagIds.length > 0 && result.toolId) {
-          await updateToolTagsAction(result.toolId, selectedTagIds);
+          promises.push(updateToolTagsAction(result.toolId, selectedTagIds));
         }
+        if ((pros.length > 0 || cons.length > 0) && result.toolId) {
+          promises.push(updateToolProsConsAction(result.toolId, { pros, cons }));
+        }
+        if (promises.length > 0) await Promise.all(promises);
         localStorage.removeItem('draft_admin_new_tool');
         router.push('/tools-dir');
         router.refresh();
@@ -425,6 +451,20 @@ export default function NewToolPage() {
               placeholder="https://..."
             />
           </div>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
+              Demo Video URL
+            </label>
+            <input
+              type="url"
+              name="demoVideoUrl"
+              value={formData.demoVideoUrl}
+              onChange={handleChange}
+              className="input-field text-sm"
+              placeholder="https://youtube.com/watch?v=... or https://loom.com/..."
+            />
+          </div>
         </div>
 
         {/* Pricing */}
@@ -473,6 +513,20 @@ export default function NewToolPage() {
                 onChange={handleChange}
                 className="input-field text-sm"
                 placeholder="https://..."
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
+                Free Trial Days
+              </label>
+              <input
+                type="number"
+                name="freeTrialDays"
+                value={formData.freeTrialDays ?? ''}
+                onChange={handleChange}
+                min="0"
+                className="input-field text-sm"
+                placeholder="14"
               />
             </div>
           </div>
@@ -551,6 +605,51 @@ export default function NewToolPage() {
               </span>
             </label>
           </div>
+        </div>
+
+        {/* Features & Use Cases */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6 space-y-6">
+          <h2 className="font-sora font-bold text-lg text-navy dark:text-white">Features & Use Cases</h2>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
+              Key Features
+            </label>
+            <textarea
+              name="features"
+              value={formData.features}
+              onChange={handleChange}
+              rows={4}
+              className="input-field text-sm"
+              placeholder="Paste features here — one per line, auto-formatted with bullet points"
+            />
+            <p className="text-xs text-gray-400 mt-1">One feature per line</p>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
+              Use Cases
+            </label>
+            <textarea
+              name="useCases"
+              value={formData.useCases}
+              onChange={handleChange}
+              rows={4}
+              className="input-field text-sm"
+              placeholder="Paste use cases here — one per line"
+            />
+            <p className="text-xs text-gray-400 mt-1">One use case per line</p>
+          </div>
+        </div>
+
+        {/* Pros & Cons */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6">
+          <ProsConsManager
+            pros={pros}
+            cons={cons}
+            onChangePros={setPros}
+            onChangeCons={setCons}
+          />
         </div>
 
         {/* Screenshots */}
