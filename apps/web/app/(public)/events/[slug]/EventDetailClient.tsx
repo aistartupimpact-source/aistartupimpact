@@ -192,7 +192,7 @@ export default function EventDetailClient({
           {/* Cover Image — square */}
           <div className="rounded-xl overflow-hidden bg-gradient-to-br from-brand/5 to-brand/10 relative aspect-square">
             {event.coverImageUrl ? (
-              <Image src={event.coverImageUrl} alt={event.title} width={400} height={400} className="w-full h-full object-cover" />
+              <Image src={event.coverImageUrl} alt={event.title} width={400} height={400} sizes="(max-width: 768px) 100vw, 50vw" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <Calendar className="w-12 h-12 text-brand/20" />
@@ -209,7 +209,7 @@ export default function EventDetailClient({
             <div className="flex items-center gap-2.5 px-1">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand to-brand-600 flex items-center justify-center shrink-0 shadow-sm">
                 {event.organizerAvatar ? (
-                  <Image src={event.organizerAvatar} alt="" width={32} height={32} className="w-full h-full rounded-full object-cover" />
+                  <Image src={event.organizerAvatar} alt="" width={32} height={32} sizes="32px" className="w-full h-full rounded-full object-cover" />
                 ) : (
                   <span className="text-xs font-bold text-white">{event.organizerName.charAt(0)}</span>
                 )}
@@ -272,7 +272,7 @@ export default function EventDetailClient({
                 {speakers.map((s) => (
                   <div key={s.id} className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2">
                     <div className="w-7 h-7 rounded-full bg-brand/10 flex items-center justify-center shrink-0 overflow-hidden">
-                      {s.headshotUrl ? <Image src={s.headshotUrl} alt={s.name} width={28} height={28} className="w-full h-full object-cover" /> : <span className="text-[10px] font-bold text-brand">{s.name.charAt(0)}</span>}
+                      {s.headshotUrl ? <Image src={s.headshotUrl} alt={s.name} width={28} height={28} sizes="28px" className="w-full h-full object-cover" /> : <span className="text-[10px] font-bold text-brand">{s.name.charAt(0)}</span>}
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 font-jakarta">{s.name}</p>

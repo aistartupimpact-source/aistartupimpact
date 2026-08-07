@@ -525,6 +525,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
               <Link
                 key={tool.slug}
                 href={`/tools/${tool.slug}`}
+                prefetch={false}
                 className={`group block rounded-2xl transition-all h-full ${isSelected ? 'ring-2 ring-brand ring-offset-2 dark:ring-offset-gray-950' : 'hover:shadow-lg hover:shadow-brand/5'}`}
               >
                 <div className="card p-4 sm:p-5 flex flex-col gap-2 sm:gap-2.5 relative h-full bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
@@ -615,6 +616,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
               <Link
                 key={tool.slug}
                 href={`/tools/${tool.slug}`}
+                prefetch={false}
                 className={`group flex items-center gap-4 p-3 rounded-xl transition-all bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-brand/30 hover:shadow-sm ${isSelected ? 'ring-2 ring-brand' : ''}`}
               >
                 {/* Logo */}

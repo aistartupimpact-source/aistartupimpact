@@ -83,7 +83,7 @@ export default function SimilarStartupsCarousel({ startups }: Props) {
             {/* Logo */}
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand/10 to-gray-100 dark:from-brand/20 dark:to-gray-800 flex items-center justify-center overflow-hidden mb-3 shrink-0">
               {s.logoUrl ? (
-                <Image src={s.logoUrl} alt={s.name} className="w-10 h-10 object-contain" width={40} height={40} />
+                <Image src={s.logoUrl} alt={s.name} className="w-10 h-10 object-contain" width={40} height={40} sizes="40px" />
               ) : (
                 <Building2 className="w-6 h-6 text-brand" />
               )}

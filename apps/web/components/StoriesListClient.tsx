@@ -146,7 +146,7 @@ export default function StoriesListClient({ stories }: { stories: Story[] }) {
           {/* Mobile: Vertical card grid (like featured) */}
           <div className="grid grid-cols-1 gap-4 sm:hidden">
             {shown.map((story) => (
-              <Link key={story.slug} href={`/stories/${story.slug}`} className="group">
+              <Link key={story.slug} href={`/stories/${story.slug}`} prefetch={false} className="group">
                 <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-brand/40 transition-colors">
                   <div className="aspect-[16/9] bg-gradient-to-br from-brand/10 to-gray-100 dark:from-brand/20 dark:to-gray-800 relative overflow-hidden">
                     {(story.thumbnailImage || story.coverImage) ? (
@@ -207,7 +207,7 @@ export default function StoriesListClient({ stories }: { stories: Story[] }) {
           {/* Desktop: List row layout */}
           <div className="hidden sm:block divide-y divide-gray-100 dark:divide-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
             {shown.map((story, idx) => (
-              <Link key={story.slug} href={`/stories/${story.slug}`} className="group block">
+              <Link key={story.slug} href={`/stories/${story.slug}`} prefetch={false} className="group block">
                 <div className="flex gap-4 sm:gap-5 p-4 sm:p-5 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 relative">
                   {/* Left accent on hover */}
                   <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-brand scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-top" />

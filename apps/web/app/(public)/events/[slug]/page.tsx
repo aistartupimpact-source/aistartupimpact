@@ -186,6 +186,20 @@ export async function generateMetadata({
   };
 }
 
+export async function generateStaticParams() {
+  try {
+    const rows = await sql`
+      SELECT slug FROM "Event"
+      WHERE "deletedAt" IS NULL AND "isApproved" = true
+      ORDER BY "startDate" DESC NULLS LAST
+      LIMIT 30
+    `;
+    return rows.map((r: any) => ({ slug: r.slug }));
+  } catch {
+    return [];
+  }
+}
+
 export default async function EventDetailPage({
   params,
 }: {

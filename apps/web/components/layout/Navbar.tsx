@@ -276,7 +276,7 @@ export default function Navbar() {
                   <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-900 rounded-xl">
                     <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden shrink-0">
                       {user.avatar ? (
-                        <Image src={user.avatar} alt={user.name || 'User'} className="w-full h-full object-cover" width={40} height={40} />
+                        <Image src={user.avatar} alt={user.name || 'User'} className="w-full h-full object-cover" width={40} height={40} sizes="40px" />
                       ) : (
                         <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">{(user.name || 'U').charAt(0)}</span>
                       )}

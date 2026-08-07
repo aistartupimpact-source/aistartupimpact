@@ -42,6 +42,7 @@ export default function FoundersSection({ founders, startupName }: FoundersSecti
                     className="w-full h-full object-cover"
                     width={56}
                     height={56}
+                    sizes="56px"
                   />
                 ) : (
                   <span>{founder.name.charAt(0).toUpperCase()}</span>

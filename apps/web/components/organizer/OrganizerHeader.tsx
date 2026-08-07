@@ -15,8 +15,8 @@ export default function OrganizerHeader({ organizer }: Props) {
       {/* Left: Mobile logo + Search */}
       <div className="flex items-center gap-3">
         <Link href="/organizer" className="md:hidden flex items-center gap-2">
-          <Image src="/logo-light.svg" alt="AI Startup Impact" width={24} height={24} className="h-6 w-auto dark:hidden" />
-          <Image src="/logo-dark.svg" alt="AI Startup Impact" width={24} height={24} className="h-6 w-auto hidden dark:block" />
+          <Image src="/logo-light.svg" alt="AI Startup Impact" width={24} height={24} sizes="24px" className="h-6 w-auto dark:hidden" />
+          <Image src="/logo-dark.svg" alt="AI Startup Impact" width={24} height={24} sizes="24px" className="h-6 w-auto hidden dark:block" />
         </Link>
         <div className="hidden md:block relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />

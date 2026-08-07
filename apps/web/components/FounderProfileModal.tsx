@@ -113,6 +113,7 @@ export default function FounderProfileModal({ founder, isOpen, onClose, startupN
                       className="w-full h-full object-cover"
                       width={96}
                       height={96}
+                      sizes="96px"
                     />
                   ) : (
                     <span>{founder.name.charAt(0).toUpperCase()}</span>

@@ -110,6 +110,7 @@ export default function ClaimStartupClient({ startup, startupId }: ClaimStartupC
                   alt={startup.name}
                   width={64}
                   height={64}
+                  sizes="64px"
                   className="rounded-lg"
                 />
               )}

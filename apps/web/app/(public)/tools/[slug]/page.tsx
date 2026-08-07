@@ -210,6 +210,7 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
             alt={tool.name}
             width={56}
             height={56}
+            sizes="56px"
             className="w-14 h-14 object-contain"
           />
         </div>
@@ -455,7 +456,7 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
                   >
                     <div className="w-9 h-9 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700">
                       {alt.logoUrl ? (
-                        <Image src={alt.logoUrl} alt={alt.name} width={28} height={28} className="w-7 h-7 object-contain" />
+                        <Image src={alt.logoUrl} alt={alt.name} width={28} height={28} sizes="28px" className="w-7 h-7 object-contain" />
                       ) : (
                         <span className="text-xs font-bold text-brand">{alt.name.charAt(0)}</span>
                       )}
@@ -541,7 +542,7 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200 dark:border-gray-700">
                   {tool.startupLogoUrl ? (
-                    <Image src={tool.startupLogoUrl} alt={tool.startupName} width={32} height={32} className="w-8 h-8 object-contain" />
+                    <Image src={tool.startupLogoUrl} alt={tool.startupName} width={32} height={32} sizes="32px" className="w-8 h-8 object-contain" />
                   ) : (
                     <span className="text-sm font-bold text-brand">{tool.startupName.charAt(0)}</span>
                   )}

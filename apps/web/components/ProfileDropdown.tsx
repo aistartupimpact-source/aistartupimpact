@@ -65,7 +65,7 @@ export default function ProfileDropdown({ user: propUser }: ProfileDropdownProps
         aria-label="Account menu"
       >
         {user.avatar ? (
-          <Image src={user.avatar} alt="" className="w-full h-full object-cover" width={32} height={32} />
+          <Image src={user.avatar} alt="" className="w-full h-full object-cover" width={32} height={32} sizes="32px" />
         ) : (
           <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">{initials}</span>
         )}

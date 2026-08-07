@@ -352,6 +352,7 @@ export default function SearchPage() {
                           src={result.logoUrl || result.coverImage || ''}
                           alt={result.title}
                           fill
+                          sizes="80px"
                           className="object-cover"
                         />
                       </div>

@@ -138,7 +138,7 @@ function OverviewTab({ profile, setProfile }: { profile: UserProfile; setProfile
       <div className="flex items-center gap-4">
         <div className="relative group">
           <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden border-2 border-gray-200 dark:border-gray-700">
-            {profile.avatar ? <Image src={profile.avatar} alt="" className="w-full h-full object-cover" width={64} height={64} /> : <span className="text-xl font-bold text-gray-400">{(profile.name || 'U').charAt(0)}</span>}
+            {profile.avatar ? <Image src={profile.avatar} alt="" className="w-full h-full object-cover" width={64} height={64} sizes="64px" /> : <span className="text-xl font-bold text-gray-400">{(profile.name || 'U').charAt(0)}</span>}
           </div>
           <button onClick={() => fileRef.current?.click()} disabled={uploadingAvatar} className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
             {uploadingAvatar ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <Camera className="w-4 h-4 text-white" />}

@@ -6,7 +6,7 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   experimental: {
-    optimizePackageImports: ['lucide-react'],
+    optimizePackageImports: ['lucide-react', 'recharts', 'date-fns', 'react-simple-maps'],
   },
   images: {
     remotePatterns: [

@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Clock, Calendar, Bookmark, ChevronRight, Users } from 'lucide-react';
-import { getArticleBySlugDirect, getArticlesDirect } from '@/lib/db';
+import { sql, getArticleBySlugDirect, getArticlesDirect } from '@/lib/db';
 import { defaultFounderSpotlights } from '@/lib/fallbacks';
 import { buildArticleMetadata, generateArticleSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import { sanitizeHtml } from '@/lib/sanitize';
@@ -17,6 +17,20 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const story = await getArticleBySlugDirect(params.slug);
   if (!story) return { title: 'Story Not Found' };
   return buildArticleMetadata({ ...story, type: 'STORY' });
+}
+
+export async function generateStaticParams() {
+  try {
+    const rows = await sql`
+      SELECT slug FROM "Article"
+      WHERE type = 'STORY' AND status = 'PUBLISHED' AND "deletedAt" IS NULL
+      ORDER BY "publishedAt" DESC NULLS LAST
+      LIMIT 50
+    `;
+    return rows.map((r: any) => ({ slug: r.slug }));
+  } catch {
+    return [];
+  }
 }
 
 export default async function StoryDetailPage({ params }: { params: { slug: string } }) {
@@ -121,7 +135,7 @@ export default async function StoryDetailPage({ params }: { params: { slug: stri
 
           {story.coverImage ? (
             <div className="relative aspect-[16/9] rounded-xl overflow-hidden my-6 sm:my-8">
-              <Image src={story.coverImage} alt={story.title} fill className="object-cover" />
+              <Image src={story.coverImage} alt={story.title} fill sizes="100vw" className="object-cover" />
             </div>
           ) : (
             <div className="aspect-[16/9] bg-gradient-to-br from-brand-50 to-gray-50 dark:from-brand-900/20 dark:to-gray-900 rounded-xl my-6 sm:my-8 flex items-center justify-center">

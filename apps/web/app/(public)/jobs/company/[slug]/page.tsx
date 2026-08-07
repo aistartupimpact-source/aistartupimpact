@@ -47,7 +47,7 @@ export default async function CompanyJobsPage({ params }: PageProps) {
       <div className="card p-5 sm:p-6 flex flex-col sm:flex-row items-start gap-4 mb-8">
         <div className="w-16 h-16 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
           {company.logoUrl ? (
-            <Image src={company.logoUrl} alt={company.companyName} width={64} height={64} className="w-full h-full object-cover" />
+            <Image src={company.logoUrl} alt={company.companyName} width={64} height={64} sizes="64px" className="w-full h-full object-cover" />
           ) : (
             <Building2 className="w-7 h-7 text-gray-400" />
           )}

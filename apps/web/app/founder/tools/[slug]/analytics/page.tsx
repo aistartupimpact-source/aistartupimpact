@@ -117,7 +117,7 @@ export default async function ToolAnalyticsPage({ params }: { params: { slug: st
         </Link>
         <div className="flex items-center gap-3">
           {tool.logoUrl && (
-            <Image src={tool.logoUrl} alt="" width={40} height={40} className="w-10 h-10 rounded-xl object-contain border border-gray-200 dark:border-gray-700 bg-white p-1" />
+            <Image src={tool.logoUrl} alt="" width={40} height={40} sizes="40px" className="w-10 h-10 rounded-xl object-contain border border-gray-200 dark:border-gray-700 bg-white p-1" />
           )}
           <div>
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">{tool.name} Analytics</h1>

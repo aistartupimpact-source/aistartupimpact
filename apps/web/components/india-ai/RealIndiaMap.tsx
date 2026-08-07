@@ -483,7 +483,7 @@ export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps)
                       <div className="flex items-start gap-3">
                         <div className="w-9 h-9 rounded bg-white dark:bg-gray-700 flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-gray-600">
                           {startup.logoUrl ? (
-                            <Image src={startup.logoUrl} alt={startup.name} width={28} height={28} className="object-contain" />
+                            <Image src={startup.logoUrl} alt={startup.name} width={28} height={28} sizes="28px" className="object-contain" />
                           ) : (
                             <Building2 className="w-4 h-4 text-gray-400" />
                           )}
