@@ -2,6 +2,7 @@
 
 import { memo, useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowUpRight, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Partner {
@@ -110,11 +111,9 @@ function FeaturedPartnerRotator({ partners }: { partners: Partner[] }) {
             <div className="relative shrink-0">
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white border border-white/10 flex items-center justify-center overflow-hidden shadow-lg shadow-brand/10">
                 {p.logoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.logoUrl} alt={p.name} className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />
+                  <Image src={p.logoUrl} alt={p.name} className="w-12 h-12 sm:w-14 sm:h-14 object-contain" width={56} height={56} />
                 ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=random&color=fff&size=150`} alt={p.name} className="w-full h-full object-cover" />
+                  <Image src={`https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=random&color=fff&size=150`} alt={p.name} className="w-full h-full object-cover" width={80} height={80} unoptimized />
                 )}
               </div>
               <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-[#0D1B2A] flex items-center justify-center">

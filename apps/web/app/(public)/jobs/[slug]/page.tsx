@@ -2,6 +2,7 @@ import { sql } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { MapPin, DollarSign, Clock, Building2, Globe, Linkedin, ExternalLink, Briefcase, Users, CheckCircle2 } from 'lucide-react';
 interface PageProps {
   params: { slug: string };
@@ -68,7 +69,7 @@ export default async function JobDetailPage({ params }: PageProps) {
             <div className="flex items-start gap-4">
               <div className="w-14 h-14 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
                 {job.logoUrl ? (
-                  <img src={job.logoUrl} alt={job.companyName} className="w-full h-full object-cover" />
+                  <Image src={job.logoUrl} alt={job.companyName} width={56} height={56} className="w-full h-full object-cover" />
                 ) : (
                   <Building2 className="w-6 h-6 text-gray-400" />
                 )}

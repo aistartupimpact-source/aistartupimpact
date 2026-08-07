@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Star, Zap, ArrowRight, CheckSquare, Square, X, BarChart, Search, Grid3X3, List, Loader2, SlidersHorizontal, ChevronDown, ChevronRight } from 'lucide-react';
 import BookmarkButton from './BookmarkButton';
 import UpvoteButton from './tools/UpvoteButton';
@@ -544,8 +545,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                   {/* Logo & Title */}
                   <div className="flex items-start gap-2.5 pr-20">
                     <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700/50">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={iconUrl} alt={tool.name} className="w-7 h-7 sm:w-8 sm:h-8 object-contain" />
+                      <Image src={iconUrl} alt={tool.name} className="w-7 h-7 sm:w-8 sm:h-8 object-contain" width={32} height={32} unoptimized />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h2 className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand transition-colors line-clamp-1">
@@ -619,8 +619,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
               >
                 {/* Logo */}
                 <div className="w-9 h-9 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700/50">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={iconUrl} alt={tool.name} className="w-7 h-7 object-contain" />
+                  <Image src={iconUrl} alt={tool.name} className="w-7 h-7 object-contain" width={28} height={28} unoptimized />
                 </div>
 
                 {/* Info */}
@@ -739,8 +738,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                     <button onClick={() => removeTool(t.slug)} className="absolute top-0 right-0 p-1.5 bg-gray-100 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors z-10"><X className="w-3 h-3" /></button>
                     <div className="h-[120px] flex flex-col justify-end pb-4 border-b border-gray-100 dark:border-gray-800">
                       <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden mb-3 border border-gray-100 dark:border-gray-700/50">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={t.logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=random&color=fff&size=150`} alt={t.name} className="w-full h-full object-cover" />
+                        <Image src={t.logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=random&color=fff&size=150`} alt={t.name} className="w-full h-full object-cover" width={48} height={48} unoptimized />
                       </div>
                       <h3 className="font-sora font-extrabold text-lg leading-tight">{t.name}</h3>
                     </div>

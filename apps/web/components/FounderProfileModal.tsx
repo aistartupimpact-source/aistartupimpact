@@ -2,6 +2,7 @@
 
 import { X, Linkedin, Twitter, Globe, Briefcase, Building2, Shield, CheckCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { createPortal } from 'react-dom';
 
 interface FounderProfileModalProps {
@@ -106,10 +107,12 @@ export default function FounderProfileModal({ founder, isOpen, onClose, startupN
               <div className="flex items-end gap-3 sm:gap-4 -mt-14 mb-4 relative z-10">
                 <div className="w-24 h-24 rounded-2xl bg-white dark:bg-gray-850 border-4 border-white dark:border-gray-900 shadow-xl flex items-center justify-center font-sora font-extrabold text-3xl text-navy dark:text-white overflow-hidden shrink-0">
                   {founder.avatar ? (
-                    <img 
-                      src={founder.avatar} 
-                      alt={founder.name} 
+                    <Image
+                      src={founder.avatar}
+                      alt={founder.name}
                       className="w-full h-full object-cover"
+                      width={96}
+                      height={96}
                     />
                   ) : (
                     <span>{founder.name.charAt(0).toUpperCase()}</span>

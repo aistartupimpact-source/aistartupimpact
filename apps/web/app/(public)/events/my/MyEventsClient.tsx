@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Calendar,
   MapPin,
@@ -180,7 +181,7 @@ function EventRegistrationCard({ reg, isPast }: { reg: Registration; isPast?: bo
         {/* Event Cover */}
         <div className="hidden sm:block w-20 h-20 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 shrink-0">
           {reg.eventCoverImageUrl ? (
-            <img src={reg.eventCoverImageUrl} alt="" className="w-full h-full object-cover" />
+            <Image src={reg.eventCoverImageUrl} alt="" width={80} height={80} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <Calendar className="w-6 h-6 text-gray-300" />
@@ -254,7 +255,7 @@ function EventRegistrationCard({ reg, isPast }: { reg: Registration; isPast?: bo
       {/* QR Code */}
       {showQr && (
         <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex flex-col items-center gap-2">
-          <img src={qrImageUrl} alt="Check-in QR Code" width={160} height={160} className="rounded-lg" />
+          <Image src={qrImageUrl} alt="Check-in QR Code" width={160} height={160} className="rounded-lg" unoptimized />
           <p className="text-[10px] text-gray-400 font-jakarta">Show this at event check-in</p>
         </div>
       )}

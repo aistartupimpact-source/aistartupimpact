@@ -2,6 +2,7 @@
 
 import { useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Star, ChevronLeft, ChevronRight, Wrench } from 'lucide-react';
 
 interface SimilarTool {
@@ -86,8 +87,7 @@ export default function SimilarToolsCarousel({ tools, categoryName, categorySlug
               {/* Logo + rating row */}
               <div className="flex items-start justify-between gap-2 mb-3">
                 <div className="w-11 h-11 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex items-center justify-center overflow-hidden shadow-sm shrink-0">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={logo} alt={tool.name} className="w-9 h-9 object-contain" />
+                  <Image src={logo} alt={tool.name} className="w-9 h-9 object-contain" width={36} height={36} />
                 </div>
                 {rating && rating > 0 && (
                   <span className="flex items-center gap-0.5 shrink-0">

@@ -1,6 +1,7 @@
 import { sql } from '@/lib/db';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Briefcase, MapPin, DollarSign, Clock, Building2 } from 'lucide-react';
 import JobFilters from '@/components/jobs/JobFilters';
 
@@ -142,7 +143,7 @@ export default async function JobsPage({ searchParams }: PageProps) {
               {/* Company Logo */}
               <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden">
                 {job.logoUrl ? (
-                  <img src={job.logoUrl} alt={job.companyName} className="w-full h-full object-cover" />
+                  <Image src={job.logoUrl} alt={job.companyName} width={48} height={48} className="w-full h-full object-cover" />
                 ) : (
                   <Building2 className="w-5 h-5 text-gray-400" />
                 )}

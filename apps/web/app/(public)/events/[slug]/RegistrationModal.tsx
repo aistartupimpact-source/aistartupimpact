@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { X, CheckCircle, Loader2, Calendar, MapPin, Video } from "lucide-react";
 import CitySelect from "@/components/events/CitySelect";
 
@@ -122,7 +123,7 @@ export default function RegistrationModal({ event, customQuestions, ticketTiers,
               {/* Cover image (16:9) */}
               {event.coverImageUrl && (
                 <div style={{ aspectRatio: "16/9" }} className="w-full">
-                  <img src={event.coverImageUrl} alt="" className="w-full h-full object-cover" />
+                  <Image src={event.coverImageUrl} alt="" width={400} height={225} className="w-full h-full object-cover" />
                 </div>
               )}
               <div className="p-3">

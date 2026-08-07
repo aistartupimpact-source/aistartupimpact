@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Building2, User, Briefcase, Phone, Linkedin, Twitter, Globe, ArrowRight, CheckCircle, Upload } from 'lucide-react';
 import { completeOnboardingAction } from './actions';
 
@@ -201,7 +202,7 @@ export default function OnboardingClient({ user, returnTo }: { user: User; retur
                <div className="flex items-center gap-6 w-full">
                  <div className="relative w-20 h-20 rounded-full overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
                    {formData.avatar ? (
-                     <img src={formData.avatar} alt="Avatar preview" className="w-full h-full object-cover" />
+                     <Image src={formData.avatar} alt="Avatar preview" width={80} height={80} unoptimized className="w-full h-full object-cover" />
                    ) : (
                      <User className="w-10 h-10 text-gray-400" />
                    )}

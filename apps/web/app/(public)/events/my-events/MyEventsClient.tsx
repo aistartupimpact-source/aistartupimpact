@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Calendar, MapPin, Video, QrCode, Download, Clock, CheckCircle, Loader2 } from "lucide-react";
 
 interface Registration {
@@ -127,7 +128,7 @@ function EventRegCard({ reg, isPast }: { reg: Registration; isPast?: boolean }) 
         {/* Cover */}
         <div className="w-[72px] h-[72px] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 shrink-0">
           {reg.eventCoverImageUrl ? (
-            <img src={reg.eventCoverImageUrl} alt="" className="w-full h-full object-cover" />
+            <Image src={reg.eventCoverImageUrl} alt="" width={72} height={72} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center"><Calendar className="w-6 h-6 text-gray-300" /></div>
           )}
@@ -178,7 +179,7 @@ function EventRegCard({ reg, isPast }: { reg: Registration; isPast?: boolean }) 
       {/* QR */}
       {showQr && (
         <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-col items-center gap-2">
-          <img src={qrImageUrl} alt="QR" width={140} height={140} className="rounded-lg" />
+          <Image src={qrImageUrl} alt="QR" width={140} height={140} className="rounded-lg" unoptimized />
           <p className="text-[11px] text-gray-400">Show at check-in</p>
         </div>
       )}

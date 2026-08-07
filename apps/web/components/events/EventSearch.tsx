@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Search, X, Calendar, MapPin, Video, Users, Loader2 } from "lucide-react";
 
@@ -307,7 +308,7 @@ function EventTimelineCard({ event }: { event: Event }) {
         <div className="shrink-0 self-start">
           {event.coverImageUrl ? (
             <div className="w-[110px] h-[110px] sm:w-[140px] sm:h-[140px] rounded-[10px] overflow-hidden bg-gray-100 dark:bg-gray-800">
-              <img src={event.coverImageUrl} alt="" className="w-full h-full object-cover" />
+              <Image src={event.coverImageUrl} alt="" className="w-full h-full object-cover" width={140} height={140} />
             </div>
           ) : (
             <div className="w-[110px] h-[110px] sm:w-[140px] sm:h-[140px] rounded-[10px] bg-gradient-to-br from-brand/5 to-brand/10 flex items-center justify-center">

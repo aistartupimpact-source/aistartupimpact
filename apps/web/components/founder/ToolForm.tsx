@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Upload, X, Loader2, Plus } from 'lucide-react';
 import { submitToolAction, getTagGroupsForFounderAction } from '@/app/founder/tools/actions';
 import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
@@ -328,7 +329,7 @@ export default function ToolForm() {
         <div className="flex items-center gap-4">
           {logoPreview ? (
             <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-              <img src={logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
+              <Image src={logoPreview} alt="Logo preview" width={80} height={80} unoptimized className="w-full h-full object-cover" />
               <button
                 type="button"
                 onClick={() => {
@@ -694,7 +695,7 @@ export default function ToolForm() {
                   : 'border-gray-200 dark:border-gray-700 hover:border-brand'
               }`}
             >
-              <img src={url} alt={`Screenshot ${index + 1}`} className="w-full h-full object-cover pointer-events-none" />
+              <Image src={url} alt={`Screenshot ${index + 1}`} width={400} height={225} unoptimized className="w-full h-full object-cover pointer-events-none" />
               <button
                 type="button"
                 onClick={() => removeScreenshot(index)}
