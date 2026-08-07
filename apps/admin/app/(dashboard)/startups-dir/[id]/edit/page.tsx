@@ -11,6 +11,7 @@ import FoundersDetailsManager, { FounderDetail } from '@/components/shared/Found
 import SocialLinksManager, { SocialLink } from '@/components/shared/SocialLinksManager';
 import CityCombobox from '@/components/shared/CityCombobox';
 import { getCanonicalCategoriesAction, getCanonicalTypesAction } from '../../manage/actions';
+import SlugEditor from '@/components/shared/SlugEditor';
 
 
 const stages = ['BOOTSTRAPPED', 'IDEA', 'PRE_SEED', 'SEED', 'PRE_SERIES_A', 'SERIES_A', 'SERIES_B', 'SERIES_C', 'GROWTH', 'PUBLIC'];
@@ -18,6 +19,8 @@ const stages = ['BOOTSTRAPPED', 'IDEA', 'PRE_SEED', 'SEED', 'PRE_SERIES_A', 'SER
 interface Startup {
   id: string;
   name: string;
+  slug: string;
+  slugChangedAt?: string | null;
   tagline: string;
   description: string;
   logoUrl?: string;
@@ -289,6 +292,20 @@ export default function EditStartupPage() {
         {/* Basic Information */}
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6 space-y-6">
           <h2 className="font-sora font-bold text-lg text-navy dark:text-white">Basic Information</h2>
+
+          <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-150 dark:border-gray-800">
+            <SlugEditor
+              currentSlug={formData.slug}
+              slugChangedAt={formData.slugChangedAt}
+              entityType="startup"
+              entityId={formData.id}
+              baseUrl="https://aistartupimpact.com/startups"
+              isAdmin={true}
+              onSuccess={(newSlug) => {
+                setFormData(prev => prev ? { ...prev, slug: newSlug } : null);
+              }}
+            />
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
