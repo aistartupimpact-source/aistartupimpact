@@ -71,6 +71,62 @@ export async function POST(request: Request) {
           WHERE email = ${email.toLowerCase()}
         `;
 
+        // Send welcome-back email (fire-and-forget)
+        try {
+          const resendKey = process.env.RESEND_API_KEY;
+          if (resendKey) {
+            const { Resend } = await import('resend');
+            const resend = new Resend(resendKey);
+            const fromEmail = process.env.RESEND_FROM_EMAIL || 'no-reply@aistartupimpact.com';
+            const fromName = process.env.RESEND_FROM_NAME || 'AI Startup Impact';
+            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aistartupimpact.com';
+
+            await resend.emails.send({
+              from: `${fromName} <${fromEmail}>`,
+              to: email.toLowerCase(),
+              subject: 'Welcome back to AI Startup Impact Newsletter!',
+              headers: {
+                'List-Unsubscribe': `<${siteUrl}/unsubscribe?email=${encodeURIComponent(email.toLowerCase())}>`,
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+              },
+              html: `
+                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+                  <div style="border-bottom: 3px solid #6366f1; padding-bottom: 20px; margin-bottom: 30px;">
+                    <h1 style="color: #111827; font-size: 20px; font-weight: 700; margin: 0;">AI Startup Impact</h1>
+                  </div>
+
+                  <p style="color: #374151; font-size: 16px; line-height: 1.6;">Hi${name ? ` ${name}` : ''},</p>
+
+                  <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+                    Great to have you back! You've been resubscribed to the AI Startup Impact newsletter. Here's what you'll get:
+                  </p>
+
+                  <div style="background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 12px; padding: 20px; margin: 24px 0;">
+                    <ul style="color: #374151; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
+                      <li>Weekly roundup of India's AI startup ecosystem</li>
+                      <li>Funding news and startup launches</li>
+                      <li>AI tool discoveries and reviews</li>
+                      <li>Founder stories and insights</li>
+                    </ul>
+                  </div>
+
+                  <div style="text-align: center; margin: 32px 0;">
+                    <a href="${siteUrl}" style="background: #111827; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 8px; display: inline-block; font-size: 14px; font-weight: 600;">Explore AI Startup Impact</a>
+                  </div>
+
+                  <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
+
+                  <p style="color: #9ca3af; font-size: 11px;">
+                    <a href="${siteUrl}/unsubscribe?email=${encodeURIComponent(email.toLowerCase())}" style="color: #9ca3af; text-decoration: underline;">Unsubscribe</a> if you no longer want these updates.
+                  </p>
+                </div>
+              `,
+            });
+          }
+        } catch (emailError) {
+          console.error('Welcome-back email error:', emailError);
+        }
+
         return NextResponse.json({
           success: true,
           message: 'Successfully resubscribed!',
@@ -101,8 +157,61 @@ export async function POST(request: Request) {
       )
     `;
 
-    // TODO: Send welcome email via Resend
-    // TODO: Add to Mailchimp/Beehiiv if integrated
+    // Send welcome email (fire-and-forget)
+    try {
+      const resendKey = process.env.RESEND_API_KEY;
+      if (resendKey) {
+        const { Resend } = await import('resend');
+        const resend = new Resend(resendKey);
+        const fromEmail = process.env.RESEND_FROM_EMAIL || 'no-reply@aistartupimpact.com';
+        const fromName = process.env.RESEND_FROM_NAME || 'AI Startup Impact';
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aistartupimpact.com';
+
+        await resend.emails.send({
+          from: `${fromName} <${fromEmail}>`,
+          to: email.toLowerCase(),
+          subject: 'Welcome to AI Startup Impact Newsletter!',
+          headers: {
+            'List-Unsubscribe': `<${siteUrl}/unsubscribe?email=${encodeURIComponent(email.toLowerCase())}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+              <div style="border-bottom: 3px solid #6366f1; padding-bottom: 20px; margin-bottom: 30px;">
+                <h1 style="color: #111827; font-size: 20px; font-weight: 700; margin: 0;">AI Startup Impact</h1>
+              </div>
+
+              <p style="color: #374151; font-size: 16px; line-height: 1.6;">Hi${name ? ` ${name}` : ''},</p>
+
+              <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+                Welcome aboard! You're now subscribed to the AI Startup Impact newsletter. Here's what you'll get:
+              </p>
+
+              <div style="background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 12px; padding: 20px; margin: 24px 0;">
+                <ul style="color: #374151; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
+                  <li>Weekly roundup of India's AI startup ecosystem</li>
+                  <li>Funding news and startup launches</li>
+                  <li>AI tool discoveries and reviews</li>
+                  <li>Founder stories and insights</li>
+                </ul>
+              </div>
+
+              <div style="text-align: center; margin: 32px 0;">
+                <a href="${siteUrl}" style="background: #111827; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 8px; display: inline-block; font-size: 14px; font-weight: 600;">Explore AI Startup Impact</a>
+              </div>
+
+              <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
+
+              <p style="color: #9ca3af; font-size: 11px;">
+                <a href="${siteUrl}/unsubscribe?email=${encodeURIComponent(email.toLowerCase())}" style="color: #9ca3af; text-decoration: underline;">Unsubscribe</a> if you no longer want these updates.
+              </p>
+            </div>
+          `,
+        });
+      }
+    } catch (emailError) {
+      console.error('Welcome email error:', emailError);
+    }
 
     return NextResponse.json({
       success: true,

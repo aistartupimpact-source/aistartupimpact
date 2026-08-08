@@ -1,18 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@aistartupimpact/database";
+import { jwtVerify } from "jose";
 
 export const dynamic = 'force-dynamic';
+
+const UNSUBSCRIBE_SECRET = new TextEncoder().encode(
+  process.env.NEXTAUTH_SECRET || "fallback-secret"
+);
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, campaignId, reason, feedback } = body;
+    const { email: rawEmail, token, campaignId, reason, feedback } = body;
 
-    if (!email) {
-      return NextResponse.json({ success: false, error: "Email is required" }, { status: 400 });
+    let decodedEmail: string | null = null;
+
+    // Prefer signed token over raw email
+    if (token) {
+      try {
+        const { payload } = await jwtVerify(token, UNSUBSCRIBE_SECRET);
+        decodedEmail = (payload as any).email;
+      } catch {
+        return NextResponse.json({ success: false, error: "Invalid or expired unsubscribe link" }, { status: 401 });
+      }
+    } else if (rawEmail) {
+      decodedEmail = decodeURIComponent(rawEmail);
     }
 
-    const decodedEmail = decodeURIComponent(email);
+    if (!decodedEmail) {
+      return NextResponse.json({ success: false, error: "Email is required" }, { status: 400 });
+    }
     const ipAddress = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
 
     // Check if subscriber exists

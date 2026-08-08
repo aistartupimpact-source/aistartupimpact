@@ -5,10 +5,27 @@ import crypto from 'crypto';
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// In production, you would verify the Resend Webhook signature here
-// using `resend.webhooks.verify`
 router.post('/resend', async (req: Request, res: Response) => {
   try {
+    // Verify Resend webhook signature via Svix
+    const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
+    if (webhookSecret) {
+      try {
+        const { Webhook } = await import('svix');
+        const wh = new Webhook(webhookSecret);
+        wh.verify(JSON.stringify(req.body), {
+          'svix-id': req.headers['svix-id'] as string,
+          'svix-timestamp': req.headers['svix-timestamp'] as string,
+          'svix-signature': req.headers['svix-signature'] as string,
+        });
+      } catch (verifyErr) {
+        console.error('Resend webhook signature verification failed:', verifyErr);
+        return res.status(401).send('Invalid webhook signature');
+      }
+    } else {
+      console.warn('RESEND_WEBHOOK_SECRET not set — skipping signature verification');
+    }
+
     const { type, data } = req.body;
 
     if (!type || !data || !data.to) {

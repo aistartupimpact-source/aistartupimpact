@@ -57,6 +57,56 @@ export async function POST(req: NextRequest) {
         )
       `;
       console.log('Job application saved successfully for:', email);
+
+      // Send application confirmation email (fire-and-forget)
+      try {
+        const resendKey = process.env.RESEND_API_KEY;
+        if (resendKey) {
+          const { Resend } = await import('resend');
+          const resend = new Resend(resendKey);
+          const fromEmail = process.env.RESEND_FROM_EMAIL || 'no-reply@aistartupimpact.com';
+          const fromName = process.env.RESEND_FROM_NAME || 'AI Startup Impact';
+
+          await resend.emails.send({
+            from: `${fromName} <${fromEmail}>`,
+            to: email,
+            subject: `Application received — ${role} at AI Startup Impact`,
+            html: `
+              <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+                <div style="border-bottom: 3px solid #6366f1; padding-bottom: 20px; margin-bottom: 30px;">
+                  <h1 style="color: #111827; font-size: 20px; font-weight: 700; margin: 0;">AI Startup Impact</h1>
+                </div>
+
+                <p style="color: #374151; font-size: 16px; line-height: 1.6;">Hi ${fullName},</p>
+
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+                  Thank you for applying for the <strong>${role}</strong> position at AI Startup Impact. We've received your application and our team will review it shortly.
+                </p>
+
+                <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                  <p style="color: #6b7280; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 8px 0; font-weight: 600;">Application Details</p>
+                  <p style="color: #374151; font-size: 14px; margin: 4px 0;"><strong>Role:</strong> ${role}</p>
+                  <p style="color: #374151; font-size: 14px; margin: 4px 0;"><strong>Name:</strong> ${fullName}</p>
+                </div>
+
+                <p style="color: #374151; font-size: 14px; line-height: 1.6;">
+                  We typically respond within 5-7 business days. If your profile matches our requirements, we'll reach out to schedule next steps.
+                </p>
+
+                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
+
+                <p style="color: #6b7280; font-size: 13px; line-height: 1.5;">
+                  Best regards,<br/>
+                  AI Startup Impact Team
+                </p>
+              </div>
+            `,
+          });
+        }
+      } catch (emailError) {
+        console.error('Application confirmation email error:', emailError);
+      }
+
     } catch (dbError: any) {
       console.error('Database insert error:', dbError);
       console.error('Error code:', dbError.code);

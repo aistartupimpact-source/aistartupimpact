@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { SignJWT } from 'jose';
 
 // Lazy initialization to avoid build-time errors
 let resend: Resend | null = null;
@@ -7,6 +8,15 @@ function getResend() {
     resend = new Resend(process.env.RESEND_API_KEY);
   }
   return resend;
+}
+
+export async function generateNewsletterUnsubscribeToken(email: string): Promise<string> {
+  const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'fallback-secret');
+  return new SignJWT({ email })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('90d')
+    .sign(secret);
 }
 
 // Transactional emails (verification, password reset, notifications)
