@@ -1,6 +1,8 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
+import { paymentSuccessHtml } from '@aistartupimpact/utils/src/email-templates';
+import { sendEmail } from '../lib/email';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -107,7 +109,24 @@ router.post('/razorpay', async (req: Request, res: Response): Promise<any> => {
         }
       });
 
-      // 4. In a real system, trigger workers/transactional.ts to send "Payment Success" email here.
+      // Send payment success email to tool owner
+      if (tool.ownerId) {
+        try {
+          const owner = await prisma.founderUser.findUnique({
+            where: { id: tool.ownerId },
+            select: { email: true, name: true },
+          });
+          if (owner?.email) {
+            sendEmail({
+              to: owner.email,
+              subject: `Payment confirmed — ${tool.name} upgraded to ${tool.pendingTier || 'Premium'}`,
+              html: paymentSuccessHtml(tool.name, owner.name || 'there', tool.pendingTier || 'Premium'),
+            }).catch(err => console.error('Payment email failed:', err));
+          }
+        } catch (emailErr) {
+          console.error('Failed to send payment success email:', emailErr);
+        }
+      }
       console.log(`Razorpay success! Activated Premium for tool: ${tool.name}`);
     }
 

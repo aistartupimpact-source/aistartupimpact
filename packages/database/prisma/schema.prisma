@@ -843,16 +843,18 @@ model NewsletterOpen {
 }
 
 model NewsletterSubscriber {
-  id             String    @id
-  email          String    @unique
-  name           String?
-  subscribedAt   DateTime  @default(now())
-  source         String?
-  isActive       Boolean   @default(true)
-  tags           String[]
-  lastOpenedAt   DateTime?
-  lastClickedAt  DateTime?
-  unsubscribedAt DateTime?
+  id                String    @id
+  email             String    @unique
+  name              String?
+  subscribedAt      DateTime  @default(now())
+  source            String?
+  isActive          Boolean   @default(true)
+  emailVerified     Boolean   @default(false)
+  verificationToken String?
+  tags              String[]
+  lastOpenedAt      DateTime?
+  lastClickedAt     DateTime?
+  unsubscribedAt    DateTime?
 
   @@index([email])
   @@index([isActive])
@@ -2612,4 +2614,19 @@ model JobBoardSaved {
   @@unique([listingId, userId])
   @@index([userId])
   @@index([listingId])
+}
+
+model EmailLog {
+  id        String   @id @default(uuid())
+  type      String
+  to        String
+  subject   String
+  status    String   @default("sent")
+  resendId  String?
+  error     String?
+  sentAt    DateTime @default(now())
+
+  @@index([to])
+  @@index([type])
+  @@index([sentAt])
 }

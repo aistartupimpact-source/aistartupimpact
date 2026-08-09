@@ -11,4 +11,17 @@ export {
 } from './src/verification/dns';
 export { CITY_DATABASE, searchCities, standardizeCityName } from './src/cities';
 export type { CityEntry } from './src/cities';
+export {
+  startupApprovalHtml,
+  toolApprovalHtml,
+  startupRejectionHtml,
+  userInvitationHtml,
+  submissionReceivedHtml,
+  verificationEmailHtml,
+  passwordResetHtml,
+  jobApplicationHtml,
+  paymentSuccessHtml,
+  newsletterConfirmHtml,
+  newsletterWelcomeHtml,
+} from './src/email-templates';
 

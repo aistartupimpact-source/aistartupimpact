@@ -262,10 +262,10 @@ export default function NewsletterPopup() {
 
                 {/* Success Message */}
                 <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3">
-                  Successfully Subscribed
+                  Almost there!
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4 sm:mb-6 leading-relaxed max-w-sm mx-auto">
-                  Thank you for subscribing! Check your inbox for a confirmation email. Your first AI digest will arrive this Friday.
+                  We've sent a confirmation email to your inbox. Click the link to activate your subscription and start receiving our weekly AI digest.
                 </p>
 
                 {/* What's Next Section */}
