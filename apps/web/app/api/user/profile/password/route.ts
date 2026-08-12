@@ -7,7 +7,7 @@ import bcrypt from 'bcryptjs';
 export const dynamic = 'force-dynamic';
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.USER_JWT_SECRET || 'user-secret-change-in-production'
+  process.env.USER_JWT_SECRET!
 );
 
 export async function PUT(request: NextRequest) {
@@ -43,15 +43,25 @@ export async function PUT(request: NextRequest) {
     // Hash and update
     const newHash = await bcrypt.hash(newPassword, 12);
 
+    const currentSessionId = (verified.payload as any).sessionId;
+
     await sql`UPDATE "WebUser" SET "passwordHash" = ${newHash} WHERE id = ${userId}`;
+
+    // Invalidate all other sessions for this user
+    if (currentSessionId) {
+      await sql`DELETE FROM "WebUserSession" WHERE "webUserId" = ${userId} AND id != ${currentSessionId}`;
+    }
 
     // Sync to UnifiedUser and FounderUser if they exist
     if (email) {
       await sql`UPDATE "UnifiedUser" SET "passwordHash" = ${newHash} WHERE email = ${email.toLowerCase()}`;
       await sql`UPDATE "FounderUser" SET "passwordHash" = ${newHash} WHERE email = ${email.toLowerCase()}`;
+      // Invalidate unified and organizer sessions
+      await sql`DELETE FROM "UnifiedSession" WHERE "userId" IN (SELECT id FROM "UnifiedUser" WHERE email = ${email.toLowerCase()})`;
+      await sql`DELETE FROM "EventOrganizerSession" WHERE "organizerId" IN (SELECT id FROM "EventOrganizer" WHERE email = ${email.toLowerCase()})`;
     }
 
-    return NextResponse.json({ success: true, message: 'Password updated' });
+    return NextResponse.json({ success: true, message: 'Password updated. Other sessions have been signed out.' });
   } catch (error) {
     console.error('Password change error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

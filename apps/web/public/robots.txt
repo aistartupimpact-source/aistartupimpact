@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+Disallow: /api/
+Disallow: /founder/
+Disallow: /employer/
+Disallow: /organizer/
+Disallow: /auth/
+Disallow: /admin/
+
+Sitemap: https://aistartupimpact.com/sitemap.xml

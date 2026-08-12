@@ -8,7 +8,7 @@ import { loginSchema, validateInput } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.USER_JWT_SECRET || 'user-secret-change-in-production'
+  process.env.USER_JWT_SECRET!
 );
 
 function generateId(): string {
@@ -114,7 +114,12 @@ export async function POST(request: NextRequest) {
 
       // 2FA check
       if (founder.twoFactorEnabled) {
-        return NextResponse.json({ success: false, requires2FA: true, userId: founder.id });
+        const challengeToken = await new SignJWT({ userId: founder.id, purpose: '2fa-challenge' })
+          .setProtectedHeader({ alg: 'HS256' })
+          .setIssuedAt()
+          .setExpirationTime('5m')
+          .sign(new TextEncoder().encode(process.env.FOUNDER_JWT_SECRET!));
+        return NextResponse.json({ success: false, requires2FA: true, challengeToken });
       }
 
       // Founder doesn't have a WebUser — create one on the fly for unified session

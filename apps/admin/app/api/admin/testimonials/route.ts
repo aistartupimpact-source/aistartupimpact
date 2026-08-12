@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
+import { requireApiAuth } from '@/lib/api-auth';
 
 const sql = neon(process.env.DATABASE_URL!);
 
 // GET - Fetch all testimonials
 export async function GET() {
+  const { error } = await requireApiAuth();
+  if (error) return error;
   try {
     const testimonials = await sql`
       SELECT id, name, role, company, avatar, quote, subscribed_duration, is_active, display_order, created_at
@@ -24,6 +27,8 @@ export async function GET() {
 
 // POST - Create new testimonial
 export async function POST(request: NextRequest) {
+  const { error } = await requireApiAuth();
+  if (error) return error;
   try {
     const body = await request.json();
     const { name, role, company, avatar, quote, subscribed_duration, is_active, display_order } = body;
@@ -53,6 +58,8 @@ export async function POST(request: NextRequest) {
 
 // PUT - Update testimonial
 export async function PUT(request: NextRequest) {
+  const { error } = await requireApiAuth();
+  if (error) return error;
   try {
     const body = await request.json();
     const { id, name, role, company, avatar, quote, subscribed_duration, is_active, display_order } = body;
@@ -99,6 +106,8 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - Delete testimonial
 export async function DELETE(request: NextRequest) {
+  const { error } = await requireApiAuth(['SUPER_ADMIN']);
+  if (error) return error;
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireFounderAuth } from '@/lib/founder-auth';
 import { prisma } from '@aistartupimpact/database';
-import { verifyDNS } from '@aistartupimpact/utils';
+import { verifyDNS } from '@aistartupimpact/utils/src/verification/dns';
 
 export const dynamic = 'force-dynamic';
 

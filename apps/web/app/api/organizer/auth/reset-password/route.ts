@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@aistartupimpact/database";
+import { sql } from "@/lib/db";
 import { hashPassword, createOrganizerSession } from "@/lib/organizer-auth";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { authRateLimit } from "@/lib/rate-limit";
@@ -27,6 +28,15 @@ export async function POST(request: NextRequest) {
     if (password.length < 8) {
       return NextResponse.json({ success: false, error: "Password must be at least 8 characters." }, { status: 400 });
     }
+    if (!/[A-Z]/.test(password)) {
+      return NextResponse.json({ success: false, error: "Password must contain an uppercase letter." }, { status: 400 });
+    }
+    if (!/[a-z]/.test(password)) {
+      return NextResponse.json({ success: false, error: "Password must contain a lowercase letter." }, { status: 400 });
+    }
+    if (!/[0-9]/.test(password)) {
+      return NextResponse.json({ success: false, error: "Password must contain a number." }, { status: 400 });
+    }
 
     const organizer = await prisma.eventOrganizer.findUnique({
       where: { verifyToken: token },
@@ -48,6 +58,9 @@ export async function POST(request: NextRequest) {
         status: "ACTIVE",
       },
     });
+
+    // Invalidate all existing sessions before creating a new one
+    await sql`DELETE FROM "EventOrganizerSession" WHERE "organizerId" = ${organizer.id}`;
 
     // Auto-login after password reset
     await createOrganizerSession(organizer.id);

@@ -9,7 +9,7 @@ import { sql } from '@/lib/db';
 import DNSVerificationModal from '@/components/founder/DNSVerificationModal';
 
 const USER_JWT_SECRET = new TextEncoder().encode(
-  process.env.USER_JWT_SECRET || 'user-secret-change-in-production'
+  process.env.USER_JWT_SECRET!
 );
 
 export default async function FounderLayout({

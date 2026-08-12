@@ -4,11 +4,15 @@ import { neon } from '@neondatabase/serverless';
 import { revalidatePath } from 'next/cache';
 import { logAuditEvent, canDelete } from '@/lib/audit-log';
 import { invalidateToolCache, invalidateTaxonomyCache } from '@/lib/cache-invalidate';
-import { toolApprovalHtml } from '@aistartupimpact/utils/src/email-templates';
+import { toolApprovalHtml } from '@aistartupimpact/utils';
+import { sendEmailFireAndForget } from '@/lib/email-send';
+import { requireActionAuth } from '@/lib/api-auth';
 
 const sql = neon(process.env.DATABASE_URL!);
 
 export async function getToolsAction() {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const tools = await sql`
       SELECT
@@ -38,6 +42,8 @@ export async function getToolsAction() {
 }
 
 export async function approveToolAction(id: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     // Get tool details and owner email
     const tools = await sql`
@@ -65,23 +71,13 @@ export async function approveToolAction(id: string) {
       WHERE id = ${id}
     `;
 
-    // Send approval email to founder if they have an email
     if (tool.founderEmail) {
-      try {
-        const { Resend } = await import('resend');
-        const resendKey = process.env.RESEND_API_KEY;
-        if (resendKey) {
-          const resend = new Resend(resendKey);
-          await resend.emails.send({
-            from: `${process.env.RESEND_FROM_NAME || 'AI Startup Impact'} <${process.env.RESEND_FROM_EMAIL || 'no-reply@aistartupimpact.com'}>`,
-            to: tool.founderEmail,
-            subject: `Your tool "${tool.name}" is now live on AI Startup Impact`,
-            html: toolApprovalHtml(tool.name, tool.founderName || 'there', tool.slug),
-          });
-        }
-      } catch (emailError) {
-        console.error('Failed to send tool approval email:', emailError);
-      }
+      sendEmailFireAndForget({
+        to: tool.founderEmail,
+        subject: `Your tool "${tool.name}" is now live on AI Startup Impact`,
+        html: toolApprovalHtml(tool.name, tool.founderName || 'there', tool.slug),
+        type: 'approval',
+      });
     }
 
     revalidatePath('/tools-dir');
@@ -103,6 +99,8 @@ export async function approveToolAction(id: string) {
 }
 
 export async function rejectToolAction(id: string, reason?: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`
       UPDATE "AiTool"
@@ -122,6 +120,8 @@ export async function rejectToolAction(id: string, reason?: string) {
 }
 
 export async function getCategoriesAction() {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const cats = await sql`
       SELECT c.id, c.name, c.slug, c."parentId",
@@ -139,6 +139,8 @@ export async function getCategoriesAction() {
 }
 
 export async function getCategoryTreeAction() {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const parents = await sql`
       SELECT id, name, slug, icon, description, "toolCount", "sortOrder"
@@ -197,6 +199,8 @@ export async function createToolAction(data: {
   features?: string[];
   useCases?: string[];
 }) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     // Check for duplicate name or slug
     const existingTool = await sql`
@@ -288,6 +292,8 @@ export async function updateToolAction(id: string, data: {
   screenshotUrls?: string[];
   faqs?: Array<{ id?: string; question: string; answer: string; order: number }>;
 }) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`
       UPDATE "AiTool"
@@ -352,7 +358,8 @@ export async function updateToolAction(id: string, data: {
 }
 
 export async function deleteToolAction(id: string) {
-  // Only SUPER_ADMIN can delete
+  const { error: authError } = await requireActionAuth(['SUPER_ADMIN']);
+  if (authError) return { success: false, error: authError };
   const { allowed, error } = await canDelete();
   if (!allowed) {
     return { success: false, error: error || 'Unauthorized' };
@@ -383,6 +390,8 @@ export async function deleteToolAction(id: string) {
 }
 
 export async function setListingTierAction(id: string, tier: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`
       UPDATE "AiTool"
@@ -399,6 +408,8 @@ export async function setListingTierAction(id: string, tier: string) {
 }
 
 export async function getToolFAQsAction(toolId: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const faqs = await sql`
       SELECT id, question, answer, "order"
@@ -419,6 +430,8 @@ export async function getToolFAQsAction(toolId: string) {
 }
 
 export async function getToolProsConsAction(toolId: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const [pros, cons] = await Promise.all([
       sql`SELECT id, text FROM "ToolPro" WHERE "toolId" = ${toolId} ORDER BY id ASC`,
@@ -435,6 +448,8 @@ export async function getToolProsConsAction(toolId: string) {
 }
 
 export async function updateToolProsConsAction(toolId: string, data: { pros: string[]; cons: string[] }) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     // Delete existing
     await sql`DELETE FROM "ToolPro" WHERE "toolId" = ${toolId}`;
@@ -472,6 +487,8 @@ const TOOL_TIER_SLOTS: Record<string, number> = {
 };
 
 export async function getToolFeaturedCampaignsAction() {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const campaigns = await sql`
       SELECT tfc.id, tfc."toolId", tfc.tier, tfc."startDate", tfc."endDate",
@@ -501,6 +518,8 @@ export async function scheduleToolFeaturedCampaignAction(data: {
   notes?: string;
   pricePaid?: number;
 }) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const { toolId, tier, startDate, endDate, notes, pricePaid } = data;
 
@@ -574,6 +593,8 @@ export async function scheduleToolFeaturedCampaignAction(data: {
 }
 
 export async function cancelToolFeaturedCampaignAction(campaignId: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const result = await sql`
       UPDATE "ToolFeaturedCampaign"
@@ -608,6 +629,8 @@ export async function cancelToolFeaturedCampaignAction(campaignId: string) {
 // ─── Startup Linking ────────────────────────────────────────────────────────
 
 export async function searchStartupsForLinkAction(query: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     if (!query || query.length < 2) return [];
     const results = await sql`
@@ -626,6 +649,8 @@ export async function searchStartupsForLinkAction(query: string) {
 }
 
 export async function linkToolToStartupAction(toolId: string, startupId: string | null) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`
       UPDATE "AiTool" SET "startupId" = ${startupId}, "updatedAt" = NOW()
@@ -641,6 +666,8 @@ export async function linkToolToStartupAction(toolId: string, startupId: string 
 }
 
 export async function getLinkedStartupAction(toolId: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const rows = await sql`
       SELECT s.id, s.name, s.slug, s."logoUrl", s.stage, s."headquartersCity", s."totalFundingInr", s."employeeCount", s."foundedYear"
@@ -658,6 +685,8 @@ export async function getLinkedStartupAction(toolId: string) {
 
 
 export async function verifyToolManuallyAction(id: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`
       UPDATE "AiTool"
@@ -681,6 +710,8 @@ export async function verifyToolManuallyAction(id: string) {
 }
 
 export async function unverifyToolAction(id: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`
       UPDATE "AiTool"
@@ -699,6 +730,8 @@ export async function unverifyToolAction(id: string) {
 // ─── Tool Alternatives ───────────────────────────────────────────────────────
 
 export async function getToolAlternativesAction(toolId: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const rows = await sql`
       SELECT a.id, a."alternativeId", a.source,
@@ -716,6 +749,8 @@ export async function getToolAlternativesAction(toolId: string) {
 }
 
 export async function addToolAlternativeAction(toolId: string, alternativeId: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     if (toolId === alternativeId) return { success: false, error: 'A tool cannot be its own alternative' };
 
@@ -737,6 +772,8 @@ export async function addToolAlternativeAction(toolId: string, alternativeId: st
 }
 
 export async function removeToolAlternativeAction(toolId: string, alternativeId: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     // Remove both directions
     await sql`DELETE FROM "ToolAlternative" WHERE ("toolId" = ${toolId} AND "alternativeId" = ${alternativeId}) OR ("toolId" = ${alternativeId} AND "alternativeId" = ${toolId})`;
@@ -749,6 +786,8 @@ export async function removeToolAlternativeAction(toolId: string, alternativeId:
 }
 
 export async function searchToolsForAlternativeAction(query: string, excludeToolId: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     if (!query || query.length < 2) return [];
     const results = await sql`
@@ -771,6 +810,8 @@ export async function searchToolsForAlternativeAction(query: string, excludeTool
 // ─── Sprint 4: Bulk Actions ─────────────────────────────────────────────────
 
 export async function bulkApproveToolsAction(ids: string[]) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     if (ids.length === 0) return { success: false, error: 'No tools selected' };
     await sql`
@@ -788,6 +829,8 @@ export async function bulkApproveToolsAction(ids: string[]) {
 }
 
 export async function bulkArchiveToolsAction(ids: string[]) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     if (ids.length === 0) return { success: false, error: 'No tools selected' };
     await sql`
@@ -805,7 +848,9 @@ export async function bulkArchiveToolsAction(ids: string[]) {
 }
 
 export async function bulkDeleteToolsAction(ids: string[]) {
-  const { allowed, error } = await canDelete();
+  const { error } = await requireActionAuth(['SUPER_ADMIN']);
+  if (error) return { success: false, error };
+  const { allowed, error: deleteError } = await canDelete();
   if (!allowed) return { success: false, error: error || 'Unauthorized' };
 
   try {

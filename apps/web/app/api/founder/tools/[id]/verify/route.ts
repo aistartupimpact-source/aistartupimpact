@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { requireFounderAuth } from '@/lib/founder-auth';
 import { prisma } from '@aistartupimpact/database';
-import { verifyDNS } from '@aistartupimpact/utils';
+import { verifyDNS } from '@aistartupimpact/utils/src/verification/dns';
 
 export const dynamic = 'force-dynamic';
 
 function generateToken(): string {
-  return 'aisitool_' + Math.random().toString(36).substring(2, 12);
+  return 'aisitool_' + crypto.randomBytes(8).toString('hex');
 }
 
 function extractDomain(url: string): string {

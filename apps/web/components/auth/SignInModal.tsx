@@ -37,7 +37,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
 
   // 2FA state
   const [requires2FA, setRequires2FA] = useState(false);
-  const [userId, setUserId] = useState('');
+  const [challengeToken, setChallengeToken] = useState('');
   const [twoFACode, setTwoFACode] = useState('');
   const [useBackupCode, setUseBackupCode] = useState(false);
 
@@ -66,7 +66,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
     setResendSuccess(false);
     setRequires2FA(false);
     setTwoFACode('');
-    setUserId('');
+    setChallengeToken('');
     setOtpStep(false);
     setOtpCode('');
   };
@@ -194,7 +194,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
       // Check if 2FA is required (founder accounts)
       if (data.requires2FA) {
         setRequires2FA(true);
-        setUserId(data.userId);
+        setChallengeToken(data.challengeToken);
         setLoading(false);
         return;
       }
@@ -241,7 +241,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
       const res = await fetch('/api/founder/auth/verify-2fa', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, token: twoFACode, isBackupCode: useBackupCode }),
+        body: JSON.stringify({ challengeToken, token: twoFACode, isBackupCode: useBackupCode }),
       });
 
       const data = await res.json();
@@ -253,7 +253,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
         await fetch('/api/user/auth/bridge-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ founderId: userId }),
+          body: JSON.stringify({}),
         });
       } catch {
         // Non-critical — founder session still works
@@ -379,7 +379,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
 
             <button
               type="button"
-              onClick={() => { setRequires2FA(false); setTwoFACode(''); setUserId(''); setError(''); }}
+              onClick={() => { setRequires2FA(false); setTwoFACode(''); setChallengeToken(''); setError(''); }}
               className="w-full text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
             >
               Back to login

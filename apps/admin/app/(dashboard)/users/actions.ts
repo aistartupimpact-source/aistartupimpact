@@ -6,12 +6,11 @@ import { neon } from '@neondatabase/serverless';
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { Resend } from "resend";
 import { logAuditEvent } from '@/lib/audit-log';
-import { userInvitationHtml } from '@aistartupimpact/utils/src/email-templates';
+import { userInvitationHtml } from '@aistartupimpact/utils';
+import { sendEmail } from '@/lib/email-send';
 
 const sql = neon(process.env.DATABASE_URL!);
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 // Helper to create a URL-friendly slug from name
 const generateSlug = (name: string) => {
@@ -89,18 +88,15 @@ export async function inviteUser(data: { name: string; email: string; role: stri
       select: { id: true }
     });
 
-    if (resend && process.env.RESEND_FROM_EMAIL) {
-      const { data: resendData, error: resendError } = await resend.emails.send({
-        from: `AI Startup Impact <${process.env.RESEND_FROM_EMAIL}>`,
-        to: data.email,
-        subject: "You've been invited to AI Startup Impact",
-        html: userInvitationHtml(data.name, data.role),
-      });
+    const emailResult = await sendEmail({
+      to: data.email,
+      subject: "You've been invited to AI Startup Impact",
+      html: userInvitationHtml(data.name, data.role),
+      type: 'user_invitation',
+    });
 
-      if (resendError) {
-        console.error("Resend API Error:", resendError);
-        return { success: true, error: `User created, but email failed: ${resendError.message}` };
-      }
+    if (!emailResult.success) {
+      return { success: true, error: `User created, but email failed: ${emailResult.error}` };
     }
 
     revalidatePath("/users");

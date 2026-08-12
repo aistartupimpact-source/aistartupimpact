@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Star, CheckCircle, Clock, Flag, Trash2, ExternalLink, Image as ImageIcon, AlertCircle } from "lucide-react";
 import { updateReviewStatusAction, deleteReviewAction, bulkUpdateReviewStatusAction, bulkDeleteReviewAction } from "./actions";
+import { ConfirmModal } from '@/components/ConfirmModal';
 
 type ReviewData = any;
 
@@ -11,6 +12,8 @@ export default function ToolReviewsClient({ initialReviews }: { initialReviews: 
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [isBulkLoading, setIsBulkLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   const handleUpdateStatus = async (reviewId: string, status: 'PENDING' | 'APPROVED' | 'FLAGGED') => {
     setLoadingId(reviewId);
@@ -26,8 +29,14 @@ export default function ToolReviewsClient({ initialReviews }: { initialReviews: 
     }
   };
 
-  const handleDelete = async (reviewId: string) => {
-    if (!confirm("Are you sure you want to permanently delete this review?")) return;
+  const handleDelete = (reviewId: string) => {
+    setDeleteTarget(reviewId);
+  };
+
+  const executeDelete = async () => {
+    if (!deleteTarget) return;
+    const reviewId = deleteTarget;
+    setDeleteTarget(null);
     setLoadingId(reviewId);
     try {
       const res = await deleteReviewAction(reviewId);
@@ -62,9 +71,13 @@ export default function ToolReviewsClient({ initialReviews }: { initialReviews: 
     }
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
     if (selectedIds.size === 0) return;
-    if (!confirm(`Are you sure you want to permanently delete ${selectedIds.size} reviews?`)) return;
+    setShowBulkDeleteConfirm(true);
+  };
+
+  const executeBulkDelete = async () => {
+    setShowBulkDeleteConfirm(false);
     setIsBulkLoading(true);
     try {
       const res = await bulkDeleteReviewAction(Array.from(selectedIds));
@@ -262,6 +275,30 @@ export default function ToolReviewsClient({ initialReviews }: { initialReviews: 
           </table>
         </div>
       </div>
+
+      {/* Single Delete Confirm Modal */}
+      <ConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={executeDelete}
+        title="Delete Review"
+        message="Are you sure you want to permanently delete this review?"
+        confirmLabel="Delete"
+        variant="danger"
+        requireTyping
+      />
+
+      {/* Bulk Delete Confirm Modal */}
+      <ConfirmModal
+        open={showBulkDeleteConfirm}
+        onClose={() => setShowBulkDeleteConfirm(false)}
+        onConfirm={executeBulkDelete}
+        title="Delete Reviews"
+        message={`Are you sure you want to permanently delete ${selectedIds.size} reviews?`}
+        confirmLabel="Delete All"
+        variant="danger"
+        requireTyping
+      />
     </div>
   );
 }

@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Save, X, Eye, EyeOff } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, Eye, EyeOff, MessageSquare } from 'lucide-react';
+import { ConfirmModal } from '@/components/ConfirmModal';
+import { TableEmptyState } from '@/components/EmptyState';
 
 interface Testimonial {
   id: number;
@@ -31,6 +33,7 @@ export default function TestimonialsClient() {
     is_active: true,
     display_order: 0,
   });
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
   useEffect(() => {
     fetchTestimonials();
@@ -94,8 +97,6 @@ export default function TestimonialsClient() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this testimonial?')) return;
-
     try {
       const res = await fetch(`/api/admin/testimonials?id=${id}`, {
         method: 'DELETE',
@@ -320,11 +321,7 @@ export default function TestimonialsClient() {
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {testimonials.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                    No testimonials yet. Click "Add Testimonial" to create one.
-                  </td>
-                </tr>
+                <TableEmptyState colSpan={5} icon={MessageSquare} title="No testimonials yet" description="Click 'Add Testimonial' to create your first one" />
               ) : (
                 testimonials.map((testimonial) => (
                   <tr key={testimonial.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50">
@@ -388,7 +385,7 @@ export default function TestimonialsClient() {
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(testimonial.id)}
+                          onClick={() => setConfirmDelete(testimonial.id)}
                           className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                           title="Delete"
                         >
@@ -403,6 +400,22 @@ export default function TestimonialsClient() {
           </table>
         </div>
       </div>
+
+      <ConfirmModal
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={() => {
+          if (confirmDelete) {
+            handleDelete(confirmDelete);
+            setConfirmDelete(null);
+          }
+        }}
+        title="Delete Testimonial"
+        message="Are you sure you want to delete this testimonial?"
+        confirmLabel="Delete Testimonial"
+        variant="danger"
+        requireTyping={true}
+      />
     </div>
   );
 }

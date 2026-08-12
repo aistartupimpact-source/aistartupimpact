@@ -1,8 +1,8 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
-import { paymentSuccessHtml } from '@aistartupimpact/utils/src/email-templates';
-import { sendEmail } from '../lib/email';
+import { paymentSuccessHtml } from '@aistartupimpact/utils';
+import { sendEmailFireAndForget } from '../lib/email-send';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -38,7 +38,7 @@ router.post('/resend', async (req: Request, res: Response) => {
 
     // If a user complains (marks as spam) or bounces (hard bounce), instantly deactivate them
     if (type === 'email.bounced' || type === 'email.complained') {
-      console.log(`Resend Webhook: Setting subscriber ${email} as inactive due to ${type}`);
+      console.log(`Resend Webhook: deactivating subscriber due to ${type}`);
 
       await prisma.newsletterSubscriber.updateMany({
         where: { email },
@@ -65,7 +65,11 @@ router.post('/resend', async (req: Request, res: Response) => {
 router.post('/razorpay', async (req: Request, res: Response): Promise<any> => {
   try {
     const signature = req.headers['x-razorpay-signature'] as string;
-    const secret = process.env.RAZORPAY_WEBHOOK_SECRET || 'fallback_secret';
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    if (!secret) {
+      console.error('RAZORPAY_WEBHOOK_SECRET is not configured');
+      return res.status(500).send('Webhook secret not configured');
+    }
 
     const shasum = crypto.createHmac('sha256', secret);
     shasum.update(JSON.stringify(req.body));
@@ -117,11 +121,12 @@ router.post('/razorpay', async (req: Request, res: Response): Promise<any> => {
             select: { email: true, name: true },
           });
           if (owner?.email) {
-            sendEmail({
+            sendEmailFireAndForget({
               to: owner.email,
               subject: `Payment confirmed — ${tool.name} upgraded to ${tool.pendingTier || 'Premium'}`,
               html: paymentSuccessHtml(tool.name, owner.name || 'there', tool.pendingTier || 'Premium'),
-            }).catch(err => console.error('Payment email failed:', err));
+              type: 'payment_success',
+            });
           }
         } catch (emailErr) {
           console.error('Failed to send payment success email:', emailErr);

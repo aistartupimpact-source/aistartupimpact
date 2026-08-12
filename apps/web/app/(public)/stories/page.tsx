@@ -5,6 +5,7 @@ import { getArticlesDirect } from '@/lib/db';
 import { generateCollectionPageSchema, generateItemListSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import StoriesListClient from '@/components/StoriesListClient';
 import SubscribeForm from '@/components/SubscribeForm';
+import EmptyState from '@/components/ui/EmptyState';
 
 export const metadata: Metadata = {
   title: 'Founder Stories — Indian AI Entrepreneurs',
@@ -84,7 +85,7 @@ export default async function StoriesPage() {
       </div>
 
       {articles.length === 0 && (
-        <p className="text-gray-400 font-jakarta text-center py-20">No stories published yet.</p>
+        <EmptyState title="No stories yet" description="Check back soon for founder stories and deep-dive interviews." />
       )}
 
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">

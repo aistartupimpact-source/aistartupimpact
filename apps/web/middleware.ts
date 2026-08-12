@@ -4,7 +4,7 @@ import { jwtVerify } from 'jose';
 import { neon } from '@neondatabase/serverless';
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.FOUNDER_JWT_SECRET || 'founder-secret-change-in-production'
+  process.env.FOUNDER_JWT_SECRET!
 );
 
 let _sql: ReturnType<typeof neon> | undefined;
@@ -15,6 +15,23 @@ function getSql() {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // CSRF protection: validate Origin header on state-changing requests to API routes
+  if (pathname.startsWith('/api/') && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)) {
+    const origin = request.headers.get('origin');
+    if (origin) {
+      const allowedOrigins = [
+        process.env.NEXT_PUBLIC_WEB_URL,
+        process.env.NEXT_PUBLIC_ADMIN_URL,
+      ].filter(Boolean);
+      if (process.env.NODE_ENV !== 'production') {
+        allowedOrigins.push('http://localhost:3000', 'http://localhost:3001', 'http://localhost:4000');
+      }
+      if (!allowedOrigins.includes(origin)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
+  }
 
   // 1. Redirect checks for startups and tools on old slugs (301)
   const isStartupPath = pathname.startsWith('/startups/');
@@ -84,6 +101,7 @@ export const config = {
     '/founder/:path*',
     '/startups/:slug',
     '/tools/:slug',
+    '/api/:path*',
   ],
 };
 

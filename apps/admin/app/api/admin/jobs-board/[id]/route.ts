@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { neon } from '@neondatabase/serverless';
+import { requireApiAuth } from '@/lib/api-auth';
 
 const sql = neon(process.env.DATABASE_URL!);
 
-// PUT: Update job (activate/deactivate/feature)
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { error } = await requireApiAuth();
+  if (error) return error;
 
   try {
     const body = await request.json();
@@ -39,13 +37,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  // Check for SUPER_ADMIN role
-  if ((session.user as any).role !== 'SUPER_ADMIN') {
-    return NextResponse.json({ error: 'Only SUPER_ADMIN can delete' }, { status: 403 });
-  }
+  const { error } = await requireApiAuth(['SUPER_ADMIN']);
+  if (error) return error;
 
   try {
     await sql`UPDATE "JobBoardListing" SET "deletedAt" = NOW(), "isActive" = false WHERE id = ${params.id}`;

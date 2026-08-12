@@ -83,7 +83,7 @@ export async function POST(
   } catch (error: any) {
     console.error('Save funding rounds error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to save funding rounds' },
+      { error: 'Failed to save funding rounds' },
       { status: 500 }
     );
   }
@@ -113,7 +113,7 @@ export async function GET(
   } catch (error: any) {
     console.error('Get funding rounds error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to get funding rounds' },
+      { error: 'Failed to get funding rounds' },
       { status: 500 }
     );
   }

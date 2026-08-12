@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import bcrypt from 'bcryptjs';
+import { strictRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
+    const identifier = getClientIdentifier(request);
+    const { success: allowed } = await checkRateLimit(strictRateLimit, identifier);
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+    }
+
     const body = await request.json();
     const { token, password } = body;
 
@@ -42,7 +49,9 @@ export async function POST(request: NextRequest) {
       WHERE id = ${employer.id}
     `;
 
-    return NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true });
+    response.cookies.delete('employer_session');
+    return response;
   } catch (error: any) {
     console.error('[POST /api/employer/auth/reset-password]', error);
     return NextResponse.json({ error: 'Failed to reset password' }, { status: 500 });

@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { prisma } from "@aistartupimpact/database";
 import crypto from "crypto";
 
-const JWT_SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || "unified-auth-secret");
+const JWT_SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET!);
 const COOKIE_NAME = "unified_session";
 const SESSION_EXPIRY_DAYS = 30;
 

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { neon } from '@neondatabase/serverless';
+import { requireApiAuth } from '@/lib/api-auth';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -9,16 +8,12 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const { error } = await requireApiAuth();
+  if (error) return error;
+
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { isActive } = await request.json();
 
-    // Use raw SQL to avoid Prisma DateTime serialization issues
     const result = await sql`
       UPDATE "WebUser"
       SET "isActive" = ${isActive}
@@ -44,24 +39,12 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const { error } = await requireApiAuth(['SUPER_ADMIN']);
+  if (error) return error;
+
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Delete user sessions first (manual cascade since we're using raw SQL)
-    await sql`
-      DELETE FROM "WebUserSession"
-      WHERE "webUserId" = ${params.id}
-    `;
-
-    // Delete user
-    await sql`
-      DELETE FROM "WebUser"
-      WHERE id = ${params.id}
-    `;
+    await sql`DELETE FROM "WebUserSession" WHERE "webUserId" = ${params.id}`;
+    await sql`DELETE FROM "WebUser" WHERE id = ${params.id}`;
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -6,6 +6,7 @@ import {
   ArrowLeft, Plus, Search, Trash2, Edit3, X, Save,
   Loader2, Eye, EyeOff,
 } from 'lucide-react';
+import { ConfirmModal } from '@/components/ConfirmModal';
 import {
   getCanonicalCategoriesAction,
   getCanonicalTypesAction,
@@ -49,6 +50,9 @@ export default function ManageStartupMetaPage() {
   // Search
   const [searchCat, setSearchCat] = useState('');
   const [searchType, setSearchType] = useState('');
+
+  // Delete confirmation
+  const [deleteTarget, setDeleteTarget] = useState<{ name: string; section: 'category' | 'type' } | null>(null);
 
   useEffect(() => {
     loadData();
@@ -120,8 +124,14 @@ export default function ManageStartupMetaPage() {
     }
   };
 
-  const handleDelete = async (name: string, section: 'category' | 'type') => {
-    if (!confirm(`Delete "${name}"? Only works if no startups use it.`)) return;
+  const handleDelete = (name: string, section: 'category' | 'type') => {
+    setDeleteTarget({ name, section });
+  };
+
+  const executeDelete = async () => {
+    if (!deleteTarget) return;
+    const { name, section } = deleteTarget;
+    setDeleteTarget(null);
     const result = section === 'category'
       ? await deleteBusinessCategoryAction(name)
       : await deleteBusinessTypeAction(name);
@@ -392,6 +402,18 @@ export default function ManageStartupMetaPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirm Modal */}
+      <ConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={executeDelete}
+        title={`Delete ${deleteTarget?.section === 'category' ? 'Category' : 'Type'}`}
+        message={`Delete "${deleteTarget?.name}"? Only works if no startups use it.`}
+        confirmLabel="Delete"
+        variant="danger"
+        requireTyping
+      />
 
       {/* Add Type Modal */}
       {showAddType && (

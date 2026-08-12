@@ -305,8 +305,12 @@ export default function Footer() {
                       )}
  
                       <div className="text-center mt-3 space-y-1">
+                        <p className="text-gray-500 text-[11px] font-jakarta leading-relaxed">
+                          By subscribing, you agree to receive the AI Startup Impact newsletter. You can{' '}
+                          <a href="/privacy" className="underline hover:text-gray-400">unsubscribe</a> at any time.
+                        </p>
                         <p className="text-gray-500 text-xs font-jakarta">
-                          Every Friday · Free forever · No spam · Unsubscribe anytime
+                          Every Friday · Free forever · No spam
                         </p>
                       </div>
  

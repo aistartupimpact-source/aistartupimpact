@@ -242,11 +242,10 @@ export default function NewsletterPopup() {
 
                 {/* Legal footnote */}
                 <p className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400 text-center mt-3 leading-relaxed">
-                  Join for free. Unsubscribe with one click. Read our{' '}
+                  By subscribing, you agree to receive marketing emails from AI Startup Impact. Unsubscribe anytime with one click. Read our{' '}
                   <a href="/privacy" className="text-purple-600 dark:text-purple-400 hover:underline font-medium">
                     Privacy Policy
-                  </a>
-                  .
+                  </a>.
                 </p>
               </>
             ) : (

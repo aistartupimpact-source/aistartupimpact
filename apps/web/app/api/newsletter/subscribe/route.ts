@@ -2,9 +2,12 @@ import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { apiRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { newsletterSchema, validateInput } from '@/lib/validation';
-import { newsletterConfirmHtml, newsletterWelcomeHtml } from '@aistartupimpact/utils/src/email-templates';
+import { newsletterConfirmHtml, newsletterWelcomeHtml } from '@aistartupimpact/utils';
 
 export const runtime = 'edge';
+
+const CONSENT_TEXT = 'I agree to receive the AI Startup Impact newsletter with AI startup news, tools, and insights. You can unsubscribe at any time.';
+const CONSENT_VERSION = 1;
 
 function generateId(): string {
   const array = new Uint8Array(16);
@@ -18,7 +21,7 @@ function generateToken(): string {
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-async function sendEmailEdge(to: string, subject: string, html: string, headers?: Record<string, string>) {
+async function sendEmailEdge(to: string, subject: string, html: string, headers?: Record<string, string>, type = 'newsletter') {
   const resendKey = process.env.RESEND_API_KEY;
   if (!resendKey) return;
 
@@ -27,13 +30,21 @@ async function sendEmailEdge(to: string, subject: string, html: string, headers?
   const fromEmail = process.env.RESEND_FROM_EMAIL || 'no-reply@aistartupimpact.com';
   const fromName = process.env.RESEND_FROM_NAME || 'AI Startup Impact';
 
-  await resend.emails.send({
+  const { data, error } = await resend.emails.send({
     from: `${fromName} <${fromEmail}>`,
     to,
     subject,
     html,
     ...(headers && { headers }),
   });
+
+  // Log to EmailLog (edge-compatible raw SQL via neon)
+  try {
+    await sql`
+      INSERT INTO "EmailLog" (id, type, "to", subject, status, "resendId", error, "sentAt")
+      VALUES (gen_random_uuid()::text, ${type}, ${to}, ${subject}, ${error ? 'failed' : 'sent'}, ${data?.id || null}, ${error?.message || null}, NOW())
+    `;
+  } catch {}
 }
 
 export async function POST(request: Request) {
@@ -111,40 +122,7 @@ export async function POST(request: Request) {
         });
       }
 
-      // Inactive (previously unsubscribed) — resubscribe with verification
-      // Previously verified subscribers skip double opt-in
-      if (sub.emailVerified) {
-        await sql`
-          UPDATE "NewsletterSubscriber"
-          SET "isActive" = true,
-              "subscribedAt" = NOW(),
-              "unsubscribedAt" = NULL,
-              source = ${source || 'india-ai'},
-              tags = ${tags || ['india-ai']}
-          WHERE email = ${email.toLowerCase()}
-        `;
-
-        try {
-          await sendEmailEdge(
-            email.toLowerCase(),
-            'Welcome back to AI Startup Impact Newsletter!',
-            newsletterWelcomeHtml(true),
-            {
-              'List-Unsubscribe': `<${siteUrl}/unsubscribe?email=${encodeURIComponent(email.toLowerCase())}>`,
-              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-            },
-          );
-        } catch (emailError) {
-          console.error('Welcome-back email error:', emailError);
-        }
-
-        return NextResponse.json({
-          success: true,
-          message: 'Successfully resubscribed!',
-        });
-      }
-
-      // Inactive and never verified — treat like new subscriber, send confirmation
+      // Inactive (previously unsubscribed) — always require fresh double opt-in
       const token = generateToken();
       await sql`
         UPDATE "NewsletterSubscriber"
@@ -154,7 +132,11 @@ export async function POST(request: Request) {
             "verificationToken" = ${token},
             "emailVerified" = false,
             source = ${source || 'india-ai'},
-            tags = ${tags || ['india-ai']}
+            tags = ${tags || ['india-ai']},
+            "consentAt" = NOW(),
+            "consentText" = ${CONSENT_TEXT},
+            "consentVersion" = ${CONSENT_VERSION},
+            "consentSource" = ${source || 'website'}
         WHERE email = ${email.toLowerCase()}
       `;
 
@@ -182,7 +164,8 @@ export async function POST(request: Request) {
 
     await sql`
       INSERT INTO "NewsletterSubscriber" (
-        id, email, name, source, tags, "isActive", "emailVerified", "verificationToken", "subscribedAt"
+        id, email, name, source, tags, "isActive", "emailVerified", "verificationToken", "subscribedAt",
+        "consentAt", "consentText", "consentVersion", "consentSource"
       ) VALUES (
         ${subscriberId},
         ${email.toLowerCase()},
@@ -192,7 +175,11 @@ export async function POST(request: Request) {
         false,
         false,
         ${token},
-        NOW()
+        NOW(),
+        NOW(),
+        ${CONSENT_TEXT},
+        ${CONSENT_VERSION},
+        ${source || 'website'}
       )
     `;
 

@@ -1,8 +1,12 @@
 "use server";
 
 import { prisma } from "@aistartupimpact/database";
+import { getFounderSession } from "@/lib/founder-auth";
 
 export async function getMyPlacementsAction() {
+  const session = await getFounderSession();
+  if (!session) return { success: false, error: "Authentication required", data: [] };
+
   try {
     const campaigns = await prisma.$queryRaw<any[]>`
       SELECT
@@ -26,12 +30,16 @@ export async function getMyPlacementsAction() {
       ORDER BY c."createdAt" DESC
     `;
     return { success: true, data: campaigns };
-  } catch (e: any) {
-    return { success: false, error: e.message, data: [] };
+  } catch (e) {
+    console.error("Error fetching placements:", e);
+    return { success: false, error: "Failed to load placements", data: [] };
   }
 }
 
 export async function getPlacementStatsAction() {
+  const session = await getFounderSession();
+  if (!session) return { success: false, error: "Authentication required", data: null };
+
   try {
     const [campaigns, creatives] = await Promise.all([
       prisma.$queryRaw<any[]>`SELECT COUNT(*) as count, status FROM "AdCampaign" GROUP BY status`,
@@ -48,7 +56,8 @@ export async function getPlacementStatsAction() {
         clicks: Number(creatives[0]?.clicks || 0),
       },
     };
-  } catch (e: any) {
-    return { success: false, error: e.message, data: null };
+  } catch (e) {
+    console.error("Error fetching placement stats:", e);
+    return { success: false, error: "Failed to load stats", data: null };
   }
 }

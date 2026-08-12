@@ -2,16 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
-/**
- * POST /api/track
- * Track views and clicks for tools and startups
- */
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { entityType, entityId, eventType, ownerId } = body;
+    const { entityType, entityId, eventType } = body;
 
-    // Validate input
     if (!entityType || !entityId || !eventType) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
@@ -33,10 +29,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get today's date
+    let ownerId: string | null = null;
+
+    if (entityType === 'TOOL') {
+      const result = await sql`
+        SELECT "ownerId" FROM "AiTool" WHERE id = ${entityId} LIMIT 1
+      `;
+      ownerId = result[0]?.ownerId ?? null;
+    } else if (entityType === 'STARTUP') {
+      const result = await sql`
+        SELECT "ownerId" FROM "Startup" WHERE id = ${entityId} LIMIT 1
+      `;
+      ownerId = result[0]?.ownerId ?? null;
+    }
+
+    if (!ownerId) {
+      return NextResponse.json({ success: true });
+    }
+
     const today = new Date().toISOString().split('T')[0];
 
-    // Check if analytics record exists for today
     const existing = await sql`
       SELECT id, views, clicks
       FROM "FounderAnalytics"
@@ -47,7 +59,6 @@ export async function POST(request: NextRequest) {
     `;
 
     if (existing.length > 0) {
-      // Update existing record
       if (eventType === 'VIEW') {
         await sql`
           UPDATE "FounderAnalytics"
@@ -62,7 +73,6 @@ export async function POST(request: NextRequest) {
         `;
       }
     } else {
-      // Create new record
       await sql`
         INSERT INTO "FounderAnalytics" (
           "userId", "entityType", "entityId", date,

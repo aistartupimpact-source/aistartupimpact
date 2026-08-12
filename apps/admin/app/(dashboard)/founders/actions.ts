@@ -1,10 +1,13 @@
 'use server';
 
 import { neon } from '@neondatabase/serverless';
+import { requireActionAuth } from '@/lib/api-auth';
 
 const sql = neon(process.env.DATABASE_URL!);
 
 export async function getFoundersAction() {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const founders = await sql`
       SELECT 

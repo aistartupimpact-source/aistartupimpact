@@ -5,7 +5,7 @@ import { jwtVerify } from "jose";
 export const dynamic = 'force-dynamic';
 
 const UNSUBSCRIBE_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || "fallback-secret"
+  process.env.NEXTAUTH_SECRET!
 );
 
 export async function POST(request: NextRequest) {
@@ -72,6 +72,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, message: "Successfully unsubscribed" });
   } catch (error: any) {
     console.error("Unsubscribe error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to unsubscribe' }, { status: 500 });
   }
 }

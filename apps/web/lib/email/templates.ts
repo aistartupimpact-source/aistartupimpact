@@ -9,4 +9,4 @@ export {
   jobApplicationHtml,
   paymentSuccessHtml,
   newsletterWelcomeHtml,
-} from '@aistartupimpact/utils/src/email-templates';
+} from '@aistartupimpact/utils';

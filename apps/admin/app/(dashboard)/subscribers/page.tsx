@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Mail, Search, Trash2, ShieldAlert, Loader2, Download } from 'lucide-react';
+import { TableEmptyState } from '@/components/EmptyState';
 import { getSubscribersAction, deleteSubscriberAction } from './actions';
 
 interface Subscriber {
@@ -121,7 +122,7 @@ export default function SubscribersPage() {
               {loading ? (
                 <tr><td colSpan={5} className="px-6 py-12 text-center"><Loader2 className="w-6 h-6 animate-spin text-brand mx-auto" /></td></tr>
               ) : subscribers.length === 0 ? (
-                <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-500 text-sm font-jakarta">No subscribers found</td></tr>
+                <TableEmptyState colSpan={5} icon={Mail} title="No subscribers found" description="Try adjusting your search" />
               ) : subscribers.map((sub) => (
                 <tr key={sub.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                   <td className="px-6 py-4">

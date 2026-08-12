@@ -5,11 +5,15 @@ import { revalidatePath } from 'next/cache';
 import { calculateImpactScore } from '@/lib/impact-score';
 import { standardizeCityName } from '@aistartupimpact/utils/src/cities';
 import { logAuditEvent, canDelete } from '@/lib/audit-log';
-import { startupApprovalHtml } from '@aistartupimpact/utils/src/email-templates';
+import { startupApprovalHtml } from '@aistartupimpact/utils';
+import { sendEmailFireAndForget } from '@/lib/email-send';
+import { requireActionAuth } from '@/lib/api-auth';
 
 const sql = neon(process.env.DATABASE_URL!);
 
 export async function getStartupsAction() {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const startups = await sql`
       SELECT 
@@ -30,6 +34,8 @@ export async function getStartupsAction() {
 }
 
 export async function getStartupFundingRoundsAction(startupId: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const fundingRounds = await sql`
       SELECT 
@@ -47,6 +53,8 @@ export async function getStartupFundingRoundsAction(startupId: string) {
 
 
 export async function getStartupFAQsAction(startupId: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const faqs = await sql`
       SELECT id, "startupId", question, answer, "order", "createdAt", "updatedAt"
@@ -100,6 +108,8 @@ export async function createStartupAction(data: {
     url: string;
   }>;
 }) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     // Generate clean SEO-friendly slug
     const { slugify } = await import('@/lib/slug-utils');
@@ -258,6 +268,8 @@ export async function updateStartupAction(id: string, data: {
     url: string;
   }>;
 }) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     // Auto-calculate impact score from funding + employees + stage + age
     let totalFundingUsdCents = 0;
@@ -394,7 +406,8 @@ export async function updateStartupAction(id: string, data: {
 
 
 export async function deleteStartupAction(id: string) {
-  // Only SUPER_ADMIN can delete
+  const { error: authError } = await requireActionAuth(['SUPER_ADMIN']);
+  if (authError) return { success: false, error: authError };
   const { allowed, error } = await canDelete();
   if (!allowed) {
     return { success: false, error: error || 'Unauthorized' };
@@ -430,6 +443,8 @@ export async function deleteStartupAction(id: string) {
 }
 
 export async function toggleFeaturedAction(id: string, isFeatured: boolean) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   // Legacy toggle — kept for backward compat but prefer scheduleFeaturedCampaign
   try {
     if (isFeatured) {
@@ -469,6 +484,8 @@ const TIER_SLOTS: Record<string, number> = {
 };
 
 export async function getFeaturedCampaignsAction() {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const campaigns = await sql`
       SELECT fc.id, fc."startupId", fc.tier, fc."startDate", fc."endDate",
@@ -498,6 +515,8 @@ export async function scheduleFeaturedCampaignAction(data: {
   notes?: string;
   pricePaid?: number;
 }) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const { startupId, tier, startDate, endDate, notes, pricePaid } = data;
 
@@ -573,6 +592,8 @@ export async function scheduleFeaturedCampaignAction(data: {
 }
 
 export async function cancelFeaturedCampaignAction(campaignId: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     // Soft cancel — sets cancelledAt, freeing the slot immediately
     const result = await sql`
@@ -605,6 +626,8 @@ export async function cancelFeaturedCampaignAction(campaignId: string) {
 }
 
 export async function getSlotAvailabilityAction(tier: string, startDate: string, endDate: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const overlapping = await sql`
       SELECT COUNT(*)::int AS count
@@ -631,6 +654,8 @@ export async function getSlotAvailabilityAction(tier: string, startDate: string,
 }
 
 export async function toggleContentReviewedAction(id: string, currentValue: boolean) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`
       UPDATE "Startup"
@@ -647,6 +672,8 @@ export async function toggleContentReviewedAction(id: string, currentValue: bool
 
 // One-time fix for null impactScore values
 export async function fixNullImpactScoresAction() {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const result = await sql`
       UPDATE "Startup"
@@ -662,6 +689,8 @@ export async function fixNullImpactScoresAction() {
 }
 
 export async function approveStartupAction(id: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     // Get startup details and owner email
     const startups = await sql`
@@ -697,23 +726,13 @@ export async function approveStartupAction(id: string) {
       WHERE id = ${id}
     `;
 
-    // Send approval email to founder if they have an email
     if (startup.founderEmail) {
-      try {
-        const { Resend } = await import('resend');
-        const resendKey = process.env.RESEND_API_KEY;
-        if (resendKey) {
-          const resend = new Resend(resendKey);
-          await resend.emails.send({
-            from: `${process.env.RESEND_FROM_NAME || 'AI Startup Impact'} <${process.env.RESEND_FROM_EMAIL || 'no-reply@aistartupimpact.com'}>`,
-            to: startup.founderEmail,
-            subject: `Your startup "${startup.name}" is now live on AI Startup Impact`,
-            html: startupApprovalHtml(startup.name, startup.founderName || 'there', startup.slug),
-          });
-        }
-      } catch (emailError) {
-        console.error('Failed to send approval email:', emailError);
-      }
+      sendEmailFireAndForget({
+        to: startup.founderEmail,
+        subject: `Your startup "${startup.name}" is now live on AI Startup Impact`,
+        html: startupApprovalHtml(startup.name, startup.founderName || 'there', startup.slug),
+        type: 'approval',
+      });
     }
 
     revalidatePath('/startups-dir');
@@ -737,6 +756,8 @@ export async function approveStartupAction(id: string) {
 // ─── Bulk Actions ────────────────────────────────────────────────────────────
 
 export async function bulkApproveStartupsAction(ids: string[]) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     if (ids.length === 0) return { success: false, error: 'No startups selected' };
     await sql`
@@ -753,6 +774,8 @@ export async function bulkApproveStartupsAction(ids: string[]) {
 }
 
 export async function bulkArchiveStartupsAction(ids: string[]) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     if (ids.length === 0) return { success: false, error: 'No startups selected' };
     await sql`
@@ -769,8 +792,10 @@ export async function bulkArchiveStartupsAction(ids: string[]) {
 }
 
 export async function bulkDeleteStartupsAction(ids: string[]) {
-  const { allowed, error } = await canDelete();
-  if (!allowed) return { success: false, error: error || 'Unauthorized' };
+  const { error } = await requireActionAuth(['SUPER_ADMIN']);
+  if (error) return { success: false, error };
+  const { allowed, error: deleteError } = await canDelete();
+  if (!allowed) return { success: false, error: deleteError || 'Unauthorized' };
 
   try {
     if (ids.length === 0) return { success: false, error: 'No startups selected' };
@@ -786,6 +811,8 @@ export async function bulkDeleteStartupsAction(ids: string[]) {
 // ─── Duplicate Detection ─────────────────────────────────────────────────────
 
 export async function checkDuplicateStartupAction(name: string, websiteUrl: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     // Try with trigram similarity first
     const results = await sql`

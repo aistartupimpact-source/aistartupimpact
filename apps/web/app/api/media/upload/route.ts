@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getFounderSession } from '@/lib/founder-auth';
+import { getUserSession } from '@/lib/user-session';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,6 +34,14 @@ const getS3Client = () => {
 
 export async function POST(request: NextRequest) {
   try {
+    const [founderSession, userSession] = await Promise.all([
+      getFounderSession(),
+      getUserSession(),
+    ]);
+    if (!founderSession && !userSession) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     console.log('[Upload] Starting upload process...');
     console.log('[Upload] R2 Configuration check:', {
       hasAccountId: !!process.env.R2_ACCOUNT_ID,
@@ -151,7 +161,7 @@ export async function POST(request: NextRequest) {
       stack: error.stack,
     });
     return NextResponse.json(
-      { error: error.message || 'Failed to upload file' },
+      { error: 'Failed to upload file' },
       { status: 500 }
     );
   }

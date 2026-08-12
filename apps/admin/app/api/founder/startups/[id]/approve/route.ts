@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@aistartupimpact/database';
 import { neon } from '@neondatabase/serverless';
 import { calculateImpactScore } from '@/lib/impact-score';
-import { startupApprovalHtml } from '@aistartupimpact/utils/src/email-templates';
+import { startupApprovalHtml } from '@aistartupimpact/utils';
+import { sendEmailFireAndForget } from '@/lib/email-send';
+import { requireApiAuth } from '@/lib/api-auth';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -12,12 +12,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const { error: authError } = await requireApiAuth(['SUPER_ADMIN', 'EDITOR_IN_CHIEF']);
+  if (authError) return authError;
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const startups = await sql`
       SELECT s.id, s.name, s.slug, s."ownerId", s.stage, s."employeeCount", s."foundedYear",
@@ -57,28 +54,19 @@ export async function POST(
     `;
 
     if (startup.founderEmail) {
-      try {
-        const { Resend } = await import('resend');
-        const resendKey = process.env.RESEND_API_KEY;
-        if (resendKey) {
-          const resend = new Resend(resendKey);
-          await resend.emails.send({
-            from: `${process.env.RESEND_FROM_NAME || 'AI Startup Impact'} <${process.env.RESEND_FROM_EMAIL || 'no-reply@aistartupimpact.com'}>`,
-            to: startup.founderEmail,
-            subject: `Your startup "${startup.name}" is now live on AI Startup Impact`,
-            html: startupApprovalHtml(startup.name, startup.founderName || 'there', startup.slug),
-          });
-        }
-      } catch (emailError) {
-        console.error('Failed to send approval email:', emailError);
-      }
+      sendEmailFireAndForget({
+        to: startup.founderEmail,
+        subject: `Your startup "${startup.name}" is now live on AI Startup Impact`,
+        html: startupApprovalHtml(startup.name, startup.founderName || 'there', startup.slug),
+        type: 'approval',
+      });
     }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Approve startup error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to approve startup' },
+      { error: 'Failed to approve startup' },
       { status: 500 }
     );
   }

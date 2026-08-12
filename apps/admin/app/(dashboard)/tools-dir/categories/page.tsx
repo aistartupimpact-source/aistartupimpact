@@ -16,6 +16,7 @@ import {
   deleteSubcategoryAction,
   refreshCategoryCountsAction,
 } from './actions';
+import { ConfirmModal } from '@/components/ConfirmModal';
 
 interface Subcategory {
   id: string;
@@ -55,6 +56,8 @@ export default function CategoriesManagementPage() {
   const [addName, setAddName] = useState('');
   const [addDescription, setAddDescription] = useState('');
   const [addSubmitting, setAddSubmitting] = useState(false);
+
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; level: 'parent' | 'sub' } | null>(null);
 
   // Inline edit
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -139,11 +142,6 @@ export default function CategoriesManagementPage() {
   };
 
   const handleDelete = async (id: string, level: 'parent' | 'sub') => {
-    const msg = level === 'parent'
-      ? 'Delete this parent category? It must have no subcategories.'
-      : 'Delete this subcategory? It must have no tools assigned.';
-    if (!confirm(msg)) return;
-
     const result = level === 'parent'
       ? await deleteParentCategoryAction(id)
       : await deleteSubcategoryAction(id);
@@ -313,7 +311,7 @@ export default function CategoriesManagementPage() {
                     {parent.isActive ? <EyeOff className="w-3.5 h-3.5 text-gray-400" /> : <Eye className="w-3.5 h-3.5 text-gray-400" />}
                   </button>
                   <button
-                    onClick={() => handleDelete(parent.id, 'parent')}
+                    onClick={() => setConfirmDelete({ id: parent.id, level: 'parent' })}
                     className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
                     title="Delete"
                   >
@@ -384,7 +382,7 @@ export default function CategoriesManagementPage() {
                               {sub.isActive ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                             </button>
                             <button
-                              onClick={() => handleDelete(sub.id, 'sub')}
+                              onClick={() => setConfirmDelete({ id: sub.id, level: 'sub' })}
                               className="p-0.5 text-gray-400 hover:text-red-500"
                               title="Delete"
                             >
@@ -530,6 +528,26 @@ export default function CategoriesManagementPage() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={() => {
+          if (confirmDelete) {
+            handleDelete(confirmDelete.id, confirmDelete.level);
+            setConfirmDelete(null);
+          }
+        }}
+        title={confirmDelete?.level === 'parent' ? 'Delete Parent Category' : 'Delete Subcategory'}
+        message={
+          confirmDelete?.level === 'parent'
+            ? 'Delete this parent category? It must have no subcategories.'
+            : 'Delete this subcategory? It must have no tools assigned.'
+        }
+        confirmLabel={confirmDelete?.level === 'parent' ? 'Delete Category' : 'Delete Subcategory'}
+        variant="danger"
+        requireTyping={true}
+      />
     </div>
   );
 }

@@ -33,6 +33,7 @@ export default function SecuritySection() {
 
   // Delete account state
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Fetch current 2FA status on mount
@@ -113,6 +114,11 @@ export default function SecuritySection() {
       return;
     }
 
+    if (!deletePassword) {
+      setToast({ type: 'error', message: 'Please enter your password to confirm' });
+      return;
+    }
+
     if (!confirm('Are you absolutely sure? This action cannot be undone and all your data will be permanently deleted.')) {
       return;
     }
@@ -122,6 +128,8 @@ export default function SecuritySection() {
     try {
       const res = await fetch('/api/founder/delete-account', {
         method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: deletePassword }),
       });
 
       const data = await res.json();
@@ -312,7 +320,7 @@ export default function SecuritySection() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md w-full shadow-2xl border border-red-200 dark:border-red-800 animate-in zoom-in-95 duration-200">
             <button
-              onClick={() => setShowDeleteModal(false)}
+              onClick={() => { setShowDeleteModal(false); setDeletePassword(''); setDeleteConfirmation(''); }}
               className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
               <X className="w-5 h-5" />
@@ -345,6 +353,20 @@ export default function SecuritySection() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Enter your password
+                </label>
+                <input
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-navy dark:text-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 font-jakarta text-sm transition-all"
+                  placeholder="Your account password"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Type <span className="font-bold text-red-600">DELETE</span> to confirm
                 </label>
                 <input
@@ -359,7 +381,7 @@ export default function SecuritySection() {
 
               <button
                 type="submit"
-                disabled={deleteLoading || deleteConfirmation !== 'DELETE'}
+                disabled={deleteLoading || deleteConfirmation !== 'DELETE' || !deletePassword}
                 className="w-full px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {deleteLoading ? 'Deleting Account...' : 'Delete My Account'}

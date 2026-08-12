@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Error fetching tool categories:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to fetch categories', categories: [] },
+      { success: false, error: 'Failed to fetch categories', categories: [] },
       { status: 500 }
     );
   }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@aistartupimpact/database';
+import { sql } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 
 export const dynamic = 'force-dynamic';
@@ -16,10 +17,16 @@ export async function POST(request: NextRequest) {
     }
 
     if (password.length < 8) {
-      return NextResponse.json(
-        { error: 'Password must be at least 8 characters' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
+    }
+    if (!/[A-Z]/.test(password)) {
+      return NextResponse.json({ error: 'Password must contain an uppercase letter' }, { status: 400 });
+    }
+    if (!/[a-z]/.test(password)) {
+      return NextResponse.json({ error: 'Password must contain a lowercase letter' }, { status: 400 });
+    }
+    if (!/[0-9]/.test(password)) {
+      return NextResponse.json({ error: 'Password must contain a number' }, { status: 400 });
     }
 
     // Find user by reset token
@@ -54,10 +61,19 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({
+    // Invalidate related sessions across auth systems
+    await sql`DELETE FROM "WebUserSession" WHERE "webUserId" IN (SELECT id FROM "WebUser" WHERE email = ${user.email.toLowerCase()})`;
+    await sql`DELETE FROM "UnifiedSession" WHERE "userId" IN (SELECT id FROM "UnifiedUser" WHERE email = ${user.email.toLowerCase()})`;
+    await sql`DELETE FROM "EventOrganizerSession" WHERE "organizerId" IN (SELECT id FROM "EventOrganizer" WHERE email = ${user.email.toLowerCase()})`;
+
+    const response = NextResponse.json({
       success: true,
       message: 'Password reset successfully',
     });
+    response.cookies.delete('founder-token');
+    response.cookies.delete('user-token');
+    response.cookies.delete('unified_session');
+    return response;
   } catch (error) {
     console.error('Reset password error:', error);
     return NextResponse.json(

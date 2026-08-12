@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getFounderSession } from '@/lib/founder-auth';
 import { db } from '@/lib/db';
+import { sql } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/startups/[id]/faqs - Get all FAQs for a startup
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -20,26 +19,35 @@ export async function GET(
     );
 
     return NextResponse.json({ success: true, faqs: faqs.rows });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching startup FAQs:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: 'Failed to fetch FAQs' },
       { status: 500 }
     );
   }
 }
 
-// POST /api/startups/[id]/faqs - Create a new FAQ
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getFounderSession();
     if (!session) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
+        { success: false, error: 'Authentication required' },
         { status: 401 }
+      );
+    }
+
+    const startup = await sql`
+      SELECT id, "ownerId" FROM "Startup" WHERE id = ${params.id} AND "deletedAt" IS NULL LIMIT 1
+    `;
+    if (!startup.length || startup[0].ownerId !== session.userId) {
+      return NextResponse.json(
+        { success: false, error: 'Not authorized to modify this startup' },
+        { status: 403 }
       );
     }
 
@@ -61,10 +69,10 @@ export async function POST(
     );
 
     return NextResponse.json({ success: true, faq: result.rows[0] });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error creating startup FAQ:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: 'Failed to create FAQ' },
       { status: 500 }
     );
   }

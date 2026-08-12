@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { setEmployerSession } from '@/lib/employer-auth';
+import { securityAlertHtml } from '@aistartupimpact/utils';
+import { sendEmailFireAndForget } from '@/lib/email/send';
+import { authRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 const MAX_FAILED_ATTEMPTS = 5;
@@ -9,6 +12,12 @@ const LOCKOUT_MINUTES = 15;
 
 export async function POST(request: NextRequest) {
   try {
+    const identifier = getClientIdentifier(request);
+    const { success: allowed } = await checkRateLimit(authRateLimit, identifier);
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+    }
+
     const body = await request.json();
     const { email, password } = body;
 
@@ -64,29 +73,13 @@ export async function POST(request: NextRequest) {
           WHERE id = ${employer.id}
         `;
 
-        // Send alert email
-        try {
-          const { Resend } = await import('resend');
-          const resendKey = process.env.RESEND_API_KEY;
-          if (resendKey) {
-            const resend = new Resend(resendKey);
-            await resend.emails.send({
-              from: `${process.env.RESEND_FROM_NAME || 'AI Startup Impact'} <${process.env.RESEND_FROM_EMAIL || 'no-reply@aistartupimpact.com'}>`,
-              to: employer.email,
-              subject: '⚠️ Security Alert — Failed Login Attempts',
-              html: `
-                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
-                  <h2 style="color: #dc2626; margin-bottom: 8px;">⚠️ Security Alert</h2>
-                  <p style="color: #666; font-size: 14px;">Someone attempted to sign in to your <strong>${employer.companyName}</strong> Employer Portal account ${newAttempts} times with an incorrect password.</p>
-                  <p style="color: #666; font-size: 14px;">Your account has been temporarily locked for ${LOCKOUT_MINUTES} minutes.</p>
-                  <p style="color: #666; font-size: 14px; margin-top: 16px;">If this wasn't you, we recommend <a href="${process.env.NEXT_PUBLIC_WEB_URL || 'https://aistartupimpact.com'}/employer/forgot-password" style="color: #ff3131;">changing your password immediately</a>.</p>
-                  <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-                  <p style="color: #999; font-size: 11px;">AI Startup Impact — Employer Portal Security</p>
-                </div>
-              `,
-            });
-          }
-        } catch {}
+        const resetUrl = `${process.env.NEXT_PUBLIC_WEB_URL || 'https://aistartupimpact.com'}/employer/forgot-password`;
+        sendEmailFireAndForget({
+          to: employer.email,
+          subject: 'Security Alert — Failed Login Attempts',
+          html: securityAlertHtml(employer.companyName, newAttempts, LOCKOUT_MINUTES, resetUrl),
+          type: 'security_alert',
+        });
 
         return NextResponse.json({
           error: `Account locked for ${LOCKOUT_MINUTES} minutes due to too many failed attempts. A security alert has been sent to your email.`

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Sora, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import ThemeProvider from '@/components/ThemeProvider';
 import { NextAuthProvider } from '@/components/NextAuthProvider';
+import { ToastProvider } from '@/components/Toast';
 import './globals.css';
 
 const sora = Sora({
@@ -65,7 +66,9 @@ export default function RootLayout({
       <body className="font-jakarta antialiased bg-white dark:bg-gray-950 text-charcoal dark:text-gray-100 transition-colors duration-300">
         <NextAuthProvider>
           <ThemeProvider>
-            {children}
+            <ToastProvider>
+              {children}
+            </ToastProvider>
           </ThemeProvider>
         </NextAuthProvider>
       </body>

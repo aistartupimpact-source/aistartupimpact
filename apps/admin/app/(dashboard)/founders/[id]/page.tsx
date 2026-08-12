@@ -10,6 +10,7 @@ import {
 import Link from 'next/link';
 import { getFounderByIdAction, deleteFounderAction, updateFounderStatusAction } from './actions';
 import { useSession } from 'next-auth/react';
+import { ConfirmModal } from '@/components/ConfirmModal';
 
 interface FounderDetail {
   id: string;
@@ -63,6 +64,14 @@ export default function FounderDetailPage({ params }: { params: { id: string } }
   const [isRejecting, setIsRejecting] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{
+    title: string;
+    message: string;
+    variant: 'danger' | 'warning';
+    confirmLabel: string;
+    requireTyping: boolean;
+    onConfirm: () => void;
+  } | null>(null);
 
   const isSuperAdmin = (session as any)?.user?.role === 'SUPER_ADMIN';
 
@@ -82,38 +91,50 @@ export default function FounderDetailPage({ params }: { params: { id: string } }
     setLoading(false);
   };
   
-  const handleDelete = async () => {
-    if (!confirm(`Are you sure you want to DELETE ${founder?.name}?\n\nThis will permanently delete:\n- The founder account\n- All their startups\n- All their tools\n\nThis action CANNOT be undone!`)) {
-      return;
-    }
-    
-    const result = await deleteFounderAction(params.id);
-    if (result.success) {
-      alert('Founder deleted successfully');
-      router.push('/founders');
-    } else {
-      alert(`Failed to delete: ${result.error}`);
-    }
+  const handleDelete = () => {
+    setConfirmAction({
+      title: `Delete ${founder?.name}`,
+      message: `This will permanently delete:\n- The founder account\n- All their startups\n- All their tools\n\nThis action CANNOT be undone!`,
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      requireTyping: true,
+      onConfirm: async () => {
+        const result = await deleteFounderAction(params.id);
+        if (result.success) {
+          alert('Founder deleted successfully');
+          router.push('/founders');
+        } else {
+          alert(`Failed to delete: ${result.error}`);
+        }
+        setConfirmAction(null);
+      },
+    });
   };
   
-  const handleStatusChange = async (newStatus: string) => {
+  const handleStatusChange = (newStatus: string) => {
     const statusNames: Record<string, string> = {
       'ACTIVE': 'activate',
       'SUSPENDED': 'suspend',
       'PENDING_VERIFICATION': 'set to pending verification'
     };
-    
-    if (!confirm(`Are you sure you want to ${statusNames[newStatus]} ${founder?.name}?`)) {
-      return;
-    }
-    
-    const result = await updateFounderStatusAction(params.id, newStatus);
-    if (result.success) {
-      alert('Status updated successfully');
-      loadFounder();
-    } else {
-      alert(`Failed to update status: ${result.error}`);
-    }
+
+    setConfirmAction({
+      title: `${statusNames[newStatus]?.replace(/^\w/, (c) => c.toUpperCase())} Founder`,
+      message: `Are you sure you want to ${statusNames[newStatus]} ${founder?.name}?`,
+      variant: 'warning',
+      confirmLabel: statusNames[newStatus]?.replace(/^\w/, (c) => c.toUpperCase()) || 'Confirm',
+      requireTyping: false,
+      onConfirm: async () => {
+        const result = await updateFounderStatusAction(params.id, newStatus);
+        if (result.success) {
+          alert('Status updated successfully');
+          loadFounder();
+        } else {
+          alert(`Failed to update status: ${result.error}`);
+        }
+        setConfirmAction(null);
+      },
+    });
   };
 
   if (loading) {
@@ -534,40 +555,56 @@ export default function FounderDetailPage({ params }: { params: { id: string } }
                         {tool.status === 'PENDING' && (
                           <div className="flex flex-col gap-2">
                             <button
-                              onClick={async () => {
-                                if (confirm(`Approve "${tool.name}"?`)) {
-                                  try {
-                                    const res = await fetch(`/api/admin/tools/${tool.id}/approve`, { method: 'POST' });
-                                    if (res.ok) {
-                                      alert('Tool approved!');
-                                      loadFounder();
-                                    } else {
-                                      alert('Failed to approve');
+                              onClick={() => {
+                                setConfirmAction({
+                                  title: 'Approve Tool',
+                                  message: `Approve "${tool.name}"?`,
+                                  variant: 'warning',
+                                  confirmLabel: 'Approve',
+                                  requireTyping: false,
+                                  onConfirm: async () => {
+                                    try {
+                                      const res = await fetch(`/api/admin/tools/${tool.id}/approve`, { method: 'POST' });
+                                      if (res.ok) {
+                                        alert('Tool approved!');
+                                        loadFounder();
+                                      } else {
+                                        alert('Failed to approve');
+                                      }
+                                    } catch (err) {
+                                      alert('Error approving tool');
                                     }
-                                  } catch (err) {
-                                    alert('Error approving tool');
-                                  }
-                                }
+                                    setConfirmAction(null);
+                                  },
+                                });
                               }}
                               className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors whitespace-nowrap"
                             >
                               ✓ Approve
                             </button>
                             <button
-                              onClick={async () => {
-                                if (confirm(`Reject "${tool.name}"?`)) {
-                                  try {
-                                    const res = await fetch(`/api/admin/tools/${tool.id}/reject`, { method: 'POST' });
-                                    if (res.ok) {
-                                      alert('Tool rejected');
-                                      loadFounder();
-                                    } else {
-                                      alert('Failed to reject');
+                              onClick={() => {
+                                setConfirmAction({
+                                  title: 'Reject Tool',
+                                  message: `Reject "${tool.name}"?`,
+                                  variant: 'warning',
+                                  confirmLabel: 'Reject',
+                                  requireTyping: false,
+                                  onConfirm: async () => {
+                                    try {
+                                      const res = await fetch(`/api/admin/tools/${tool.id}/reject`, { method: 'POST' });
+                                      if (res.ok) {
+                                        alert('Tool rejected');
+                                        loadFounder();
+                                      } else {
+                                        alert('Failed to reject');
+                                      }
+                                    } catch (err) {
+                                      alert('Error rejecting tool');
                                     }
-                                  } catch (err) {
-                                    alert('Error rejecting tool');
-                                  }
-                                }
+                                    setConfirmAction(null);
+                                  },
+                                });
                               }}
                               className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors whitespace-nowrap"
                             >
@@ -593,6 +630,18 @@ export default function FounderDetailPage({ params }: { params: { id: string } }
           </div>
         </div>
       </div>
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        open={!!confirmAction}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={confirmAction?.onConfirm ?? (() => {})}
+        title={confirmAction?.title ?? ''}
+        message={confirmAction?.message ?? ''}
+        confirmLabel={confirmAction?.confirmLabel}
+        variant={confirmAction?.variant}
+        requireTyping={confirmAction?.requireTyping}
+      />
 
       {/* Startup Details Modal */}
       {viewingStartup && (
@@ -900,24 +949,33 @@ export default function FounderDetailPage({ params }: { params: { id: string } }
                     </button>
                     
                     <button
-                      onClick={async () => {
-                        if (!confirm(`Approve claim and listing for "${viewingStartup.name}"?`)) return;
-                        setActionLoading(true);
-                        try {
-                          const res = await fetch(`/api/founder/startups/${viewingStartup.id}/approve`, { method: 'POST' });
-                          if (res.ok) {
-                            alert('Startup approved successfully!');
-                            setViewingStartup(null);
-                            loadFounder();
-                          } else {
-                            const data = await res.json();
-                            alert(`Failed to approve: ${data.error || 'Unknown error'}`);
-                          }
-                        } catch (err) {
-                          alert('Error approving startup');
-                        } finally {
-                          setActionLoading(false);
-                        }
+                      onClick={() => {
+                        setConfirmAction({
+                          title: 'Approve Startup Claim',
+                          message: `Approve claim and listing for "${viewingStartup.name}"?`,
+                          variant: 'warning',
+                          confirmLabel: 'Approve',
+                          requireTyping: false,
+                          onConfirm: async () => {
+                            setActionLoading(true);
+                            try {
+                              const res = await fetch(`/api/founder/startups/${viewingStartup.id}/approve`, { method: 'POST' });
+                              if (res.ok) {
+                                alert('Startup approved successfully!');
+                                setViewingStartup(null);
+                                loadFounder();
+                              } else {
+                                const data = await res.json();
+                                alert(`Failed to approve: ${data.error || 'Unknown error'}`);
+                              }
+                            } catch (err) {
+                              alert('Error approving startup');
+                            } finally {
+                              setActionLoading(false);
+                            }
+                            setConfirmAction(null);
+                          },
+                        });
                       }}
                       disabled={actionLoading}
                       className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50"

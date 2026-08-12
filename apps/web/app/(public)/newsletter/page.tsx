@@ -367,8 +367,8 @@ export default function NewsletterPage() {
                 <p className="text-[10px] font-bold text-gray-200 tracking-tight mb-1">
                   Google, Microsoft, TCS, Flipkart & Amazon
                 </p>
-                <p className="text-[8px] text-gray-500 leading-none">
-                  No credit card required · Unsubscribe anytime
+                <p className="text-[8px] text-gray-500 leading-relaxed">
+                  By subscribing, you agree to receive the AI Startup Impact newsletter. <a href="/privacy" className="underline hover:text-gray-400">Unsubscribe</a> anytime.
                 </p>
               </div>
             </form>
@@ -517,8 +517,12 @@ export default function NewsletterPage() {
                           </>
                         )}
                       </button>
-                      <p className="text-center text-xs text-gray-500 dark:text-gray-400 font-jakarta">
-                        Free forever · No spam · Unsubscribe anytime
+                      <p className="text-center text-[11px] text-gray-500 dark:text-gray-400 font-jakarta mt-2 leading-relaxed">
+                        By subscribing, you agree to receive the AI Startup Impact newsletter. You can{' '}
+                        <a href="/privacy" className="underline hover:text-gray-700 dark:hover:text-gray-300">unsubscribe</a> at any time.
+                      </p>
+                      <p className="text-center text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-1">
+                        Free forever · No spam
                       </p>
                     </form>
                   ) : (
@@ -729,8 +733,12 @@ export default function NewsletterPage() {
                   </>
                 )}
               </button>
-              <p className="text-center text-xs text-gray-500 dark:text-gray-400 font-jakarta">
-                Free forever · No spam · Unsubscribe anytime
+              <p className="text-center text-[11px] text-gray-500 dark:text-gray-400 font-jakarta mt-2 leading-relaxed">
+                By subscribing, you agree to receive the AI Startup Impact newsletter. You can{' '}
+                <a href="/privacy" className="underline hover:text-gray-700 dark:hover:text-gray-300">unsubscribe</a> at any time.
+              </p>
+              <p className="text-center text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-1">
+                Free forever · No spam
               </p>
             </form>
           </div>

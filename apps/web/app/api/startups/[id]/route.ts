@@ -30,7 +30,6 @@ export async function GET(
         impactScore: true,
         isVerified: true,
         verifiedAt: true,
-        verificationToken: true,
         verifiedDomain: true,
         claimedBy: true,
         claimedAt: true,

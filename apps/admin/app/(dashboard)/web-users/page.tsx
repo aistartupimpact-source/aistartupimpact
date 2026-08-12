@@ -1,7 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Users, Search, Mail, Calendar, CheckCircle, XCircle, Eye, Trash2, Shield, Download } from 'lucide-react';
+import { ConfirmModal } from '@/components/ConfirmModal';
+import { Pagination } from '@/components/Pagination';
+import { EmptyState } from '@/components/EmptyState';
+
+const PAGE_SIZE = 20;
 
 interface WebUser {
   id: string;
@@ -25,6 +30,7 @@ export default function WebUsersPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -70,10 +76,6 @@ export default function WebUsersPage() {
   };
 
   const deleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-      return;
-    }
-
     try {
       const res = await fetch(`/api/admin/web-users/${userId}`, {
         method: 'DELETE',
@@ -263,10 +265,7 @@ export default function WebUsersPage() {
       {/* Users List - Horizontal Compact Rows */}
       <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
         {filteredUsers.length === 0 ? (
-          <div className="p-12 text-center">
-            <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-sm text-gray-500 dark:text-gray-400">No users found</p>
-          </div>
+          <EmptyState icon={Users} title="No users found" description="Try adjusting your search or filters" />
         ) : (
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {filteredUsers.map((user) => (
@@ -361,7 +360,7 @@ export default function WebUsersPage() {
                     {user.isActive ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
                   </button>
                   <button
-                    onClick={() => deleteUser(user.id)}
+                    onClick={() => setConfirmDelete(user.id)}
                     className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                     title="Delete user"
                   >
@@ -373,6 +372,22 @@ export default function WebUsersPage() {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={() => {
+          if (confirmDelete) {
+            deleteUser(confirmDelete);
+            setConfirmDelete(null);
+          }
+        }}
+        title="Delete User"
+        message="Are you sure you want to delete this user? This action cannot be undone."
+        confirmLabel="Delete User"
+        variant="danger"
+        requireTyping={true}
+      />
     </div>
   );
 }

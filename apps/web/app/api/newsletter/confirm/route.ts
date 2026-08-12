@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@aistartupimpact/database';
-import { newsletterWelcomeHtml } from '@aistartupimpact/utils/src/email-templates';
+import { newsletterWelcomeHtml } from '@aistartupimpact/utils';
+import { sendEmailFireAndForget } from '@/lib/email/send';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,30 +39,18 @@ export async function GET(request: NextRequest) {
       WHERE id = ${subscriber.id}
     `;
 
-    // Send welcome email now that they're confirmed
-    try {
-      const { Resend } = await import('resend');
-      const resendKey = process.env.RESEND_API_KEY;
-      if (resendKey) {
-        const resend = new Resend(resendKey);
-        const fromEmail = process.env.RESEND_FROM_EMAIL || 'no-reply@aistartupimpact.com';
-        const fromName = process.env.RESEND_FROM_NAME || 'AI Startup Impact';
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aistartupimpact.com';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aistartupimpact.com';
 
-        await resend.emails.send({
-          from: `${fromName} <${fromEmail}>`,
-          to: subscriber.email,
-          subject: 'Welcome to AI Startup Impact Newsletter!',
-          headers: {
-            'List-Unsubscribe': `<${siteUrl}/unsubscribe?email=${encodeURIComponent(subscriber.email)}>`,
-            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-          },
-          html: newsletterWelcomeHtml(false),
-        });
-      }
-    } catch (emailError) {
-      console.error('Welcome email error after confirmation:', emailError);
-    }
+    sendEmailFireAndForget({
+      to: subscriber.email,
+      subject: 'Welcome to AI Startup Impact Newsletter!',
+      html: newsletterWelcomeHtml(false),
+      type: 'newsletter_welcome',
+      headers: {
+        'List-Unsubscribe': `<${siteUrl}/unsubscribe?email=${encodeURIComponent(subscriber.email)}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    });
 
     return redirectWithStatus(request, 'confirmed');
   } catch (error) {

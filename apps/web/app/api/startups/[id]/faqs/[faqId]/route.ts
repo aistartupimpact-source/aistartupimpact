@@ -1,21 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getFounderSession } from '@/lib/founder-auth';
 import { db } from '@/lib/db';
+import { sql } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-// PUT /api/startups/[id]/faqs/[faqId] - Update an FAQ
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string; faqId: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getFounderSession();
     if (!session) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
+        { success: false, error: 'Authentication required' },
         { status: 401 }
+      );
+    }
+
+    const startup = await sql`
+      SELECT id, "ownerId" FROM "Startup" WHERE id = ${params.id} AND "deletedAt" IS NULL LIMIT 1
+    `;
+    if (!startup.length || startup[0].ownerId !== session.userId) {
+      return NextResponse.json(
+        { success: false, error: 'Not authorized to modify this startup' },
+        { status: 403 }
       );
     }
 
@@ -45,26 +54,35 @@ export async function PUT(
     }
 
     return NextResponse.json({ success: true, faq: result.rows[0] });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error updating startup FAQ:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: 'Failed to update FAQ' },
       { status: 500 }
     );
   }
 }
 
-// DELETE /api/startups/[id]/faqs/[faqId] - Delete an FAQ
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string; faqId: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getFounderSession();
     if (!session) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
+        { success: false, error: 'Authentication required' },
         { status: 401 }
+      );
+    }
+
+    const startup = await sql`
+      SELECT id, "ownerId" FROM "Startup" WHERE id = ${params.id} AND "deletedAt" IS NULL LIMIT 1
+    `;
+    if (!startup.length || startup[0].ownerId !== session.userId) {
+      return NextResponse.json(
+        { success: false, error: 'Not authorized to modify this startup' },
+        { status: 403 }
       );
     }
 
@@ -83,10 +101,10 @@ export async function DELETE(
     }
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error deleting startup FAQ:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: 'Failed to delete FAQ' },
       { status: 500 }
     );
   }

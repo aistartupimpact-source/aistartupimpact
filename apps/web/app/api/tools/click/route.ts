@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
   } catch (err: any) {
     console.error('[click-api] Error:', err);
     return NextResponse.json(
-      { error: 'Server error', details: err.message },
+      { error: 'Server error' },
       { status: 500 }
     );
   }

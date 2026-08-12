@@ -9,7 +9,7 @@ import OrganizerHeader from "@/components/organizer/OrganizerHeader";
 import OrganizerMobileNav from "@/components/organizer/OrganizerMobileNav";
 
 const USER_JWT_SECRET = new TextEncoder().encode(
-  process.env.USER_JWT_SECRET || "user-secret-change-in-production"
+  process.env.USER_JWT_SECRET!
 );
 
 export default async function OrganizerWorkspaceLayout({

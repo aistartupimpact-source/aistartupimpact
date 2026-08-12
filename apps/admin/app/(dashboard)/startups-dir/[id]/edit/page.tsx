@@ -83,8 +83,9 @@ export default function EditStartupPage() {
   const loadStartup = async () => {
     setLoading(true);
     try {
-      const startups = await getStartupsAction();
-      const startup = startups.find((s: any) => s.id === startupId);
+      const result = await getStartupsAction();
+      if (!Array.isArray(result)) return;
+      const startup = result.find((s: any) => s.id === startupId);
       
       if (!startup) {
         alert('Startup not found');
@@ -124,7 +125,7 @@ export default function EditStartupPage() {
       setLoadingFundingRounds(true);
       try {
         const dbRounds = await getStartupFundingRoundsAction(startupId);
-        setFundingRounds(convertFromDbFormat(dbRounds));
+        if (Array.isArray(dbRounds)) setFundingRounds(convertFromDbFormat(dbRounds));
       } catch (roundError) {
         console.error('Error loading funding rounds:', roundError);
         setFundingRounds([]);

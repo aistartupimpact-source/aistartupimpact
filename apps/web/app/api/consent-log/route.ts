@@ -6,7 +6,7 @@ import { ConsentLogPayload } from '@/types/consent';
 
 export const dynamic = 'force-dynamic';
 
-const IP_HASH_SALT = process.env.IP_HASH_SALT || 'default-salt-change-in-production';
+const IP_HASH_SALT = process.env.IP_HASH_SALT!;
 
 function hashIp(ip: string): string {
   return createHash('sha256')

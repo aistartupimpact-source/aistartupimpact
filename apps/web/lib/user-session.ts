@@ -3,7 +3,7 @@ import { jwtVerify } from 'jose';
 import { sql } from '@/lib/db';
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.USER_JWT_SECRET || 'user-secret-change-in-production'
+  process.env.USER_JWT_SECRET!
 );
 
 export interface UserSession {

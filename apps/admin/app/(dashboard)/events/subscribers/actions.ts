@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@aistartupimpact/database";
 import { Resend } from "resend";
+import { eventPromotionHtml } from "@aistartupimpact/utils";
 
 const EVENT_ROLES = ["SUPER_ADMIN", "EDITOR_IN_CHIEF"];
 
@@ -96,13 +97,21 @@ export async function sendCampaignAction(data: { subject: string; body: string; 
       const batch = targetEmails.slice(i, i + 50);
       try {
         await client.batch.send(
-          batch.map(s => ({
-            from: `${FROM_NAME} <${FROM_EMAIL}>`,
-            to: s.email,
-            subject: data.subject,
-            html: `<div style="font-family:-apple-system,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;"><div style="border-bottom:3px solid #FF3131;padding-bottom:16px;margin-bottom:24px;"><strong style="font-size:16px;">AI Startup Impact Events</strong></div><h2 style="margin:0 0 16px;font-size:20px;">${data.subject}</h2><div style="font-size:15px;line-height:1.7;color:#374151;white-space:pre-wrap;">${data.body}</div><div style="margin-top:32px;">${data.eventSlug ? `<a href="${SITE_URL}/events/${data.eventSlug}" style="background:#FF3131;color:#fff;padding:14px 28px;text-decoration:none;border-radius:8px;font-weight:bold;font-size:14px;">Register Now →</a>` : `<a href="${SITE_URL}/events" style="background:#FF3131;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;font-size:14px;">Browse Events</a>`}</div><hr style="border:none;border-top:1px solid #e5e7eb;margin:32px 0;"/><p style="font-size:11px;color:#9ca3af;"><a href="${SITE_URL}/api/events/unsubscribe?email=${encodeURIComponent(s.email)}" style="color:#9ca3af;text-decoration:underline;">Unsubscribe</a></p></div>`,
-            headers: { "List-Unsubscribe": `<${SITE_URL}/api/events/unsubscribe?email=${encodeURIComponent(s.email)}>` },
-          }))
+          batch.map(s => {
+            const ctaUrl = data.eventSlug ? `${SITE_URL}/events/${data.eventSlug}` : `${SITE_URL}/events`;
+            const ctaLabel = data.eventSlug ? 'Register Now →' : 'Browse Events';
+            const unsubUrl = `${SITE_URL}/api/events/unsubscribe?email=${encodeURIComponent(s.email)}`;
+            return {
+              from: `${FROM_NAME} <${FROM_EMAIL}>`,
+              to: s.email,
+              subject: data.subject,
+              html: eventPromotionHtml(data.subject, data.body, ctaUrl, ctaLabel, unsubUrl),
+              headers: {
+                "List-Unsubscribe": `<${unsubUrl}>`,
+                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+              },
+            };
+          })
         );
         sent += batch.length;
       } catch (e) { console.error("Batch error:", e); }

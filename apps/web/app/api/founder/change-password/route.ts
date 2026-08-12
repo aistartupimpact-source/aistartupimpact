@@ -10,8 +10,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { currentPassword, newPassword } = body;
 
-    console.log('🔐 Change password request for user:', session.userId);
-
     if (!currentPassword || !newPassword) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
@@ -43,13 +41,6 @@ export async function POST(request: NextRequest) {
 
     const user = users[0];
 
-    console.log('👤 User found:', {
-      email: user.email,
-      hasPasswordHash: !!user.passwordHash,
-      authProvider: user.authProvider,
-      hashPrefix: user.passwordHash?.substring(0, 10)
-    });
-
     if (!user.passwordHash) {
       return NextResponse.json(
         { success: false, error: 'User is using OAuth login' },
@@ -57,14 +48,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify current password using the same function as login
-    console.log('🔍 Comparing password...');
-    console.log('   Password length:', currentPassword.length);
-    console.log('   Password (first 3 chars):', currentPassword.substring(0, 3));
-    console.log('   Hash (first 20 chars):', user.passwordHash.substring(0, 20));
-    
     const isValidPassword = await verifyPassword(currentPassword, user.passwordHash);
-    console.log('✅ Password comparison result:', isValidPassword);
 
     if (!isValidPassword) {
       console.log('❌ Password verification failed');

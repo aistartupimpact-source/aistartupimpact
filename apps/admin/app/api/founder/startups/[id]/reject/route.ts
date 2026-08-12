@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@aistartupimpact/database';
 import { neon } from '@neondatabase/serverless';
-import { startupRejectionHtml } from '@aistartupimpact/utils/src/email-templates';
+import { startupRejectionHtml } from '@aistartupimpact/utils';
+import { sendEmailFireAndForget } from '@/lib/email-send';
+import { requireApiAuth } from '@/lib/api-auth';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -11,12 +11,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const { error: authError } = await requireApiAuth(['SUPER_ADMIN', 'EDITOR_IN_CHIEF']);
+  if (authError) return authError;
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const body = await request.json();
     const reason = body.reason || 'No specific reason provided.';
@@ -46,33 +43,24 @@ export async function POST(
     `;
 
     if (startup.founderEmail) {
-      try {
-        const { Resend } = await import('resend');
-        const resendKey = process.env.RESEND_API_KEY;
-        if (resendKey) {
-          const resend = new Resend(resendKey);
-          await resend.emails.send({
-            from: `${process.env.RESEND_FROM_NAME || 'AI Startup Impact'} <${process.env.RESEND_FROM_EMAIL || 'no-reply@aistartupimpact.com'}>`,
-            to: startup.founderEmail,
-            subject: `Action Required: Your startup "${startup.name}" requires changes`,
-            html: startupRejectionHtml(startup.name, startup.founderName || 'there', reason, {
-              tagline: startup.tagline,
-              description: startup.description,
-              stage: startup.stage,
-              websiteUrl: startup.websiteUrl,
-            }),
-          });
-        }
-      } catch (emailErr) {
-        console.error('Failed to send rejection email:', emailErr);
-      }
+      sendEmailFireAndForget({
+        to: startup.founderEmail,
+        subject: `Action Required: Your startup "${startup.name}" requires changes`,
+        html: startupRejectionHtml(startup.name, startup.founderName || 'there', reason, {
+          tagline: startup.tagline,
+          description: startup.description,
+          stage: startup.stage,
+          websiteUrl: startup.websiteUrl,
+        }),
+        type: 'rejection',
+      });
     }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Reject startup error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to reject startup' },
+      { error: 'Failed to reject startup' },
       { status: 500 }
     );
   }

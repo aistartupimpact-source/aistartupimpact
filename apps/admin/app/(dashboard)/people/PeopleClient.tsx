@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Search, Download, ChevronLeft, ChevronRight, X, Shield, Rocket, CalendarDays } from "lucide-react";
+import { ConfirmModal } from '@/components/ConfirmModal';
 
 interface Person {
   id: string;
@@ -29,6 +30,7 @@ const FILTERS = [
   { key: "founders", label: "Founders" },
   { key: "organizers", label: "Organizers" },
   { key: "community", label: "Community" },
+  { key: "web_users", label: "Web Users" },
   { key: "2fa", label: "2FA" },
   { key: "suspended", label: "Suspended" },
 ];
@@ -44,6 +46,7 @@ export default function PeopleClient() {
   const [selected, setSelected] = useState<Person | null>(null);
   const [detail, setDetail] = useState<any>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
 
   const fetchPeople = useCallback(async () => {
     setLoading(true);
@@ -76,17 +79,22 @@ export default function PeopleClient() {
 
   const handleAction = async (action: string) => {
     if (!selected) return;
-    if (!confirm(`Are you sure you want to ${action.replace("_", " ")} this account?`)) return;
+    setPendingAction(action);
+  };
+
+  const executeAction = async () => {
+    if (!selected || !pendingAction) return;
     try {
       await fetch(`/api/admin/people/${selected.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action: pendingAction }),
       });
       fetchPeople();
       setSelected(null);
       setDetail(null);
     } catch {}
+    setPendingAction(null);
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -186,7 +194,10 @@ export default function PeopleClient() {
                         {p.organizerId && (
                           <span className="px-1.5 py-0.5 text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded">O</span>
                         )}
-                        {!p.founderId && !p.organizerId && (
+                        {(p as any).userSource === "web_user" && (
+                          <span className="px-1.5 py-0.5 text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded">W</span>
+                        )}
+                        {!p.founderId && !p.organizerId && (p as any).userSource !== "web_user" && (
                           <span className="text-xs text-gray-400">—</span>
                         )}
                       </div>
@@ -222,6 +233,17 @@ export default function PeopleClient() {
           </div>
         )}
       </div>
+
+      {/* Action Confirm Modal */}
+      <ConfirmModal
+        open={!!pendingAction}
+        onClose={() => setPendingAction(null)}
+        onConfirm={executeAction}
+        title={`${(pendingAction || '').replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())} Account`}
+        message={`Are you sure you want to ${(pendingAction || '').replace('_', ' ')} this account?`}
+        confirmLabel={(pendingAction || '').replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
+        variant="warning"
+      />
 
       {/* Detail Slide-out */}
       {selected && (

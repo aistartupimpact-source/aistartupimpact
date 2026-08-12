@@ -85,12 +85,14 @@ export default function EditToolPage() {
   const loadTool = async () => {
     setLoading(true);
     try {
-      const [tools, cats, tagGroupsData] = await Promise.all([
+      const [toolsResult, catsResult, tagGroupsData] = await Promise.all([
         getToolsAction(),
         getCategoriesAction(),
         getTagGroupsWithTagsAction(),
       ]);
-      
+      const tools = Array.isArray(toolsResult) ? toolsResult : [];
+      const cats = Array.isArray(catsResult) ? catsResult : [];
+
       const tool = tools.find((t: any) => t.id === toolId);
       
       if (!tool) {

@@ -2,11 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { detectCategory } from '@/lib/categories';
 import { standardizeCityName } from '@aistartupimpact/utils/src/cities';
+import { apiRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
+    const identifier = getClientIdentifier(req);
+    const { success: allowed } = await checkRateLimit(apiRateLimit, identifier);
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+    }
+
     const body = await req.json();
     const {
       name, websiteUrl, linkedinUrl, logoUrl,

@@ -4,7 +4,7 @@ import { jwtVerify } from 'jose';
 
 export const dynamic = 'force-dynamic';
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.USER_JWT_SECRET || 'user-secret-change-in-production'
+  process.env.USER_JWT_SECRET!
 );
 
 const DAILY_UPVOTE_CAP = 20;

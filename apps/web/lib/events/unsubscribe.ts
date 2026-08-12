@@ -7,7 +7,7 @@ import { SignJWT, jwtVerify } from "jose";
  */
 
 const UNSUBSCRIBE_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || "fallback-secret"
+  process.env.NEXTAUTH_SECRET!
 );
 
 const TOKEN_EXPIRY = "30d"; // Tokens valid for 30 days

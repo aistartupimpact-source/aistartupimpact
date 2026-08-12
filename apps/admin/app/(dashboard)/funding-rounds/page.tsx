@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Plus, Search, IndianRupee, Calendar, Edit3, Trash2, X, Save, Building2,
 } from 'lucide-react';
@@ -11,6 +11,10 @@ import {
   updateFundingRoundAction,
   deleteFundingRoundAction,
 } from './actions';
+import { Pagination } from '@/components/Pagination';
+import { TableEmptyState } from '@/components/EmptyState';
+
+const PAGE_SIZE = 20;
 
 interface FundingRound {
   id: string;
@@ -40,6 +44,7 @@ export default function FundingRoundsPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [investorInput, setInvestorInput] = useState('');
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     loadData();
@@ -65,6 +70,13 @@ export default function FundingRoundsPage() {
     round.startupName.toLowerCase().includes(search.toLowerCase()) ||
     round.roundType.toLowerCase().includes(search.toLowerCase())
   );
+
+  // Reset page when search changes
+  useMemo(() => { setPage(1); }, [search]);
+
+  const totalFiltered = filtered.length;
+  const totalPages = Math.ceil(totalFiltered / PAGE_SIZE);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const openCreate = () => {
     setEditing({
@@ -223,7 +235,7 @@ export default function FundingRoundsPage() {
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400 font-jakarta text-sm">No funding rounds found</td></tr>
+              <TableEmptyState colSpan={6} icon={IndianRupee} title="No funding rounds found" description="Try adjusting your search or add a new round" action={{ label: "Add Funding Round", onClick: openCreate }} />
             )}
           </tbody>
         </table>

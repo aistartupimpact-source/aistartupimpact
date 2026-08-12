@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { SignJWT } from 'jose';
 import { randomBytes } from 'crypto';
+import { getFounderSession } from '@/lib/founder-auth';
 
 export const dynamic = 'force-dynamic';
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.USER_JWT_SECRET || 'user-secret-change-in-production'
+  process.env.USER_JWT_SECRET!
 );
 
 function generateId(): string {
@@ -21,21 +22,19 @@ function generateSlug(name: string): string {
 /**
  * POST /api/user/auth/bridge-session
  * Creates a WebUser session for a founder who just completed 2FA.
- * This bridges the founder's auth to the community session system.
- * Only callable after successful founder 2FA verification (founder_session cookie must be set).
+ * Uses the founder-token cookie for authentication — no client-provided IDs.
  */
 export async function POST(request: NextRequest) {
   try {
-    const { founderId } = await request.json();
-    if (!founderId) {
-      return NextResponse.json({ error: 'Missing founderId' }, { status: 400 });
+    const founderSession = await getFounderSession();
+    if (!founderSession) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    // Get founder data
     const founders = await sql`
       SELECT id, email, name, avatar
       FROM "FounderUser"
-      WHERE id = ${founderId}
+      WHERE id = ${founderSession.userId}
       LIMIT 1
     `;
 
@@ -45,7 +44,6 @@ export async function POST(request: NextRequest) {
 
     const founder = founders[0];
 
-    // Find or create WebUser for this email
     let webUsers = await sql`
       SELECT id, email, name, avatar, slug
       FROM "WebUser"
@@ -68,7 +66,6 @@ export async function POST(request: NextRequest) {
 
     const user = webUsers[0];
 
-    // Create session token
     const sessionId = generateId();
     const token = await new SignJWT({
       userId: user.id,

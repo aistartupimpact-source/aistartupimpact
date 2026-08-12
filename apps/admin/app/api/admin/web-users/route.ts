@@ -1,27 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { neon } from '@neondatabase/serverless';
+import { requireApiAuth } from '@/lib/api-auth';
 
 const sql = neon(process.env.DATABASE_URL!);
 
 export async function GET(request: NextRequest) {
-  console.log('🔵 Admin API: Fetching web users...');
-  
+  const { error } = await requireApiAuth();
+  if (error) return error;
+
   try {
-    const session = await getServerSession(authOptions);
-    console.log('🔵 Admin session:', { hasSession: !!session, user: session?.user?.email });
-
-    if (!session?.user) {
-      console.log('❌ No session - unauthorized');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    console.log('🔵 Querying database for web users using raw SQL...');
-    
-    // Use raw SQL to avoid Prisma DateTime serialization issues with Neon HTTP adapter
     const users = await sql`
-      SELECT 
+      SELECT
         u.id,
         u.email,
         u.name,
@@ -40,7 +29,6 @@ export async function GET(request: NextRequest) {
       ORDER BY u."createdAt" DESC
     `;
 
-    // Transform to match expected format
     const formattedUsers = users.map((user: any) => ({
       ...user,
       _count: {
@@ -48,14 +36,9 @@ export async function GET(request: NextRequest) {
       },
     }));
 
-    console.log(`✅ Found ${formattedUsers.length} web users`);
     return NextResponse.json({ users: formattedUsers });
   } catch (error) {
-    console.error('❌ Error fetching web users:', error);
-    console.error('Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown',
-      stack: error instanceof Error ? error.stack : undefined,
-    });
+    console.error('Error fetching web users:', error);
     return NextResponse.json(
       { error: 'Failed to fetch web users' },
       { status: 500 }

@@ -4,10 +4,10 @@ import { prisma } from "@aistartupimpact/database";
 import crypto from "crypto";
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || "organizer-secret-fallback"
+  process.env.NEXTAUTH_SECRET!
 );
 const USER_JWT_SECRET = new TextEncoder().encode(
-  process.env.USER_JWT_SECRET || "user-secret-change-in-production"
+  process.env.USER_JWT_SECRET!
 );
 const COOKIE_NAME = "organizer_session";
 const SESSION_EXPIRY_DAYS = 30;

@@ -2,10 +2,13 @@
 
 import { neon } from '@neondatabase/serverless';
 import { revalidatePath } from 'next/cache';
+import { requireActionAuth } from '@/lib/api-auth';
 
 const sql = neon(process.env.DATABASE_URL!);
 
 export async function getSponsorsAction() {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const sponsors = await sql`
       SELECT id, brand, tagline, "ctaUrl", "logoUrl", "isActive", "sortOrder",
@@ -24,6 +27,8 @@ export async function createSponsorAction(data: {
   brand: string; tagline: string; ctaUrl: string; logoUrl?: string;
   isActive: boolean; sortOrder: number; startDate?: string; endDate?: string;
 }) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`
       INSERT INTO "Sponsor" (id, brand, tagline, "ctaUrl", "logoUrl", "isActive", "sortOrder", "startDate", "endDate", "createdAt", "updatedAt")
@@ -46,6 +51,8 @@ export async function updateSponsorAction(id: string, data: {
   brand: string; tagline: string; ctaUrl: string; logoUrl?: string;
   isActive: boolean; sortOrder: number; startDate?: string; endDate?: string;
 }) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`
       UPDATE "Sponsor" SET
@@ -65,6 +72,8 @@ export async function updateSponsorAction(id: string, data: {
 }
 
 export async function deleteSponsorAction(id: string) {
+  const { error } = await requireActionAuth(['SUPER_ADMIN']);
+  if (error) return { success: false, error };
   try {
     await sql`DELETE FROM "Sponsor" WHERE id = ${id}`;
     revalidatePath('/sponsors');
@@ -75,6 +84,8 @@ export async function deleteSponsorAction(id: string) {
 }
 
 export async function toggleSponsorStatusAction(id: string, current: boolean) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`UPDATE "Sponsor" SET "isActive" = ${!current}, "updatedAt" = NOW() WHERE id = ${id}`;
     revalidatePath('/sponsors');

@@ -110,7 +110,8 @@ export default function NewsletterCapture({ source, className = '' }: Newsletter
       )}
 
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-        Weekly India AI Intelligence Report • Unsubscribe anytime
+        By subscribing, you agree to receive marketing emails. Unsubscribe anytime.{' '}
+        <a href="/privacy" className="underline hover:text-gray-700 dark:hover:text-gray-300">Privacy Policy</a>
       </p>
     </div>
   );

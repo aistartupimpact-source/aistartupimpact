@@ -3,6 +3,7 @@ import { sql } from '@/lib/db';
 import { generateToken } from '@/lib/founder-auth';
 import { sendVerificationEmail } from '@/lib/founder-email';
 import { z } from 'zod';
+import { authRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 const resendSchema = z.object({
@@ -11,6 +12,12 @@ const resendSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const identifier = getClientIdentifier(request);
+    const { success: allowed } = await checkRateLimit(authRateLimit, identifier);
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+    }
+
     const body = await request.json();
     const validated = resendSchema.parse(body);
     
@@ -53,9 +60,8 @@ export async function POST(request: NextRequest) {
     // Send verification email
     try {
       await sendVerificationEmail(user.email, user.name, verifyToken);
-      console.log('✅ Verification email resent to:', user.email);
     } catch (emailError) {
-      console.error('❌ Failed to resend verification email:', emailError);
+      console.error('Failed to resend verification email:', emailError);
       return NextResponse.json(
         { error: 'Failed to send verification email. Please try again later.' },
         { status: 500 }

@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { sendEmail } from '../../lib/email';
-import { OtpEmail } from '../../lib/emails/templates/OtpEmail';
+import { sendEmailLogged } from '../../lib/email-send';
+import { otpEmailHtml } from '@aistartupimpact/utils';
 import { rateLimit } from '../../lib/redis';
 
 const router = express.Router();
@@ -31,10 +31,11 @@ router.post('/request-otp', rateLimit(3, 300), async (req: Request, res: Respons
     // Example: await redis.set(`otp:${email}`, otp, 'EX', 600); // 10 minutes
 
     // Send the OTP email using Resend
-    const result = await sendEmail({
+    const result = await sendEmailLogged({
       to: email,
       subject: 'Your AIStartupImpact Login Code',
-      react: OtpEmail({ otp, name: user?.name || 'there' }),
+      html: otpEmailHtml(otp),
+      type: 'otp',
     });
 
     if (!result.success) {

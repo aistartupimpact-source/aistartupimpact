@@ -9,7 +9,7 @@ import { checkRateLimit, getClientIdentifier, authRateLimit } from "@/lib/rate-l
 export const dynamic = "force-dynamic";
 
 const USER_JWT_SECRET = new TextEncoder().encode(
-  process.env.USER_JWT_SECRET || "user-secret-change-in-production"
+  process.env.USER_JWT_SECRET!
 );
 
 /**

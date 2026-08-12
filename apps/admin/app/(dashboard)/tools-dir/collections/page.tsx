@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Plus, Trash2, Eye, EyeOff, Edit3, X, Save, Loader2 } from 'lucide-react';
 import { getCollectionsAction, createCollectionAction, updateCollectionAction, deleteCollectionAction } from './actions';
+import { ConfirmModal } from '@/components/ConfirmModal';
 
 export default function CollectionsPage() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function CollectionsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -40,7 +42,6 @@ export default function CollectionsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this collection and all its items?')) return;
     await deleteCollectionAction(id);
     await loadData();
   };
@@ -91,7 +92,7 @@ export default function CollectionsPage() {
               <button onClick={() => handleTogglePublish(col.id, col.isPublished)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" title={col.isPublished ? 'Unpublish' : 'Publish'}>
                 {col.isPublished ? <EyeOff className="w-3.5 h-3.5 text-gray-400" /> : <Eye className="w-3.5 h-3.5 text-gray-400" />}
               </button>
-              <button onClick={() => handleDelete(col.id)} className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"><Trash2 className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" /></button>
+              <button onClick={() => setConfirmDelete(col.id)} className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"><Trash2 className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" /></button>
             </div>
           </div>
         ))}
@@ -113,6 +114,22 @@ export default function CollectionsPage() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={() => {
+          if (confirmDelete) {
+            handleDelete(confirmDelete);
+            setConfirmDelete(null);
+          }
+        }}
+        title="Delete Collection"
+        message="Delete this collection and all its items? This action cannot be undone."
+        confirmLabel="Delete Collection"
+        variant="danger"
+        requireTyping={true}
+      />
     </div>
   );
 }

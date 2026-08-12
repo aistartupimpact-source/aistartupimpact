@@ -13,6 +13,7 @@ import {
   deleteTagAction,
   refreshTagCountsAction,
 } from './actions';
+import { ConfirmModal } from '@/components/ConfirmModal';
 
 interface TagItem {
   id: string;
@@ -53,6 +54,8 @@ export default function TagsManagementPage() {
   const [addName, setAddName] = useState('');
   const [addEmoji, setAddEmoji] = useState('');
   const [addSubmitting, setAddSubmitting] = useState(false);
+
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   // Edit tag inline
   const [editingTag, setEditingTag] = useState<string | null>(null);
@@ -114,7 +117,6 @@ export default function TagsManagementPage() {
   };
 
   const handleDeleteTag = async (tagId: string) => {
-    if (!confirm('Delete this tag? All tool mappings for this tag will be removed.')) return;
     await deleteTagAction(tagId);
     await loadData();
   };
@@ -289,7 +291,7 @@ export default function TagsManagementPage() {
                               {tag.isActive ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                             </button>
                             <button
-                              onClick={() => handleDeleteTag(tag.id)}
+                              onClick={() => setConfirmDelete(tag.id)}
                               className="p-0.5 text-gray-400 hover:text-red-500"
                               title="Delete tag"
                             >
@@ -374,6 +376,22 @@ export default function TagsManagementPage() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={() => {
+          if (confirmDelete) {
+            handleDeleteTag(confirmDelete);
+            setConfirmDelete(null);
+          }
+        }}
+        title="Delete Tag"
+        message="Delete this tag? All tool mappings for this tag will be removed."
+        confirmLabel="Delete Tag"
+        variant="danger"
+        requireTyping={true}
+      />
     </div>
   );
 }

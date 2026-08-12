@@ -4,6 +4,15 @@ import { useState } from "react";
 import { Users, MapPin, Briefcase, Send, Loader2, Mail, CalendarDays, Eye, Phone, MessageCircle } from "lucide-react";
 import { getAudiencePreviewAction, sendCampaignAction } from "./actions";
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 interface EventItem {
   id: string; title: string; slug: string; startAt: string;
   venueName: string | null; category: string; format: string; coverImageUrl?: string | null;
@@ -70,12 +79,12 @@ export default function SubscriberDashboard({ totalCount, events, topCities, top
   // Generate email HTML for preview
   const emailPreviewHtml = selectedEvent ? `
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
-      ${selectedEvent.coverImageUrl ? `<img src="${selectedEvent.coverImageUrl}" style="width:100%;height:200px;object-fit:cover;" alt="" />` : `<div style="width:100%;height:120px;background:linear-gradient(135deg,#fff0f0,#ffe0e0);display:flex;align-items:center;justify-content:center;"><span style="font-size:40px;">🎉</span></div>`}
+      ${selectedEvent.coverImageUrl ? `<img src="${escapeHtml(selectedEvent.coverImageUrl)}" style="width:100%;height:200px;object-fit:cover;" alt="" />` : `<div style="width:100%;height:120px;background:linear-gradient(135deg,#fff0f0,#ffe0e0);display:flex;align-items:center;justify-content:center;"><span style="font-size:40px;">🎉</span></div>`}
       <div style="padding:28px 24px;">
-        <div style="margin-bottom:16px;"><span style="background:#fff0f0;color:#FF3131;font-size:10px;font-weight:700;text-transform:uppercase;padding:4px 10px;border-radius:20px;">${selectedEvent.category.replace(/_/g, " ")}</span></div>
-        <h1 style="font-size:22px;font-weight:700;color:#0D1B2A;margin:0 0 8px;line-height:1.3;">${selectedEvent.title}</h1>
-        <div style="font-size:14px;color:#6b7280;line-height:1.8;white-space:pre-wrap;margin:16px 0;">${emailBody}</div>
-        <div style="margin:24px 0;text-align:center;"><a href="${SITE_URL}/events/${selectedEvent.slug}" style="background:#FF3131;color:#fff;padding:14px 32px;text-decoration:none;border-radius:10px;font-weight:700;font-size:15px;display:inline-block;">Register Now →</a></div>
+        <div style="margin-bottom:16px;"><span style="background:#fff0f0;color:#FF3131;font-size:10px;font-weight:700;text-transform:uppercase;padding:4px 10px;border-radius:20px;">${escapeHtml(selectedEvent.category.replace(/_/g, " "))}</span></div>
+        <h1 style="font-size:22px;font-weight:700;color:#0D1B2A;margin:0 0 8px;line-height:1.3;">${escapeHtml(selectedEvent.title)}</h1>
+        <div style="font-size:14px;color:#6b7280;line-height:1.8;white-space:pre-wrap;margin:16px 0;">${escapeHtml(emailBody)}</div>
+        <div style="margin:24px 0;text-align:center;"><a href="${SITE_URL}/events/${escapeHtml(selectedEvent.slug)}" style="background:#FF3131;color:#fff;padding:14px 32px;text-decoration:none;border-radius:10px;font-weight:700;font-size:15px;display:inline-block;">Register Now →</a></div>
         <hr style="border:none;border-top:1px solid #f3f4f6;margin:24px 0;" />
         <p style="font-size:11px;color:#9ca3af;text-align:center;">AI Startup Impact Events · <a href="#" style="color:#9ca3af;text-decoration:underline;">Unsubscribe</a></p>
       </div>

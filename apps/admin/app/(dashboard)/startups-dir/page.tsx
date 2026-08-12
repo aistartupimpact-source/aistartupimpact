@@ -1,17 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Plus, Search, Building2, MapPin, Star, StarOff,
   Edit3, Trash2, Crown, CheckCircle, Clock, Calendar, X,
   ShieldCheck, UserCheck, AlertCircle,
 } from 'lucide-react';
+import { ConfirmModal } from '@/components/ConfirmModal';
+import { TableEmptyState } from '@/components/EmptyState';
+import { Pagination } from '@/components/Pagination';
 import {
   getStartupsAction,
   deleteStartupAction,
   toggleFeaturedAction,
-  fixNullImpactScoresAction,
   approveStartupAction,
   getFeaturedCampaignsAction,
   scheduleFeaturedCampaignAction,
@@ -48,10 +50,13 @@ interface Startup {
   updatedAt: string;
 }
 
+const PAGE_SIZE = 20;
+
 export default function StartupsDirPage() {
   const router = useRouter();
   const [startups, setStartups] = useState<Startup[]>([]);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deleteTyped, setDeleteTyped] = useState('');
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
@@ -69,6 +74,7 @@ export default function StartupsDirPage() {
   const [featurePrice, setFeaturePrice] = useState('');
   const [featureError, setFeatureError] = useState('');
   const [featureSubmitting, setFeatureSubmitting] = useState(false);
+  const [bulkAction, setBulkAction] = useState<'approve' | 'archive' | null>(null);
 
   useEffect(() => {
     loadStartups();
@@ -97,6 +103,10 @@ export default function StartupsDirPage() {
     if (filterClaim !== 'all') return s.claimStatus === filterClaim;
     return true;
   });
+
+  const totalFiltered = filtered.length;
+  const totalPages = Math.ceil(totalFiltered / PAGE_SIZE);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const featuredCount = startups.filter(s => s.isFeatured).length;
   const pendingCount = startups.filter(s => !s.isApproved).length;
@@ -183,7 +193,7 @@ export default function StartupsDirPage() {
       if (result.success) {
         await loadStartups();
       } else {
-        alert('Error: ' + result.error);
+        console.error('Error approving startup:', result.error);
       }
     } catch (error) {
       console.error('Error approving startup:', error);
@@ -198,22 +208,6 @@ export default function StartupsDirPage() {
       }
     } catch (error) {
       console.error('Error toggling review:', error);
-    }
-  };
-
-  const runImpactScoreFix = async () => {
-    if (!confirm('This will update all startups with null impactScore to 0. Continue?')) return;
-    try {
-      const result = await fixNullImpactScoresAction();
-      if (result.success) {
-        alert(result.message || 'Fixed successfully');
-        await loadStartups();
-      } else {
-        alert('Error: ' + result.error);
-      }
-    } catch (error) {
-      console.error('Error running fix:', error);
-      alert('Error running fix');
     }
   };
 
@@ -237,9 +231,6 @@ export default function StartupsDirPage() {
           <button onClick={() => router.push('/startups-dir/manage')} className="btn-outline text-xs flex items-center gap-1.5 px-3 py-2">
             Categories & Types
           </button>
-          <button onClick={runImpactScoreFix} className="px-3 py-2 text-xs font-medium border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300">
-            Fix Null Scores
-          </button>
           <button onClick={openCreate} className="btn-brand text-sm flex items-center gap-2">
             <Plus className="w-4 h-4" /> Add Startup
           </button>
@@ -249,12 +240,12 @@ export default function StartupsDirPage() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-48">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input type="text" placeholder="Search startups..." value={search} onChange={(e) => setSearch(e.target.value)} className="input-field pl-10" />
+          <input type="text" placeholder="Search startups..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="input-field pl-10" />
         </div>
         {/* Review filter */}
         <select
           value={filterReview}
-          onChange={(e) => setFilterReview(e.target.value as any)}
+          onChange={(e) => { setFilterReview(e.target.value as any); setPage(1); }}
           className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-jakarta text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand"
         >
           <option value="all">All Reviews</option>
@@ -264,7 +255,7 @@ export default function StartupsDirPage() {
         {/* Claim filter */}
         <select
           value={filterClaim}
-          onChange={(e) => setFilterClaim(e.target.value as any)}
+          onChange={(e) => { setFilterClaim(e.target.value as any); setPage(1); }}
           className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-jakarta text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand"
         >
           <option value="all">All Claims</option>
@@ -300,7 +291,7 @@ export default function StartupsDirPage() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((startup) => (
+            {paginated.map((startup) => (
               <tr key={startup.id} className="border-t border-gray-50 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
                 <td className="px-3 py-3">
                   <input
@@ -436,12 +427,14 @@ export default function StartupsDirPage() {
                 </td>
               </tr>
             ))}
-            {filtered.length === 0 && (
-              <tr><td colSpan={9} className="px-6 py-12 text-center text-gray-400 font-jakarta text-sm">No startups found</td></tr>
+            {paginated.length === 0 && (
+              <TableEmptyState colSpan={9} icon={Building2} title="No startups found" description="Try adjusting your search or filters" />
             )}
           </tbody>
         </table>
       </div>
+
+      <Pagination page={page} totalPages={totalPages} total={totalFiltered} pageSize={PAGE_SIZE} onPageChange={setPage} />
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
@@ -473,23 +466,13 @@ export default function StartupsDirPage() {
           <span className="text-sm font-semibold font-jakarta">{selectedIds.size} selected</span>
           <div className="w-px h-6 bg-gray-700" />
           <button
-            onClick={async () => {
-              if (!confirm(`Approve ${selectedIds.size} startups?`)) return;
-              await bulkApproveStartupsAction([...selectedIds]);
-              setSelectedIds(new Set());
-              await loadStartups();
-            }}
+            onClick={() => setBulkAction('approve')}
             className="px-3 py-1.5 text-xs font-semibold bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
           >
             Approve All
           </button>
           <button
-            onClick={async () => {
-              if (!confirm(`Archive ${selectedIds.size} startups?`)) return;
-              await bulkArchiveStartupsAction([...selectedIds]);
-              setSelectedIds(new Set());
-              await loadStartups();
-            }}
+            onClick={() => setBulkAction('archive')}
             className="px-3 py-1.5 text-xs font-semibold bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors"
           >
             Archive All
@@ -562,6 +545,36 @@ export default function StartupsDirPage() {
           </div>
         </div>
       )}
+
+      {/* Bulk Approve/Archive Confirm Modal */}
+      <ConfirmModal
+        open={bulkAction === 'approve'}
+        onClose={() => setBulkAction(null)}
+        onConfirm={async () => {
+          setBulkAction(null);
+          await bulkApproveStartupsAction([...selectedIds]);
+          setSelectedIds(new Set());
+          await loadStartups();
+        }}
+        title="Approve Startups"
+        message={`Approve ${selectedIds.size} startups?`}
+        confirmLabel="Approve"
+        variant="warning"
+      />
+      <ConfirmModal
+        open={bulkAction === 'archive'}
+        onClose={() => setBulkAction(null)}
+        onConfirm={async () => {
+          setBulkAction(null);
+          await bulkArchiveStartupsAction([...selectedIds]);
+          setSelectedIds(new Set());
+          await loadStartups();
+        }}
+        title="Archive Startups"
+        message={`Archive ${selectedIds.size} startups?`}
+        confirmLabel="Archive"
+        variant="warning"
+      />
 
       {/* Featured Campaign Scheduling Modal */}
       {featureModal && (

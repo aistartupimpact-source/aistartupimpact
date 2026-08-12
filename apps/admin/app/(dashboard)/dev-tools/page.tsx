@@ -1,12 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle2, XCircle, Wrench, Mail, AlertCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, Wrench, Mail, AlertCircle, Database } from 'lucide-react';
+import { fixNullImpactScoresAction } from '../startups-dir/actions';
 
 export default function DevToolsPage() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [fixLoading, setFixLoading] = useState(false);
+  const [fixResult, setFixResult] = useState<{ success: boolean; message: string } | null>(null);
 
   const handleVerifyEmail = async () => {
     if (!email) {
@@ -155,6 +158,59 @@ export default function DevToolsPage() {
               <li>The founder can now login without clicking the verification link</li>
             </ol>
           </div>
+        </div>
+      </div>
+
+      {/* Fix Null Impact Scores Card */}
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+        <div className="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 px-6 py-4">
+          <h2 className="font-sora font-bold text-lg text-navy dark:text-white flex items-center gap-2">
+            <Database className="w-5 h-5 text-brand" />
+            Fix Null Impact Scores
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-jakarta">
+            Sets all startups with null impactScore to 0. Run this after data migrations or imports.
+          </p>
+        </div>
+        <div className="p-6 space-y-4">
+          <button
+            onClick={async () => {
+              setFixLoading(true);
+              setFixResult(null);
+              try {
+                const res = await fixNullImpactScoresAction();
+                setFixResult({
+                  success: res.success,
+                  message: res.success ? (res as any).message || 'Fixed successfully' : (res as any).error || 'Failed',
+                });
+              } catch {
+                setFixResult({ success: false, message: 'Failed to run fix' });
+              }
+              setFixLoading(false);
+            }}
+            disabled={fixLoading}
+            className="w-full bg-brand hover:bg-brand/90 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-4 rounded-lg transition-colors font-jakarta"
+          >
+            {fixLoading ? 'Running...' : 'Fix Null Scores'}
+          </button>
+          {fixResult && (
+            <div className={`rounded-lg p-4 ${
+              fixResult.success
+                ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+                : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+            }`}>
+              <div className="flex items-start gap-3">
+                {fixResult.success ? (
+                  <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+                ) : (
+                  <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
+                )}
+                <p className={`text-sm font-medium ${
+                  fixResult.success ? 'text-green-900 dark:text-green-200' : 'text-red-900 dark:text-red-200'
+                }`}>{fixResult.message}</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

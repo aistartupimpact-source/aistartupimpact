@@ -367,7 +367,6 @@ export async function getArticleByIdAction(id: string) {
 
 export async function getArticlesAction() {
   const session: any = await getServerSession(authOptions);
-  console.log("[DEBUG] getArticlesAction Session User:", session?.user?.email, "Role:", session?.user?.role);
 
   if (!session?.user || !["SUPER_ADMIN", "EDITOR_IN_CHIEF", "SENIOR_WRITER", "WRITER"].includes(session.user.role)) {
     console.log("[DEBUG] Unauthorized. Expected admin role, got:", session?.user?.role);
@@ -468,6 +467,70 @@ export async function deleteArticleAction(id: string) {
   } catch (error: any) {
     console.error("Delete Article Error:", error);
     return { success: false, error: error.message || "Failed to delete article" };
+  }
+}
+
+export async function duplicateArticleAction(sourceId: string) {
+  const session: any = await getServerSession(authOptions);
+  if (!session?.user || !["SUPER_ADMIN", "EDITOR_IN_CHIEF", "SENIOR_WRITER", "WRITER"].includes(session.user.role)) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  try {
+    const rows: any[] = await prisma.$queryRaw`
+      SELECT title, slug, excerpt, content, type, "coverImage", "thumbnailImage",
+             "seoTitle", "seoDescription", "focusKeyword", "canonicalUrl", "ogImage",
+             "noIndex", "isFeatured", "isPinned", "isSponsored", "categoryId"
+      FROM "Article" WHERE id = ${sourceId} AND "deletedAt" IS NULL LIMIT 1
+    `;
+    if (!rows.length) return { success: false, error: "Source article not found" };
+
+    const src = rows[0];
+    const newId = crypto.randomUUID();
+    let newSlug = `${src.slug}-copy`;
+    let counter = 1;
+    while (true) {
+      const existing: any[] = await prisma.$queryRaw`SELECT id FROM "Article" WHERE slug = ${newSlug} LIMIT 1`;
+      if (!existing.length) break;
+      newSlug = `${src.slug}-copy-${++counter}`;
+    }
+
+    await prisma.$executeRaw`
+      INSERT INTO "Article" (
+        id, title, slug, excerpt, content, type, status, "noIndex",
+        "isFeatured", "isPinned", "isSponsored", "categoryId",
+        "coverImage", "thumbnailImage", "seoTitle", "seoDescription",
+        "focusKeyword", "canonicalUrl", "ogImage",
+        "authorId", "createdAt", "updatedAt"
+      ) VALUES (
+        ${newId}, ${src.title + ' (Copy)'}, ${newSlug}, ${src.excerpt || ''},
+        ${JSON.stringify(src.content)}::jsonb, ${src.type}::"ArticleType", 'DRAFT'::"ArticleStatus",
+        ${src.noIndex}, false, false, false, ${src.categoryId || null},
+        ${src.coverImage || null}, ${src.thumbnailImage || null},
+        ${src.seoTitle || null}, ${src.seoDescription || null},
+        ${src.focusKeyword || null}, ${src.canonicalUrl || null}, ${src.ogImage || null},
+        ${session.user.id}, NOW(), NOW()
+      )
+    `;
+
+    revalidatePath("/articles");
+    return {
+      success: true,
+      data: {
+        id: newId,
+        title: src.title + ' (Copy)',
+        slug: newSlug,
+        status: 'DRAFT',
+        type: src.type,
+        views: 0,
+        publishedAt: null,
+        author: session.user.name || 'Unknown',
+        category: '',
+      }
+    };
+  } catch (error: any) {
+    console.error("[duplicateArticleAction] Error:", error);
+    return { success: false, error: error.message || "Failed to duplicate article" };
   }
 }
 

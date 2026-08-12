@@ -24,6 +24,15 @@ export async function POST(request: NextRequest) {
     if (password.length < 8) {
       return NextResponse.json({ success: false, error: "Password must be at least 8 characters." }, { status: 400 });
     }
+    if (!/[A-Z]/.test(password)) {
+      return NextResponse.json({ success: false, error: "Password must contain an uppercase letter." }, { status: 400 });
+    }
+    if (!/[a-z]/.test(password)) {
+      return NextResponse.json({ success: false, error: "Password must contain a lowercase letter." }, { status: 400 });
+    }
+    if (!/[0-9]/.test(password)) {
+      return NextResponse.json({ success: false, error: "Password must contain a number." }, { status: 400 });
+    }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ success: false, error: "Invalid email address." }, { status: 400 });

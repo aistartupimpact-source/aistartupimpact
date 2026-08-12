@@ -86,12 +86,15 @@ export async function POST(request: NextRequest) {
     
     // Check if 2FA is enabled
     if (user.twoFactorEnabled) {
-      // Return special response indicating 2FA is required
-      // Don't set session yet - wait for 2FA verification
+      const { SignJWT } = await import('jose');
+      const challengeToken = await new SignJWT({ userId: user.id, purpose: '2fa-challenge' })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('5m')
+        .sign(new TextEncoder().encode(process.env.FOUNDER_JWT_SECRET!));
       return NextResponse.json({
         requires2FA: true,
-        userId: user.id,
-        email: user.email,
+        challengeToken,
         message: 'Please enter your 2FA code',
       });
     }

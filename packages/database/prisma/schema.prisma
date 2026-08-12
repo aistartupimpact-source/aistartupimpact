@@ -855,6 +855,10 @@ model NewsletterSubscriber {
   lastOpenedAt      DateTime?
   lastClickedAt     DateTime?
   unsubscribedAt    DateTime?
+  consentAt         DateTime?
+  consentText       String?
+  consentVersion    Int?
+  consentSource     String?
 
   @@index([email])
   @@index([isActive])

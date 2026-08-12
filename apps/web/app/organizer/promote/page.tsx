@@ -83,11 +83,12 @@ export default function PromotePage() {
   };
 
   // Email preview HTML
+  const escapeHtml = (str: string) => str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   const emailPreviewHtml = selectedEvent ? `
     <div style="font-family:-apple-system,sans-serif;max-width:100%;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;">
       <div style="padding:20px;">
-        <h2 style="font-size:18px;font-weight:700;color:#0D1B2A;margin:0 0 12px;">${selectedEvent.title}</h2>
-        <div style="font-size:13px;color:#6b7280;line-height:1.7;white-space:pre-wrap;">${emailBody}</div>
+        <h2 style="font-size:18px;font-weight:700;color:#0D1B2A;margin:0 0 12px;">${escapeHtml(selectedEvent.title)}</h2>
+        <div style="font-size:13px;color:#6b7280;line-height:1.7;white-space:pre-wrap;">${escapeHtml(emailBody)}</div>
         <div style="margin:20px 0;"><a style="background:#FF3131;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:700;font-size:13px;">Register Now →</a></div>
         <p style="font-size:10px;color:#9ca3af;">AI Startup Impact Events · Unsubscribe</p>
       </div>

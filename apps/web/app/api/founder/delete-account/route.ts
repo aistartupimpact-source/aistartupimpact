@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@aistartupimpact/database';
+import bcrypt from 'bcryptjs';
 import { requireFounderAuth } from '@/lib/founder-auth';
 import { clearFounderSession } from '@/lib/founder-auth';
 
@@ -9,11 +10,30 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await requireFounderAuth();
 
-    // Verify user exists
+    const body = await request.json().catch(() => ({}));
+    const { password } = body as { password?: string };
+    if (!password) {
+      return NextResponse.json(
+        { success: false, error: 'Password is required to delete your account' },
+        { status: 400 }
+      );
+    }
+
+    // Verify user exists and check password
     const user = await prisma.founderUser.findUnique({
       where: { id: session.userId },
-      select: { id: true },
+      select: { id: true, passwordHash: true },
     });
+
+    if (user?.passwordHash) {
+      const valid = await bcrypt.compare(password, user.passwordHash);
+      if (!valid) {
+        return NextResponse.json(
+          { success: false, error: 'Incorrect password' },
+          { status: 401 }
+        );
+      }
+    }
 
     if (!user) {
       return NextResponse.json(

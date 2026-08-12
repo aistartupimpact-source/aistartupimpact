@@ -8,7 +8,7 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI_USER || 'http://localhost:3000/api/user/auth/google/callback';
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.USER_JWT_SECRET || 'user-secret-change-in-production'
+  process.env.USER_JWT_SECRET!
 );
 
 function generateId(): string {
@@ -45,8 +45,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/?error=oauth_failed', request.url));
     }
 
-    // Exchange code for tokens
-    console.log('🔵 Exchanging code for tokens...');
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -60,50 +58,33 @@ export async function GET(request: NextRequest) {
     });
 
     const tokens = await tokenResponse.json();
-    console.log('🔵 Token response:', { hasAccessToken: !!tokens.access_token, error: tokens.error });
 
     if (!tokens.access_token) {
-      console.log('❌ No access token received:', tokens);
+      console.error('Google OAuth: no access token received');
       return NextResponse.redirect(new URL('/?error=oauth_token_failed', request.url));
     }
 
-    // Get user info from Google
-    console.log('🔵 Fetching user info from Google...');
     const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: { Authorization: `Bearer ${tokens.access_token}` },
     });
 
     const googleUser = await userInfoResponse.json();
-    console.log('🔵 Google user info:', { email: googleUser.email, name: googleUser.name });
 
     if (!googleUser.email) {
-      console.log('❌ No email in Google user info');
       return NextResponse.redirect(new URL('/?error=oauth_no_email', request.url));
     }
 
-    // Find or create user using raw SQL to avoid Prisma DateTime issues
-    console.log('🔵 Looking for existing user...');
     const existingUsers = await sql`
       SELECT id, email, name, avatar, slug, "isActive"
       FROM "WebUser"
       WHERE email = ${googleUser.email.toLowerCase()}
       LIMIT 1
     `;
-    console.log('🔵 Query result:', { count: existingUsers.length });
 
     let user;
     if (existingUsers.length === 0) {
-      console.log('🔵 Creating new user...');
       const newUserId = generateId();
       const newUserSlug = generateSlug(googleUser.name || googleUser.email.split('@')[0]);
-      
-      console.log('🔵 New user data:', {
-        id: newUserId,
-        email: googleUser.email.toLowerCase(),
-        name: googleUser.name || googleUser.email.split('@')[0],
-        slug: newUserSlug,
-        avatar: googleUser.picture || null,
-      });
 
       try {
         await sql`
@@ -121,9 +102,8 @@ export async function GET(request: NextRequest) {
             NOW()
           )
         `;
-        console.log('✅ User insert successful');
       } catch (insertError) {
-        console.error('❌ User insert failed:', insertError);
+        console.error('User insert failed:', insertError);
         throw insertError;
       }
       
@@ -135,19 +115,14 @@ export async function GET(request: NextRequest) {
         slug: newUserSlug,
         isActive: true,
       };
-      console.log('✅ User created:', user.id);
     } else {
       user = existingUsers[0];
-      console.log('✅ User found:', user.id);
     }
 
     if (!user.isActive) {
-      console.log('❌ User account is deactivated');
       return NextResponse.redirect(new URL('/?error=account_deactivated', request.url));
     }
 
-    // Create session token
-    console.log('🔵 Creating session token...');
     const sessionId = generateId();
     const token = await new SignJWT({
       userId: user.id,
@@ -192,9 +167,12 @@ export async function GET(request: NextRequest) {
       WHERE id = ${user.id}
     `;
 
-    // Set cookie and redirect
-    console.log('✅ OAuth success! Redirecting to:', state);
-    const response = NextResponse.redirect(new URL(state, request.url));
+    // Set cookie and redirect (validate returnTo to prevent open redirects)
+    let redirectPath = '/profile';
+    if (typeof state === 'string' && state.startsWith('/') && !state.startsWith('//')) {
+      redirectPath = state;
+    }
+    const response = NextResponse.redirect(new URL(redirectPath, request.url));
     response.cookies.set('user-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

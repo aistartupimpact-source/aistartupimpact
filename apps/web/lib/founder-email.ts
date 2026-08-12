@@ -6,12 +6,12 @@ import {
   submissionReceivedHtml,
   startupApprovalHtml,
   toolApprovalHtml,
-} from '@aistartupimpact/utils/src/email-templates';
+} from '@aistartupimpact/utils';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
 export async function generateNewsletterUnsubscribeToken(email: string): Promise<string> {
-  const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'fallback-secret');
+  const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET!);
   return new SignJWT({ email })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
