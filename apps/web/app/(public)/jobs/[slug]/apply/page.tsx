@@ -13,6 +13,7 @@ export default function ApplyPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const [consent, setConsent] = useState(false);
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -27,13 +28,17 @@ export default function ApplyPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (!consent) {
+      setError('Please agree to the privacy policy to submit your application.');
+      return;
+    }
     setLoading(true);
 
     try {
       const res = await fetch(`/api/jobs/${slug}/apply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, consent: true }),
       });
 
       const data = await res.json();
@@ -120,8 +125,13 @@ export default function ApplyPage() {
           </div>
         </div>
 
+        <label className="flex items-start gap-2 cursor-pointer">
+          <input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} className="mt-0.5 rounded border-gray-300" required />
+          <span className="text-xs text-gray-500 dark:text-gray-400">I agree that my personal data will be processed for this job application in accordance with the <Link href="/privacy" className="text-brand hover:underline" target="_blank">Privacy Policy</Link>.</span>
+        </label>
+
         <div className="flex justify-end">
-          <button type="submit" disabled={loading} className="btn-brand flex items-center gap-2 px-6 py-3 text-sm disabled:opacity-50">
+          <button type="submit" disabled={loading || !consent} className="btn-brand flex items-center gap-2 px-6 py-3 text-sm disabled:opacity-50">
             <Send className="w-4 h-4" />
             {loading ? 'Submitting...' : 'Submit Application'}
           </button>

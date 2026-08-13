@@ -254,6 +254,12 @@ export default function EmployerSignupPage() {
               </div>
             </div>
 
+            <p className="text-[11px] text-gray-400 font-jakarta">
+              By creating an account, you agree to our{' '}
+              <Link href="/terms" className="underline hover:text-brand">Terms of Service</Link> and{' '}
+              <Link href="/privacy" className="underline hover:text-brand">Privacy Policy</Link>.
+            </p>
+
             <button type="submit" disabled={loading || strength < 3} className="btn-brand w-full flex items-center justify-center gap-2 py-3 disabled:opacity-50">
               {loading ? 'Creating account...' : 'Create Account'}
               {!loading && <ArrowRight className="w-4 h-4" />}

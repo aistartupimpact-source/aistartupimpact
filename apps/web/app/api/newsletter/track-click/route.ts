@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@aistartupimpact/database";
+import crypto from "crypto";
+
+function hashIp(ip: string): string {
+  return crypto.createHash('sha256').update(ip).digest('hex').substring(0, 16);
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -18,10 +23,10 @@ export async function GET(request: NextRequest) {
     const decodedEmail = decodeURIComponent(email);
     const decodedUrl = decodeURIComponent(url);
     const decodedLabel = label ? decodeURIComponent(label) : null;
-    const ipAddress = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+    const rawIp = request.headers.get("x-forwarded-for")?.split(',')[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
+    const ipHashed = hashIp(rawIp);
     const userAgent = request.headers.get("user-agent") || "unknown";
 
-    // Check if this is the first click from this email for this campaign
     const existingClick = await prisma.$queryRaw<any[]>`
       SELECT id FROM "NewsletterClick"
       WHERE "campaignId" = ${campaignId} AND email = ${decodedEmail}
@@ -30,10 +35,9 @@ export async function GET(request: NextRequest) {
 
     const isFirstClick = existingClick.length === 0;
 
-    // Record the click
     await prisma.$executeRaw`
       INSERT INTO "NewsletterClick" (id, "campaignId", email, "linkUrl", "linkLabel", "ipAddress", "userAgent", "clickedAt")
-      VALUES (gen_random_uuid(), ${campaignId}, ${decodedEmail}, ${decodedUrl}, ${decodedLabel}, ${ipAddress}, ${userAgent}, NOW())
+      VALUES (gen_random_uuid(), ${campaignId}, ${decodedEmail}, ${decodedUrl}, ${decodedLabel}, ${ipHashed}, ${userAgent}, NOW())
     `;
 
     // Update campaign stats

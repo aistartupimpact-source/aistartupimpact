@@ -22,7 +22,7 @@ export async function DELETE(request: NextRequest) {
     // Verify user exists and check password
     const user = await prisma.founderUser.findUnique({
       where: { id: session.userId },
-      select: { id: true, passwordHash: true },
+      select: { id: true, email: true, passwordHash: true },
     });
 
     if (user?.passwordHash) {
@@ -45,7 +45,11 @@ export async function DELETE(request: NextRequest) {
     // Delete all related data using Prisma transactions
     // Prisma will handle cascade deletes based on schema relations
     await prisma.$transaction(async (tx) => {
-      // Delete founder's analytics
+      await tx.newsletterSubscriber.updateMany({
+        where: { email: user.email },
+        data: { isActive: false, unsubscribedAt: new Date() },
+      });
+
       await tx.founderAnalytics.deleteMany({
         where: { userId: session.userId },
       });

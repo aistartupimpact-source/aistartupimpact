@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@aistartupimpact/database";
+import crypto from "crypto";
+
+function hashIp(ip: string): string {
+  return crypto.createHash('sha256').update(ip).digest('hex').substring(0, 16);
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -28,10 +33,10 @@ export async function GET(request: NextRequest) {
 
   try {
     const decodedEmail = decodeURIComponent(email);
-    const ipAddress = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+    const rawIp = request.headers.get("x-forwarded-for")?.split(',')[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
+    const ipHashed = hashIp(rawIp);
     const userAgent = request.headers.get("user-agent") || "unknown";
 
-    // Check if this is the first open from this email for this campaign
     const existingOpen = await prisma.$queryRaw<any[]>`
       SELECT id FROM "NewsletterOpen"
       WHERE "campaignId" = ${campaignId} AND email = ${decodedEmail}
@@ -40,10 +45,9 @@ export async function GET(request: NextRequest) {
 
     const isFirstOpen = existingOpen.length === 0;
 
-    // Record the open
     await prisma.$executeRaw`
       INSERT INTO "NewsletterOpen" (id, "campaignId", email, "ipAddress", "userAgent", "openedAt")
-      VALUES (gen_random_uuid(), ${campaignId}, ${decodedEmail}, ${ipAddress}, ${userAgent}, NOW())
+      VALUES (gen_random_uuid(), ${campaignId}, ${decodedEmail}, ${ipHashed}, ${userAgent}, NOW())
     `;
 
     // Update campaign stats

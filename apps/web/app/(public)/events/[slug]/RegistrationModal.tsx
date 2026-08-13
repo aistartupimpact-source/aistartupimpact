@@ -40,8 +40,8 @@ export default function RegistrationModal({ event, customQuestions, ticketTiers,
   const [company, setCompany] = useState("");
   const [occupation, setOccupation] = useState("");
   const [locationCity, setLocationCity] = useState("");
-  const [newsletterConsent, setNewsletterConsent] = useState(true);
-  const [whatsappConsent, setWhatsappConsent] = useState(true);
+  const [newsletterConsent, setNewsletterConsent] = useState(false);
+  const [whatsappConsent, setWhatsappConsent] = useState(false);
   const [ticketTierId, setTicketTierId] = useState(ticketTiers.length > 0 ? ticketTiers[0].id : "");
   const [answers, setAnswers] = useState<Record<string, string>>({});
 

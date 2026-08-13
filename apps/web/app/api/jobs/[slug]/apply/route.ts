@@ -17,7 +17,7 @@ export async function POST(
     const { slug } = params;
     const body = await request.json();
 
-    // Validation
+    if (!body.consent) return NextResponse.json({ error: 'You must agree to the privacy policy to apply' }, { status: 400 });
     if (!body.fullName?.trim()) return NextResponse.json({ error: 'Full name is required' }, { status: 400 });
     if (!body.email?.trim() || !body.email.includes('@')) return NextResponse.json({ error: 'Valid email is required' }, { status: 400 });
     if (!body.resumeUrl?.trim()) return NextResponse.json({ error: 'Resume URL is required' }, { status: 400 });

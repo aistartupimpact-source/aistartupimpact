@@ -289,12 +289,12 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
     setShowEmailModal(true);
   };
 
-  const handleEmailSubmit = async (email: string) => {
+  const handleEmailSubmit = async (email: string, subscribeNewsletter = false) => {
     try {
       const response = await fetch('/api/funding-report/download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email, subscribeNewsletter })
       });
       
       const result = await response.json();
@@ -326,16 +326,22 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
             </p>
             <form onSubmit={(e) => {
               e.preventDefault();
-              const email = (e.target as any).email.value;
-              handleEmailSubmit(email);
+              const formEl = e.target as HTMLFormElement;
+              const email = (formEl.elements.namedItem('email') as HTMLInputElement).value;
+              const subscribeNewsletter = (formEl.elements.namedItem('subscribe') as HTMLInputElement).checked;
+              handleEmailSubmit(email, subscribeNewsletter);
             }}>
               <input
                 type="email"
                 name="email"
                 placeholder="Enter your email"
                 required
-                className="input-field w-full mb-4"
+                className="input-field w-full mb-3"
               />
+              <label className="flex items-start gap-2 mb-4 cursor-pointer">
+                <input type="checkbox" name="subscribe" className="mt-0.5 rounded border-gray-300" />
+                <span className="text-xs text-gray-500 dark:text-gray-400">I agree to receive the AI Startup Impact newsletter with AI startup news and insights. Unsubscribe anytime.</span>
+              </label>
               <div className="flex gap-3">
                 <button
                   type="button"
