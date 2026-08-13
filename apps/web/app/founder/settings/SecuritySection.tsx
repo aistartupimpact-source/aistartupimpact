@@ -31,6 +31,9 @@ export default function SecuritySection() {
   const [twoFALoading, setTwoFALoading] = useState(false);
   const [twoFAFetching, setTwoFAFetching] = useState(true);
 
+  // Export data state
+  const [exportLoading, setExportLoading] = useState(false);
+
   // Delete account state
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [deletePassword, setDeletePassword] = useState('');
@@ -201,6 +204,27 @@ export default function SecuritySection() {
                   </span>
                 )}
               </div>
+            </button>
+
+            <button
+              onClick={async () => {
+                setExportLoading(true);
+                try {
+                  const res = await fetch('/api/founder/export-data');
+                  if (!res.ok) { setToast({ type: 'error', message: 'Failed to export data' }); return; }
+                  const blob = await res.blob();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a'); a.href = url;
+                  a.download = `aistartupimpact-founder-data-${new Date().toISOString().split('T')[0]}.json`;
+                  a.click(); URL.revokeObjectURL(url);
+                  setToast({ type: 'success', message: 'Data exported successfully' });
+                } catch { setToast({ type: 'error', message: 'Failed to export data' }); } finally { setExportLoading(false); }
+              }}
+              disabled={exportLoading}
+              className="w-full text-left py-3 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors disabled:opacity-50"
+            >
+              <p className="text-sm font-medium text-gray-900 dark:text-white">{exportLoading ? 'Exporting...' : 'Export Data'}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Download all your personal data as JSON (DPDP Act Sec 11)</p>
             </button>
 
             <button
