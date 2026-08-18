@@ -89,6 +89,7 @@ function ResetPasswordContent() {
             type="password"
             required
             minLength={8}
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="New password (min 8 characters)"
@@ -101,6 +102,7 @@ function ResetPasswordContent() {
             type="password"
             required
             minLength={8}
+            autoComplete="new-password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Confirm new password"

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Briefcase, PlusCircle, Users, Building2,
-  BarChart3, Megaphone, Settings,
+  BarChart3, Megaphone, Settings, HelpCircle,
 } from 'lucide-react';
 
 interface Props {
@@ -30,6 +30,7 @@ const NAV_ITEMS = [
   { label: 'Promote', href: '/employer/promote', icon: Megaphone },
   { type: 'divider', label: 'Account' },
   { label: 'Settings', href: '/employer/settings', icon: Settings },
+  { label: 'Support', href: '/employer/support', icon: HelpCircle },
 ];
 
 export default function EmployerSidebar({ employer }: Props) {

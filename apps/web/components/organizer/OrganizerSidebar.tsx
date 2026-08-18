@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, CalendarDays, Plus, Users, BarChart3,
-  Settings, ChevronRight, Send, QrCode, Lock,
+  Settings, ChevronRight, Send, QrCode, Lock, HelpCircle,
 } from "lucide-react";
 
 interface Props {
@@ -26,6 +26,7 @@ const NAV_ITEMS = [
   { type: "divider", label: "Account" },
   { label: "Team", href: "/organizer/team", icon: Users },
   { label: "Settings", href: "/organizer/settings", icon: Settings },
+  { label: "Support", href: "/organizer/support", icon: HelpCircle },
 ];
 
 export default function OrganizerSidebar({ organizer }: Props) {

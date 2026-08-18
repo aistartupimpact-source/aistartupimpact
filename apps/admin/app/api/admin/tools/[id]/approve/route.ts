@@ -3,6 +3,7 @@ import { neon } from '@neondatabase/serverless';
 import { toolApprovalHtml } from '@aistartupimpact/utils';
 import { sendEmailFireAndForget } from '@/lib/email-send';
 import { requireApiAuth } from '@/lib/api-auth';
+import { logAuditEvent } from '@/lib/audit-log';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -43,6 +44,8 @@ export async function POST(
         type: 'approval',
       });
     }
+
+    logAuditEvent({ action: 'APPROVE', resourceType: 'AI_TOOL', resourceId: id, resourceName: tool?.name });
 
     return NextResponse.json({ success: true, message: 'Tool approved successfully' });
   } catch (error: any) {

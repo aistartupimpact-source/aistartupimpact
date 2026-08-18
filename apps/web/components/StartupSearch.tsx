@@ -139,11 +139,27 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
   const [startups, setStartups] = useState<Startup[]>(initialStartups);
   const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const [visibleCount, setVisibleCount] = useState(() => {
+    if (typeof window === 'undefined') return ITEMS_PER_PAGE;
+    try {
+      const saved = sessionStorage.getItem('startups-visible-count');
+      if (saved) {
+        const count = parseInt(saved, 10);
+        if (count > ITEMS_PER_PAGE) return count;
+      }
+    } catch {}
+    return ITEMS_PER_PAGE;
+  });
   const [showAdvanced, setShowAdvanced] = useState(false);
-  
+
   const hasUserInteracted = useRef(false);
   const debounceRef = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('startups-visible-count', String(visibleCount));
+    } catch {}
+  }, [visibleCount]);
 
   const fetchStartups = useCallback(async (
     q: string, s: string, c: string, bt: string, st: string, ci: string, co: string, er: string

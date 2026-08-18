@@ -5,7 +5,7 @@ import crypto from "crypto";
 
 const JWT_SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET!);
 const COOKIE_NAME = "unified_session";
-const SESSION_EXPIRY_DAYS = 30;
+const SESSION_EXPIRY_DAYS = 7;
 
 // Rate limit: max 5 workspace link attempts per user per hour
 const LINK_RATE_LIMIT = 5;

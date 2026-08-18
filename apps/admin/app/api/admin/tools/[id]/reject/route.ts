@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 import { requireApiAuth } from '@/lib/api-auth';
+import { logAuditEvent } from '@/lib/audit-log';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -22,6 +23,8 @@ export async function POST(
         "updatedAt" = NOW()
       WHERE id = ${id}
     `;
+
+    logAuditEvent({ action: 'REJECT', resourceType: 'AI_TOOL', resourceId: id });
 
     return NextResponse.json({ success: true, message: 'Tool rejected successfully' });
   } catch (error: any) {

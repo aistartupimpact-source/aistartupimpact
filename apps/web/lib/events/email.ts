@@ -13,6 +13,9 @@ export async function sendRegistrationConfirmationEmail(
   name: string,
   data: EventEmailData
 ) {
+  const unsubToken = await generateUnsubscribeToken(email, email);
+  const unsubUrl = `${SITE_URL}/api/events/unsubscribe?token=${unsubToken}`;
+
   sendEmailFireAndForget({
     to: email,
     from: `AI Startup Impact Events <${FROM_EMAIL}>`,
@@ -20,7 +23,7 @@ export async function sendRegistrationConfirmationEmail(
     html: eventRegistrationHtml(name, data),
     type: "event_registration",
     headers: {
-      "List-Unsubscribe": `<${SITE_URL}/api/events/unsubscribe?email=${encodeURIComponent(email)}>`,
+      "List-Unsubscribe": `<${unsubUrl}>`,
       "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
     },
   });

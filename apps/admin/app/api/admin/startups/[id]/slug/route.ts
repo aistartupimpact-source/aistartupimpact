@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 import { requireApiAuth } from '@/lib/api-auth';
+import { logAuditEvent } from '@/lib/audit-log';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -42,6 +43,8 @@ export async function PUT(
       SET slug = ${newSlug}, "slugChangedAt" = NOW(), "previousSlugs" = ${previousSlugs}, "updatedAt" = NOW()
       WHERE id = ${params.id}
     `;
+
+    logAuditEvent({ action: 'UPDATE', resourceType: 'STARTUP', resourceId: params.id, before: { slug: startup.slug }, after: { slug: newSlug } });
 
     return NextResponse.json({ success: true, slug: newSlug });
   } catch (error: any) {

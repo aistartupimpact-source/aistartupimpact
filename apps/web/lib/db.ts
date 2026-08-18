@@ -10,7 +10,6 @@ function getSql(): NeonQueryFunction<false, false> {
       console.warn('[db] DATABASE_URL not set — returning empty stub');
       return ((() => Promise.resolve([])) as unknown) as NeonQueryFunction<false, false>;
     }
-    console.log('[db] Initializing neon client');
     _sql = neon(process.env.DATABASE_URL);
   }
   return _sql;

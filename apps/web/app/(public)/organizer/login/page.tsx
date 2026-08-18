@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Loader2, CalendarDays, Mail, Lock, User, Building2, CheckCircle, ArrowLeft } from "lucide-react";
+import { Loader2, CalendarDays, Mail, Lock, User, Building2, CheckCircle, ArrowLeft, Shield } from "lucide-react";
 
 type Mode = "login" | "signup" | "forgot";
 
@@ -20,6 +20,12 @@ function OrganizerAuthContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [company, setCompany] = useState("");
+
+  // 2FA state
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [challengeToken, setChallengeToken] = useState("");
+  const [twoFACode, setTwoFACode] = useState("");
+  const [useBackupCode, setUseBackupCode] = useState(false);
 
   // Check URL params for errors from OAuth
   useEffect(() => {
@@ -65,6 +71,13 @@ function OrganizerAuthContent() {
 
       const data = await res.json();
 
+      if (data.requires2FA) {
+        setRequires2FA(true);
+        setChallengeToken(data.challengeToken);
+        setLoading(false);
+        return;
+      }
+
       if (!res.ok || !data.success) {
         setError(data.error || "Something went wrong.");
         setLoading(false);
@@ -85,6 +98,25 @@ function OrganizerAuthContent() {
   const handleGoogleSignIn = () => {
     // Redirect to our server-side Google OAuth initiation endpoint
     window.location.href = "/api/organizer/auth/google";
+  };
+
+  const handleVerify2FA = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/organizer/auth/verify-2fa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ challengeToken, token: twoFACode, isBackupCode: useBackupCode }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) { setError(data.error || "2FA verification failed"); return; }
+      router.push("/organizer");
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const switchMode = (newMode: Mode) => {
@@ -112,6 +144,54 @@ function OrganizerAuthContent() {
         </p>
       </div>
 
+      {/* 2FA Verification */}
+      {requires2FA ? (
+        <div className="space-y-4">
+          <div className="text-center mb-4">
+            <div className="w-12 h-12 mx-auto bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-3">
+              <Shield className="w-6 h-6 text-green-600 dark:text-green-400" />
+            </div>
+            <h2 className="font-sora font-bold text-lg text-navy dark:text-white">Two-Factor Authentication</h2>
+            <p className="text-xs text-gray-500 mt-1">Enter the 6-digit code from your authenticator app</p>
+          </div>
+
+          {error && (
+            <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-xl">
+              <span className="text-red-500 text-sm">⚠</span>
+              <p className="text-sm text-red-600 dark:text-red-400 font-jakarta">{error}</p>
+            </div>
+          )}
+
+          <input
+            type="text"
+            value={twoFACode}
+            onChange={(e) => setTwoFACode(e.target.value.replace(/\D/g, "").slice(0, useBackupCode ? 20 : 6))}
+            placeholder={useBackupCode ? "Backup code" : "000000"}
+            maxLength={useBackupCode ? 20 : 6}
+            className="w-full px-4 py-3 text-center text-xl font-mono tracking-widest border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
+            autoFocus
+          />
+
+          <button
+            onClick={handleVerify2FA}
+            disabled={loading || (!useBackupCode && twoFACode.length !== 6) || (useBackupCode && !twoFACode)}
+            className="w-full py-3 bg-brand hover:bg-brand-600 text-white font-bold font-jakarta text-sm rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+            {loading ? "Verifying..." : "Verify"}
+          </button>
+
+          <div className="flex items-center justify-between text-xs">
+            <button onClick={() => { setUseBackupCode(!useBackupCode); setTwoFACode(""); }} className="text-brand font-semibold hover:underline">
+              {useBackupCode ? "Use authenticator code" : "Use backup code"}
+            </button>
+            <button onClick={() => { setRequires2FA(false); setTwoFACode(""); setChallengeToken(""); setError(""); }} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+              Back to login
+            </button>
+          </div>
+        </div>
+      ) : (
+      <>
       {/* Google OAuth Button */}
       {mode !== "forgot" && (
         <>
@@ -189,6 +269,7 @@ function OrganizerAuthContent() {
               type="password"
               required
               minLength={8}
+              autoComplete={mode === "signup" ? "new-password" : "current-password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={mode === "signup" ? "Password (min 8 characters)" : "Password"}
@@ -274,6 +355,8 @@ function OrganizerAuthContent() {
           <Link href="/terms" className="underline">terms of service</Link> and{" "}
           <Link href="/privacy" className="underline">privacy policy</Link>.
         </p>
+      )}
+      </>
       )}
     </div>
   );

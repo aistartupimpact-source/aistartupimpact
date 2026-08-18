@@ -138,17 +138,12 @@ export default function NewsletterPage() {
 
   const fetchTestimonials = async () => {
     try {
-      console.log('Fetching testimonials...');
-      // Add timestamp to prevent caching
       const res = await fetch(`/api/testimonials?t=${Date.now()}`, {
         cache: 'no-store',
       });
-      console.log('Response status:', res.status);
       const data = await res.json();
-      console.log('Testimonials data:', data);
       if (data.success) {
         setTestimonials(data.testimonials);
-        console.log('Testimonials set:', data.testimonials.length);
       }
     } catch (error) {
       console.error('Error fetching testimonials:', error);

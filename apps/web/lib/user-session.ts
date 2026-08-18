@@ -49,6 +49,15 @@ export async function getUserSession(): Promise<UserSession | null> {
       return null;
     }
 
+    if (payload.sessionId) {
+      const sessions = await sql`
+        SELECT id FROM "WebUserSession"
+        WHERE id = ${payload.sessionId} AND "expiresAt" > NOW()
+        LIMIT 1
+      `;
+      if (sessions.length === 0) return null;
+    }
+
     const user = users[0];
 
     return {

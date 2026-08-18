@@ -5,6 +5,7 @@ import { calculateImpactScore } from '@/lib/impact-score';
 import { startupApprovalHtml } from '@aistartupimpact/utils';
 import { sendEmailFireAndForget } from '@/lib/email-send';
 import { requireApiAuth } from '@/lib/api-auth';
+import { logAuditEvent } from '@/lib/audit-log';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -61,6 +62,8 @@ export async function POST(
         type: 'approval',
       });
     }
+
+    logAuditEvent({ action: 'APPROVE', resourceType: 'STARTUP', resourceId: params.id, resourceName: startup.name });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

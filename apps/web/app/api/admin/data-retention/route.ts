@@ -3,7 +3,15 @@ import { prisma } from '@aistartupimpact/database';
 
 export const dynamic = 'force-dynamic';
 
+export async function GET(request: NextRequest) {
+  return runCleanup(request);
+}
+
 export async function POST(request: NextRequest) {
+  return runCleanup(request);
+}
+
+async function runCleanup(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
@@ -40,13 +48,19 @@ export async function POST(request: NextRequest) {
       results.softDeletedRegistrationsHardDeleted = deleted.count;
     }
 
-    // Expired founder sessions older than 30 days
+    // Expired sessions older than 30 days (all user types)
     const sessionCutoff = new Date(now);
     sessionCutoff.setDate(sessionCutoff.getDate() - 30);
-    const sessions = await prisma.founderSession.deleteMany({
+    const founderSessions = await prisma.founderSession.deleteMany({
       where: { expiresAt: { lt: sessionCutoff } },
     });
-    results.expiredSessionsDeleted = sessions.count;
+    const webUserSessions = await prisma.webUserSession.deleteMany({
+      where: { expiresAt: { lt: sessionCutoff } },
+    });
+    const organizerSessions = await prisma.eventOrganizerSession.deleteMany({
+      where: { expiresAt: { lt: sessionCutoff } },
+    });
+    results.expiredSessionsDeleted = founderSessions.count + webUserSessions.count + organizerSessions.count;
 
     // Unsubscribe records older than 1 year (keep audit trail for 12 months)
     const unsubCutoff = new Date(now);
@@ -67,6 +81,14 @@ export async function POST(request: NextRequest) {
       },
     });
     results.unverifiedSubscribersDeleted = unverified.count;
+
+    // Audit logs older than 1 year
+    const auditCutoff = new Date(now);
+    auditCutoff.setFullYear(auditCutoff.getFullYear() - 1);
+    const auditLogs = await prisma.auditLog.deleteMany({
+      where: { createdAt: { lt: auditCutoff } },
+    });
+    results.auditLogsDeleted = auditLogs.count;
 
     return NextResponse.json({
       success: true,

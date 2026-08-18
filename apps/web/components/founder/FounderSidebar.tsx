@@ -10,6 +10,7 @@ import {
   BarChart3,
   User,
   Settings,
+  HelpCircle,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { type: 'divider', label: 'Account' },
   { label: 'Profile', href: '/founder/profile', icon: User },
   { label: 'Settings', href: '/founder/settings', icon: Settings },
+  { label: 'Support', href: '/founder/support', icon: HelpCircle },
 ];
 
 export default function FounderSidebar() {

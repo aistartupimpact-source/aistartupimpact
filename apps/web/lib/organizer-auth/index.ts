@@ -10,7 +10,7 @@ const USER_JWT_SECRET = new TextEncoder().encode(
   process.env.USER_JWT_SECRET!
 );
 const COOKIE_NAME = "organizer_session";
-const SESSION_EXPIRY_DAYS = 30;
+const SESSION_EXPIRY_DAYS = 7;
 
 export interface OrganizerSession {
   id: string;

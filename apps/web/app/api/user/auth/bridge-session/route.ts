@@ -75,10 +75,10 @@ export async function POST(request: NextRequest) {
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime('30d')
+      .setExpirationTime('7d')
       .sign(JWT_SECRET);
 
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await sql`
       INSERT INTO "WebUserSession" (id, "webUserId", "refreshToken", "expiresAt", "ipAddress", "userAgent", "createdAt")
       VALUES (${sessionId}, ${user.id}, ${token}, ${expiresAt.toISOString()}, 'bridge', 'bridge', NOW())
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge: 7 * 24 * 60 * 60,
       path: '/',
     });
 

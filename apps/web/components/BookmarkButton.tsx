@@ -85,8 +85,6 @@ export default function BookmarkButton({
           console.error('Error unsaving:', error);
           // Revert optimistic update
           setIsSaved(previousState);
-        } else {
-          console.log(`Successfully unsaved ${type}:`, itemId);
         }
       } else {
         // Save
@@ -101,8 +99,6 @@ export default function BookmarkButton({
           console.error('Error saving:', error);
           // Revert optimistic update
           setIsSaved(previousState);
-        } else {
-          console.log(`Successfully saved ${type}:`, itemId);
         }
       }
     } catch (error) {

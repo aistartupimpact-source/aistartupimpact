@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
-import { authRateLimit, getClientIdentifier } from '@/lib/rate-limit';
+import { authRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { signupSchema, validateInput } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
@@ -21,25 +21,13 @@ function generateSlug(name: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting - prevent spam signups (with fallback)
     const identifier = getClientIdentifier(request);
-    let remaining = 999;
-    
-    if (authRateLimit) {
-      try {
-        const { success: rateLimitSuccess, remaining: rem } = await authRateLimit.limit(identifier);
-        remaining = rem;
-        
-        if (!rateLimitSuccess) {
-          return NextResponse.json(
-            { error: 'Too many signup attempts. Please try again in 15 minutes.' },
-            { status: 429, headers: { 'X-RateLimit-Remaining': '0' } }
-          );
-        }
-      } catch (rateLimitError) {
-        console.error('Rate limit check failed:', rateLimitError);
-        // Continue without rate limiting if it fails
-      }
+    const { success: rateLimitSuccess, remaining } = await checkRateLimit(authRateLimit, identifier);
+    if (!rateLimitSuccess) {
+      return NextResponse.json(
+        { error: 'Too many signup attempts. Please try again in 15 minutes.' },
+        { status: 429, headers: { 'X-RateLimit-Remaining': '0' } }
+      );
     }
 
     // Input validation

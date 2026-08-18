@@ -1,90 +1,107 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { verifyPassword, setFounderSession } from '@/lib/founder-auth';
-import { authRateLimit, getClientIdentifier } from '@/lib/rate-limit';
+import { authRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { loginSchema, validateInput } from '@/lib/validation';
+import { securityAlertHtml } from '@aistartupimpact/utils';
+import { sendEmailFireAndForget } from '@/lib/email/send';
 
 export const dynamic = 'force-dynamic';
+
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_MINUTES = 15;
+
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting (with fallback)
     const identifier = getClientIdentifier(request);
-    let remaining = 999;
-    
-    if (authRateLimit) {
-      try {
-        const { success: rateLimitSuccess, remaining: rem } = await authRateLimit.limit(identifier);
-        remaining = rem;
-        
-        if (!rateLimitSuccess) {
-          return NextResponse.json(
-            { error: 'Too many login attempts. Please try again in 15 minutes.' },
-            { status: 429, headers: { 'X-RateLimit-Remaining': '0' } }
-          );
-        }
-      } catch (rateLimitError) {
-        console.error('Rate limit check failed:', rateLimitError);
-        // Continue without rate limiting if it fails
-      }
+    const { success: rateLimitSuccess, remaining } = await checkRateLimit(authRateLimit, identifier);
+    if (!rateLimitSuccess) {
+      return NextResponse.json(
+        { error: 'Too many login attempts. Please try again in 15 minutes.' },
+        { status: 429, headers: { 'X-RateLimit-Remaining': '0' } }
+      );
     }
 
-    // Input validation
     const body = await request.json();
     const validation = validateInput(loginSchema, body);
-    
+
     if (!validation.success) {
       return NextResponse.json(
         { error: validation.error },
         { status: 400, headers: { 'X-RateLimit-Remaining': remaining.toString() } }
       );
     }
-    
+
     const validated = validation.data;
-    
-    // Find user with raw SQL
+
     const users = await sql`
-      SELECT id, email, name, "passwordHash", company, "emailVerified", status, "twoFactorEnabled", "onboardingCompleted"
+      SELECT id, email, name, "passwordHash", company, "emailVerified", status,
+             "twoFactorEnabled", "onboardingCompleted", "failedLoginAttempts", "lockedUntil"
       FROM "FounderUser"
       WHERE email = ${validated.email.toLowerCase()}
       LIMIT 1
     `;
-    
+
     if (users.length === 0) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
-    
+
     const user = users[0];
-    
-    // Verify password
-    const isValid = await verifyPassword(validated.password, user.passwordHash);
-    
-    if (!isValid) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
+
+    if (user.status === 'SUSPENDED') {
+      return NextResponse.json({ error: 'Your account has been suspended. Please contact support.' }, { status: 403 });
     }
-    
-    // Check if email is verified
+
+    if (user.lockedUntil) {
+      const raw = String(user.lockedUntil);
+      const lockExpiry = new Date(raw.includes('Z') ? raw : raw + 'Z');
+      if (lockExpiry > new Date()) {
+        const minutesLeft = Math.ceil((lockExpiry.getTime() - Date.now()) / 60000);
+        return NextResponse.json({
+          error: `Account locked due to too many failed attempts. Try again in ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''}.`
+        }, { status: 429 });
+      }
+      await sql`UPDATE "FounderUser" SET "lockedUntil" = NULL, "failedLoginAttempts" = 0 WHERE id = ${user.id}`;
+    }
+
+    const isValid = await verifyPassword(validated.password, user.passwordHash);
+
+    if (!isValid) {
+      const newAttempts = (user.failedLoginAttempts || 0) + 1;
+
+      if (newAttempts >= MAX_FAILED_ATTEMPTS) {
+        const lockUntil = new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000);
+        await sql`UPDATE "FounderUser" SET "failedLoginAttempts" = ${newAttempts}, "lockedUntil" = ${lockUntil.toISOString()}::timestamp WHERE id = ${user.id}`;
+
+        const resetUrl = `${process.env.NEXT_PUBLIC_WEB_URL || 'https://aistartupimpact.com'}/auth/forgot-password`;
+        sendEmailFireAndForget({
+          to: user.email,
+          subject: 'Security Alert — Failed Login Attempts',
+          html: securityAlertHtml(user.name || 'Founder', newAttempts, LOCKOUT_MINUTES, resetUrl),
+          type: 'security_alert',
+        });
+
+        return NextResponse.json({
+          error: `Account locked for ${LOCKOUT_MINUTES} minutes due to too many failed attempts. A security alert has been sent to your email.`
+        }, { status: 429 });
+      }
+
+      await sql`UPDATE "FounderUser" SET "failedLoginAttempts" = ${newAttempts} WHERE id = ${user.id}`;
+      const remaining_attempts = MAX_FAILED_ATTEMPTS - newAttempts;
+      return NextResponse.json({
+        error: `Invalid email or password. ${remaining_attempts} attempt${remaining_attempts !== 1 ? 's' : ''} remaining before account lockout.`
+      }, { status: 401 });
+    }
+
+    await sql`UPDATE "FounderUser" SET "failedLoginAttempts" = 0, "lockedUntil" = NULL WHERE id = ${user.id}`;
+
     if (!user.emailVerified) {
       return NextResponse.json(
         { error: 'Please verify your email first. Check your inbox for the verification link.' },
         { status: 403 }
       );
     }
-    
-    // Check if account is active
-    if (user.status === 'SUSPENDED') {
-      return NextResponse.json(
-        { error: 'Your account has been suspended. Please contact support.' },
-        { status: 403 }
-      );
-    }
-    
-    // Check if 2FA is enabled
+
     if (user.twoFactorEnabled) {
       const { SignJWT } = await import('jose');
       const challengeToken = await new SignJWT({ userId: user.id, purpose: '2fa-challenge' })
@@ -98,17 +115,15 @@ export async function POST(request: NextRequest) {
         message: 'Please enter your 2FA code',
       });
     }
-    
-    // Update last login with raw SQL
+
     await sql`
       UPDATE "FounderUser"
       SET "lastLoginAt" = NOW(), "updatedAt" = NOW()
       WHERE id = ${user.id}
     `;
-    
-    // Set session
+
     await setFounderSession(user.id, user.email, user.name, !!user.onboardingCompleted);
-    
+
     return NextResponse.json({
       success: true,
       user: {
@@ -118,20 +133,9 @@ export async function POST(request: NextRequest) {
         company: user.company,
       }
     });
-    
-  } catch (error: any) {
-    console.error('Login error:', error);
-    
-    if (error.name === 'ZodError') {
-      return NextResponse.json(
-        { error: error.errors[0]?.message || 'Invalid input data' },
-        { status: 400 }
-      );
-    }
-    
-    return NextResponse.json(
-      { error: 'Login failed. Please try again.' },
-      { status: 500 }
-    );
+
+  } catch (error) {
+    console.error('Founder login error:', error instanceof Error ? error.message : 'Unknown error');
+    return NextResponse.json({ error: 'Login failed. Please try again.' }, { status: 500 });
   }
 }

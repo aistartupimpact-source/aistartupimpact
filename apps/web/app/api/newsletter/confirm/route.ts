@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@aistartupimpact/database';
 import { newsletterWelcomeHtml } from '@aistartupimpact/utils';
 import { sendEmailFireAndForget } from '@/lib/email/send';
+import { generateUnsubscribeToken } from '@/lib/events/unsubscribe';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +41,8 @@ export async function GET(request: NextRequest) {
     `;
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aistartupimpact.com';
+    const unsubToken = await generateUnsubscribeToken(subscriber.id, subscriber.email);
+    const unsubUrl = `${siteUrl}/api/events/unsubscribe?token=${unsubToken}`;
 
     sendEmailFireAndForget({
       to: subscriber.email,
@@ -47,7 +50,7 @@ export async function GET(request: NextRequest) {
       html: newsletterWelcomeHtml(false),
       type: 'newsletter_welcome',
       headers: {
-        'List-Unsubscribe': `<${siteUrl}/unsubscribe?email=${encodeURIComponent(subscriber.email)}>`,
+        'List-Unsubscribe': `<${unsubUrl}>`,
         'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
       },
     });

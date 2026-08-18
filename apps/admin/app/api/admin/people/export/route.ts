@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { neon } from "@neondatabase/serverless";
+import { logAuditEvent } from "@/lib/audit-log";
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -37,6 +38,12 @@ export async function GET(request: NextRequest) {
     ]);
 
     const csv = [headers.join(","), ...rows.map((r: any) => r.map((c: any) => `"${String(c).replace(/"/g, '""')}"`).join(","))].join("\n");
+
+    logAuditEvent({
+      action: 'EXPORT',
+      resourceType: 'PEOPLE_EXPORT',
+      after: { recordCount: people.length, fields: headers },
+    });
 
     return new NextResponse(csv, {
       headers: {

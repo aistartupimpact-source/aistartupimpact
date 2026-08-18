@@ -74,6 +74,48 @@ export const toolSubmissionSchema = z.object({
   pricingModel: z.enum(['FREE', 'FREEMIUM', 'PAID', 'SUBSCRIPTION']),
 });
 
+// Change password validation
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required').max(100),
+  newPassword: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(100, 'Password too long')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+});
+
+// Change email validation
+export const changeEmailSchema = z.object({
+  newEmail: z.string().email('Invalid email address').max(255),
+  password: z.string().min(1, 'Password is required').max(100),
+});
+
+// Delete account validation
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1, 'Password is required').max(100),
+  confirmation: z.string().optional(),
+});
+
+// Support ticket validation
+export const supportTicketSchema = z.object({
+  subject: z.string().min(3, 'Subject must be at least 3 characters').max(200, 'Subject too long'),
+  description: z.string().min(10, 'Description must be at least 10 characters').max(5000, 'Description too long'),
+  category: z.string().min(1).max(50).optional(),
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
+});
+
+// Support ticket message validation
+export const supportMessageSchema = z.object({
+  content: z.string().min(1, 'Message is required').max(5000, 'Message too long'),
+});
+
+// Strip HTML tags from plain text inputs to prevent XSS
+export function sanitizeText(input: string): string {
+  return input.replace(/<[^>]*>/g, '').trim();
+}
+
 // Helper function to validate and sanitize input
 export function validateInput<T>(schema: z.ZodSchema<T>, data: unknown): { success: true; data: T } | { success: false; error: string } {
   try {

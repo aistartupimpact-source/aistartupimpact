@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     const users = await sql`
       SELECT 
         id, email, name, avatar, slug, bio, twitter, linkedin, instagram, facebook, github,
-        "isActive", "termsAcceptedAt"::text as "termsAcceptedAt"
+        "isActive", "termsAcceptedAt"::text as "termsAcceptedAt", "termsVersion"
       FROM "WebUser"
       WHERE id = ${payload.userId}
       LIMIT 1
@@ -87,6 +87,7 @@ export async function GET(request: NextRequest) {
         facebook: user.facebook,
         github: user.github,
         termsAcceptedAt: user.termsAcceptedAt,
+        termsVersion: user.termsVersion,
         // Workspace links
         founderId,
         organizerId,

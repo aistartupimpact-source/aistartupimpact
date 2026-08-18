@@ -3,11 +3,16 @@ import { prisma } from '@aistartupimpact/database';
 import bcrypt from 'bcryptjs';
 import { getUserSession } from '@/lib/user-session';
 import { cookies } from 'next/headers';
+import { checkRateLimit, getClientIdentifier, strictRateLimit } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 export async function DELETE(request: NextRequest) {
   try {
+    const identifier = getClientIdentifier(request);
+    const { success } = await checkRateLimit(strictRateLimit, identifier);
+    if (!success) return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
+
     const session = await getUserSession();
     if (!session) {
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });

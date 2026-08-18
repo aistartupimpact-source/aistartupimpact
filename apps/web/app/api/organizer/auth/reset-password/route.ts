@@ -40,11 +40,22 @@ export async function POST(request: NextRequest) {
 
     const organizer = await prisma.eventOrganizer.findUnique({
       where: { verifyToken: token },
-      select: { id: true, email: true, name: true },
+      select: { id: true, email: true, name: true, verifyToken: true },
     });
 
     if (!organizer) {
       return NextResponse.json({ success: false, error: "Invalid or expired reset link." }, { status: 400 });
+    }
+
+    const RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000;
+    const tokenParts = organizer.verifyToken?.split(".");
+    const tokenTimestamp = tokenParts ? parseInt(tokenParts[tokenParts.length - 1], 10) : 0;
+    if (!tokenTimestamp || Date.now() - tokenTimestamp > RESET_TOKEN_EXPIRY_MS) {
+      await prisma.eventOrganizer.update({
+        where: { id: organizer.id },
+        data: { verifyToken: null },
+      });
+      return NextResponse.json({ success: false, error: "Reset link has expired. Please request a new one." }, { status: 400 });
     }
 
     // Update password and clear token

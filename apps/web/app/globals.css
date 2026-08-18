@@ -65,7 +65,7 @@
 
   /* Selection color */
   ::selection {
-    @apply bg-brand/20 text-brand-900 dark:text-brand-100;
+    @apply bg-brand-100 text-brand-900 dark:text-brand-100;
   }
 
   /* Scrollbar — slim & themed */
@@ -122,7 +122,8 @@
   /* ─── Buttons ──────────────────────────────── */
 
   .btn-brand {
-    @apply inline-flex items-center justify-center bg-brand hover:bg-brand-600 active:bg-brand-700 text-white font-bold font-jakarta px-5 py-3 sm:px-6 sm:py-2.5 text-sm rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-brand/25 active:scale-[0.97] min-h-[44px] sm:min-h-0;
+    @apply inline-flex items-center justify-center bg-brand hover:bg-brand-600 active:bg-brand-700 text-white font-bold font-jakarta px-5 py-3 sm:px-6 sm:py-2.5 text-sm rounded-xl transition-all duration-200 hover:shadow-lg active:scale-[0.97] min-h-[44px] sm:min-h-0;
+    --tw-shadow-color: color-mix(in srgb, var(--brand-color) 25%, transparent);
   }
 
   .btn-outline {
@@ -132,11 +133,27 @@
   /* ─── Cards ────────────────────────────────── */
 
   .card {
-    @apply bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:border-brand/20 dark:hover:border-brand/30;
+    @apply bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg;
+  }
+  .card:hover {
+    border-color: color-mix(in srgb, var(--brand-color) 20%, transparent);
+  }
+  .dark .card:hover {
+    border-color: color-mix(in srgb, var(--brand-color) 30%, transparent);
   }
 
   .card-featured {
-    @apply bg-white dark:bg-gray-900 border-2 border-brand/15 dark:border-brand/25 rounded-2xl transition-all duration-300 hover:border-brand/30 dark:hover:border-brand/40;
+    @apply bg-white dark:bg-gray-900 rounded-2xl transition-all duration-300;
+    border: 2px solid color-mix(in srgb, var(--brand-color) 15%, transparent);
+  }
+  .dark .card-featured {
+    border-color: color-mix(in srgb, var(--brand-color) 25%, transparent);
+  }
+  .card-featured:hover {
+    border-color: color-mix(in srgb, var(--brand-color) 30%, transparent);
+  }
+  .dark .card-featured:hover {
+    border-color: color-mix(in srgb, var(--brand-color) 40%, transparent);
   }
 
   /* ─── Badges ───────────────────────────────── */
@@ -146,19 +163,32 @@
   }
 
   .badge-category {
-    @apply inline-flex items-center text-[10px] font-bold uppercase tracking-wider text-brand bg-brand/5 dark:bg-brand/10 px-2.5 py-1 rounded-full border border-brand/10 dark:border-brand/20;
+    @apply inline-flex items-center text-[10px] font-bold uppercase tracking-wider text-brand px-2.5 py-1 rounded-full;
+    background-color: color-mix(in srgb, var(--brand-color) 5%, transparent);
+    border: 1px solid color-mix(in srgb, var(--brand-color) 10%, transparent);
+  }
+  .dark .badge-category {
+    background-color: color-mix(in srgb, var(--brand-color) 10%, transparent);
+    border-color: color-mix(in srgb, var(--brand-color) 20%, transparent);
   }
 
   /* ─── Inputs ───────────────────────────────── */
 
   .input-field {
-    @apply w-full px-4 py-3 sm:py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-charcoal dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand font-jakarta text-sm transition-all min-h-[44px] sm:min-h-0;
+    @apply w-full px-4 py-3 sm:py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-charcoal dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:border-brand font-jakarta text-sm transition-all min-h-[44px] sm:min-h-0;
+    --tw-ring-color: color-mix(in srgb, var(--brand-color) 30%, transparent);
   }
 
   /* ─── Pills (tags) ─────────────────────────── */
 
   .pill {
-    @apply inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-800 text-charcoal dark:text-gray-200 text-sm font-jakarta font-medium rounded-full hover:bg-brand/10 dark:hover:bg-brand/15 hover:text-brand transition-all duration-200 cursor-pointer active:scale-95;
+    @apply inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-800 text-charcoal dark:text-gray-200 text-sm font-jakarta font-medium rounded-full hover:text-brand transition-all duration-200 cursor-pointer active:scale-95;
+  }
+  .pill:hover {
+    background-color: color-mix(in srgb, var(--brand-color) 10%, transparent);
+  }
+  .dark .pill:hover {
+    background-color: color-mix(in srgb, var(--brand-color) 15%, transparent);
   }
 
   /* ─── Section title ────────────────────────── */
@@ -170,7 +200,13 @@
   /* ─── Article content ──────────────────────── */
 
   .article-content {
-    @apply prose prose-sm sm:prose-base lg:prose-lg dark:prose-invert max-w-none font-jakarta prose-headings:font-sora prose-headings:font-bold prose-headings:text-navy dark:prose-headings:text-white prose-p:text-charcoal/80 dark:prose-p:text-gray-300 prose-a:text-brand prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-pre:bg-gray-50 dark:prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-200 dark:prose-pre:border-gray-700 prose-code:font-mono prose-code:text-sm prose-blockquote:border-brand prose-blockquote:bg-brand/5 dark:prose-blockquote:bg-brand/10 prose-blockquote:py-1 prose-blockquote:rounded-r-lg;
+    @apply prose prose-sm sm:prose-base lg:prose-lg dark:prose-invert max-w-none font-jakarta prose-headings:font-sora prose-headings:font-bold prose-headings:text-navy dark:prose-headings:text-white prose-p:text-charcoal/80 dark:prose-p:text-gray-300 prose-a:text-brand prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-pre:bg-gray-50 dark:prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-200 dark:prose-pre:border-gray-700 prose-code:font-mono prose-code:text-sm prose-blockquote:border-brand prose-blockquote:py-1 prose-blockquote:rounded-r-lg;
+  }
+  .article-content blockquote {
+    background-color: color-mix(in srgb, var(--brand-color) 5%, transparent);
+  }
+  .dark .article-content blockquote {
+    background-color: color-mix(in srgb, var(--brand-color) 10%, transparent);
   }
 }
 

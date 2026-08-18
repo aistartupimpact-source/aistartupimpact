@@ -32,9 +32,8 @@ export async function POST(request: NextRequest) {
     });
 
     if (organizer) {
-      const resetToken = generateToken();
+      const resetToken = `${generateToken()}.${Date.now()}`;
 
-      // Store reset token (reusing verifyToken field for simplicity)
       await prisma.eventOrganizer.update({
         where: { id: organizer.id },
         data: { verifyToken: resetToken },

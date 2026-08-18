@@ -1,13 +1,17 @@
 "use client";
 
 import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
-import { Shield, Sparkles } from "lucide-react";
+import { Shield, Sparkles, AlertTriangle, Clock } from "lucide-react";
 
 export default function LoginPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
+  const reason = searchParams.get("reason");
+  const lockedUntil = searchParams.get("until");
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -42,6 +46,23 @@ export default function LoginPage() {
               Sign in with your authorized Google account to access the dashboard.
             </p>
           </div>
+
+          {reason === "timeout" && (
+            <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2.5 mb-4">
+              <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+              <p className="text-xs text-amber-700 dark:text-amber-400 font-jakarta">Your session expired due to inactivity. Please sign in again.</p>
+            </div>
+          )}
+
+          {error === "locked" && (
+            <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2.5 mb-4">
+              <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+              <p className="text-xs text-red-700 dark:text-red-400 font-jakarta">
+                Account locked due to too many failed attempts.
+                {lockedUntil && ` Try again after ${new Date(lockedUntil).toLocaleTimeString()}.`}
+              </p>
+            </div>
+          )}
 
           <button
             onClick={() => signIn("google", { callbackUrl: "/dashboard" })}

@@ -9,9 +9,13 @@ import AnalyticsTracker from '@/components/Analytics';
 import CookieConsent from '@/components/CookieConsent';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import ClearConsentButton from '@/components/ClearConsentButton';
+import ScrollRestoration from '@/components/ScrollRestoration';
 import NewsletterPopup from '@/components/NewsletterPopup';
 import SignupSuccessPopup from '@/components/auth/SignupSuccessPopup';
 import { generateWebSiteSchema, generateOrganizationSchema } from '@/lib/seo';
+import { getBrandConfig } from '@/lib/brand';
+import { getSeoConfig } from '@/lib/seo-config';
+import { buildGoogleFontsUrl } from '@/lib/font-registry';
 import './globals.css';
 
 // Only load the two fonts actually used in UI — JetBrains is code-only, loaded on demand
@@ -37,61 +41,68 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://aistartupimpact.com"),
-  alternates: {
-    canonical: '/',
-  },
-  title: {
-    default: "AI Startup Impact – AI Startup India News & Funding",
-    template: '%s | AI Startup Impact',
-  },
-  description:
-    "AI Startup Impact is the premier platform for Indian AI news. Discover top artificial intelligence startups, funding, tools, and founder stories.",
-  keywords: [
-    'ai startups india 2026', 'Krutrim AI', 'India AI news', 'best AI tools India',
-    'Sarvam AI', 'India AI ecosystem', 'Bhavish Aggarwal AI', 'AI funding India 2026',
-    'top AI companies India', 'Sarvam AI funding', 'AI startup news India', 'IndiaAI Mission',
-    'India AI unicorn', 'AI jobs India', 'best AI assistant India', 'India AI funding tracker',
-    'Neysa AI India', 'sovereign AI India', 'AI newsletter India', 'Indian AI founder stories',
-    'ai startup impact', 'AI startups India', 'India AI startup news',
-    'AI startup funding India 2026', 'Indian AI ecosystem', 'AI founder stories India',
-    'India artificial intelligence news', 'AI startup news', 'IndiaAI startup ecosystem'
-  ],
-  openGraph: {
-    title: "AI Startup Impact – AI Startup India News & Funding",
-    description: "AI Startup Impact is the premier platform for Indian AI news. Discover top artificial intelligence startups, funding, tools, and founder stories.",
-    url: "https://aistartupimpact.com",
-    siteName: "AI Startup Impact",
-    type: "website",
-    locale: 'en_IN',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: "AI Startup Impact – AI Startup India News & Funding" }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    site: '@aikitstartup',
-    creator: '@aikitstartup',
-    title: "AI Startup Impact – AI Startup India News & Funding",
-    description: "AI Startup Impact is the premier platform for Indian AI news. Discover top artificial intelligence startups, funding, tools, and founder stories.",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
-  },
-  verification: {
-    // Add your Google Search Console verification token here
-    // google: 'your-token',
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const [seo, brand] = await Promise.all([getSeoConfig(), getBrandConfig()]);
+  const siteName = seo.metaTitle.split('–')[0]?.trim() || 'AI Startup Impact';
+  const ogImage = brand.ogImage || '/og-image.png';
 
-export default function RootLayout({
+  return {
+    metadataBase: new URL(seo.canonicalDomain),
+    alternates: { canonical: '/' },
+    title: {
+      default: seo.metaTitle,
+      template: `%s | ${siteName}`,
+    },
+    description: seo.metaDescription,
+    keywords: [
+      'ai startups india 2026', 'Krutrim AI', 'India AI news', 'best AI tools India',
+      'Sarvam AI', 'India AI ecosystem', 'Bhavish Aggarwal AI', 'AI funding India 2026',
+      'top AI companies India', 'Sarvam AI funding', 'AI startup news India', 'IndiaAI Mission',
+      'India AI unicorn', 'AI jobs India', 'best AI assistant India', 'India AI funding tracker',
+      'Neysa AI India', 'sovereign AI India', 'AI newsletter India', 'Indian AI founder stories',
+      'ai startup impact', 'AI startups India', 'India AI startup news',
+      'AI startup funding India 2026', 'Indian AI ecosystem', 'AI founder stories India',
+      'India artificial intelligence news', 'AI startup news', 'IndiaAI startup ecosystem',
+    ],
+    openGraph: {
+      title: seo.metaTitle,
+      description: seo.metaDescription,
+      url: seo.canonicalDomain,
+      siteName,
+      type: 'website',
+      locale: 'en_IN',
+      images: [{ url: ogImage, width: 1200, height: 630, alt: seo.metaTitle }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      site: seo.twitterHandle,
+      creator: seo.twitterHandle,
+      title: seo.metaTitle,
+      description: seo.metaDescription,
+    },
+    robots: {
+      index: !seo.noindex,
+      follow: !seo.noindex,
+      googleBot: {
+        index: !seo.noindex,
+        follow: !seo.noindex,
+        'max-image-preview': 'large' as const,
+        'max-snippet': -1,
+      },
+    },
+    ...(seo.gscVerification ? { verification: { google: seo.gscVerification } } : {}),
+  };
+}
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const websiteSchema = generateWebSiteSchema();
-  const orgSchema = generateOrganizationSchema();
+  const [seo, brand] = await Promise.all([getSeoConfig(), getBrandConfig()]);
+  const websiteSchema = generateWebSiteSchema(seo);
+  const orgSchema = generateOrganizationSchema(seo, brand);
+  const gaId = seo.gaId || process.env.NEXT_PUBLIC_GA_ID;
 
   return (
     <html
@@ -100,10 +111,32 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        {brand.favicon && <link rel="icon" href={brand.favicon} />}
+        {/* Dynamic Google Fonts for brand typography */}
+        {(() => {
+          const fontsToLoad = [brand.displayFont, brand.bodyFont].filter(Boolean) as string[];
+          const url = fontsToLoad.length > 0 ? buildGoogleFontsUrl(fontsToLoad) : null;
+          return url ? (
+            <>
+              <link rel="preconnect" href="https://fonts.googleapis.com" />
+              <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+              <link rel="stylesheet" href={url} />
+            </>
+          ) : null;
+        })()}
+        {/* Custom font files uploaded via admin */}
+        {brand.customDisplayFontUrl && brand.customDisplayFontName && (
+          <style dangerouslySetInnerHTML={{ __html: `@font-face { font-family: '${brand.customDisplayFontName}'; src: url('${brand.customDisplayFontUrl}') format('woff2'); font-display: swap; }` }} />
+        )}
+        {brand.customBodyFontUrl && brand.customBodyFontName && (
+          <style dangerouslySetInnerHTML={{ __html: `@font-face { font-family: '${brand.customBodyFontName}'; src: url('${brand.customBodyFontUrl}') format('woff2'); font-display: swap; }` }} />
+        )}
+        {/* Inject brand colors + font overrides as CSS custom properties */}
+        <style dangerouslySetInnerHTML={{ __html: `:root { --brand-color: ${brand.brandColor}; --brand-secondary: ${brand.brandSecondary}; --brand-tertiary: ${brand.brandTertiary};${brand.customDisplayFontName || brand.displayFont ? ` --font-brand-display: '${brand.customDisplayFontName || brand.displayFont}', sans-serif;` : ''}${brand.customBodyFontName || brand.bodyFont ? ` --font-brand-body: '${brand.customBodyFontName || brand.bodyFont}', sans-serif;` : ''} }` }} />
         {/* Prevent FOUC — set dark class before paint */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('asi-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
+            __html: `(function(){try{var t=localStorage.getItem('asi-theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
           }}
         />
       </head>
@@ -122,11 +155,12 @@ export default function RootLayout({
             <NavigationProgress />
           </Suspense>
           <AnalyticsTracker />
+          <ScrollRestoration />
           {children}
           {/* <NewsletterPopup /> */}
           <SignupSuccessPopup />
           <CookieConsent />
-          <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_ID || 'G-PVL3NC8DQ6'} />
+          {gaId && <GoogleAnalytics measurementId={gaId} />}
           <ClearConsentButton />
         </ThemeProvider>
         <Analytics />

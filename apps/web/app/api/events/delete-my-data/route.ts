@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@aistartupimpact/database';
 import { jwtVerify } from 'jose';
+import { checkRateLimit, getClientIdentifier, strictRateLimit } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
+    const identifier = getClientIdentifier(request);
+    const { success } = await checkRateLimit(strictRateLimit, identifier);
+    if (!success) return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
+
     const { token } = await request.json();
 
     if (!token) {

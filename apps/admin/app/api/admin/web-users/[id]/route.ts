@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 import { requireApiAuth } from '@/lib/api-auth';
+import { logAuditEvent } from '@/lib/audit-log';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -25,6 +26,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    logAuditEvent({ action: 'UPDATE', resourceType: 'WEB_USER', resourceId: params.id, after: { isActive } });
+
     return NextResponse.json({ user: result[0] });
   } catch (error) {
     console.error('Error updating web user:', error);
@@ -45,6 +48,8 @@ export async function DELETE(
   try {
     await sql`DELETE FROM "WebUserSession" WHERE "webUserId" = ${params.id}`;
     await sql`DELETE FROM "WebUser" WHERE id = ${params.id}`;
+
+    logAuditEvent({ action: 'DELETE', resourceType: 'WEB_USER', resourceId: params.id });
 
     return NextResponse.json({ success: true });
   } catch (error) {

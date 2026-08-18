@@ -1,55 +1,63 @@
 import { Metadata } from 'next';
+import type { SeoConfig } from './seo-config';
+import type { BrandConfig } from './brand';
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.startsWith('http')
-    ? process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '')
-    : 'https://aistartupimpact.com';
+const DEFAULT_DOMAIN = 'https://aistartupimpact.com';
+const DEFAULT_NAME = 'AI Startup Impact';
+const DEFAULT_TWITTER = '@aikitstartup';
 
-const PROD_URL = 'https://aistartupimpact.com'; // always canonical production
-const SITE_NAME = 'AIStartupImpact';
-const SITE_LOGO = `${PROD_URL}/og-image.png`;
-const TWITTER_HANDLE = '@aikitstartup';
+function domain(seo?: Partial<SeoConfig>) {
+  return (seo?.canonicalDomain || DEFAULT_DOMAIN).replace(/\/$/, '');
+}
 
 // ─── Site-level schemas (injected once in root layout) ───────────────────────
 
-/** WebSite schema — enables Google Sitelinks Search Box + AI engine site identity */
-export const generateWebSiteSchema = () => ({
-  '@context': 'https://schema.org',
-  '@type': 'WebSite',
-  name: 'AIStartupImpact',
-  url: 'https://aistartupimpact.com',
-  potentialAction: {
-    '@type': 'SearchAction',
-    target: 'https://aistartupimpact.com/search?q={search_term_string}',
-    'query-input': 'required name=search_term_string',
-  },
-});
+export function generateWebSiteSchema(seo?: Partial<SeoConfig>) {
+  const d = domain(seo);
+  const name = seo?.metaTitle?.split('–')[0]?.trim() || DEFAULT_NAME;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name,
+    url: d,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${d}/search?q={search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
+  };
+}
 
-/** Organization schema — publisher identity for all content */
-export const generateOrganizationSchema = () => ({
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "AIStartupImpact",
-  alternateName: "AI Startup India",
-  description: "AI Startup Impact is India's leading platform for AI startup news, funding updates, founder stories, curated AI tools, ecosystem insights, and emerging innovation.",
-  url: "https://aistartupimpact.com",
-  logo: "https://aistartupimpact.com/logo.png",
-  sameAs: [
-    "https://x.com/aistartupimapct",
-    "https://www.linkedin.com/company/ai-startup-impact/",
-    "https://www.youtube.com/@aistartupimpact",
-    "https://www.instagram.com/aistartupimpact/"
-  ],
-  contactPoint: {
-    "@type": "ContactPoint",
-    contactType: "customer support",
-    email: "support@aistartupimpact.com"
-  }
-});
+export function generateOrganizationSchema(seo?: Partial<SeoConfig>, brand?: Partial<BrandConfig>) {
+  const d = domain(seo);
+  const name = seo?.metaTitle?.split('–')[0]?.trim() || DEFAULT_NAME;
+  const sameAs = [
+    seo?.socialTwitter,
+    seo?.socialLinkedin,
+    seo?.socialYoutube,
+    seo?.socialInstagram,
+    seo?.socialFacebook,
+  ].filter(Boolean);
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name,
+    alternateName: "AI Startup India",
+    description: seo?.metaDescription || "AI Startup Impact is India's leading platform for AI startup news, funding updates, founder stories, curated AI tools, ecosystem insights, and emerging innovation.",
+    url: d,
+    logo: brand?.logoLight || brand?.ogImage || `${d}/logo.png`,
+    ...(sameAs.length ? { sameAs } : {}),
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      email: seo?.contactEmail || "support@aistartupimpact.com",
+    },
+  };
+}
 
 // ─── Page-level schemas ───────────────────────────────────────────────────────
 
-/** BreadcrumbList — helps AI engines understand page hierarchy */
 export function generateBreadcrumbSchema(
   crumbs: { name: string; url: string }[]
 ) {
@@ -65,7 +73,6 @@ export function generateBreadcrumbSchema(
   };
 }
 
-/** NewsArticle schema — rich structured data for news content */
 export function generateArticleSchema(data: {
   title: string;
   excerpt: string;
@@ -85,13 +92,15 @@ export function generateArticleSchema(data: {
     slug: string;
     startupSlug?: string;
   };
-}) {
+}, seo?: Partial<SeoConfig>) {
+  const d = domain(seo);
+  const siteName = seo?.metaTitle?.split('–')[0]?.trim() || DEFAULT_NAME;
+  const siteLogo = `${d}/og-image.png`;
   const publishedDate = new Date(data.date).toISOString();
   const modifiedDate = data.updatedAt
     ? new Date(data.updatedAt).toISOString()
     : publishedDate;
 
-  // Speakable — tells Google/AI which parts to read aloud / extract as answers
   const speakable = {
     '@type': 'SpeakableSpecification',
     cssSelector: ['h1', '.article-lede', '.article-content'],
@@ -106,21 +115,21 @@ export function generateArticleSchema(data: {
     description: data.excerpt,
     image: data.imageUrl
       ? [{ '@type': 'ImageObject', url: data.imageUrl, width: 1200, height: 630 }]
-      : [{ '@type': 'ImageObject', url: SITE_LOGO, width: 1200, height: 630 }],
+      : [{ '@type': 'ImageObject', url: siteLogo, width: 1200, height: 630 }],
     datePublished: publishedDate,
     dateModified: modifiedDate,
     author: {
       '@type': 'Person',
       name: data.author.name,
-      url: data.author.url || `${PROD_URL}/author/${data.author.slug}`,
+      url: data.author.url || `${d}/author/${data.author.slug}`,
     },
     publisher: {
       '@type': 'Organization',
-      '@id': `${PROD_URL}/#organization`,
-      name: data.publisherName || SITE_NAME,
+      '@id': `${d}/#organization`,
+      name: data.publisherName || siteName,
       logo: {
         '@type': 'ImageObject',
-        url: data.publisherLogoUrl || SITE_LOGO,
+        url: data.publisherLogoUrl || siteLogo,
       },
     },
     keywords: data.tags ? data.tags.join(', ') : data.category || '',
@@ -128,17 +137,15 @@ export function generateArticleSchema(data: {
     inLanguage: 'en-IN',
     isAccessibleForFree: true,
     speakable,
-    // about — helps AI engines understand the topic
-    // For stories, link to the founder as the main entity
     about: data.isStory && data.founderData
       ? {
           '@type': 'Person',
-          '@id': `${PROD_URL}/founder/${data.founderData.slug}#person`,
+          '@id': `${d}/founder/${data.founderData.slug}#person`,
           name: data.founderData.name,
           ...(data.founderData.startupSlug ? {
             worksFor: {
               '@type': 'Organization',
-              '@id': `${PROD_URL}/startups/${data.founderData.startupSlug}#organization`
+              '@id': `${d}/startups/${data.founderData.startupSlug}#organization`
             }
           } : {})
         }
@@ -148,7 +155,6 @@ export function generateArticleSchema(data: {
   };
 }
 
-/** SoftwareApplication schema for tool detail pages */
 export function generateToolSchema(data: {
   name: string;
   description: string;
@@ -186,7 +192,6 @@ export function generateToolSchema(data: {
   };
 }
 
-/** ItemList schema — for listing pages (tools, articles, digests) */
 export function generateItemListSchema(data: {
   name: string;
   description: string;
@@ -210,12 +215,13 @@ export function generateItemListSchema(data: {
   };
 }
 
-/** CollectionPage schema — for index/listing pages */
 export function generateCollectionPageSchema(data: {
   name: string;
   description: string;
   url: string;
-}) {
+}, seo?: Partial<SeoConfig>) {
+  const d = domain(seo);
+  const siteName = seo?.metaTitle?.split('–')[0]?.trim() || DEFAULT_NAME;
   return {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
@@ -224,14 +230,13 @@ export function generateCollectionPageSchema(data: {
     url: data.url,
     publisher: {
       '@type': 'Organization',
-      '@id': `${PROD_URL}/#organization`,
-      name: SITE_NAME,
+      '@id': `${d}/#organization`,
+      name: siteName,
     },
     inLanguage: 'en-IN',
   };
 }
 
-/** Person schema for author pages */
 export function generatePersonSchema(data: {
   name: string;
   slug: string;
@@ -240,7 +245,9 @@ export function generatePersonSchema(data: {
   twitter?: string;
   linkedin?: string;
   website?: string;
-}) {
+}, seo?: Partial<SeoConfig>) {
+  const d = domain(seo);
+  const siteName = seo?.metaTitle?.split('–')[0]?.trim() || DEFAULT_NAME;
   const sameAs = [data.twitter, data.linkedin, data.website].filter(Boolean);
   return {
     '@context': 'https://schema.org',
@@ -248,17 +255,16 @@ export function generatePersonSchema(data: {
     name: data.name,
     description: data.bio,
     jobTitle: data.role,
-    url: `${PROD_URL}/author/${data.slug}`,
+    url: `${d}/author/${data.slug}`,
     worksFor: {
       '@type': 'Organization',
-      '@id': `${PROD_URL}/#organization`,
-      name: SITE_NAME,
+      '@id': `${d}/#organization`,
+      name: siteName,
     },
     ...(sameAs.length ? { sameAs } : {}),
   };
 }
 
-/** FAQPage schema — for pages with Q&A content (AEO gold standard) */
 export function generateFAQSchema(
   faqs: { question: string; answer: string }[]
 ) {
@@ -278,7 +284,6 @@ export function generateFAQSchema(
 
 // ─── Next.js Metadata builder ─────────────────────────────────────────────────
 
-/** Build full Next.js Metadata for article/story pages */
 export function buildArticleMetadata(article: {
   title: string;
   excerpt?: string | null;
@@ -288,14 +293,17 @@ export function buildArticleMetadata(article: {
   category?: { name?: string | null } | null;
   slug: string;
   type?: string;
-}): Metadata {
+}, seo?: Partial<SeoConfig>): Metadata {
+  const d = domain(seo);
+  const siteName = seo?.metaTitle?.split('–')[0]?.trim() || DEFAULT_NAME;
+  const twitterHandle = seo?.twitterHandle || DEFAULT_TWITTER;
   const isStory = article.type === 'STORY';
   const path = isStory ? `/stories/${article.slug}` : `/news/${article.slug}`;
-  const canonical = `${PROD_URL}${path}`;
+  const canonical = `${d}${path}`;
   const description = article.excerpt || '';
   const images = article.coverImage
     ? [{ url: article.coverImage, width: 1200, height: 630, alt: article.title }]
-    : [{ url: `${PROD_URL}/og-image.png`, width: 1200, height: 630 }];
+    : [{ url: `${d}/og-image.png`, width: 1200, height: 630 }];
 
   return {
     title: article.title,
@@ -307,7 +315,7 @@ export function buildArticleMetadata(article: {
       description,
       type: 'article',
       url: canonical,
-      siteName: SITE_NAME,
+      siteName,
       locale: 'en_IN',
       images,
       ...(article.publishedAt
@@ -320,8 +328,8 @@ export function buildArticleMetadata(article: {
       title: article.title,
       description,
       images: images.map((i) => i.url),
-      creator: TWITTER_HANDLE,
-      site: TWITTER_HANDLE,
+      creator: twitterHandle,
+      site: twitterHandle,
     },
   };
 }

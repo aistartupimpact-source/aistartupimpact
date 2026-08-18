@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { CheckCircle2, X } from 'lucide-react';
 import Link from 'next/link';
+import { maskEmail } from '@/lib/mask';
 
 export default function SignupSuccessPopup() {
   const [isVisible, setIsVisible] = useState(false);
@@ -48,7 +49,7 @@ export default function SignupSuccessPopup() {
         {/* Message */}
         <p className="text-gray-600 dark:text-gray-400 mb-6">
           We've sent a verification link to{' '}
-          <span className="font-semibold text-gray-900 dark:text-white">{email}</span>
+          <span className="font-semibold text-gray-900 dark:text-white">{maskEmail(email)}</span>
         </p>
 
         {/* Info box */}

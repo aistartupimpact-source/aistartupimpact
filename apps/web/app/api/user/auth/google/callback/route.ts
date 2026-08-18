@@ -25,23 +25,17 @@ function generateSlug(name: string): string {
 }
 
 export async function GET(request: NextRequest) {
-  console.log('🔵 Google OAuth callback started');
-  
   try {
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
     const state = searchParams.get('state') || '/profile';
     const error = searchParams.get('error');
 
-    console.log('🔵 OAuth params:', { hasCode: !!code, state, error });
-
     if (error) {
-      console.log('❌ OAuth error from Google:', error);
       return NextResponse.redirect(new URL('/?error=oauth_cancelled', request.url));
     }
 
     if (!code) {
-      console.log('❌ No authorization code received');
       return NextResponse.redirect(new URL('/?error=oauth_failed', request.url));
     }
 
@@ -86,27 +80,22 @@ export async function GET(request: NextRequest) {
       const newUserId = generateId();
       const newUserSlug = generateSlug(googleUser.name || googleUser.email.split('@')[0]);
 
-      try {
-        await sql`
-          INSERT INTO "WebUser" (
-            id, email, name, slug, avatar, "isActive", "lastLoginAt", "createdAt", "updatedAt"
-          ) VALUES (
-            ${newUserId},
-            ${googleUser.email.toLowerCase()},
-            ${googleUser.name || googleUser.email.split('@')[0]},
-            ${newUserSlug},
-            ${googleUser.picture || null},
-            true,
-            NOW(),
-            NOW(),
-            NOW()
-          )
-        `;
-      } catch (insertError) {
-        console.error('User insert failed:', insertError);
-        throw insertError;
-      }
-      
+      await sql`
+        INSERT INTO "WebUser" (
+          id, email, name, slug, avatar, "isActive", "lastLoginAt", "createdAt", "updatedAt"
+        ) VALUES (
+          ${newUserId},
+          ${googleUser.email.toLowerCase()},
+          ${googleUser.name || googleUser.email.split('@')[0]},
+          ${newUserSlug},
+          ${googleUser.picture || null},
+          true,
+          NOW(),
+          NOW(),
+          NOW()
+        )
+      `;
+
       user = {
         id: newUserId,
         email: googleUser.email.toLowerCase(),
@@ -132,42 +121,31 @@ export async function GET(request: NextRequest) {
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime('30d')
+      .setExpirationTime('7d')
       .sign(JWT_SECRET);
 
-    // Create session in database using raw SQL
-    console.log('🔵 Creating session in database...');
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    
-    try {
-      await sql`
-        INSERT INTO "WebUserSession" (
-          id, "webUserId", "refreshToken", "expiresAt", "ipAddress", "userAgent", "createdAt"
-        ) VALUES (
-          ${sessionId},
-          ${user.id},
-          ${token},
-          ${expiresAt.toISOString()},
-          ${request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'},
-          ${request.headers.get('user-agent') || 'unknown'},
-          NOW()
-        )
-      `;
-      console.log('✅ Session created');
-    } catch (sessionError) {
-      console.error('❌ Session creation failed:', sessionError);
-      throw sessionError;
-    }
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-    // Update last login using raw SQL
-    console.log('🔵 Updating last login...');
+    await sql`
+      INSERT INTO "WebUserSession" (
+        id, "webUserId", "refreshToken", "expiresAt", "ipAddress", "userAgent", "createdAt"
+      ) VALUES (
+        ${sessionId},
+        ${user.id},
+        ${token},
+        ${expiresAt.toISOString()},
+        ${request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'},
+        ${request.headers.get('user-agent') || 'unknown'},
+        NOW()
+      )
+    `;
+
     await sql`
       UPDATE "WebUser"
       SET "lastLoginAt" = NOW()
       WHERE id = ${user.id}
     `;
 
-    // Set cookie and redirect (validate returnTo to prevent open redirects)
     let redirectPath = '/profile';
     if (typeof state === 'string' && state.startsWith('/') && !state.startsWith('//')) {
       redirectPath = state;
@@ -177,25 +155,13 @@ export async function GET(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60, // 30 days
+      maxAge: 7 * 24 * 60 * 60,
       path: '/',
     });
 
     return response;
   } catch (error) {
-    console.error('❌ Google OAuth callback error:', error);
-    console.error('Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      name: error instanceof Error ? error.name : undefined,
-    });
-    
-    // Log Prisma-specific errors
-    if (error && typeof error === 'object' && 'code' in error) {
-      console.error('Prisma error code:', (error as any).code);
-      console.error('Prisma error meta:', (error as any).meta);
-    }
-    
+    console.error('Google OAuth callback error:', error instanceof Error ? error.message : 'Unknown error');
     return NextResponse.redirect(new URL('/?error=oauth_error', request.url));
   }
 }

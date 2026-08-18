@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Lock, X, AlertTriangle, Shield, Trash2 } from 'lucide-react';
+import { Lock, X, AlertTriangle, Shield, Trash2, Mail } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Toast from '@/components/Toast';
 import TwoFactorSetup from './SecuritySection2FA';
+import EmailChangeModal from '@/components/EmailChangeModal';
 
 type ToastType = {
   type: 'success' | 'error' | 'info';
@@ -33,6 +34,9 @@ export default function SecuritySection() {
 
   // Export data state
   const [exportLoading, setExportLoading] = useState(false);
+
+  // Email change state
+  const [showEmailChange, setShowEmailChange] = useState(false);
 
   // Delete account state
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
@@ -187,6 +191,14 @@ export default function SecuritySection() {
             </button>
 
             <button
+              onClick={() => setShowEmailChange(true)}
+              className="w-full text-left py-3 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors last:border-0"
+            >
+              <p className="text-sm font-medium text-gray-900 dark:text-white">Change Email</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Update your account email address</p>
+            </button>
+
+            <button
               onClick={() => setShow2FAModal(true)}
               disabled={twoFAFetching}
               className="w-full text-left py-3 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed last:border-0"
@@ -268,6 +280,7 @@ export default function SecuritySection() {
                 </label>
                 <input
                   type="password"
+                  autoComplete="current-password"
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                   required
@@ -281,6 +294,7 @@ export default function SecuritySection() {
                 </label>
                 <input
                   type="password"
+                  autoComplete="new-password"
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                   required
@@ -295,6 +309,7 @@ export default function SecuritySection() {
                 </label>
                 <input
                   type="password"
+                  autoComplete="new-password"
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                   required
@@ -381,6 +396,7 @@ export default function SecuritySection() {
                 </label>
                 <input
                   type="password"
+                  autoComplete="current-password"
                   value={deletePassword}
                   onChange={(e) => setDeletePassword(e.target.value)}
                   required
@@ -413,6 +429,15 @@ export default function SecuritySection() {
             </form>
           </div>
         </div>
+      )}
+
+      {showEmailChange && (
+        <EmailChangeModal
+          apiPath="/api/founder/change-email"
+          onClose={() => setShowEmailChange(false)}
+          onSuccess={(msg) => { setToast({ type: 'success', message: msg }); }}
+          onError={(msg) => { setToast({ type: 'error', message: msg }); }}
+        />
       )}
     </>
   );

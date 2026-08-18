@@ -12,6 +12,7 @@ export interface UserSession {
   twitter: string | null;
   linkedin: string | null;
   termsAcceptedAt: string | null;
+  termsVersion: string | null;
 }
 
 interface UserContextType {
@@ -71,10 +72,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+const fallbackContext: UserContextType = {
+  user: null,
+  loading: false,
+  signIn: () => { window.location.href = '/api/user/auth/google?returnTo=' + encodeURIComponent(window.location.pathname); },
+  signOut: async () => {},
+  refreshSession: async () => {},
+};
+
 export function useUser() {
   const context = useContext(UserContext);
   if (context === undefined) {
-    throw new Error('useUser must be used within a UserProvider');
+    return fallbackContext;
   }
   return context;
 }

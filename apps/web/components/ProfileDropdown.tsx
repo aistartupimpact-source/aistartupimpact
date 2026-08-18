@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
+import { maskEmail } from "@/lib/mask";
 
 interface ProfileDropdownProps {
   user?: { name?: string; email?: string; avatar?: string; founderId?: string; organizerId?: string } | null;
@@ -76,7 +77,7 @@ export default function ProfileDropdown({ user: propUser }: ProfileDropdownProps
           {/* User info */}
           <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
             <p className="text-[13px] font-semibold text-gray-900 dark:text-white truncate">{user.name}</p>
-            <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{user.email ? maskEmail(user.email) : ''}</p>
           </div>
 
           <div className="py-1">

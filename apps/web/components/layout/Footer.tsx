@@ -51,6 +51,7 @@ const footerLinks = [
       { label: 'Copyright Policy', href: '/copyright' },
       { label: 'Trademark Policy', href: '/trademark' },
       { label: 'Verification Policy', href: '/verification-policy' },
+      { label: 'Grievance Officer', href: '/privacy#grievance-officer' },
     ],
   },
 ];
@@ -417,6 +418,12 @@ export default function Footer() {
                   Contact
                 </Link>
               </div>
+              <span className="text-gray-600">
+                Grievance Officer: Lahori Venkatesh —{' '}
+                <a href="mailto:privacy@aistartupimpact.com" className="hover:text-brand transition-colors">
+                  privacy@aistartupimpact.com
+                </a>
+              </span>
             </div>
  
             <a href="https://www.producthunt.com/products/aistartupimpact?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-aistartupimpact" target="_blank" rel="noopener noreferrer" className="hidden sm:block order-none mb-2 sm:mb-0">

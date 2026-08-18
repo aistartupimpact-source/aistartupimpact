@@ -4,33 +4,16 @@ import { verifyUnsubscribeToken } from "@/lib/events/unsubscribe";
 
 export const dynamic = "force-dynamic";
 
-/**
- * GET /api/events/unsubscribe?token=<jwt>&email=<email>
- * 
- * Handles one-click unsubscribe from event newsletter.
- * Supports two modes:
- * 1. Signed JWT token (from email links) — most secure
- * 2. Email parameter (fallback for List-Unsubscribe header) — less secure but RFC-compliant
- * 
- * No login required. Returns an HTML confirmation page.
- */
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token");
-  const emailParam = request.nextUrl.searchParams.get("email");
 
   let email: string | null = null;
 
-  // Try token-based unsubscribe first (preferred)
   if (token) {
     const payload = await verifyUnsubscribeToken(token);
     if (payload) {
       email = payload.email;
     }
-  }
-
-  // Fallback to email parameter (for List-Unsubscribe header)
-  if (!email && emailParam) {
-    email = emailParam;
   }
 
   if (!email) {
@@ -92,7 +75,6 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token");
-  const emailParam = request.nextUrl.searchParams.get("email");
 
   let email: string | null = null;
 
@@ -100,7 +82,6 @@ export async function POST(request: NextRequest) {
     const payload = await verifyUnsubscribeToken(token);
     if (payload) email = payload.email;
   }
-  if (!email && emailParam) email = emailParam;
 
   if (!email) {
     return NextResponse.json({ error: "Invalid" }, { status: 400 });

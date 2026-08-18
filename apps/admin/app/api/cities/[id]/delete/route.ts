@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@aistartupimpact/database';
 import { requireApiAuth } from '@/lib/api-auth';
+import { logAuditEvent } from '@/lib/audit-log';
 
 export async function POST(
   request: NextRequest,
@@ -12,6 +13,8 @@ export async function POST(
     await prisma.indiaAICity.delete({
       where: { id: params.id }
     });
+
+    logAuditEvent({ action: 'DELETE', resourceType: 'CITY', resourceId: params.id });
 
     return NextResponse.json({ success: true });
   } catch (error) {

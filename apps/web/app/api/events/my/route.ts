@@ -2,15 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { apiRateLimit } from "@/lib/rate-limit";
+import { getUserSession } from "@/lib/user-session";
 
 export const dynamic = "force-dynamic";
 
-/**
- * GET /api/events/my?email=user@example.com
- * Returns all event registrations for a given email address.
- */
 export async function GET(request: NextRequest) {
-  // Rate limit
   const identifier = getClientIdentifier(request);
   const { success } = await checkRateLimit(apiRateLimit, identifier);
   if (!success) {
@@ -20,12 +16,11 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const email = request.nextUrl.searchParams.get("email");
-
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  const session = await getUserSession();
+  if (!session?.email) {
     return NextResponse.json(
-      { success: false, error: "Valid email is required." },
-      { status: 400 }
+      { success: false, error: "Authentication required." },
+      { status: 401 }
     );
   }
 
@@ -48,7 +43,7 @@ export async function GET(request: NextRequest) {
         e."coverImageUrl" AS "eventCoverImageUrl"
       FROM "EventRegistration" r
       JOIN "Event" e ON e.id = r."eventId"
-      WHERE r."guestEmail" = ${email}
+      WHERE r."guestEmail" = ${session.email}
         AND r."deletedAt" IS NULL
         AND e."deletedAt" IS NULL
         AND e.status = 'PUBLISHED'
@@ -57,7 +52,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, registrations: rows });
   } catch (error) {
-    console.error("My events API error:", error);
+    console.error("My events API error:", error instanceof Error ? error.message : "Unknown error");
     return NextResponse.json(
       { success: false, error: "Failed to fetch registrations." },
       { status: 500 }

@@ -30,6 +30,7 @@ import {
   Flag,
   Activity,
   Briefcase,
+  LifeBuoy,
 } from 'lucide-react';
 
 const SidebarContext = createContext<{
@@ -117,6 +118,7 @@ const sidebarItems = [
   { label: 'Cities', href: '/cities', icon: MapPin, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
   { label: 'Admin Users', href: '/users', icon: Shield, roles: ['SUPER_ADMIN'] },
   { label: 'Consent Logs', href: '/consent-logs', icon: Shield, roles: ['SUPER_ADMIN'] },
+  { label: 'Support Tickets', href: '/support', icon: LifeBuoy, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
   { label: 'Reports', href: '/reports', icon: Flag, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
   { label: 'Settings', href: '/settings', icon: Settings, roles: ['SUPER_ADMIN'] },
   { label: 'Dev Tools', href: '/dev-tools', icon: Wrench, roles: ['SUPER_ADMIN'] },

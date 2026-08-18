@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 import { requireApiAuth } from '@/lib/api-auth';
+import { logAuditEvent } from '@/lib/audit-log';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -25,6 +26,8 @@ export async function PUT(
       const maxJobs = body.plan === 'PREMIUM' ? 999 : body.plan === 'FEATURED' ? 5 : 1;
       await sql`UPDATE "JobBoardEmployer" SET plan = ${body.plan}::"JobBoardPlan", "maxActiveJobs" = ${maxJobs}, "updatedAt" = NOW() WHERE id = ${id}`;
     }
+
+    logAuditEvent({ action: 'UPDATE', resourceType: 'EMPLOYER', resourceId: id, after: body });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

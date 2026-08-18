@@ -11,17 +11,23 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          DEFAULT: '#FF3131',
+          DEFAULT: 'var(--brand-color, #FF3131)',
           50: '#FFF0F0',
           100: '#FFE0E0',
           200: '#FFC2C2',
           300: '#FF9494',
           400: '#FF5E5E',
-          500: '#FF3131',
+          500: 'var(--brand-color, #FF3131)',
           600: '#E51A1A',
           700: '#C01010',
           800: '#9C1010',
           900: '#821414',
+        },
+        'brand-secondary': {
+          DEFAULT: 'var(--brand-secondary, #1B3A5C)',
+        },
+        'brand-tertiary': {
+          DEFAULT: 'var(--brand-tertiary, #F59E0B)',
         },
         navy: {
           DEFAULT: '#0D1B2A',

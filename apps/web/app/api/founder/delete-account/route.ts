@@ -3,11 +3,16 @@ import { prisma } from '@aistartupimpact/database';
 import bcrypt from 'bcryptjs';
 import { requireFounderAuth } from '@/lib/founder-auth';
 import { clearFounderSession } from '@/lib/founder-auth';
+import { checkRateLimit, getClientIdentifier, strictRateLimit } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 export async function DELETE(request: NextRequest) {
   try {
+    const identifier = getClientIdentifier(request);
+    const { success } = await checkRateLimit(strictRateLimit, identifier);
+    if (!success) return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
+
     const session = await requireFounderAuth();
 
     const body = await request.json().catch(() => ({}));

@@ -1,6 +1,5 @@
 import { MetadataRoute } from 'next';
-
-const SITE_URL = 'https://aistartupimpact.com';
+import { getSeoConfig } from '@/lib/seo-config';
 
 const DISALLOWED_PATHS = [
   '/api/',
@@ -18,7 +17,17 @@ const DISALLOWED_PATHS = [
   '/search',
 ];
 
-export default function robots(): MetadataRoute.Robots {
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const seo = await getSeoConfig();
+  const domain = seo.canonicalDomain.replace(/\/$/, '');
+
+  if (seo.noindex) {
+    return {
+      rules: [{ userAgent: '*', disallow: '/' }],
+      host: domain,
+    };
+  }
+
   return {
     rules: [
       {
@@ -27,17 +36,21 @@ export default function robots(): MetadataRoute.Robots {
         disallow: DISALLOWED_PATHS,
       },
     ],
-    sitemap: [
-      `${SITE_URL}/sitemap.xml`,
-      `${SITE_URL}/news/sitemap.xml`,
-      `${SITE_URL}/stories/sitemap.xml`,
-      `${SITE_URL}/tools/sitemap.xml`,
-      `${SITE_URL}/tools/category/sitemap.xml`,
-      `${SITE_URL}/startups/sitemap.xml`,
-      `${SITE_URL}/events/sitemap.xml`,
-      `${SITE_URL}/jobs/sitemap.xml`,
-      `${SITE_URL}/india-ai/sitemap.xml`,
-    ],
-    host: SITE_URL,
+    ...(seo.autoSitemap
+      ? {
+          sitemap: [
+            `${domain}/sitemap.xml`,
+            `${domain}/news/sitemap.xml`,
+            `${domain}/stories/sitemap.xml`,
+            `${domain}/tools/sitemap.xml`,
+            `${domain}/tools/category/sitemap.xml`,
+            `${domain}/startups/sitemap.xml`,
+            `${domain}/events/sitemap.xml`,
+            `${domain}/jobs/sitemap.xml`,
+            `${domain}/india-ai/sitemap.xml`,
+          ],
+        }
+      : {}),
+    host: domain,
   };
 }

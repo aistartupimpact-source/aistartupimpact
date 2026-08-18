@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
-import { apiRateLimit, getClientIdentifier } from '@/lib/rate-limit';
+import { apiRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { newsletterSchema, validateInput } from '@/lib/validation';
 import { newsletterConfirmHtml, newsletterWelcomeHtml } from '@aistartupimpact/utils';
 
@@ -50,19 +50,12 @@ async function sendEmailEdge(to: string, subject: string, html: string, headers?
 export async function POST(request: Request) {
   try {
     const identifier = getClientIdentifier(request);
-
-    if (apiRateLimit) {
-      try {
-        const { success: rateLimitSuccess } = await apiRateLimit.limit(identifier);
-        if (!rateLimitSuccess) {
-          return NextResponse.json(
-            { success: false, error: 'Too many requests. Please try again later.' },
-            { status: 429 }
-          );
-        }
-      } catch (rateLimitError) {
-        console.error('Rate limit check failed:', rateLimitError);
-      }
+    const { success: rateLimitSuccess } = await checkRateLimit(apiRateLimit, identifier);
+    if (!rateLimitSuccess) {
+      return NextResponse.json(
+        { success: false, error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
     }
 
     const body = await request.json();

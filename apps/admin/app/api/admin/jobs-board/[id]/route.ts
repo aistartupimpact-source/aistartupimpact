@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 import { requireApiAuth } from '@/lib/api-auth';
+import { logAuditEvent } from '@/lib/audit-log';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -25,6 +26,8 @@ export async function PUT(
       await sql`UPDATE "JobBoardListing" SET "listingTier" = ${body.listingTier}::"JobBoardTier", "updatedAt" = NOW() WHERE id = ${id}`;
     }
 
+    logAuditEvent({ action: 'UPDATE', resourceType: 'JOB_LISTING', resourceId: id, after: body });
+
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('[Admin Jobs Board PUT]', error);
@@ -42,6 +45,9 @@ export async function DELETE(
 
   try {
     await sql`UPDATE "JobBoardListing" SET "deletedAt" = NOW(), "isActive" = false WHERE id = ${params.id}`;
+
+    logAuditEvent({ action: 'DELETE', resourceType: 'JOB_LISTING', resourceId: params.id });
+
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('[Admin Jobs Board DELETE]', error);

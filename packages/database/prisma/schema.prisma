@@ -194,9 +194,10 @@ model AiTool {
   @@index([ownerId])
   @@index([pricingModel])
   @@index([searchVector], type: Gin)
-  @@index([slug])
   @@index([status])
   @@index([status, listingTier])
+  @@index([deletedAt])
+  @@index([createdAt])
 }
 
 model Article {
@@ -251,9 +252,9 @@ model Article {
   @@index([categoryId])
   @@index([isFeatured, status])
   @@index([searchVector], type: Gin)
-  @@index([slug])
   @@index([status, publishedAt])
   @@index([type, status])
+  @@index([deletedAt])
 }
 
 model ArticleCoAuthor {
@@ -328,7 +329,6 @@ model Category {
   other_Category Category[] @relation("CategoryToCategory")
 
   @@index([parentId])
-  @@index([slug])
 }
 
 model CityDeepDive {
@@ -376,6 +376,7 @@ model Comment {
 
   @@index([articleId, status])
   @@index([parentId])
+  @@index([userId])
 }
 
 model FeaturedFounder {
@@ -451,7 +452,6 @@ model FounderSession {
   FounderUser FounderUser @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([expiresAt])
-  @@index([token])
   @@index([userId])
 }
 
@@ -485,6 +485,13 @@ model FounderUser {
   twoFactorEnabled                       Boolean                  @default(false)
   twoFactorSecret                        String?
   twoFactorBackupCodes                   String[]
+  failedLoginAttempts                    Int                      @default(0)
+  lockedUntil                            DateTime?
+
+  // Email change
+  pendingEmail                           String?
+  emailChangeToken                       String?                  @unique
+  emailChangeTokenExpiry                 DateTime?
 
   // Unified identity link
   unifiedUserId                          String?                  @unique
@@ -501,12 +508,7 @@ model FounderUser {
   founder_settings                       founder_settings?
 
   @@index([companyDomain])
-  @@index([email])
-  @@index([googleId])
-  @@index([resetToken])
   @@index([status])
-  @@index([unifiedUserId])
-  @@index([verifyToken])
 }
 
 model FundingDigest {
@@ -552,7 +554,6 @@ model GlossaryTerm {
   createdAt    DateTime @default(now())
   updatedAt    DateTime
 
-  @@index([slug])
 }
 
 model GovernmentScheme {
@@ -696,7 +697,6 @@ model IndianAITool {
   @@index([displayOrder])
   @@index([isActive])
   @@index([isFeatured])
-  @@index([slug])
 }
 
 model Investor {
@@ -713,7 +713,6 @@ model Investor {
   createdAt          DateTime     @default(now())
   updatedAt          DateTime
 
-  @@index([slug])
   @@index([type])
 }
 
@@ -860,7 +859,6 @@ model NewsletterSubscriber {
   consentVersion    Int?
   consentSource     String?
 
-  @@index([email])
   @@index([isActive])
 }
 
@@ -931,7 +929,6 @@ model Redirect {
   permanent Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  @@index([fromPath])
 }
 
 model RelatedArticle {
@@ -1075,8 +1072,13 @@ model Startup {
   @@index([isVerified])
   @@index([ownerId])
   @@index([searchVector], type: Gin)
-  @@index([slug])
   @@index([stage])
+  @@index([deletedAt, isApproved, createdAt(sort: Desc)])
+  @@index([headquartersCity])
+  @@index([status])
+  @@index([businessType])
+  @@index([employeeCount])
+  @@index([createdAt])
 }
 
 model StartupFAQ {
@@ -1142,7 +1144,6 @@ model Tag {
   createdAt  DateTime     @default(now())
   ArticleTag ArticleTag[]
 
-  @@index([slug])
 }
 
 model TalentStats {
@@ -1183,7 +1184,6 @@ model ToolCategory {
   AiTool      AiTool[]
 
   @@index([parentId])
-  @@index([slug])
   @@index([level, sortOrder])
 }
 
@@ -1192,6 +1192,8 @@ model ToolCon {
   toolId String
   text   String
   AiTool AiTool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@index([toolId])
 }
 
 model ToolPro {
@@ -1199,6 +1201,8 @@ model ToolPro {
   toolId String
   text   String
   AiTool AiTool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@index([toolId])
 }
 
 model ToolReview {
@@ -1255,6 +1259,8 @@ model ToolUseCase {
   toolId String
   text   String
   AiTool AiTool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@index([toolId])
 }
 
 model User {
@@ -1268,25 +1274,28 @@ model User {
   avatar          String?
   twitter         String?
   linkedin        String?
-  isActive        Boolean           @default(true)
-  canDeleteUntil  DateTime?         // Temporary delete permission granted by SUPER_ADMIN
-  deleteGrantedBy String?           // Who granted delete access
-  deleteGrantedAt DateTime?         // When delete access was granted
-  lastLoginAt     DateTime?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  deletedAt       DateTime?
-  Article         Article[]
-  ArticleCoAuthor ArticleCoAuthor[]
-  AuditLog        AuditLog[]
-  Comment         Comment[]
-  MediaAsset      MediaAsset[]
-  UserSession     UserSession[]
+  isActive             Boolean           @default(true)
+  canDeleteUntil       DateTime?
+  deleteGrantedBy      String?
+  deleteGrantedAt      DateTime?
+  lastLoginAt          DateTime?
+  twoFactorEnabled     Boolean           @default(false)
+  twoFactorSecret      String?
+  twoFactorBackupCodes String[]
+  failedLoginAttempts  Int               @default(0)
+  lockedUntil          DateTime?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  deletedAt            DateTime?
+  Article              Article[]
+  ArticleCoAuthor      ArticleCoAuthor[]
+  AuditLog             AuditLog[]
+  Comment              Comment[]
+  MediaAsset           MediaAsset[]
+  UserSession          UserSession[]
 
   @@index([canDeleteUntil])
-  @@index([email])
   @@index([role])
-  @@index([slug])
 }
 
 model WebUser {
@@ -1304,9 +1313,23 @@ model WebUser {
   github          String?
   isActive        Boolean          @default(true)
   termsAcceptedAt DateTime?        @db.Timestamptz
+  termsVersion    String?
   lastLoginAt     DateTime?        @db.Timestamptz
   createdAt       DateTime         @default(now()) @db.Timestamptz
   updatedAt       DateTime         @updatedAt @db.Timestamptz
+
+  // 2FA
+  twoFactorEnabled   Boolean       @default(false)
+  twoFactorSecret    String?
+  twoFactorBackupCodes String[]
+  failedLoginAttempts Int          @default(0)
+  lockedUntil         DateTime?
+
+  // Email change
+  pendingEmail           String?
+  emailChangeToken       String?   @unique
+  emailChangeTokenExpiry DateTime?
+
   StartupReview   StartupReview[]
   ToolReview      ToolReview[]
   WebUserSession  WebUserSession[]
@@ -1314,8 +1337,6 @@ model WebUser {
   SavedStartup    SavedStartup[]
   JobBoardSaved   JobBoardSaved[]
 
-  @@index([email])
-  @@index([slug])
 }
 
 model SavedTool {
@@ -1356,8 +1377,8 @@ model WebUserSession {
   createdAt    DateTime @default(now()) @db.Timestamptz
   WebUser      WebUser  @relation(fields: [webUserId], references: [id], onDelete: Cascade)
 
-  @@index([refreshToken])
   @@index([webUserId])
+  @@index([expiresAt])
 }
 
 model UserSession {
@@ -1370,8 +1391,8 @@ model UserSession {
   createdAt    DateTime @default(now())
   User         User     @relation(fields: [userId], references: [id])
 
-  @@index([refreshToken])
   @@index([userId])
+  @@index([expiresAt])
 }
 
 model consent_logs {
@@ -1446,7 +1467,6 @@ model City {
   updatedAt DateTime @updatedAt
   Startup   Startup[]
 
-  @@index([slug])
   @@index([country, state])
   @@index([name])
 }
@@ -1684,6 +1704,89 @@ model ContentReport {
   @@index([createdAt])
 }
 
+// ============================================================
+// SUPPORT TICKET SYSTEM
+// ============================================================
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  AWAITING_USER
+  RESOLVED
+  CLOSED
+}
+
+enum SupportTicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum SupportTicketCategory {
+  ACCOUNT
+  BILLING
+  BUG_REPORT
+  FEATURE_REQUEST
+  LISTING
+  EVENT
+  JOB_BOARD
+  OTHER
+}
+
+enum SupportTicketPortal {
+  FOUNDER
+  ORGANIZER
+  EMPLOYER
+  PUBLIC
+}
+
+model SupportTicket {
+  id             String                @id @default(dbgenerated("gen_random_uuid()"))
+  ticketNumber   String                @unique
+  subject        String
+  description    String
+  category       SupportTicketCategory @default(OTHER)
+  priority       SupportTicketPriority @default(MEDIUM)
+  status         SupportTicketStatus   @default(OPEN)
+  portal         SupportTicketPortal
+  submitterType  String
+  submitterId    String
+  submitterEmail String
+  submitterName  String
+  assignedTo     String?
+  resolvedAt     DateTime?
+  resolvedBy     String?
+  closedAt       DateTime?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  messages       SupportTicketMessage[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([portal])
+  @@index([submitterType, submitterId])
+  @@index([assignedTo])
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@index([portal, createdAt])
+  @@index([priority, createdAt])
+  @@index([submitterType, submitterId, createdAt])
+}
+
+model SupportTicketMessage {
+  id         String        @id @default(dbgenerated("gen_random_uuid()"))
+  ticketId   String
+  senderType String
+  senderId   String
+  senderName String
+  body       String
+  isInternal Boolean       @default(false)
+  createdAt  DateTime      @default(now())
+  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+}
 
 // ============================================================
 // EMAIL OTP VERIFICATION
@@ -1741,8 +1844,6 @@ model UnifiedUser {
   founderProfile       FounderUser?   @relation("FounderToUnified")
   organizerProfile     EventOrganizer? @relation("OrganizerToUnified")
 
-  @@index([email])
-  @@index([googleId])
 }
 
 model UnifiedSession {
@@ -1757,7 +1858,6 @@ model UnifiedSession {
 
   user      UnifiedUser @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([token])
   @@index([userId])
   @@index([expiresAt])
 }
@@ -1837,6 +1937,18 @@ model EventOrganizer {
   updatedAt        DateTime             @updatedAt
   lastLoginAt      DateTime?
 
+  // 2FA
+  twoFactorEnabled   Boolean            @default(false)
+  twoFactorSecret    String?
+  twoFactorBackupCodes String[]
+  failedLoginAttempts Int               @default(0)
+  lockedUntil         DateTime?
+
+  // Email change
+  pendingEmail           String?
+  emailChangeToken       String?        @unique
+  emailChangeTokenExpiry DateTime?
+
   // Unified identity link
   unifiedUserId    String?              @unique
   unifiedUser      UnifiedUser?         @relation("OrganizerToUnified", fields: [unifiedUserId], references: [id], onDelete: SetNull)
@@ -1846,10 +1958,7 @@ model EventOrganizer {
   sessions         EventOrganizerSession[]
   teamMembers      EventTeamMember[]
 
-  @@index([email])
-  @@index([googleId])
   @@index([status])
-  @@index([unifiedUserId])
 }
 
 model EventOrganizerSession {
@@ -1862,7 +1971,6 @@ model EventOrganizerSession {
   createdAt   DateTime       @default(now())
   organizer   EventOrganizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
 
-  @@index([token])
   @@index([organizerId])
   @@index([expiresAt])
 }
@@ -2042,8 +2150,6 @@ model Event {
   slugHistory              EventSlugHistory[]
   teamAssignments          EventTeamAssignment[]
 
-  @@index([slug])
-  @@index([shortCode])
   @@index([status, visibility])
   @@index([startAt])
   @@index([organizerId])
@@ -2063,7 +2169,6 @@ model EventSlugHistory {
 
   event      Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
-  @@index([oldSlug])
   @@index([eventId])
 }
 
@@ -2249,7 +2354,6 @@ model EventSubscriber {
   interests           EventSubscriberInterest[]
   campaignRecipients  EventCampaignRecipient[]
 
-  @@index([email])
   @@index([subscribed])
   @@index([locationLat, locationLng])
   @@index([locationCountryCode])
@@ -2361,7 +2465,6 @@ model ToolReviewResponse {
   review   ToolReview  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
   founder  FounderUser @relation(fields: [founderId], references: [id], onDelete: Cascade)
 
-  @@index([reviewId])
   @@index([founderId])
 }
 
@@ -2382,7 +2485,6 @@ model ToolTagGroup {
   tags ToolSystemTag[]
 
   @@index([sortOrder])
-  @@index([slug])
 }
 
 model ToolSystemTag {
@@ -2402,7 +2504,6 @@ model ToolSystemTag {
 
   @@unique([groupId, slug])
   @@index([groupId, sortOrder])
-  @@index([slug])
   @@index([tagCount(sort: Desc)])
 }
 
@@ -2418,7 +2519,6 @@ model ToolSystemTagMapping {
 
   @@unique([toolId, tagId])
   @@index([tagId, toolId])
-  @@index([toolId, tagId])
 }
 
 // ============================================================
@@ -2511,14 +2611,22 @@ model JobBoardEmployer {
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 
+  // 2FA
+  twoFactorEnabled   Boolean        @default(false)
+  twoFactorSecret    String?
+  twoFactorBackupCodes String[]
+
+  // Email change
+  pendingEmail           String?
+  emailChangeToken       String?    @unique
+  emailChangeTokenExpiry DateTime?
+
   Listings        JobBoardListing[]
   Startup         Startup?          @relation(fields: [startupId], references: [id], onDelete: SetNull)
 
-  @@index([slug])
   @@index([startupId])
   @@index([isActive])
   @@index([plan])
-  @@index([email])
 }
 
 model JobBoardListing {
@@ -2573,10 +2681,10 @@ model JobBoardListing {
   @@index([isActive, listingTier])
   @@index([employerId])
   @@index([startupId])
-  @@index([slug])
   @@index([publishedAt])
   @@index([expiresAt])
   @@index([searchVector], type: Gin)
+  @@index([deletedAt])
 }
 
 model JobBoardApplication {
@@ -2631,6 +2739,6 @@ model EmailLog {
   sentAt    DateTime @default(now())
 
   @@index([to])
-  @@index([type])
+  @@index([type, sentAt])
   @@index([sentAt])
 }

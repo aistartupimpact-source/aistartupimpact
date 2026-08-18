@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import bcrypt from 'bcryptjs';
+import { SignJWT } from 'jose';
 import { setEmployerSession } from '@/lib/employer-auth';
 import { securityAlertHtml } from '@aistartupimpact/utils';
 import { sendEmailFireAndForget } from '@/lib/email/send';
 import { authRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
+
+const CHALLENGE_SECRET = new TextEncoder().encode(process.env.EMPLOYER_JWT_SECRET || process.env.USER_JWT_SECRET!);
 
 export const dynamic = 'force-dynamic';
 const MAX_FAILED_ATTEMPTS = 5;
@@ -28,7 +31,7 @@ export async function POST(request: NextRequest) {
     // Find employer
     const employers = await sql`
       SELECT id, "companyName", slug, email, "passwordHash", plan, "isActive",
-             "emailVerified", "failedLoginAttempts", "lockedUntil"
+             "emailVerified", "failedLoginAttempts", "lockedUntil", "twoFactorEnabled"
       FROM "JobBoardEmployer"
       WHERE email = ${email.toLowerCase().trim()}
       LIMIT 1
@@ -101,6 +104,15 @@ export async function POST(request: NextRequest) {
       SET "failedLoginAttempts" = 0, "lockedUntil" = NULL, "lastLoginAt" = NOW()
       WHERE id = ${employer.id}
     `;
+
+    if (employer.twoFactorEnabled) {
+      const challengeToken = await new SignJWT({ userId: employer.id, userType: 'employer', purpose: '2fa-challenge' })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('5m')
+        .sign(CHALLENGE_SECRET);
+      return NextResponse.json({ success: false, requires2FA: true, challengeToken });
+    }
 
     // Set session cookie
     await setEmployerSession({

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@aistartupimpact/database';
 import { requireApiAuth } from '@/lib/api-auth';
+import { logAuditEvent } from '@/lib/audit-log';
 
 export async function POST(
   req: NextRequest,
@@ -56,6 +57,8 @@ export async function POST(
         ON CONFLICT (slug) DO NOTHING
       `;
     }
+
+    logAuditEvent({ action: 'APPROVE', resourceType: 'CITY', resourceId: id, resourceName: city.cityName });
 
     return NextResponse.json({ success: true, data: city });
   } catch (error) {

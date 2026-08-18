@@ -46,21 +46,7 @@ export default function MyEventsClient() {
     setError("");
 
     try {
-      // Get user session to get email
-      const sessionRes = await fetch("/api/user/session");
-      if (!sessionRes.ok) {
-        setError("Please sign in to view your registrations.");
-        setLoading(false);
-        return;
-      }
-      const sessionData = await sessionRes.json();
-      if (!sessionData.user?.email) {
-        setError("Please sign in to view your registrations.");
-        setLoading(false);
-        return;
-      }
-
-      const res = await fetch(`/api/events/my?email=${encodeURIComponent(sessionData.user.email)}`);
+      const res = await fetch("/api/events/my");
       const data = await res.json();
       if (data.success) {
         setRegistrations(data.registrations || []);

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { IndianRupee, MapPin, Building2, Calendar, TrendingUp, Download, Users, Map as MapIcon } from 'lucide-react';
+import { IndianRupee, MapPin, Building2, Calendar, TrendingUp, Download, Users, Map as MapIcon, Lock } from 'lucide-react';
+import { useUser } from '@/components/UserProvider';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 import { standardizeCityName } from '@aistartupimpact/utils/src/cities';
@@ -20,7 +21,10 @@ interface FundingRound {
   startupCategory: string | null;
 }
 
+const FREE_ROWS_LIMIT = 5;
+
 export default function FundingDashboard({ data: rawData }: { data: FundingRound[] }) {
+  const { user, signIn } = useUser();
   const data = useMemo(() => {
     return rawData.map(d => ({
       ...d,
@@ -662,7 +666,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
           </div>
         </div>
         
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto relative">
           <table className="w-full text-left font-jakarta">
             <thead className="bg-gray-50 dark:bg-gray-800/50 text-xs uppercase text-gray-500 font-semibold border-b border-gray-100 dark:border-gray-800">
               <tr>
@@ -677,7 +681,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {filteredData.map((row) => {
+              {(user ? filteredData : filteredData.slice(0, FREE_ROWS_LIMIT)).map((row) => {
                 const sector = row.startupCategory || 'Other';
                 const trend = getTrendSignal(row);
                 
@@ -748,9 +752,40 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
               })}
             </tbody>
           </table>
+
+          {/* Gradient fade on last visible rows for non-authenticated users */}
+          {!user && filteredData.length > FREE_ROWS_LIMIT && (
+            <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white via-white/80 to-transparent dark:from-gray-900 dark:via-gray-900/80 dark:to-transparent" />
+          )}
         </div>
         {filteredData.length === 0 && (
           <div className="p-8 text-center text-gray-500 text-sm">No funding rounds matched your filters.</div>
+        )}
+
+        {/* Sign-in CTA for non-authenticated users */}
+        {!user && filteredData.length > FREE_ROWS_LIMIT && (
+          <div className="border-t border-gray-100 dark:border-gray-800 bg-gradient-to-b from-gray-50/80 to-white dark:from-gray-800/40 dark:to-gray-900 px-6 py-10 text-center">
+            <div className="max-w-md mx-auto">
+              <div className="w-14 h-14 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Lock className="w-6 h-6 text-brand" />
+              </div>
+              <h3 className="font-sora font-bold text-xl text-navy dark:text-white mb-2">
+                Sign in to see all {filteredData.length} rounds
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 font-jakarta">
+                Create a free account to unlock the full funding table with filters, investor details, and trend signals.
+              </p>
+              <button
+                onClick={() => signIn('/funding')}
+                className="btn-brand px-10 py-3.5 text-sm mb-4"
+              >
+                Sign In — It&apos;s Free
+              </button>
+              <p className="text-xs text-gray-400 dark:text-gray-500 font-jakarta">
+                No credit card required · Google sign-in · Takes 5 seconds
+              </p>
+            </div>
+          </div>
         )}
       </div>
 

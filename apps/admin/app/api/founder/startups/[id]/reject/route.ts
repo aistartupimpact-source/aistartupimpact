@@ -4,6 +4,7 @@ import { neon } from '@neondatabase/serverless';
 import { startupRejectionHtml } from '@aistartupimpact/utils';
 import { sendEmailFireAndForget } from '@/lib/email-send';
 import { requireApiAuth } from '@/lib/api-auth';
+import { logAuditEvent } from '@/lib/audit-log';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -55,6 +56,8 @@ export async function POST(
         type: 'rejection',
       });
     }
+
+    logAuditEvent({ action: 'REJECT', resourceType: 'STARTUP', resourceId: params.id, resourceName: startup.name, after: { reason } });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

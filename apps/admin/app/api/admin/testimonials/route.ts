@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 import { requireApiAuth } from '@/lib/api-auth';
+import { logAuditEvent } from '@/lib/audit-log';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -45,6 +46,8 @@ export async function POST(request: NextRequest) {
       VALUES (${name}, ${role}, ${company || null}, ${avatar}, ${quote}, ${subscribed_duration || null}, ${is_active !== false}, ${display_order || 0})
       RETURNING *
     `;
+
+    logAuditEvent({ action: 'CREATE', resourceType: 'TESTIMONIAL', resourceId: result[0]?.id, resourceName: name });
 
     return NextResponse.json({ success: true, testimonial: result[0] });
   } catch (error) {
@@ -94,6 +97,8 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    logAuditEvent({ action: 'UPDATE', resourceType: 'TESTIMONIAL', resourceId: id, resourceName: name });
+
     return NextResponse.json({ success: true, testimonial: result[0] });
   } catch (error) {
     console.error('Error updating testimonial:', error);
@@ -123,6 +128,8 @@ export async function DELETE(request: NextRequest) {
       DELETE FROM newsletter_testimonials
       WHERE id = ${id}
     `;
+
+    logAuditEvent({ action: 'DELETE', resourceType: 'TESTIMONIAL', resourceId: id });
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -4,8 +4,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Loader2, Camera, Check, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Camera, Check, Eye, EyeOff, Shield, Monitor, Smartphone, Globe, X } from 'lucide-react';
+import { maskEmail } from '@/lib/mask';
 import SavedItems from '@/components/profile/SavedItems';
+import TwoFactorSetup from '@/components/TwoFactorSetup';
+import EmailChangeModal from '@/components/EmailChangeModal';
 
 interface UserProfile {
   id: string;
@@ -145,7 +148,7 @@ function OverviewTab({ profile, setProfile }: { profile: UserProfile; setProfile
           </button>
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
         </div>
-        <div><p className="text-sm font-medium text-gray-900 dark:text-white">{profile.name}</p><p className="text-xs text-gray-500">{profile.email}</p></div>
+        <div><p className="text-sm font-medium text-gray-900 dark:text-white">{profile.name}</p><p className="text-xs text-gray-500">{maskEmail(profile.email)}</p></div>
       </div>
       <Section title="Personal">
         <Field label="Name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
@@ -176,6 +179,27 @@ function SecurityTab() {
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [twoFAEnabled, setTwoFAEnabled] = useState(false);
+  const [show2FA, setShow2FA] = useState(false);
+  const [showEmailChange, setShowEmailChange] = useState(false);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [revokingId, setRevokingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/user/2fa-status').then(r => r.json()).then(d => { if (d.success) setTwoFAEnabled(d.enabled); }).catch(() => {});
+    fetch('/api/user/sessions').then(r => r.json()).then(d => { if (d.sessions) setSessions(d.sessions); }).catch(() => {}).finally(() => setSessionsLoading(false));
+  }, []);
+
+  const revokeSession = async (sessionId: string) => {
+    setRevokingId(sessionId);
+    try {
+      const res = await fetch('/api/user/sessions', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId }) });
+      if (res.ok) setSessions(s => s.filter(x => x.id !== sessionId));
+      else { const d = await res.json(); setError(d.error || 'Failed to revoke session'); }
+    } catch { setError('Failed to revoke session'); }
+    finally { setRevokingId(null); }
+  };
 
   const handleChangePassword = async () => {
     setError(''); setSuccess('');
@@ -202,9 +226,9 @@ function SecurityTab() {
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="relative"><input type={showCurrent ? 'text' : 'password'} value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} placeholder="Current password" className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" /><button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">{showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button></div>
-            <div className="relative"><input type={showNew ? 'text' : 'password'} value={passwords.newPass} onChange={(e) => setPasswords({ ...passwords, newPass: e.target.value })} placeholder="New password (min 8)" className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" /><button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">{showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button></div>
-            <input type="password" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} placeholder="Confirm new password" className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" />
+            <div className="relative"><input type={showCurrent ? 'text' : 'password'} autoComplete="current-password" value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} placeholder="Current password" className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" /><button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">{showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button></div>
+            <div className="relative"><input type={showNew ? 'text' : 'password'} autoComplete="new-password" value={passwords.newPass} onChange={(e) => setPasswords({ ...passwords, newPass: e.target.value })} placeholder="New password (min 8)" className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" /><button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">{showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button></div>
+            <input type="password" autoComplete="new-password" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} placeholder="Confirm new password" className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white" />
             <div className="flex gap-2">
               <button onClick={handleChangePassword} disabled={saving} className="px-4 py-2 text-xs font-semibold bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg disabled:opacity-50">{saving ? 'Updating...' : 'Update'}</button>
               <button onClick={() => { setChangingPassword(false); setPasswords({ current: '', newPass: '', confirm: '' }); setError(''); }} className="px-4 py-2 text-xs font-medium text-gray-500 hover:text-gray-700">Cancel</button>
@@ -212,8 +236,65 @@ function SecurityTab() {
           </div>
         )}
       </Section>
-      <Section title="Two-factor authentication"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-700 dark:text-gray-300">Authenticator app</p><p className="text-xs text-gray-500">Extra security layer</p></div><span className="px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-100 dark:bg-gray-800 rounded-lg">Coming soon</span></div></Section>
-      <Section title="Sessions"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-700 dark:text-gray-300">Active sessions</p><p className="text-xs text-gray-500">Manage devices</p></div><span className="px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-100 dark:bg-gray-800 rounded-lg">Coming soon</span></div></Section>
+      <Section title="Email">
+        <div className="flex items-center justify-between">
+          <div><p className="text-sm text-gray-700 dark:text-gray-300">Change email</p><p className="text-xs text-gray-500">Update your account email address</p></div>
+          <button onClick={() => setShowEmailChange(true)} className="px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">Change</button>
+        </div>
+      </Section>
+      <Section title="Two-factor authentication">
+        <div className="flex items-center justify-between">
+          <div><p className="text-sm text-gray-700 dark:text-gray-300">Authenticator app</p><p className="text-xs text-gray-500">Extra security layer</p></div>
+          <button onClick={() => setShow2FA(true)} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${twoFAEnabled ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>
+            {twoFAEnabled ? 'Enabled' : 'Set up'}
+          </button>
+        </div>
+      </Section>
+      <Section title="Sessions">
+        {sessionsLoading ? (
+          <div className="flex items-center justify-center py-4"><Loader2 className="w-4 h-4 animate-spin text-gray-400" /></div>
+        ) : sessions.length === 0 ? (
+          <p className="text-sm text-gray-500">No active sessions found</p>
+        ) : (
+          <div className="space-y-3">
+            {sessions.map((s) => {
+              const ua = s.userAgent || '';
+              const isMobile = /mobile|android|iphone|ipad/i.test(ua);
+              const browser = ua.match(/(Chrome|Firefox|Safari|Edge|Opera|Brave)[\/\s]([\d.]+)/)?.[1] || 'Browser';
+              const os = ua.match(/(Windows|Mac OS X|Linux|Android|iOS|iPhone OS)[\/\s]?([\d._]*)/)?.[1]?.replace('_', '.') || '';
+              return (
+                <div key={s.id} className={`flex items-center justify-between p-3 rounded-lg border ${s.isCurrent ? 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10' : 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900'}`}>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${s.isCurrent ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>
+                      {isMobile ? <Smartphone className="w-4 h-4" /> : <Monitor className="w-4 h-4" />}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        {browser}{os ? ` on ${os}` : ''}{s.isCurrent ? ' (this device)' : ''}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <span className="flex items-center gap-1"><Globe className="w-3 h-3" />{s.ipAddress || 'Unknown'}</span>
+                        <span>·</span>
+                        <span>{new Date(s.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                  {!s.isCurrent && (
+                    <button
+                      onClick={() => revokeSession(s.id)}
+                      disabled={revokingId === s.id}
+                      className="ml-2 p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50 shrink-0"
+                      title="Revoke session"
+                    >
+                      {revokingId === s.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Section>
 
       <Section title="Data & Privacy">
         <div className="space-y-4">
@@ -295,7 +376,7 @@ function SecurityTab() {
             }} className="space-y-3">
               <div>
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Enter your password</label>
-                <input type="password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} required placeholder="Your account password" className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500" />
+                <input type="password" autoComplete="current-password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} required placeholder="Your account password" className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Type <span className="font-bold text-red-600">DELETE</span> to confirm</label>
@@ -307,6 +388,25 @@ function SecurityTab() {
             </form>
           </div>
         </div>
+      )}
+
+      {show2FA && (
+        <TwoFactorSetup
+          isEnabled={twoFAEnabled}
+          apiBasePath="/api/user"
+          onClose={() => setShow2FA(false)}
+          onSuccess={() => { setTwoFAEnabled(!twoFAEnabled); setSuccess(twoFAEnabled ? '2FA disabled' : '2FA enabled successfully'); setTimeout(() => setSuccess(''), 3000); }}
+          onError={(msg) => { setError(msg); setTimeout(() => setError(''), 5000); }}
+        />
+      )}
+
+      {showEmailChange && (
+        <EmailChangeModal
+          apiPath="/api/user/change-email"
+          onClose={() => setShowEmailChange(false)}
+          onSuccess={(msg) => { setSuccess(msg); setTimeout(() => setSuccess(''), 5000); }}
+          onError={(msg) => { setError(msg); setTimeout(() => setError(''), 5000); }}
+        />
       )}
     </div>
   );

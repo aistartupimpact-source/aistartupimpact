@@ -40,6 +40,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
   const [challengeToken, setChallengeToken] = useState('');
   const [twoFACode, setTwoFACode] = useState('');
   const [useBackupCode, setUseBackupCode] = useState(false);
+  const [twoFAUserType, setTwoFAUserType] = useState<string>('founder');
 
   // OTP verification state (for signup)
   const [otpStep, setOtpStep] = useState(false);
@@ -67,6 +68,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
     setRequires2FA(false);
     setTwoFACode('');
     setChallengeToken('');
+    setTwoFAUserType('founder');
     setOtpStep(false);
     setOtpCode('');
   };
@@ -191,10 +193,11 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
         throw new Error(data.error || 'Login failed');
       }
 
-      // Check if 2FA is required (founder accounts)
+      // Check if 2FA is required
       if (data.requires2FA) {
         setRequires2FA(true);
         setChallengeToken(data.challengeToken);
+        setTwoFAUserType(data.userType || 'founder');
         setLoading(false);
         return;
       }
@@ -237,8 +240,11 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
     setLoading(true);
 
     try {
-      // Verify 2FA through founder endpoint
-      const res = await fetch('/api/founder/auth/verify-2fa', {
+      const verifyEndpoint = twoFAUserType === 'webuser' || twoFAUserType === 'organizer'
+        ? '/api/user/auth/verify-2fa'
+        : '/api/founder/auth/verify-2fa';
+
+      const res = await fetch(verifyEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ challengeToken, token: twoFACode, isBackupCode: useBackupCode }),
@@ -247,16 +253,16 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || '2FA verification failed');
 
-      // Also create a web user session so navbar works (bridge login)
-      // The founder is now authenticated — create/find their WebUser and set user-token
-      try {
-        await fetch('/api/user/auth/bridge-session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({}),
-        });
-      } catch {
-        // Non-critical — founder session still works
+      if (twoFAUserType === 'founder') {
+        try {
+          await fetch('/api/user/auth/bridge-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}),
+          });
+        } catch {
+          // Non-critical — founder session still works
+        }
       }
 
       onClose();
@@ -379,7 +385,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
 
             <button
               type="button"
-              onClick={() => { setRequires2FA(false); setTwoFACode(''); setChallengeToken(''); setError(''); }}
+              onClick={() => { setRequires2FA(false); setTwoFACode(''); setChallengeToken(''); setTwoFAUserType('founder'); setError(''); }}
               className="w-full text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
             >
               Back to login
@@ -487,6 +493,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
+                      autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white pr-11 text-sm"
@@ -518,6 +525,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
                       <input
                         type={showConfirmPassword ? 'text' : 'password'}
                         required
+                        autoComplete="new-password"
                         value={formData.confirmPassword}
                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                         className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white pr-11 text-sm ${

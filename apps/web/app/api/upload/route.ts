@@ -35,15 +35,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
+    const ALLOWED_MIME: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/gif': 'gif',
+    };
+
+    if (!ALLOWED_MIME[file.type]) {
       return NextResponse.json(
-        { error: 'Only image files are allowed' },
+        { error: 'Only JPEG, PNG, WebP, and GIF images are allowed' },
         { status: 400 }
       );
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       return NextResponse.json(
         { error: 'File size must be less than 5MB' },
@@ -51,10 +56,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate unique filename
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 15);
-    const extension = file.name.split('.').pop();
+    const extension = ALLOWED_MIME[file.type];
     const filename = `${type || 'upload'}/${session.userId}/${timestamp}-${randomString}.${extension}`;
 
     // Convert file to buffer

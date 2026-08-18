@@ -62,8 +62,6 @@ export async function POST(req: NextRequest) {
           gen_random_uuid(), ${role}, ${fullName}, ${email}, NULL, ${resumeLink}, 'NEW', NOW()
         )
       `;
-      console.log('Job application saved successfully');
-
       sendEmailFireAndForget({
         to: email,
         subject: `Application received — ${role} at AI Startup Impact`,

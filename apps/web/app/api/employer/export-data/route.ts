@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@aistartupimpact/database';
 import { requireEmployerAuth } from '@/lib/employer-auth';
+import { checkRateLimit, getClientIdentifier, strictRateLimit } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    const identifier = getClientIdentifier(request);
+    const { success } = await checkRateLimit(strictRateLimit, identifier);
+    if (!success) return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
+
     const session = await requireEmployerAuth();
 
     const employer = await prisma.jobBoardEmployer.findUnique({

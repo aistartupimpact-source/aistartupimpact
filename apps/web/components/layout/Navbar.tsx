@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Search, X, Menu, Moon, Sun,
+  Search, X, Menu, Moon, Sun, Monitor,
   Home, Newspaper, BookOpen, Wrench, Flag, Building2, TrendingUp, Users, Star,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
@@ -52,7 +52,8 @@ export default function Navbar() {
 
   const pathname = usePathname();
   const router = useRouter();
-  const { theme, toggle } = useTheme();
+  const { theme, mode, setMode } = useTheme();
+  const [themeMenuOpen, setThemeMenuOpen] = useState(false);
 
   // Fetch user session — try legacy first (where existing users are), then unified
   useEffect(() => {
@@ -176,17 +177,42 @@ export default function Navbar() {
               </button>
 
               {/* Theme Toggle */}
-              <button
-                onClick={toggle}
-                className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                aria-label="Toggle theme"
-              >
-                {theme === 'dark' ? (
-                  <Sun className="w-5 h-5 text-yellow-500" />
-                ) : (
-                  <Moon className="w-5 h-5 text-gray-500" />
+              <div className="relative">
+                <button
+                  onClick={() => setThemeMenuOpen((v) => !v)}
+                  className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  aria-label="Toggle theme"
+                >
+                  {mode === 'dark' ? (
+                    <Moon className="w-5 h-5 text-indigo-400" />
+                  ) : mode === 'light' ? (
+                    <Sun className="w-5 h-5 text-yellow-500" />
+                  ) : (
+                    <Monitor className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                  )}
+                </button>
+                {themeMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setThemeMenuOpen(false)} />
+                    <div className="absolute right-0 top-full mt-2 z-50 w-36 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg py-1 font-jakarta text-sm">
+                      {([
+                        { value: 'light' as const, label: 'Light', icon: Sun, iconClass: 'text-yellow-500' },
+                        { value: 'dark' as const, label: 'Dark', icon: Moon, iconClass: 'text-indigo-400' },
+                        { value: 'system' as const, label: 'System', icon: Monitor, iconClass: 'text-gray-500 dark:text-gray-400' },
+                      ]).map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() => { setMode(opt.value); setThemeMenuOpen(false); }}
+                          className={`w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${mode === opt.value ? 'text-brand font-semibold' : 'text-gray-700 dark:text-gray-300'}`}
+                        >
+                          <opt.icon className={`w-4 h-4 ${mode === opt.value ? 'text-brand' : opt.iconClass}`} />
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
                 )}
-              </button>
+              </div>
 
               {/* User Profile or Sign In */}
               {!loading && (

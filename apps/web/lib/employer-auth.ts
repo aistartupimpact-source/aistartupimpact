@@ -1,12 +1,13 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
+import { prisma } from '@aistartupimpact/database';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.EMPLOYER_JWT_SECRET!
 );
 
 const COOKIE_NAME = 'employer_session';
-const SESSION_EXPIRY_DAYS = 30;
+const SESSION_EXPIRY_DAYS = 7;
 
 export interface EmployerSession {
   id: string;
@@ -58,6 +59,12 @@ export async function getEmployerSession(): Promise<EmployerSession | null> {
     if (!cookie?.value) return null;
 
     const { payload } = await jwtVerify(cookie.value, JWT_SECRET);
+
+    const employer = await prisma.jobBoardEmployer.findUnique({
+      where: { id: payload.employerId as string },
+      select: { isActive: true },
+    });
+    if (!employer || !employer.isActive) return null;
 
     return {
       id: payload.employerId as string,

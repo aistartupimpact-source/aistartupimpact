@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@aistartupimpact/database';
 import { getUserSession } from '@/lib/user-session';
+import { checkRateLimit, getClientIdentifier, strictRateLimit } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    const identifier = getClientIdentifier(request);
+    const { success } = await checkRateLimit(strictRateLimit, identifier);
+    if (!success) return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
+
     const session = await getUserSession();
     if (!session) {
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
