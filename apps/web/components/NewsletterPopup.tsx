@@ -136,11 +136,11 @@ export default function NewsletterPopup() {
     <>
       {/* Overlay - Lighter with better blur */}
       <div 
-        className="fixed inset-0 bg-black/30 backdrop-blur-md z-[9999] animate-in fade-in duration-300"
+        className="fixed inset-0 bg-black/30 backdrop-blur-md z-toast animate-in fade-in duration-300"
         onClick={handleClose}
       />
       {/* Popup Card */}
-      <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 pointer-events-none">
+      <div className="fixed inset-0 z-critical flex items-center justify-center p-4 pointer-events-none">
         <div 
           className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full pointer-events-auto animate-in zoom-in-95 slide-in-from-bottom-8 fade-in duration-500 ease-out relative overflow-hidden sm:overflow-visible"
           onClick={(e) => e.stopPropagation()}

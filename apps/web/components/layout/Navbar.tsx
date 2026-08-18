@@ -131,7 +131,7 @@ export default function Navbar() {
 
       {/* ─── Fixed Header ──────────────────────────── */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
+        className={`fixed top-0 left-0 right-0 z-sticky transition-all duration-300 ${scrolled
           ? 'bg-white/95 dark:bg-gray-950/95 backdrop-blur-md shadow-sm border-b border-gray-100 dark:border-gray-800'
           : 'bg-white dark:bg-gray-950 border-b border-transparent'
           }`}
@@ -170,7 +170,7 @@ export default function Navbar() {
               {/* Search */}
               <button
                 onClick={() => setSearchOpen(true)}
-                className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="p-2.5 min-w-[44px] min-h-[44px] rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 aria-label="Search"
               >
                 <Search className="w-5 h-5 text-gray-500 dark:text-gray-400" />
@@ -180,7 +180,7 @@ export default function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setThemeMenuOpen((v) => !v)}
-                  className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  className="p-2.5 min-w-[44px] min-h-[44px] rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                   aria-label="Toggle theme"
                 >
                   {mode === 'dark' ? (
@@ -193,8 +193,8 @@ export default function Navbar() {
                 </button>
                 {themeMenuOpen && (
                   <>
-                    <div className="fixed inset-0 z-40" onClick={() => setThemeMenuOpen(false)} />
-                    <div className="absolute right-0 top-full mt-2 z-50 w-36 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg py-1 font-jakarta text-sm">
+                    <div className="fixed inset-0 z-overlay" onClick={() => setThemeMenuOpen(false)} />
+                    <div className="absolute right-0 top-full mt-2 z-dropdown w-36 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg py-1 font-jakarta text-sm">
                       {([
                         { value: 'light' as const, label: 'Light', icon: Sun, iconClass: 'text-yellow-500' },
                         { value: 'dark' as const, label: 'Dark', icon: Moon, iconClass: 'text-indigo-400' },
@@ -243,7 +243,7 @@ export default function Navbar() {
               {/* Mobile hamburger — visible below lg */}
               <button
                 onClick={() => setMobileOpen(true)}
-                className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors lg:hidden"
+                className="p-2.5 min-w-[44px] min-h-[44px] rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors lg:hidden"
                 aria-label="Menu"
               >
                 <Menu className="w-5 h-5 text-gray-600 dark:text-gray-400" />
@@ -255,7 +255,7 @@ export default function Navbar() {
 
       {/* ─── Mobile Full-Screen Nav ─────────────────── */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-[60] bg-white dark:bg-gray-950 lg:hidden">
+        <div className="fixed inset-0 z-overlay bg-white dark:bg-gray-950 lg:hidden">
           {/* Status Bar Accent */}
           <div className="h-[3px] bg-brand w-full" />
 
@@ -264,7 +264,8 @@ export default function Navbar() {
             <Logo height={28} />
             <button
               onClick={() => setMobileOpen(false)}
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 active:scale-90 transition-transform"
+              aria-label="Close menu"
+              className="w-11 h-11 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 active:scale-90 transition-transform"
             >
               <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </button>
@@ -374,7 +375,7 @@ export default function Navbar() {
       )}
 
       {/* ─── Mobile Bottom Tab Bar ──────────────────── */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-950/95 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 lg:hidden pb-[env(safe-area-inset-bottom)]">
+      <nav className="fixed bottom-0 left-0 right-0 z-sticky bg-white/95 dark:bg-gray-950/95 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 lg:hidden pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-stretch justify-around h-16">
           {mobileNav.map((item) => {
             const isActive = item.href === '/' ? pathname === '/' : pathname?.startsWith(item.href);
@@ -382,7 +383,7 @@ export default function Navbar() {
               <Link
                 key={item.label}
                 href={item.href}
-                className={`relative flex flex-col items-center justify-center gap-1 px-4 min-w-[60px] active:scale-90 transition-transform ${isActive
+                className={`relative flex flex-col items-center justify-center gap-1 px-4 min-w-[60px] min-h-[44px] active:scale-90 transition-transform ${isActive
                   ? 'text-brand'
                   : 'text-gray-400 dark:text-gray-500'
                 }`}

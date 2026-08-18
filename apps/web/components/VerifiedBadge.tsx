@@ -45,7 +45,7 @@ export function VerifiedBadge({
   const s = sizes[size];
 
   const tooltip = (
-    <div className={`absolute z-50 bottom-full left-0 mb-2 w-64 bg-gray-900 dark:bg-gray-800 rounded-lg rounded-bl-none shadow-xl px-3.5 py-2.5 pointer-events-none transition-all duration-150 ${showTooltip ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1 invisible'}`}>
+    <div className={`absolute z-dropdown bottom-full left-0 mb-2 w-64 bg-gray-900 dark:bg-gray-800 rounded-lg rounded-bl-none shadow-xl px-3.5 py-2.5 pointer-events-none transition-all duration-150 ${showTooltip ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1 invisible'}`}>
       <div className="flex items-center gap-1.5 mb-1">
         <BadgeCheck className="w-3.5 h-3.5 text-green-400" />
         <span className="text-[11px] font-bold text-white font-jakarta">Verified</span>

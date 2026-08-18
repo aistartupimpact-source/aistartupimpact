@@ -146,7 +146,7 @@ export default function ToolTagSelector({
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-[280px] overflow-y-auto">
+        <div className="0 top-full left-0 right-0 mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-[280px] overflow-y-auto">
           {filteredGroups.length === 0 ? (
             <div className="px-4 py-6 text-center text-sm text-gray-400">
               {query ? 'No tags match your search' : 'All tags selected'}

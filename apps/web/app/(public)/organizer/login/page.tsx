@@ -216,7 +216,7 @@ function OrganizerAuthContent() {
               <div className="w-full border-t border-gray-200 dark:border-gray-700" />
             </div>
             <div className="relative flex justify-center">
-              <span className="bg-[#F9FAFB] dark:bg-gray-950 px-3 text-xs text-gray-400 font-jakarta">or continue with email</span>
+              <span className="bg-page dark:bg-page-dark px-3 text-xs text-gray-400 font-jakarta">or continue with email</span>
             </div>
           </div>
         </>

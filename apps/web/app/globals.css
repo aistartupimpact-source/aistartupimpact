@@ -6,7 +6,7 @@
   .animate-fade-in {
     animation: fadeIn 0.2s ease-in-out;
   }
-  
+
   .animate-scale-in {
     animation: scaleIn 0.3s ease-out;
   }
@@ -63,9 +63,13 @@
     @apply text-lg sm:text-xl font-sora font-bold;
   }
 
-  /* Selection color */
+  /* Selection color — themed */
   ::selection {
-    @apply bg-brand-100 text-brand-900 dark:text-brand-100;
+    @apply bg-brand-100 text-brand-900;
+  }
+
+  .dark ::selection {
+    @apply bg-brand-900 text-brand-100;
   }
 
   /* Scrollbar — slim & themed */
@@ -112,7 +116,33 @@
     max-width: 100vw;
     overflow-x: hidden;
   }
+
+  /* ─── Focus management ─────────────────────── */
+
+  /* Visible focus ring only for keyboard navigation */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand;
+  }
+
+  /* Remove default outline — focus-visible handles it */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* ─── Reduced motion ───────────────────────── */
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
+
 /* ═══════════════════════════════════════════════════
    COMPONENT CLASSES — Dark mode + mobile-first
    ═══════════════════════════════════════════════════ */
@@ -128,6 +158,12 @@
 
   .btn-outline {
     @apply inline-flex items-center justify-center border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-700 font-medium font-jakarta px-5 py-3 sm:px-5 sm:py-2.5 text-sm rounded-xl transition-all duration-200 active:scale-[0.97] min-h-[44px] sm:min-h-0;
+  }
+
+  /* ─── Touch target — minimum 44px for mobile ── */
+
+  .touch-target {
+    @apply min-w-[44px] min-h-[44px] flex items-center justify-center;
   }
 
   /* ─── Cards ────────────────────────────────── */

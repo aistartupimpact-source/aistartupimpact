@@ -245,7 +245,7 @@ export default function NewsletterPage() {
 
   return (
     <div className="bg-white dark:bg-gray-950">
-      <div className="md:hidden fixed top-14 bottom-0 left-0 right-0 z-[20] flex flex-col justify-between p-3.5 bg-gradient-to-br from-[#0a1628] via-[#0f1f3a] to-[#1a2942] text-white overflow-hidden pb-4 sm:pb-5">
+      <div className="md:hidden fixed top-14 bottom-0 left-0 right-0 z-10 flex flex-col justify-between p-3.5 bg-gradient-to-br from-navy-900 via-navy-800 to-navy-700 text-white overflow-hidden pb-4 sm:pb-5">
         {/* Glowing background orbs */}
         <div className="absolute -top-12 -right-12 w-64 h-64 bg-brand/15 rounded-full blur-[80px] animate-pulse" />
         <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-blue-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1.5s' }} />
@@ -392,7 +392,7 @@ export default function NewsletterPage() {
       {/* Desktop view: original scrollable content */}
       <div className="hidden md:block">
         {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-[#0a1628] via-[#0f1f3a] to-[#1a2942] border-b border-white/10">
+        <section className="relative overflow-hidden bg-gradient-to-br from-navy-900 via-navy-800 to-navy-700 border-b border-white/10">
         {/* Animated gradient orbs */}
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand/10 rounded-full blur-[150px] animate-pulse" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
@@ -675,7 +675,7 @@ export default function NewsletterPage() {
 
       {/* Newsletter Signup Modal for Highlights */}
       {showHighlightModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md w-full shadow-2xl border border-gray-200 dark:border-gray-800 animate-in zoom-in-95 duration-200">
             <button
               onClick={() => setShowHighlightModal(false)}
@@ -843,7 +843,7 @@ export default function NewsletterPage() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#0a1628] via-[#0f1f3a] to-[#1a2942] py-16 sm:py-20">
+      <section className="relative overflow-hidden bg-gradient-to-br from-navy-900 via-navy-800 to-navy-700 py-16 sm:py-20">
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-brand/10 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
         

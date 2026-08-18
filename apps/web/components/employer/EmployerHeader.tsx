@@ -108,7 +108,7 @@ export default function EmployerHeader({ employer }: Props) {
           </button>
 
           {dropdownOpen && (
-            <div className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg z-50 py-2">
+            <div className="0 py-2">
               {/* Company info */}
               <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-800">
                 <p className="text-xs font-semibold text-navy dark:text-white font-jakarta truncate">{employer.companyName}</p>

@@ -2,15 +2,15 @@ export default function HomeLoading() {
   return (
     <div className="animate-pulse">
       {/* Tagline bar */}
-      <div className="bg-[#08111B] text-center py-1 px-4">
+      <div className="bg-navy-900 text-center py-1 px-4">
         <div className="h-3 w-80 bg-gray-700 rounded mx-auto" />
       </div>
 
       {/* Hero carousel placeholder */}
-      <div className="h-[340px] sm:h-[420px] bg-[#0a1628]" />
+      <div className="h-[340px] sm:h-[420px] bg-navy-900" />
 
       {/* Trending ticker */}
-      <div className="bg-[#08111B] border-y border-white/5">
+      <div className="bg-navy-900 border-y border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-11 flex items-center gap-4">
           <div className="h-2 w-2 bg-gray-600 rounded-full shrink-0" />
           <div className="h-3 w-8 bg-gray-700 rounded shrink-0" />

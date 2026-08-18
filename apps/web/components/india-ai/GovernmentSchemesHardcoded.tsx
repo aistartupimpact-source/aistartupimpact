@@ -274,7 +274,7 @@ export default function GovernmentSchemesHardcoded() {
 
             {/* Email Capture Modal */}
             {showEmailCapture === scheme.id && (
-              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-modal p-4">
                 <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 sm:p-6 max-w-md w-full">
                   <div className="flex items-center justify-between mb-3 sm:mb-4">
                     <h4 className="font-sora font-bold text-base sm:text-lg text-navy dark:text-white">

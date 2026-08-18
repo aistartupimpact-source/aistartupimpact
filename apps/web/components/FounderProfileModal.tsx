@@ -51,12 +51,12 @@ export default function FounderProfileModal({ founder, isOpen, onClose, startupN
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] transition-opacity duration-300"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-toast transition-opacity duration-300"
         onClick={onClose}
       />
       
       {/* Modal Container */}
-      <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-critical flex items-center justify-center p-4">
         <div 
           className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl max-w-xl w-full h-auto max-h-[90vh] sm:max-h-[85vh] overflow-hidden border border-gray-200 dark:border-gray-800 animate-in fade-in zoom-in-95 duration-200 flex flex-col relative"
           onClick={(e) => e.stopPropagation()}

@@ -43,6 +43,20 @@ const config: Config = {
           900: '#08111B',
         },
         charcoal: '#2C2C2C',
+        link: {
+          DEFAULT: '#1B75E6',
+          hover: '#1558B0',
+          dark: '#60A5FA',
+          'dark-hover': '#93C5FD',
+        },
+        page: {
+          DEFAULT: '#F9FAFB',
+          dark: '#030712',
+        },
+        surface: {
+          DEFAULT: '#FFFFFF',
+          dark: '#111827',
+        },
       },
       fontFamily: {
         sora: ['var(--font-sora)', 'sans-serif'],
@@ -55,12 +69,21 @@ const config: Config = {
         md: '8px',
         lg: '12px',
         xl: '16px',
+        '2xl': '20px',
       },
       maxWidth: {
         article: '720px',
       },
       transitionDuration: {
         DEFAULT: '200ms',
+      },
+      zIndex: {
+        dropdown: '100',
+        sticky: '200',
+        overlay: '300',
+        modal: '400',
+        toast: '500',
+        critical: '600',
       },
       animation: {
         'slide-up': 'slideUp 0.3s ease-out',

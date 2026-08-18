@@ -46,7 +46,7 @@ export default function DNSVerificationModal({ unverifiedStartups }: DNSVerifica
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-modal bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-md shadow-2xl border border-yellow-200 dark:border-yellow-900/30 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header */}

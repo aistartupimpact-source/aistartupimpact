@@ -178,7 +178,7 @@ export default function GlobalSearch() {
 
       {/* Search Modal */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] px-4">
+        <div className="fixed inset-0 z-modal flex items-start justify-center pt-[10vh] px-4">
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
 

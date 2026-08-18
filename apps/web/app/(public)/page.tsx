@@ -48,7 +48,7 @@ import {
 const FeaturedPartnerRotator = dynamic(() => import('@/components/FeaturedPartnerRotator'), { ssr: false });
 const HeroCarousel = dynamic(() => import('@/components/HeroCarousel'), {
   ssr: false,
-  loading: () => <div className="bg-[#0D1B2A] min-h-[340px] sm:min-h-[420px] md:min-h-[500px] animate-pulse" />,
+  loading: () => <div className="bg-navy-800 min-h-[340px] sm:min-h-[420px] md:min-h-[500px] animate-pulse" />,
 });
 const SponsorStrip = dynamic(() => import('@/components/SponsorStrip'), { ssr: false });
 
@@ -162,7 +162,7 @@ export default async function HomePage() {
       {/* ╔════════════════════════════════════════════╗
           ║  1. HERO — Scheduled Carousel / Ad / Article║
           ╚════════════════════════════════════════════╝ */}
-      <div className="bg-[#08111B] text-center pt-0 pb-0 border-b border-white/5 px-4">
+      <div className="bg-navy-900 text-center pt-0 pb-0 border-b border-white/5 px-4">
         <h1 className="text-[9px] sm:text-[10px] text-gray-500 font-jakarta font-medium tracking-[0.2em] uppercase truncate max-w-full">
           AI Startup Impact — #1 AI Startup India News, AI Ecosystem, and Tools
         </h1>
@@ -174,7 +174,7 @@ export default async function HomePage() {
       {/* ╔════════════════════════════════════════════╗
           ║  2. TRENDING TICKER — Live Strip            ║
           ╚════════════════════════════════════════════╝ */}
-      <section className="bg-[#08111B] dark:bg-gray-900 border-y border-white/5">
+      <section className="bg-navy-900 dark:bg-gray-900 border-y border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 sm:gap-4 h-10 sm:h-11 overflow-hidden">
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">

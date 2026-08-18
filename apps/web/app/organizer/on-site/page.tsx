@@ -51,7 +51,7 @@ export default function OnSitePage() {
   // Full screen QR
   if (fullScreen && selectedEvent) {
     return (
-      <div className="fixed inset-0 z-50 bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-6" onClick={() => setFullScreen(false)}>
+      <div className="fixed inset-0 z-modal bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-6" onClick={() => setFullScreen(false)}>
         <Image src={qrUrl} alt="QR Code" width={384} height={384} unoptimized className="w-72 h-72 sm:w-96 sm:h-96"/>
         <p className="text-lg font-sora font-bold text-navy dark:text-white mt-6 text-center">{selectedEvent.title}</p>
         <p className="text-sm text-gray-500 font-jakarta mt-2">Scan to register</p>

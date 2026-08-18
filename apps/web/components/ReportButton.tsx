@@ -53,11 +53,11 @@ export default function ReportButton({ entityType, entityId, entityName, entityS
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)}>
           <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
               <h3 className="text-sm font-bold text-gray-800 dark:text-white font-sora">Report an Issue</h3>
-              <button onClick={() => setOpen(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><X className="w-4 h-4 text-gray-400"/></button>
+              <button onClick={() => setOpen(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" aria-label="Close"><X className="w-4 h-4 text-gray-400"/></button>
             </div>
 
             {done ? (

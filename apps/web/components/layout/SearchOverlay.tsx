@@ -102,7 +102,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   const trendingTerms = ['GPT-5', 'AI Regulation India', 'LLM Fine-tuning', 'Cursor AI', 'Krutrim'];
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-overlay bg-black/60 backdrop-blur-sm animate-fade-in">
       <div className="bg-white dark:bg-gray-950 w-full max-w-3xl mx-auto mt-20 sm:mt-32 rounded-2xl shadow-2xl overflow-hidden mx-4 sm:mx-auto">
         {/* Search Input */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 dark:border-gray-800">

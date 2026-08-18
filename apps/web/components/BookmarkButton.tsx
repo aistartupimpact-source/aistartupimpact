@@ -161,7 +161,7 @@ export default function BookmarkButton({
           } ${isAnimating ? 'scale-125 rotate-12' : 'scale-100 rotate-0'}`}
         />
       </button>
-      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:flex flex-col items-center z-50">
+      <div className="0">
         <div className="w-2.5 h-2.5 bg-black dark:bg-gray-800 rotate-45 -mb-1.5" />
         <div className="bg-black dark:bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg font-jakarta">
           {isSaved ? 'Saved' : 'Save'}

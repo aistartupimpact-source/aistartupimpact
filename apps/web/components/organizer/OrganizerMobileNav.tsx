@@ -21,7 +21,7 @@ export default function OrganizerMobileNav() {
   };
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800 safe-area-pb">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-sticky bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800 safe-area-pb">
       <div className="flex items-stretch justify-around h-14">
         {NAV_ITEMS.map((item) => {
           const active = isActive(item.href, item.exact);

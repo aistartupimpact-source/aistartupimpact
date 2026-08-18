@@ -73,7 +73,7 @@ export default function ProfileDropdown({ user: propUser }: ProfileDropdownProps
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-60 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden z-50">
+        <div className="0">
           {/* User info */}
           <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
             <p className="text-[13px] font-semibold text-gray-900 dark:text-white truncate">{user.name}</p>

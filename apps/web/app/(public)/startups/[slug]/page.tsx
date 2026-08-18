@@ -539,7 +539,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                 >
                   <Globe className="w-5 h-5" />
                 </a>
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:flex flex-col items-center z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="0 animate-in fade-in slide-in-from-top-1 duration-150">
                   <div className="w-2.5 h-2.5 bg-black dark:bg-gray-800 rotate-45 -mb-1.5" />
                   <div className="bg-black dark:bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg font-jakarta">
                     {startup.websiteUrl.replace(/^https?:\/\/(www\.)?/, '')}
@@ -556,7 +556,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                     <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                   </svg>
                 </a>
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:flex flex-col items-center z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="0 animate-in fade-in slide-in-from-top-1 duration-150">
                   <div className="w-2.5 h-2.5 bg-black dark:bg-gray-800 rotate-45 -mb-1.5" />
                   <div className="bg-black dark:bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg font-jakarta">
                     LinkedIn
@@ -573,7 +573,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                   </svg>
                 </a>
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:flex flex-col items-center z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="0 animate-in fade-in slide-in-from-top-1 duration-150">
                   <div className="w-2.5 h-2.5 bg-black dark:bg-gray-800 rotate-45 -mb-1.5" />
                   <div className="bg-black dark:bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg font-jakarta">
                     Twitter / X
@@ -673,7 +673,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                   >
                     {icon}
                   </a>
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:flex flex-col items-center z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                  <div className="0 animate-in fade-in slide-in-from-top-1 duration-150">
                     <div className="w-2.5 h-2.5 bg-black dark:bg-gray-800 rotate-45 -mb-1.5" />
                     <div className="bg-black dark:bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg font-jakarta">
                       {label}
@@ -845,7 +845,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                     <div>
                       <Link 
                         href={job.slug ? `/jobs/${job.slug}` : `/jobs/${job.id}`} 
-                        className="text-[15px] font-bold text-[#1B75E6] dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline leading-snug"
+                        className="text-[15px] font-bold text-link dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline leading-snug"
                       >
                         {job.title}
                       </Link>
@@ -901,7 +901,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                     <div>
                       <Link 
                         href={`/events/${event.id}`} 
-                        className="text-[15px] font-bold text-[#1B75E6] dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline leading-snug"
+                        className="text-[15px] font-bold text-link dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline leading-snug"
                       >
                         {event.title}
                       </Link>
@@ -1023,7 +1023,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
               <div className="space-y-3">
                 {startup.founderStories.map((story: any) => (
                   <Link key={story.slug} href={`/stories/${story.slug}`} className="group block">
-                    <h5 className="text-sm font-jakarta text-[#1B75E6] dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300 hover:underline group-hover:underline transition-colors leading-snug line-clamp-2">{story.title}</h5>
+                    <h5 className="text-sm font-jakarta text-link dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300 hover:underline group-hover:underline transition-colors leading-snug line-clamp-2">{story.title}</h5>
                     <span className="text-xs text-gray-400 font-jakarta">
                       {new Date(story.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </span>
@@ -1040,7 +1040,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
               <div className="space-y-3">
                 {startup.relatedNews.map((n: any) => (
                   <Link key={n.slug} href={`/news/${n.slug}`} className="group block">
-                    <h5 className="text-sm font-jakarta text-[#1B75E6] dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300 hover:underline group-hover:underline transition-colors leading-snug line-clamp-2">{n.title}</h5>
+                    <h5 className="text-sm font-jakarta text-link dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300 hover:underline group-hover:underline transition-colors leading-snug line-clamp-2">{n.title}</h5>
                     <span className="text-xs text-gray-400 font-jakarta">
                       {new Date(n.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </span>

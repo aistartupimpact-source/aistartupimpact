@@ -263,7 +263,7 @@ export default function SearchPage() {
         {showSuggestions && suggestions.length > 0 && (
           <div
             ref={suggestionsRef}
-            className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 shadow-xl overflow-hidden"
+            className="0 w-full mt-2 bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 shadow-xl overflow-hidden"
           >
             <div className="p-2">
               {!hasQuery && (

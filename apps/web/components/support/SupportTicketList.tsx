@@ -115,7 +115,7 @@ export default function SupportTicketList({ apiBasePath, portalPath }: SupportTi
       {error && (
         <div className="p-3 text-sm bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-lg flex items-center justify-between">
           {error}
-          <button onClick={() => setError('')} className="text-red-400 hover:text-red-600"><X className="w-4 h-4" /></button>
+          <button onClick={() => setError('')} className="text-red-400 hover:text-red-600" aria-label="Dismiss error"><X className="w-4 h-4" /></button>
         </div>
       )}
 
@@ -175,9 +175,9 @@ export default function SupportTicketList({ apiBasePath, portalPath }: SupportTi
       )}
 
       {showNew && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-lg w-full shadow-2xl border border-gray-200 dark:border-gray-800">
-            <button onClick={() => setShowNew(false)} className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+            <button onClick={() => setShowNew(false)} className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="Close">
               <X className="w-5 h-5" />
             </button>
             <div className="mb-5">

@@ -59,7 +59,7 @@ export default function ShareButton({ title, text, url, iconOnly = false, size =
       <button onClick={handleShare} className={`${sizeClasses[size]} border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-center shadow-sm text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:border-indigo-500 dark:hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/20 transition-all ${className}`}>
         {copied ? <Check className={`${iconSizes[size]} text-green-500`} /> : <Share2 className={iconSizes[size]} />}
       </button>
-      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:flex flex-col items-center z-50">
+      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:flex flex-col items-center z-dropdown">
         <div className="w-2.5 h-2.5 bg-black dark:bg-gray-800 rotate-45 -mb-1.5" />
         <div className="bg-black dark:bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg font-jakarta">{copied ? 'Copied!' : 'Share'}</div>
       </div>
@@ -76,7 +76,7 @@ export default function ShareButton({ title, text, url, iconOnly = false, size =
 
       {/* Share Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowModal(false)}>
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowModal(false)}>
           <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">

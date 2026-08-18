@@ -25,7 +25,7 @@ export default function SignupSuccessPopup() {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-toast flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
       <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 text-center relative animate-scale-in">
         {/* Close button */}
         <button

@@ -130,7 +130,7 @@ export default function SubmitContentPage() {
 
       {/* Create/Edit Modal */}
       {modalOpen && editing && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-modal bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-2xl shadow-2xl border border-gray-200 dark:border-gray-800">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
               <h2 className="font-sora font-bold text-lg text-navy dark:text-white">{submissions.find(s => s.id === editing.id) ? 'Edit Submission' : 'New Content Submission'}</h2>
@@ -177,7 +177,7 @@ export default function SubmitContentPage() {
       )}
 
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-modal bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl border border-gray-200 dark:border-gray-800 p-6 text-center">
             <Trash2 className="w-10 h-10 text-red-500 mx-auto mb-3" />
             <h3 className="font-sora font-bold text-lg text-navy dark:text-white">Delete Submission?</h3>

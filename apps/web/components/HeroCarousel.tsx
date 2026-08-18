@@ -170,7 +170,7 @@ function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   return (
     <div
       ref={containerRef}
-      className="relative bg-[#0D1B2A] min-h-[340px] sm:min-h-[420px] md:min-h-[500px] overflow-hidden"
+      className="relative bg-navy-800 min-h-[340px] sm:min-h-[420px] md:min-h-[500px] overflow-hidden"
       style={{ userSelect: 'none' }}
     >
       {/* Shared background */}

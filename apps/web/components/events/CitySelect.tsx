@@ -96,7 +96,7 @@ export default function CitySelect({ value, onChange, placeholder = "Search your
 
       {/* Dropdown */}
       {open && results.length > 0 && (
-        <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+        <div className="0 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-48 overflow-y-auto">
           {results.map((city) => (
             <button
               key={city.id}

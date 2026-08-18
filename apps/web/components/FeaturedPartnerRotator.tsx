@@ -46,7 +46,7 @@ function FeaturedPartnerRotator({ partners }: { partners: Partner[] }) {
   const p = partners[active];
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-[#0D1B2A]">
+    <div className="relative overflow-hidden rounded-2xl bg-navy-800">
       <div className="absolute inset-0 bg-gradient-to-r from-[#0D1B2A] via-[#0F2239] to-[#071018]" />
       <div className="absolute top-0 right-0 w-80 h-80 bg-brand/15 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/4" />
       <div

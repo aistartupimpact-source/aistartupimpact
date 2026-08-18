@@ -322,7 +322,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
     <div className="space-y-8">
       {/* Email Gate Modal */}
       {showEmailModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-modal p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md w-full shadow-2xl">
             <h3 className="font-sora font-bold text-2xl mb-2">Download AI Startups Funding Report 2026</h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">

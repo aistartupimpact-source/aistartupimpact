@@ -311,8 +311,8 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
   };
 
   const wrapperClass = fullPage
-    ? "fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 p-4"
-    : "fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm";
+    ? "fixed inset-0 z-modal flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 p-4"
+    : "fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm";
 
   return (
     <div className={wrapperClass}>

@@ -206,7 +206,7 @@ export default function CityCombobox({
       {isOpen && (
         <ul
           ref={listRef}
-          className="absolute z-50 w-full mt-1 max-h-60 overflow-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-1 shadow-lg focus:outline-none text-sm"
+          className="0 w-full mt-1 max-h-60 overflow-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-1 shadow-lg focus:outline-none text-sm"
         >
           {suggestions.map((item, idx) => {
             const isSelected = value === item.city;

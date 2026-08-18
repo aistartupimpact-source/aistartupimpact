@@ -225,7 +225,7 @@ export default function Footer() {
  
                   {/* Right Form */}
                   <div className="lg:pl-4">
-                    <div className="bg-[#0b0b0c]/85 backdrop-blur-sm border border-gray-800 rounded-2xl p-5 sm:p-6 shadow-xl">
+                    <div className="bg-gray-950/85 backdrop-blur-sm border border-gray-800 rounded-2xl p-5 sm:p-6 shadow-xl">
                       <div className="text-center mb-5">
                         <p className="text-white text-3xl font-bold font-sora mb-1">5,000+</p>
                         <p className="text-gray-400 text-sm font-jakarta">

@@ -263,7 +263,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
   return (
     <div className="space-y-5">
       {/* ── Sticky Category Pills ── */}
-      <div className="sticky top-0 z-30 bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-2.5 sm:py-3 border-b border-gray-100 dark:border-gray-800">
+      <div className="sticky top-0 z-sticky bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-2.5 sm:py-3 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide pb-1">
           <button
             onClick={() => handleCategoryChange('')}
@@ -305,7 +305,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
               className="w-full pl-10 sm:pl-12 pr-10 py-2 sm:py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent text-sm font-jakarta"
             />
             {query && (
-              <button onClick={() => { hasUserInteracted.current = true; setQuery(''); }} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
+              <button onClick={() => { hasUserInteracted.current = true; setQuery(''); }} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full" aria-label="Clear search">
                 <X className="w-3.5 h-3.5 text-gray-400" />
               </button>
             )}

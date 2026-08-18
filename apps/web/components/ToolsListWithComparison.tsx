@@ -229,7 +229,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
   return (
     <div className="relative">
       {/* ── Sticky Category Pills (Parent Categories) ── */}
-      <div className="sticky top-0 z-30 bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-2.5 sm:py-3 border-b border-gray-100 dark:border-gray-800">
+      <div className="sticky top-0 z-sticky bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-2.5 sm:py-3 border-b border-gray-100 dark:border-gray-800">
         {/* Parent category pills */}
         <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide pb-1">
           <button
@@ -695,7 +695,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
 
       {/* ── Comparison Footer Bar ── */}
       {selectedTools.length > 0 && !showComparison && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-navy text-white px-6 py-4 rounded-full shadow-2xl flex items-center gap-6 z-50 animate-fade-in-up border border-indigo-500/30">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-navy text-white px-6 py-4 rounded-full shadow-2xl flex items-center gap-6 z-sticky animate-fade-in-up border border-indigo-500/30">
           <div className="flex -space-x-2">
             <div className="font-sora font-bold text-sm mr-4 flex items-center gap-2"><BarChart className="w-4 h-4 text-brand" /> {selectedTools.length}/3 Selected</div>
           </div>
@@ -706,7 +706,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
           >
             {selectedTools.length < 2 ? 'Select one more' : 'Compare Now'}
           </button>
-          <button onClick={() => setSelectedTools([])} className="text-gray-400 hover:text-white">
+          <button onClick={() => setSelectedTools([])} className="text-gray-400 hover:text-white" aria-label="Clear all">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -714,11 +714,11 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
 
       {/* ── Comparison Modal ── */}
       {showComparison && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-white dark:bg-gray-900 w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-4 sm:p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
               <h2 className="font-sora font-extrabold text-xl sm:text-2xl flex items-center gap-2"><BarChart className="text-brand" /> Tool Comparison</h2>
-              <button onClick={() => setShowComparison(false)} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors">
+              <button onClick={() => setShowComparison(false)} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors" aria-label="Close comparison">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -737,7 +737,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                 {/* Tool Columns */}
                 {selectedTools.map((t) => (
                   <div key={t.slug} className="flex flex-col gap-4 relative">
-                    <button onClick={() => removeTool(t.slug)} className="absolute top-0 right-0 p-1.5 bg-gray-100 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors z-10"><X className="w-3 h-3" /></button>
+                    <button onClick={() => removeTool(t.slug)} className="absolute top-0 right-0 p-1.5 bg-gray-100 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors z-10" aria-label={`Remove ${t.name}`}><X className="w-3 h-3" /></button>
                     <div className="h-[120px] flex flex-col justify-end pb-4 border-b border-gray-100 dark:border-gray-800">
                       <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden mb-3 border border-gray-100 dark:border-gray-700/50">
                         <Image src={t.logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=random&color=fff&size=150`} alt={t.name} className="w-full h-full object-cover" width={48} height={48} unoptimized />

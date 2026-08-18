@@ -73,7 +73,7 @@ export default async function FounderLayout({
   `;
 
   return (
-    <div className="flex h-screen bg-[#F9FAFB] dark:bg-gray-950 overflow-hidden">
+    <div className="flex h-screen bg-page dark:bg-page-dark overflow-hidden">
       {/* Sidebar */}
       <div className="hidden md:block">
         <FounderSidebar />

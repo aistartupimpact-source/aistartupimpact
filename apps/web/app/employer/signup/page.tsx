@@ -97,7 +97,7 @@ export default function EmployerSignupPage() {
   // OTP Verification Step
   if (step === 'verify') {
     return (
-      <div className="min-h-screen bg-[#F9FAFB] dark:bg-gray-950 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-page dark:bg-page-dark flex items-center justify-center px-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -151,7 +151,7 @@ export default function EmployerSignupPage() {
 
   // Signup Form
   return (
-    <div className="min-h-screen bg-[#F9FAFB] dark:bg-gray-950 flex items-center justify-center px-4 py-10">
+    <div className="min-h-screen bg-page dark:bg-page-dark flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="w-14 h-14 bg-brand rounded-2xl flex items-center justify-center mx-auto mb-4">
