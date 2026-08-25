@@ -38,6 +38,6 @@ test.describe('Founder portal', () => {
 
   test('login page has email input', async ({ page }) => {
     await page.goto('/auth/login');
-    await expect(page.getByPlaceholder(/email/i).first()).toBeVisible();
+    await expect(page.locator('input[type="email"]').first()).toBeVisible();
   });
 });

@@ -23,7 +23,7 @@ test.describe('Employer portal', () => {
 
   test('employer login has email and password fields', async ({ page }) => {
     await page.goto('/employer/login');
-    await expect(page.getByPlaceholder(/email/i).first()).toBeVisible();
+    await expect(page.locator('input[type="email"]').first()).toBeVisible();
     await expect(page.locator('input[type="password"]').first()).toBeVisible();
   });
 

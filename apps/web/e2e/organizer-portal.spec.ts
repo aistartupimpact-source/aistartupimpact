@@ -28,7 +28,7 @@ test.describe('Organizer portal', () => {
 
   test('organizer login has email field', async ({ page }) => {
     await page.goto('/organizer/login');
-    await expect(page.getByPlaceholder(/email/i).first()).toBeVisible();
+    await expect(page.locator('input[type="email"]').first()).toBeVisible();
   });
 
   test('organizer login has password field', async ({ page }) => {

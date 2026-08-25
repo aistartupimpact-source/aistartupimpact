@@ -19,7 +19,7 @@ test.describe('Auth flows', () => {
 
     test('login page has email input', async ({ page }) => {
       await page.goto('/auth/login');
-      const emailInput = page.getByPlaceholder(/email/i).first();
+      const emailInput = page.locator('input[type="email"]').first();
       await expect(emailInput).toBeVisible();
     });
 
@@ -50,7 +50,7 @@ test.describe('Auth flows', () => {
 
     test('employer login has email and password fields', async ({ page }) => {
       await page.goto('/employer/login');
-      await expect(page.getByPlaceholder(/email/i).first()).toBeVisible();
+      await expect(page.locator('input[type="email"]').first()).toBeVisible();
       await expect(page.locator('input[type="password"]').first()).toBeVisible();
     });
   });
@@ -63,7 +63,7 @@ test.describe('Auth flows', () => {
 
     test('organizer login has email field', async ({ page }) => {
       await page.goto('/organizer/login');
-      await expect(page.getByPlaceholder(/email/i).first()).toBeVisible();
+      await expect(page.locator('input[type="email"]').first()).toBeVisible();
     });
   });
 
