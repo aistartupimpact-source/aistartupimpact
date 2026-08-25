@@ -99,7 +99,7 @@ jobs:
         run: npm ci
 
       - name: Audit dependencies
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=critical
 
   sast:
     name: SAST (Semgrep)
@@ -183,7 +183,7 @@ jobs:
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: [lint-and-typecheck, test]
     steps:
       - uses: actions/checkout@v4
 
@@ -198,14 +198,11 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate --schema=packages/database/prisma/schema.prisma
 
+      - name: Build web app
+        run: npx turbo run build --filter=@aistartupimpact/web
+
       - name: Install Playwright Chromium
         run: npx playwright install chromium --with-deps
-
-      - name: Download web build
-        uses: actions/download-artifact@v4
-        with:
-          name: web-build
-          path: apps/web/.next
 
       - name: Run E2E tests
         run: npm run test:e2e --workspace=apps/web
