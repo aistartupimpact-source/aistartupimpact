@@ -226,33 +226,33 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
               </div>
             )}
             {(tool.upvoteCount || 0) >= 5 && (
-              <span className="text-[10px] font-bold bg-brand/10 text-brand px-2.5 py-1 rounded-full">
+              <span className="text-xs font-bold bg-brand/10 text-brand px-2.5 py-1 rounded-full">
                 {tool.upvoteCount} upvotes
               </span>
             )}
             {tool.categoryName && <span className="badge-category">{tool.categoryName}</span>}
             {tool.pricingModel && (
-              <span className="text-[10px] font-bold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2.5 py-1 rounded-full uppercase">
+              <span className="text-xs font-bold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2.5 py-1 rounded-full uppercase">
                 {pricingLabel[tool.pricingModel] || tool.pricingModel}
               </span>
             )}
             {tool.hasApi && (
-              <span className="flex items-center gap-1 text-[10px] font-bold bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-2.5 py-1 rounded-full">
+              <span className="flex items-center gap-1 text-xs font-bold bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-2.5 py-1 rounded-full">
                 <Cpu className="w-3 h-3" /> API
               </span>
             )}
             {tool.hasMobileApp && (
-              <span className="flex items-center gap-1 text-[10px] font-bold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2.5 py-1 rounded-full">
+              <span className="flex items-center gap-1 text-xs font-bold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2.5 py-1 rounded-full">
                 <Smartphone className="w-3 h-3" /> Mobile App
               </span>
             )}
             {tool.freeTrialDays && tool.freeTrialDays > 0 && (
-              <span className="text-[10px] font-bold bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 px-2.5 py-1 rounded-full">
+              <span className="text-xs font-bold bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 px-2.5 py-1 rounded-full">
                 {tool.freeTrialDays}-Day Free Trial
               </span>
             )}
             {tool.isUrlVerified && (
-              <span className="flex items-center gap-1 text-[10px] font-bold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-full">
+              <span className="flex items-center gap-1 text-xs font-bold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-full">
                 <Check className="w-3 h-3" /> Verified
               </span>
             )}
@@ -431,7 +431,7 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
                         <Link
                           key={tag.id}
                           href={`/tools?tag=${tag.slug}`}
-                          className="inline-flex items-center px-2.5 py-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-[11px] font-jakarta text-gray-600 dark:text-gray-400 hover:border-brand/30 hover:text-brand hover:bg-brand/5 transition-colors"
+                          className="inline-flex items-center px-2.5 py-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-jakarta text-gray-600 dark:text-gray-400 hover:border-brand/30 hover:text-brand hover:bg-brand/5 transition-colors"
                         >
                           {tag.name}
                         </Link>
@@ -463,7 +463,7 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-navy dark:text-white group-hover:text-brand transition-colors truncate">{alt.name}</p>
-                      <p className="text-[11px] text-gray-400 font-jakarta truncate">{alt.tagline}</p>
+                      <p className="text-xs text-gray-400 font-jakarta truncate">{alt.tagline}</p>
                     </div>
                     {alt.avgRating > 0 && (
                       <div className="flex items-center gap-0.5 shrink-0">
@@ -510,7 +510,7 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
                   {/* Founder Response */}
                   {reviewResponses[rev.id] && (
                     <div className="mt-3 ml-4 pl-4 border-l-2 border-brand/30 py-2">
-                      <p className="text-[11px] font-semibold text-brand mb-1">
+                      <p className="text-xs font-semibold text-brand mb-1">
                         Founder Response — {reviewResponses[rev.id].founderName}
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-300 font-jakarta leading-relaxed">
@@ -538,7 +538,7 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
           {/* Built by Startup */}
           {tool.startupId && tool.startupName && (
             <Link href={`/startups/${tool.startupSlug || tool.startupId}`} className="card p-5 block hover:border-brand/30 transition-colors group">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider font-jakarta mb-3">Built by</p>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider font-jakarta mb-3">Built by</p>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200 dark:border-gray-700">
                   {tool.startupLogoUrl ? (
@@ -550,7 +550,7 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
                 <div>
                   <p className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand transition-colors">{tool.startupName}</p>
                   {tool.totalFundingInr && Number(tool.totalFundingInr) > 0 && (
-                    <p className="text-[10px] text-gray-400 font-jakarta">₹{(Number(tool.totalFundingInr) / 10000000).toFixed(1)}Cr raised</p>
+                    <p className="text-xs text-gray-400 font-jakarta">₹{(Number(tool.totalFundingInr) / 10000000).toFixed(1)}Cr raised</p>
                   )}
                 </div>
               </div>
@@ -577,7 +577,7 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
                   <Link key={story.id} href={`/news/${story.slug}`} className="block group">
                     <h5 className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand leading-snug transition-colors">{story.title}</h5>
                     <p className="text-xs text-gray-500 font-jakarta mt-1 line-clamp-2">{story.excerpt}</p>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-brand mt-2 inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">Read Story <ArrowRight className="w-3 h-3" /></span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-brand mt-2 inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">Read Story <ArrowRight className="w-3 h-3" /></span>
                   </Link>
                 ))}
               </div>
@@ -599,7 +599,7 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
                     </div>
                     <div className="text-right">
                       <span className="font-sora font-extrabold text-sm text-green-600 dark:text-green-400 block">{formatAmount(round.amountUsd, round.amountInr)}</span>
-                      {round.leadInvestors?.[0] && <span className="text-[10px] text-gray-400 font-jakarta">{round.leadInvestors[0]}</span>}
+                      {round.leadInvestors?.[0] && <span className="text-xs text-gray-400 font-jakarta">{round.leadInvestors[0]}</span>}
                     </div>
                   </div>
                 ))}

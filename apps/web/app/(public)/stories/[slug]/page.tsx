@@ -98,7 +98,7 @@ export default async function StoryDetailPage({ params }: { params: { slug: stri
       <div className="flex flex-col lg:flex-row gap-10">
         {/* ── Main Article ── */}
         <article className="flex-1 min-w-0">
-          <span className="badge-brand text-[10px] mb-4 inline-block">Founder Story</span>
+          <span className="badge-brand text-xs mb-4 inline-block">Founder Story</span>
 
           <h1 className="font-sora font-extrabold text-[22px] leading-[1.2] sm:text-3xl md:text-[36px] md:leading-[1.2] text-navy dark:text-white">
             {story.title}
@@ -159,7 +159,7 @@ export default async function StoryDetailPage({ params }: { params: { slug: stri
                 {relatedStories.map((s: any) => (
                   <Link key={s.slug} href={`/stories/${s.slug}`} className="group">
                     <div className="card p-4 h-full">
-                      <span className="badge-category text-[10px] mb-2 inline-block">Founder Story</span>
+                      <span className="badge-category text-xs mb-2 inline-block">Founder Story</span>
                       <h3 className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand transition-colors leading-snug line-clamp-3">{s.title}</h3>
                       <span className="text-xs text-gray-400 font-jakarta mt-2 block">{s.readTimeMinutes} min</span>
                     </div>

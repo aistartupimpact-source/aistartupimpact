@@ -34,7 +34,12 @@ const formatDate = (d: string) =>
 export const revalidate = 60;
 
 export default async function StoriesPage() {
-  const articles: any[] = (await getArticlesDirect({ type: 'STORY', limit: 100 })) || [];
+  const [editorialStories, founderStories] = await Promise.all([
+    getArticlesDirect({ type: 'STORY', limit: 100 }),
+    getArticlesDirect({ type: 'FOUNDER_STORY', limit: 50 }),
+  ]);
+  const articles: any[] = [...(editorialStories || []), ...(founderStories || [])]
+    .sort((a, b) => new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime());
   const featured = articles.filter((a) => a.isFeatured).slice(0, 2);
 
   const siteUrl = 'https://aistartupimpact.com';
@@ -91,75 +96,78 @@ export default async function StoriesPage() {
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
         {/* ── Main column ── */}
         <div className="flex-1 min-w-0">
-          {/* Featured — 2-col cards */}
-          {featured.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-              {featured.map((story) => (
-                <Link key={story.slug} href={`/stories/${story.slug}`} className="group">
-                  <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-brand/40 transition-colors h-full flex flex-col">
-                    <div className="aspect-[16/9] bg-gradient-to-br from-brand/10 to-gray-100 dark:from-brand/20 dark:to-gray-800 relative overflow-hidden">
-                      {(story.thumbnailImage || story.coverImage) && (
-                        <Image
-                          src={story.thumbnailImage || story.coverImage}
-                          alt={story.title}
-                          fill
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                          className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                      <span className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wider text-white bg-brand px-2 py-0.5 rounded-sm z-10">
-                        Featured
-                      </span>
-                    </div>
-                    <div className="p-4 sm:p-5 flex flex-col flex-1">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-brand mb-2">
-                        {story.category?.name || 'Founder Story'}
-                      </span>
-                      <h2 className="font-sora font-bold text-base sm:text-lg text-navy dark:text-white group-hover:text-brand transition-colors leading-snug line-clamp-2 flex-1">
-                        {story.title}
-                      </h2>
-                      {story.excerpt && (
-                        <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-jakarta mt-2 line-clamp-2">
-                          {story.excerpt}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400 font-jakarta">
-                        <div className="w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center text-[9px] font-bold text-brand shrink-0">
-                          {story.author?.name?.charAt(0) || 'A'}
-                        </div>
-                        <span className="font-medium text-gray-500 dark:text-gray-400">{story.author?.name}</span>
-                        {story.publishedAt && (
-                          <>
-                            <span className="text-gray-300 dark:text-gray-600">·</span>
-                            <span>{formatDate(story.publishedAt)}</span>
-                          </>
-                        )}
-                        {story.readTimeMinutes && (
-                          <>
-                            <span className="text-gray-300 dark:text-gray-600">·</span>
-                            <span>{story.readTimeMinutes} min</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-
-          {/* All Stories list */}
           {articles.length > 0 && (
-            <StoriesListClient stories={articles} />
+            <StoriesListClient stories={articles}>
+              {/* Featured — rendered between filters and story grid */}
+              {featured.length > 0 && (
+                <div className="relative mb-8 sm:mb-10">
+                  <div className="absolute -top-10 left-0 w-px h-10 bg-gradient-to-t from-gray-300 dark:from-gray-600 to-transparent hidden sm:block" />
+                  <div className="absolute top-0 -left-10 h-px w-10 bg-gradient-to-l from-gray-300 dark:from-gray-600 to-transparent hidden sm:block" />
+                  <div className="absolute -top-10 right-0 w-px h-10 bg-gradient-to-t from-gray-300 dark:from-gray-600 to-transparent hidden sm:block" />
+                  <div className="absolute top-0 -right-10 h-px w-10 bg-gradient-to-r from-gray-300 dark:from-gray-600 to-transparent hidden sm:block" />
+                  <div className="absolute -bottom-10 left-0 w-px h-10 bg-gradient-to-b from-gray-300 dark:from-gray-600 to-transparent hidden sm:block" />
+                  <div className="absolute bottom-0 -left-10 h-px w-10 bg-gradient-to-l from-gray-300 dark:from-gray-600 to-transparent hidden sm:block" />
+                  <div className="absolute -bottom-10 right-0 w-px h-10 bg-gradient-to-b from-gray-300 dark:from-gray-600 to-transparent hidden sm:block" />
+                  <div className="absolute bottom-0 -right-10 h-px w-10 bg-gradient-to-r from-gray-300 dark:from-gray-600 to-transparent hidden sm:block" />
+                  <h2 className="font-sora font-bold text-base sm:text-xl text-gray-900 dark:text-white mb-4 sm:mb-5">Featured Stories</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 border border-gray-200 dark:border-gray-700">
+                    {featured.map((story, idx) => {
+                      const N = featured.length;
+                      const borderClass = [
+                        idx < N - 1 ? 'border-b border-gray-200 dark:border-gray-700' : '',
+                        idx >= N - (N % 2 === 0 ? 2 : 1) ? 'sm:border-b-0' : '',
+                        idx % 2 === 0 ? 'sm:border-r border-gray-200 dark:border-gray-700' : '',
+                      ].filter(Boolean).join(' ');
+                      return (
+                        <Link key={story.slug} href={`/stories/${story.slug}`} className="group h-full">
+                          <div className={`bg-gray-50 dark:bg-gray-900 relative hover:bg-white dark:hover:bg-gray-800 transition-all duration-300 ${borderClass} hover:border-l-4 hover:border-l-red-500 h-full flex flex-col`}>
+                            {(story.thumbnailImage || story.coverImage) && (
+                              <div className="relative aspect-[16/9] overflow-hidden">
+                                <Image
+                                  src={story.thumbnailImage || story.coverImage}
+                                  alt={story.title}
+                                  fill
+                                  sizes="(max-width: 640px) 100vw, 50vw"
+                                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                              </div>
+                            )}
+                            <div className="p-3 sm:p-5 flex flex-col flex-1">
+                              <div className="mb-1.5 sm:mb-2 flex items-center gap-1.5 sm:gap-2">
+                                <span className="inline-block text-[10px] sm:text-xs font-bold uppercase tracking-wider text-red-500">Featured</span>
+                                <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 font-jakarta">{story.category?.name || 'Founder Story'}</span>
+                              </div>
+                              <p className="font-sora font-bold text-[15px] leading-snug sm:text-lg sm:leading-tight mb-1.5 sm:mb-2 text-gray-900 dark:text-white group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors line-clamp-2">
+                                {story.title}
+                              </p>
+                              {story.excerpt && (
+                                <p className="text-gray-600 dark:text-gray-400 font-jakarta text-xs sm:text-sm leading-relaxed mb-2 sm:mb-3 line-clamp-2 flex-1">
+                                  {story.excerpt}
+                                </p>
+                              )}
+                              <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-gray-400 font-jakarta mt-auto">
+                                {story.author?.name && <><span>{story.author.name}</span><span>·</span></>}
+                                <span>{formatDate(story.publishedAt)}</span>
+                                {story.readTimeMinutes && <><span>·</span><span>{story.readTimeMinutes} min</span></>}
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </StoriesListClient>
           )}
         </div>
 
         {/* ── Sidebar ── */}
         <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-6">
           {/* Newsletter CTA */}
-          <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-brand mb-2">Free Weekly</div>
+          <div className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
+            <div className="text-xs font-bold uppercase tracking-wider text-brand mb-2">Free Weekly</div>
             <h3 className="font-sora font-bold text-base text-navy dark:text-white leading-snug mb-1">
               India AI Digest
             </h3>
@@ -170,7 +178,7 @@ export default async function StoriesPage() {
           </div>
 
           {/* About */}
-          <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
+          <div className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
             <h3 className="font-sora font-bold text-sm text-navy dark:text-white mb-3">About Founder Stories</h3>
             <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta leading-relaxed">
               In-depth profiles of the builders, investors, and operators shaping India's AI ecosystem. Every story is independently reported — no PR, no fluff.
@@ -178,11 +186,11 @@ export default async function StoriesPage() {
           </div>
 
           {/* Topics */}
-          <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
+          <div className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
             <h3 className="font-sora font-bold text-sm text-navy dark:text-white mb-4">Story Themes</h3>
             <div className="flex flex-wrap gap-2">
               {['Origin Story', 'Fundraising', 'Product', 'Team Building', 'Failure', 'Vision', 'India Stack', 'Global Expansion'].map((tag) => (
-                <span key={tag} className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-brand/10 hover:text-brand cursor-pointer transition-colors font-jakarta">
+                <span key={tag} className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-brand/10 hover:text-brand cursor-pointer transition-colors font-jakarta">
                   {tag}
                 </span>
               ))}
@@ -191,7 +199,7 @@ export default async function StoriesPage() {
 
           {/* Recent stories quick list */}
           {articles.slice(0, 5).length > 0 && (
-            <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
+            <div className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
               <h3 className="font-sora font-bold text-sm text-navy dark:text-white mb-4">Recent Stories</h3>
               <div className="space-y-3">
                 {articles.slice(0, 5).map((s: any, i: number) => (

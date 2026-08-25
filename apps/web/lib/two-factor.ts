@@ -88,23 +88,38 @@ export async function verifyBackupCode(
   return -1;
 }
 
-/**
- * Encrypt secret for storage (simple encryption)
- */
-export function encryptSecret(secret: string): string {
-  const key = process.env.ENCRYPTION_KEY || 'default-encryption-key-change-in-production';
-  const cipher = crypto.createCipher('aes-256-cbc', key);
-  let encrypted = cipher.update(secret, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
-  return encrypted;
+const IV_LENGTH = 16;
+
+function getEncryptionKey(): Buffer {
+  const key = process.env.ENCRYPTION_KEY;
+  if (!key) {
+    throw new Error('ENCRYPTION_KEY environment variable is required');
+  }
+  return crypto.createHash('sha256').update(key).digest();
 }
 
-/**
- * Decrypt secret from storage
- */
+export function encryptSecret(secret: string): string {
+  const key = getEncryptionKey();
+  const iv = crypto.randomBytes(IV_LENGTH);
+  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+  let encrypted = cipher.update(secret, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  return iv.toString('hex') + ':' + encrypted;
+}
+
 export function decryptSecret(encryptedSecret: string): string {
-  const key = process.env.ENCRYPTION_KEY || 'default-encryption-key-change-in-production';
-  const decipher = crypto.createDecipher('aes-256-cbc', key);
+  const key = getEncryptionKey();
+  const parts = encryptedSecret.split(':');
+  if (parts.length === 2) {
+    const iv = Buffer.from(parts[0], 'hex');
+    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+    let decrypted = decipher.update(parts[1], 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+  }
+  // Legacy format (no IV prefix) — decrypt with derived IV for migration
+  const iv = crypto.createHash('md5').update(key).digest();
+  const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
   let decrypted = decipher.update(encryptedSecret, 'hex', 'utf8');
   decrypted += decipher.final('utf8');
   return decrypted;

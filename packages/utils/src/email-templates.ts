@@ -319,6 +319,30 @@ export function teamInviteHtml(inviterName: string, role: string, acceptUrl: str
   <p style="color: #6b7280; font-size: 13px;">This link expires in 7 days.</p>`);
 }
 
+export function founderTeamInviteHtml(inviterName: string, role: string, acceptUrl: string): string {
+  return eventsWrapper(`
+  <p style="color: #374151; font-size: 16px; line-height: 1.6;">Hi,</p>
+  <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+    <strong>${inviterName}</strong> has invited you as <strong>${role}</strong> to their founder team on AI Startup Impact.
+  </p>
+  <div style="margin: 32px 0; text-align: center;">
+    ${eventsButton(acceptUrl, 'Accept Invitation')}
+  </div>
+  <p style="color: #6b7280; font-size: 13px;">This link expires in 7 days.</p>`);
+}
+
+export function founderTeamOtpHtml(action: string, code: string): string {
+  return eventsWrapper(`
+  <p style="color: #374151; font-size: 16px; line-height: 1.6;">Security Verification</p>
+  <p style="color: #374151; font-size: 14px; line-height: 1.6;">
+    You requested to <strong>${action}</strong> on your founder team. Use this code to confirm:
+  </p>
+  <div style="margin: 24px 0; text-align: center;">
+    <div style="display: inline-block; padding: 16px 32px; background: #f3f4f6; border-radius: 12px; letter-spacing: 8px; font-size: 32px; font-weight: 700; color: #111827; font-family: monospace;">${code}</div>
+  </div>
+  <p style="color: #6b7280; font-size: 13px;">This code expires in 10 minutes. If you didn't request this, ignore this email.</p>`);
+}
+
 // ── Event: Registration Confirmation ─────────────────────────────────────
 
 export interface EventEmailData {

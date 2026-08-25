@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
@@ -9,6 +9,7 @@ import {
   Home, Newspaper, BookOpen, Wrench, Flag, Building2, TrendingUp, Users, Star,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
+import { useUser } from '@/components/UserProvider';
 import SearchOverlay from './SearchOverlay';
 import SignInModal from '@/components/auth/SignInModal';
 import ProfileDropdown from '@/components/ProfileDropdown';
@@ -42,62 +43,40 @@ const mobileMenuNav = [
   { label: 'About Us', href: '/about' },
 ];
 
-export default function Navbar() {
+export default function Navbar({ hasSession = false }: { hasSession?: boolean }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [signInModalOpen, setSignInModalOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+
+  const { user, loading, refreshSession } = useUser();
+  const showProfile = user || (loading && hasSession);
+  const showSignIn = !user && (!loading || !hasSession);
 
   const pathname = usePathname();
   const router = useRouter();
   const { theme, mode, setMode } = useTheme();
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
+  const themeMenuRef = useRef<HTMLDivElement>(null);
 
-  // Fetch user session — try legacy first (where existing users are), then unified
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        // Try legacy user session first (existing WebUser accounts)
-        const res = await fetch('/api/user/session');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.user) {
-            setUser(data.user);
-            setLoading(false);
-            return;
-          }
-        }
-        // Fallback: try unified session
-        const unifiedRes = await fetch('/api/auth/session');
-        if (unifiedRes.ok) {
-          const data = await unifiedRes.json();
-          if (data.user) {
-            setUser(data.user);
-            setLoading(false);
-            return;
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch user:', error);
-      } finally {
-        setLoading(false);
+    if (!themeMenuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (themeMenuRef.current && !themeMenuRef.current.contains(e.target as Node)) {
+        setThemeMenuOpen(false);
       }
     };
-    fetchUser();
-  }, [pathname]);
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [themeMenuOpen]);
 
   const handleLogout = async () => {
     try {
-      // Logout from all session types
       await Promise.allSettled([
         fetch('/api/user/auth/logout', { method: 'POST' }),
         fetch('/api/auth/logout', { method: 'POST' }),
       ]);
-      setUser(null);
-      router.push('/');
-      router.refresh();
+      window.location.href = '/';
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -127,11 +106,11 @@ export default function Navbar() {
       <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
       
       {/* Sign In Modal */}
-      <SignInModal isOpen={signInModalOpen} onClose={() => setSignInModalOpen(false)} />
+      <SignInModal isOpen={signInModalOpen} onClose={() => { setSignInModalOpen(false); refreshSession(); }} />
 
       {/* ─── Fixed Header ──────────────────────────── */}
       <header
-        className={`fixed top-0 left-0 right-0 z-sticky transition-all duration-300 ${scrolled
+        className={`fixed top-[36px] left-0 right-0 z-sticky transition-all duration-300 pt-[env(safe-area-inset-top)] ${scrolled
           ? 'bg-white/95 dark:bg-gray-950/95 backdrop-blur-md shadow-sm border-b border-gray-100 dark:border-gray-800'
           : 'bg-white dark:bg-gray-950 border-b border-transparent'
           }`}
@@ -177,7 +156,7 @@ export default function Navbar() {
               </button>
 
               {/* Theme Toggle */}
-              <div className="relative">
+              <div className="relative" ref={themeMenuRef}>
                 <button
                   onClick={() => setThemeMenuOpen((v) => !v)}
                   className="p-2.5 min-w-[44px] min-h-[44px] rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -192,45 +171,42 @@ export default function Navbar() {
                   )}
                 </button>
                 {themeMenuOpen && (
-                  <>
-                    <div className="fixed inset-0 z-overlay" onClick={() => setThemeMenuOpen(false)} />
-                    <div className="absolute right-0 top-full mt-2 z-dropdown w-36 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg py-1 font-jakarta text-sm">
-                      {([
-                        { value: 'light' as const, label: 'Light', icon: Sun, iconClass: 'text-yellow-500' },
-                        { value: 'dark' as const, label: 'Dark', icon: Moon, iconClass: 'text-indigo-400' },
-                        { value: 'system' as const, label: 'System', icon: Monitor, iconClass: 'text-gray-500 dark:text-gray-400' },
-                      ]).map((opt) => (
-                        <button
-                          key={opt.value}
-                          onClick={() => { setMode(opt.value); setThemeMenuOpen(false); }}
-                          className={`w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${mode === opt.value ? 'text-brand font-semibold' : 'text-gray-700 dark:text-gray-300'}`}
-                        >
-                          <opt.icon className={`w-4 h-4 ${mode === opt.value ? 'text-brand' : opt.iconClass}`} />
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </>
+                  <div className="absolute right-0 top-full mt-2 z-overlay w-36 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden font-jakarta text-sm">
+                    {([
+                      { value: 'light' as const, label: 'Light', icon: Sun, iconClass: 'text-yellow-500' },
+                      { value: 'dark' as const, label: 'Dark', icon: Moon, iconClass: 'text-indigo-400' },
+                      { value: 'system' as const, label: 'System', icon: Monitor, iconClass: 'text-gray-500 dark:text-gray-400' },
+                    ]).map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => { setMode(opt.value); setThemeMenuOpen(false); }}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${mode === opt.value ? 'text-brand font-semibold' : 'text-gray-700 dark:text-gray-300'}`}
+                      >
+                        <opt.icon className={`w-4 h-4 ${mode === opt.value ? 'text-brand' : opt.iconClass}`} />
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
 
-              {/* User Profile or Sign In */}
-              {!loading && (
-                <>
+              {/* User Profile or Sign In — server knows hasSession so no flicker */}
+              {showProfile ? (
+                <div className="hidden md:block">
                   {user ? (
-                    <div className="hidden md:block">
-                      <ProfileDropdown user={user} />
-                    </div>
+                    <ProfileDropdown user={user} onLogout={handleLogout} />
                   ) : (
-                    <button
-                      onClick={() => setSignInModalOpen(true)}
-                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg font-bold text-sm bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-md hidden md:inline-flex"
-                    >
-                      Sign In
-                    </button>
+                    <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
                   )}
-                </>
-              )}
+                </div>
+              ) : showSignIn ? (
+                <button
+                  onClick={() => setSignInModalOpen(true)}
+                  className="hidden md:inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg font-bold text-sm bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-md"
+                >
+                  Sign In
+                </button>
+              ) : null}
 
               {/* Subscribe CTA — hidden on small mobile */}
               <Link
@@ -297,7 +273,8 @@ export default function Navbar() {
 
             {/* User Section */}
             <div className="space-y-2 px-1">
-              {user ? (
+              {showProfile ? (
+                user ? (
                 <>
                   {/* User Info */}
                   <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-900 rounded-xl">
@@ -310,7 +287,7 @@ export default function Navbar() {
                     </div>
                     <div className="min-w-0">
                       <p className="font-semibold text-[14px] text-gray-900 dark:text-white truncate">{user.name}</p>
-                      <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
                     </div>
                   </div>
 
@@ -328,15 +305,15 @@ export default function Navbar() {
                   </Link>
 
                   {/* Workspace links */}
-                  {(user?.founderId || user?.organizerId) && (
+                  {(user.founderId || user.organizerId) && (
                     <div className="border-t border-gray-100 dark:border-gray-800 pt-2 mt-1">
-                      {user?.founderId && (
+                      {user.founderId && (
                         <Link href="/founder/dashboard" onClick={() => setMobileOpen(false)}
                           className="block w-full px-4 py-3 text-[14px] font-medium text-gray-800 dark:text-gray-200 rounded-xl active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
                           Founder Dashboard
                         </Link>
                       )}
-                      {user?.organizerId && (
+                      {user.organizerId && (
                         <Link href="/organizer" onClick={() => setMobileOpen(false)}
                           className="block w-full px-4 py-3 text-[14px] font-medium text-gray-800 dark:text-gray-200 rounded-xl active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
                           Organizer Dashboard
@@ -353,7 +330,16 @@ export default function Navbar() {
                     </button>
                   </div>
                 </>
-              ) : (
+                ) : (
+                  <div className="flex items-center gap-3 px-4 py-3">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                    <div className="space-y-2 flex-1">
+                      <div className="h-3 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                      <div className="h-2 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                    </div>
+                  </div>
+                )
+              ) : showSignIn ? (
                 <>
                   {/* Sign In - Black */}
                   <button
@@ -362,7 +348,7 @@ export default function Navbar() {
                     Sign In
                   </button>
                 </>
-              )}
+              ) : null}
 
               {/* Subscribe - Red */}
               <Link href="/newsletter" onClick={() => setMobileOpen(false)}
@@ -392,7 +378,7 @@ export default function Navbar() {
                   <span className="absolute top-0 left-0 right-0 h-[4px] bg-brand rounded-b-sm" />
                 )}
                 <item.icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5]' : ''}`} />
-                <span className="text-[10px] font-semibold font-jakarta">{item.label}</span>
+                <span className="text-xs font-semibold font-jakarta">{item.label}</span>
               </Link>
             );
           })}

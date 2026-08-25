@@ -19,6 +19,7 @@ interface FundingRound {
   startupSlug: string;
   headquartersCity: string | null;
   startupCategory: string | null;
+  startupLogoUrl: string | null;
 }
 
 const FREE_ROWS_LIMIT = 5;
@@ -40,6 +41,8 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
   const [filterAmountMin, setFilterAmountMin] = useState(0);
   const [filterAmountMax, setFilterAmountMax] = useState(Infinity);
   const [showEmailModal, setShowEmailModal] = useState(false);
+  const [visibleRows, setVisibleRows] = useState(20);
+  const ROWS_PER_PAGE = 20;
 
   // Format amount — prefer USD (more accurate for 2026 rounds), fallback to INR
   const formatAmount = (row: FundingRound) => {
@@ -74,12 +77,15 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
   };
 
   // Calculate YTD period dynamically based on actual data
-  const ytdPeriod = useMemo(() => {
-    if (data.length === 0) return '2026';
-    const dates = data.map(d => new Date(d.announcedAt).getFullYear());
-    const minYear = Math.min(...dates);
-    const maxYear = Math.max(...dates);
-    return minYear === maxYear ? `${maxYear}` : `${minYear}–${maxYear}`;
+  const ytdStats = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth();
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const ytdDeals = data.filter(d => new Date(d.announcedAt).getFullYear() === currentYear);
+    const ytdTotal = ytdDeals.reduce((acc, curr) => acc + (Number(curr.amountUsd || 0) / 100), 0);
+    const display = ytdTotal >= 1e9 ? `$${(ytdTotal / 1e9).toFixed(1)}B` : ytdTotal >= 1e6 ? `$${(ytdTotal / 1e6).toFixed(0)}M` : `$${(ytdTotal / 1e3).toFixed(0)}K`;
+    const label = `Jan–${monthNames[currentMonth]} ${currentYear}`;
+    return { display, label, deals: ytdDeals.length };
   }, [data]);
 
   // Calculate largest single round
@@ -164,16 +170,17 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
   };
 
   const filteredData = useMemo(() => {
+    setVisibleRows(ROWS_PER_PAGE);
     const matched = data.filter(d => {
       const matchStage = filterStage === 'All' || d.roundType.toLowerCase().includes(filterStage.toLowerCase());
       const matchYear = filterYear === 'All' || new Date(d.announcedAt).getFullYear().toString() === filterYear;
       const matchInvestor = filterInvestor === 'All' || (d.leadInvestors && d.leadInvestors.some(inv => inv === filterInvestor));
       const matchSector = filterSector === 'All' || (d.startupCategory || 'Other') === filterSector;
       const matchCity = filterCity === 'All' || d.headquartersCity === filterCity;
-      
+
       const amount = Number(d.amountUsd || 0) / 100;
       const matchAmount = amount >= filterAmountMin && amount <= filterAmountMax;
-      
+
       return matchStage && matchYear && matchInvestor && matchSector && matchCity && matchAmount;
     });
 
@@ -391,7 +398,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Total Capital Raised */}
         <div className="card p-4 sm:p-6 bg-gradient-to-br from-brand-50 to-white dark:from-brand-900/20 dark:to-gray-900">
-          <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-2 sm:mb-3">
+          <div className="text-xs sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-2 sm:mb-3">
             Total Capital Raised
           </div>
           <div className="font-sora font-extrabold text-2xl sm:text-4xl text-navy dark:text-white mb-1 sm:mb-2">
@@ -406,7 +413,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
 
         {/* Total Deals */}
         <div className="card p-4 sm:p-6">
-          <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-2 sm:mb-3">
+          <div className="text-xs sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-2 sm:mb-3">
             AI-only deals tracked
           </div>
           <div className="font-sora font-extrabold text-2xl sm:text-4xl text-navy dark:text-white mb-1 sm:mb-2">
@@ -427,13 +434,13 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
         {/* Largest Single Round */}
         {largestRound && (
           <div className="card p-4 sm:p-6 bg-gradient-to-br from-green-50 to-white dark:from-green-900/20 dark:to-gray-900">
-            <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-2 sm:mb-3">
+            <div className="text-xs sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-2 sm:mb-3">
               Largest Round
             </div>
             <div className="font-sora font-extrabold text-2xl sm:text-4xl text-navy dark:text-white mb-1 sm:mb-2">
               {largestRound.amount}
             </div>
-            <div className="text-[10px] sm:text-sm text-gray-600 dark:text-gray-400 truncate">
+            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
               {largestRound.startup} · {largestRound.date}
             </div>
           </div>
@@ -441,14 +448,14 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
 
         {/* YTD Period */}
         <div className="card p-4 sm:p-6">
-          <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-2 sm:mb-3">
-            {ytdPeriod.includes('–') ? 'Jan–Apr' : 'YTD'} {new Date().getFullYear()}
+          <div className="text-xs sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-2 sm:mb-3">
+            {ytdStats.label}
           </div>
           <div className="font-sora font-extrabold text-2xl sm:text-4xl text-navy dark:text-white mb-1 sm:mb-2">
-            {ytdPeriod}
+            {ytdStats.display}+
           </div>
           <div className="text-xs sm:text-sm text-gray-500">
-            Updated daily
+            {ytdStats.deals} deals · Updated daily
           </div>
         </div>
       </div>
@@ -681,32 +688,43 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {(user ? filteredData : filteredData.slice(0, FREE_ROWS_LIMIT)).map((row) => {
+              {(user ? filteredData.slice(0, visibleRows) : filteredData.slice(0, FREE_ROWS_LIMIT)).map((row) => {
                 const sector = row.startupCategory || 'Other';
                 const trend = getTrendSignal(row);
                 
                 return (
                   <tr key={row.id} className={`transition-colors ${topDeals.has(row.id) ? 'bg-amber-50/30 hover:bg-amber-50/60 dark:bg-amber-900/5 dark:hover:bg-amber-900/10' : 'hover:bg-gray-50/50 dark:hover:bg-gray-800/20'}`}>
                     <td className="px-6 py-4">
-                      <a href={`/startups/${row.startupSlug}`} className="font-sora font-bold text-sm text-navy dark:text-white hover:text-brand transition-colors block">
-                        {row.startupName}
-                        {topDeals.has(row.id) && (
-                          <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 align-middle">FEATURED</span>
+                      <div className="flex items-center gap-3">
+                        {row.startupLogoUrl ? (
+                          <img src={row.startupLogoUrl} alt="" className="w-8 h-8 rounded-lg object-contain bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex-shrink-0" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center flex-shrink-0">
+                            <span className="text-xs font-bold text-brand">{row.startupName?.charAt(0)}</span>
+                          </div>
                         )}
-                      </a>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full inline-block font-semibold">
-                          AI Startup
-                        </span>
-                        {row.headquartersCity && (
-                          <span className="text-xs text-gray-400 flex items-center gap-0.5">
-                            <MapPin className="w-3 h-3" />{row.headquartersCity}
-                          </span>
-                        )}
+                        <div className="min-w-0">
+                          <a href={`/startups/${row.startupSlug}`} className="font-sora font-bold text-sm text-navy dark:text-white hover:text-brand transition-colors block truncate">
+                            {row.startupName}
+                            {topDeals.has(row.id) && (
+                              <span className="ml-2 px-1.5 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 align-middle">FEATURED</span>
+                            )}
+                          </a>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full inline-block font-semibold">
+                              AI Startup
+                            </span>
+                            {row.headquartersCity && (
+                              <span className="text-xs text-gray-400 flex items-center gap-0.5">
+                                <MapPin className="w-3 h-3" />{row.headquartersCity}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-[10px] font-bold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 py-1 rounded-full uppercase">{row.roundType}</span>
+                      <span className="text-xs font-bold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 py-1 rounded-full uppercase">{row.roundType}</span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="font-sora font-extrabold text-sm text-brand block">
@@ -714,7 +732,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
                       </span>
                     </td>
                     <td className="px-6 py-4 hidden xl:table-cell">
-                      <span className="text-[10px] font-bold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2 py-1 rounded-full uppercase whitespace-nowrap">
+                      <span className="text-xs font-bold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2 py-1 rounded-full uppercase whitespace-nowrap">
                         {sector}
                       </span>
                     </td>
@@ -740,7 +758,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
                       </div>
                     </td>
                     <td className="px-6 py-4 hidden xl:table-cell">
-                      <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase whitespace-nowrap ${trend.color}`}>
+                      <span className={`text-xs font-bold px-2 py-1 rounded-full uppercase whitespace-nowrap ${trend.color}`}>
                         ↑ {trend.label}
                       </span>
                     </td>
@@ -786,6 +804,16 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
               </p>
             </div>
           </div>
+        )}
+
+        {/* See More */}
+        {user && visibleRows < filteredData.length && (
+          <button
+            onClick={() => setVisibleRows(v => v + ROWS_PER_PAGE)}
+            className="w-full py-3 text-sm font-semibold text-brand bg-gradient-to-t from-gray-50 to-white dark:from-gray-800/50 dark:to-gray-900 hover:text-brand-600 transition-colors font-jakarta border-t border-gray-100 dark:border-gray-800"
+          >
+            See more · {filteredData.length - visibleRows} remaining
+          </button>
         )}
       </div>
 

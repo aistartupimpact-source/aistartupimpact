@@ -107,7 +107,7 @@ export default async function NewsPage() {
         <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-6">
           {/* Newsletter CTA */}
           <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-brand mb-2">Free Weekly</div>
+            <div className="text-xs font-bold uppercase tracking-wider text-brand mb-2">Free Weekly</div>
             <h3 className="font-sora font-bold text-base text-navy dark:text-white leading-snug mb-1">
               India AI Digest
             </h3>

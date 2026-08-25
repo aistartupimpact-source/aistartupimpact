@@ -199,8 +199,8 @@ export default function EventDetailClient({
               </div>
             )}
             <div className="absolute top-3 left-3 flex gap-1.5">
-              <span className="text-[9px] font-bold uppercase tracking-wider bg-white/90 backdrop-blur-sm text-brand px-2 py-0.5 rounded-full">{event.category.replace(/_/g, " ")}</span>
-              <span className="text-[9px] font-bold uppercase tracking-wider bg-white/90 backdrop-blur-sm text-navy px-2 py-0.5 rounded-full">{event.format.replace(/_/g, " ")}</span>
+              <span className="text-xs font-bold uppercase tracking-wider bg-white/90 backdrop-blur-sm text-brand px-2 py-0.5 rounded-full">{event.category.replace(/_/g, " ")}</span>
+              <span className="text-xs font-bold uppercase tracking-wider bg-white/90 backdrop-blur-sm text-navy px-2 py-0.5 rounded-full">{event.format.replace(/_/g, " ")}</span>
             </div>
           </div>
 
@@ -215,7 +215,7 @@ export default function EventDetailClient({
                 )}
               </div>
               <div>
-                <p className="text-[10px] text-gray-400 font-jakarta leading-none">Hosted by</p>
+                <p className="text-xs text-gray-400 font-jakarta leading-none">Hosted by</p>
                 <p className="text-sm font-semibold text-navy dark:text-white font-jakarta">{event.organizerName}</p>
               </div>
             </div>
@@ -272,11 +272,11 @@ export default function EventDetailClient({
                 {speakers.map((s) => (
                   <div key={s.id} className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2">
                     <div className="w-7 h-7 rounded-full bg-brand/10 flex items-center justify-center shrink-0 overflow-hidden">
-                      {s.headshotUrl ? <Image src={s.headshotUrl} alt={s.name} width={28} height={28} sizes="28px" className="w-full h-full object-cover" /> : <span className="text-[10px] font-bold text-brand">{s.name.charAt(0)}</span>}
+                      {s.headshotUrl ? <Image src={s.headshotUrl} alt={s.name} width={28} height={28} sizes="28px" className="w-full h-full object-cover" /> : <span className="text-xs font-bold text-brand">{s.name.charAt(0)}</span>}
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 font-jakarta">{s.name}</p>
-                      {s.title && <p className="text-[10px] text-gray-400">{s.title}</p>}
+                      {s.title && <p className="text-xs text-gray-400">{s.title}</p>}
                     </div>
                   </div>
                 ))}
@@ -289,7 +289,7 @@ export default function EventDetailClient({
             <div className="flex items-center justify-between">
               <span className="text-lg font-sora font-bold text-navy dark:text-white">Free</span>
               {event.registrationDeadline && (
-                <span className="text-[10px] text-gray-400 font-jakarta">Closes {new Date(event.registrationDeadline).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
+                <span className="text-xs text-gray-400 font-jakarta">Closes {new Date(event.registrationDeadline).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
               )}
             </div>
             {regOpen ? (
@@ -333,7 +333,7 @@ export default function EventDetailClient({
                           <p className="text-xs font-mono text-gray-500 dark:text-gray-400">
                             {item.startTime}
                           </p>
-                          <p className="text-[10px] font-mono text-gray-400">
+                          <p className="text-xs font-mono text-gray-400">
                             {item.endTime}
                           </p>
                         </div>

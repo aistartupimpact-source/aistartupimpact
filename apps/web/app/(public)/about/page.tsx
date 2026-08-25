@@ -118,22 +118,25 @@ export default async function AboutPage() {
   const counts = await getLiveCounts();
 
   const stats = [
-    { value: '45K+', label: 'LinkedIn Followers' },
+    { value: '50K+', label: 'LinkedIn Followers', href: 'https://www.linkedin.com/company/aistartupimpact' },
     {
-      value: counts.monthlyVisitors > 0 ? fmt(counts.monthlyVisitors) : '50K+',
+      value: counts.monthlyVisitors > 0 ? fmt(counts.monthlyVisitors) : '—',
       label: 'Monthly Visitors',
     },
     {
-      value: counts.subscribers > 0 ? fmt(counts.subscribers) : '5,000+',
+      value: counts.subscribers > 0 ? fmt(counts.subscribers) : '—',
       label: 'Newsletter Subscribers',
+      href: '/newsletter',
     },
     {
-      value: counts.startups > 0 ? fmt(counts.startups) : '3,200+',
+      value: counts.startups > 0 ? fmt(counts.startups) : '—',
       label: 'AI Startups Listed',
+      href: '/startups',
     },
     {
-      value: counts.tools > 0 ? fmt(counts.tools) : '500+',
+      value: counts.tools > 0 ? fmt(counts.tools) : '—',
       label: 'AI Tools Listed',
+      href: '/tools',
     },
   ];
 
@@ -142,17 +145,17 @@ export default async function AboutPage() {
 
       {/* ── Hero ──────────────────────────────────────────── */}
       <section className="text-center mb-12 sm:mb-16" aria-labelledby="about-hero-heading">
-        <span className="inline-block text-brand text-[11px] font-bold uppercase tracking-widest mb-3 font-sora">
+        <span className="inline-block text-brand text-xs font-bold uppercase tracking-widest mb-3 font-sora">
           About AIStartupImpact
         </span>
         <h1
           id="about-hero-heading"
-          className="font-sora font-extrabold text-3xl sm:text-4xl md:text-[44px] md:leading-[1.15] text-navy dark:text-white max-w-3xl mx-auto"
+          className="font-sora font-extrabold text-2xl sm:text-4xl md:text-[44px] md:leading-[1.15] text-navy dark:text-white max-w-3xl mx-auto"
         >
           One place to track the entire{' '}
           <span className="text-brand">AI startup ecosystem</span>
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 font-jakarta text-base sm:text-lg mt-5 max-w-2xl mx-auto leading-relaxed">
+        <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm sm:text-lg mt-4 sm:mt-5 max-w-2xl mx-auto leading-relaxed">
           AIStartupImpact is an independent platform built to give AI startups the visibility they
           deserve. From founder stories to funding rounds, from startup discovery to tool reviews —
           we bring everything into one place, and put it in front of a global audience.
@@ -168,36 +171,52 @@ export default async function AboutPage() {
           At a Glance
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-          {stats.map((s) => (
-            <div
-              key={s.label}
-              className="card p-4 sm:p-5 text-center hover:border-brand/30 transition-colors"
-            >
-              <div className="font-sora font-extrabold text-2xl sm:text-3xl text-brand">{s.value}</div>
-              <div className="text-[11px] sm:text-xs text-gray-400 dark:text-gray-500 font-jakarta mt-1 leading-snug">
-                {s.label}
+          {stats.map((s) => {
+            const inner = (
+              <>
+                <div className="font-sora font-extrabold text-2xl sm:text-3xl text-brand">{s.value}</div>
+                <div className="text-xs sm:text-xs text-gray-400 dark:text-gray-500 font-jakarta mt-1 leading-snug">
+                  {s.label}
+                </div>
+              </>
+            );
+            return s.href ? (
+              <Link
+                key={s.label}
+                href={s.href}
+                {...(s.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                className="card p-4 sm:p-5 text-center hover:border-brand/30 transition-colors"
+              >
+                {inner}
+              </Link>
+            ) : (
+              <div
+                key={s.label}
+                className="card p-4 sm:p-5 text-center hover:border-brand/30 transition-colors"
+              >
+                {inner}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
       {/* ── Vision ────────────────────────────────────────── */}
       <section className="mb-14 sm:mb-20" aria-labelledby="vision-heading">
-        <span className="text-brand text-[11px] font-bold uppercase tracking-widest font-sora">
+        <span className="text-brand text-xs font-bold uppercase tracking-widest font-sora">
           Our Vision
         </span>
         <h2
           id="vision-heading"
-          className="font-sora font-extrabold text-2xl sm:text-3xl text-navy dark:text-white mt-2 mb-5"
+          className="font-sora font-extrabold text-xl sm:text-3xl text-navy dark:text-white mt-2 mb-4 sm:mb-5"
         >
           Give every AI startup the visibility it deserves
         </h2>
-        <div className="space-y-4 font-jakarta text-gray-600 dark:text-gray-400 text-base leading-relaxed">
+        <div className="space-y-3 sm:space-y-4 font-jakarta text-gray-600 dark:text-gray-400 text-sm sm:text-base leading-relaxed">
           <p>
             {"India's AI ecosystem is booming. New startups launch every week, solving real problems and building genuinely original technology. But most of them stay invisible — buried under thousands of listings on crowded global platforms like Product Hunt, where standing out is nearly impossible and regional builders rarely break through."}
           </p>
-          <p className="font-semibold text-navy dark:text-white">
+          <p className="font-semibold text-navy dark:text-white text-base sm:text-lg">
             {"We believe great work shouldn't depend on who shouts the loudest."}
           </p>
           <p>
@@ -211,16 +230,16 @@ export default async function AboutPage() {
 
       {/* ── Mission ───────────────────────────────────────── */}
       <section className="mb-14 sm:mb-20" aria-labelledby="mission-heading">
-        <span className="text-brand text-[11px] font-bold uppercase tracking-widest font-sora">
+        <span className="text-brand text-xs font-bold uppercase tracking-widest font-sora">
           Our Mission
         </span>
         <h2
           id="mission-heading"
-          className="font-sora font-extrabold text-2xl sm:text-3xl text-navy dark:text-white mt-2 mb-5"
+          className="font-sora font-extrabold text-xl sm:text-3xl text-navy dark:text-white mt-2 mb-4 sm:mb-5"
         >
           Empower founders by bringing everything into one place
         </h2>
-        <div className="space-y-4 font-jakarta text-gray-600 dark:text-gray-400 text-base leading-relaxed">
+        <div className="space-y-3 sm:space-y-4 font-jakarta text-gray-600 dark:text-gray-400 text-sm sm:text-base leading-relaxed">
           <p>
             {"Founders shouldn't have to piece together fragments from a dozen sources to understand their own ecosystem. Who's raising, which tools work, what other founders are doing, where the opportunities are — today that information is scattered, gated, or lost in noise."}
           </p>
@@ -240,7 +259,7 @@ export default async function AboutPage() {
       <section className="mb-14 sm:mb-20" aria-labelledby="features-heading">
         <h2
           id="features-heading"
-          className="font-sora font-extrabold text-2xl sm:text-3xl text-navy dark:text-white mb-8"
+          className="font-sora font-extrabold text-xl sm:text-3xl text-navy dark:text-white mb-6 sm:mb-8"
         >
           What You&apos;ll Find Here
         </h2>
@@ -269,10 +288,10 @@ export default async function AboutPage() {
 
       {/* ── Where We Show Up ──────────────────────────────── */}
       <section
-        className="card p-6 sm:p-8 mb-14 sm:mb-20 bg-gradient-to-br from-brand-50 to-white dark:from-brand-900/15 dark:to-gray-900 border-brand/20"
+        className="card p-5 sm:p-8 mb-14 sm:mb-20 bg-gradient-to-br from-brand-50 to-white dark:from-brand-900/15 dark:to-gray-900 border-brand/20"
         aria-labelledby="reach-heading"
       >
-        <span className="text-brand text-[11px] font-bold uppercase tracking-widest font-sora">
+        <span className="text-brand text-xs font-bold uppercase tracking-widest font-sora">
           Where We Show Up
         </span>
         <h2
@@ -301,7 +320,7 @@ export default async function AboutPage() {
       <section className="mb-14 sm:mb-20" aria-labelledby="values-heading">
         <h2
           id="values-heading"
-          className="font-sora font-extrabold text-2xl sm:text-3xl text-navy dark:text-white mb-8"
+          className="font-sora font-extrabold text-xl sm:text-3xl text-navy dark:text-white mb-6 sm:mb-8"
         >
           What We Stand For
         </h2>
@@ -326,7 +345,7 @@ export default async function AboutPage() {
       <section className="mb-14 sm:mb-20" aria-labelledby="founder-heading">
         <h2
           id="founder-heading"
-          className="font-sora font-extrabold text-2xl sm:text-3xl text-navy dark:text-white mb-8"
+          className="font-sora font-extrabold text-xl sm:text-3xl text-navy dark:text-white mb-6 sm:mb-8"
         >
           The Founder
         </h2>
@@ -351,7 +370,7 @@ export default async function AboutPage() {
             <p className="text-xs text-gray-400 dark:text-gray-500 font-jakarta mt-1 mb-4">
               MNIT Jaipur
             </p>
-            <div className="space-y-3 font-jakarta text-gray-600 dark:text-gray-400 text-sm sm:text-base leading-relaxed">
+            <div className="space-y-2.5 sm:space-y-3 font-jakarta text-gray-600 dark:text-gray-400 text-sm sm:text-base leading-relaxed">
               <p>
                 Lahori Venkatesh is the Founder & CEO of AI Startup Impact, a global AI startup media and ecosystem platform dedicated to showcasing AI startups, founders, AI tools, industry news, funding, and events.
               </p>
@@ -366,7 +385,7 @@ export default async function AboutPage() {
               {['Artificial Intelligence', 'AI Startups', 'AI Founders', 'AI Tools', 'Startup Ecosystem', 'AI News', 'Founder Stories', 'AI Events', 'Technology Media', 'Innovation'].map((tag) => (
                 <span
                   key={tag}
-                  className="inline-block text-[11px] font-jakarta font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-full"
+                  className="inline-block text-xs font-jakarta font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-full"
                 >
                   {tag}
                 </span>

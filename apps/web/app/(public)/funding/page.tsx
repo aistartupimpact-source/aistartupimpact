@@ -96,7 +96,7 @@ export default async function FundingPage() {
             </div>
             <div className="flex flex-col text-left">
               <span className="text-xs sm:text-sm font-sora font-bold text-navy dark:text-white leading-none">Announce your round</span>
-              <span className="text-[10px] sm:text-xs text-brand font-semibold mt-0.5 sm:mt-1 leading-none">Premium PR Service <ArrowRight className="inline w-3 h-3 ml-0.5" /></span>
+              <span className="text-xs sm:text-xs text-brand font-semibold mt-0.5 sm:mt-1 leading-none">Premium PR Service <ArrowRight className="inline w-3 h-3 ml-0.5" /></span>
             </div>
           </Link>
         </div>

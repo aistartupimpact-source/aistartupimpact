@@ -122,8 +122,8 @@ export default function SupportTicketDetail({ apiBasePath, portalPath, ticketId 
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xs font-mono text-gray-400">{ticket.ticketNumber}</span>
-              <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full ${STATUS_COLORS[ticket.status]}`}>{STATUS_LABELS[ticket.status]}</span>
-              <span className={`text-[10px] font-medium ${PRIORITY_COLORS[ticket.priority]}`}>{ticket.priority}</span>
+              <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${STATUS_COLORS[ticket.status]}`}>{STATUS_LABELS[ticket.status]}</span>
+              <span className={`text-xs font-medium ${PRIORITY_COLORS[ticket.priority]}`}>{ticket.priority}</span>
             </div>
             <h1 className="text-lg font-semibold text-gray-900 dark:text-white">{ticket.subject}</h1>
           </div>
@@ -154,7 +154,7 @@ export default function SupportTicketDetail({ apiBasePath, portalPath, ticketId 
                   {msg.senderType === 'ADMIN' ? <Shield className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /> : <User className="w-3.5 h-3.5 text-brand" />}
                 </div>
                 <span className="text-sm font-medium text-gray-900 dark:text-white">{msg.senderName}</span>
-                {msg.senderType === 'ADMIN' && <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded">Support</span>}
+                {msg.senderType === 'ADMIN' && <span className="px-1.5 py-0.5 text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded">Support</span>}
                 <span className="text-xs text-gray-400">{formatDate(msg.createdAt)}</span>
               </div>
               <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap pl-9">{msg.body}</p>
@@ -179,7 +179,7 @@ export default function SupportTicketDetail({ apiBasePath, portalPath, ticketId 
                 {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </button>
             </div>
-            <p className="text-[10px] text-gray-400 mt-1.5">Press Cmd+Enter to send</p>
+            <p className="text-xs text-gray-400 mt-1.5">Press Cmd+Enter to send</p>
           </div>
         ) : (
           <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-green-50 dark:bg-green-900/10 text-center">

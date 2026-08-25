@@ -26,8 +26,8 @@ function SlideContent({ s, onClick }: { s: HeroSlide; onClick?: (e: React.MouseE
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-20 md:pb-24 pt-32 sm:pt-20">
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 mb-4 sm:mb-5">
-              <div className="h-px w-8 bg-brand/60" />
-              <span className="text-brand/80 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.2em] font-jakarta">
+              <div className="h-px w-8 bg-red-500/60" />
+              <span className="text-red-500 text-xs sm:text-xs font-bold uppercase tracking-[0.2em] font-jakarta">
                 {s.badgeText || 'India AI · Cover Story'}
               </span>
             </div>
@@ -43,7 +43,7 @@ function SlideContent({ s, onClick }: { s: HeroSlide; onClick?: (e: React.MouseE
               {s.authorName && (
                 <>
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-brand/30 flex items-center justify-center text-[10px] text-brand font-bold">
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-red-500/20 flex items-center justify-center text-xs text-red-400 font-bold">
                       {s.authorName.charAt(0)}
                     </div>
                     <span className="text-gray-300 font-medium">{s.authorName}</span>
@@ -57,7 +57,7 @@ function SlideContent({ s, onClick }: { s: HeroSlide; onClick?: (e: React.MouseE
                   {s.readTimeMinutes} min read
                 </span>
               )}
-              <span className="ml-auto sm:ml-0 inline-flex items-center gap-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors border border-red-500/30">
+              <span className="ml-auto sm:ml-0 inline-flex items-center gap-1 sm:gap-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 text-[10px] sm:text-xs font-semibold px-2 py-1 sm:px-3 sm:py-1.5 rounded-full transition-colors border border-red-500/30">
                 {s.ctaLabel} →
               </span>
             </div>

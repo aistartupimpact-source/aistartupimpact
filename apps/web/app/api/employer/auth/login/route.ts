@@ -31,7 +31,8 @@ export async function POST(request: NextRequest) {
     // Find employer
     const employers = await sql`
       SELECT id, "companyName", slug, email, "passwordHash", plan, "isActive",
-             "emailVerified", "failedLoginAttempts", "lockedUntil", "twoFactorEnabled"
+             "emailVerified", "failedLoginAttempts", "lockedUntil", "twoFactorEnabled",
+             "deactivatedAt", "onboardingCompleted"
       FROM "JobBoardEmployer"
       WHERE email = ${email.toLowerCase().trim()}
       LIMIT 1
@@ -105,6 +106,15 @@ export async function POST(request: NextRequest) {
       WHERE id = ${employer.id}
     `;
 
+    if (employer.deactivatedAt) {
+      return NextResponse.json({
+        deactivated: true,
+        deactivatedAt: employer.deactivatedAt,
+        message: 'Your account has been deactivated. Would you like to reactivate it?',
+        reactivateUrl: '/api/employer/reactivate',
+      });
+    }
+
     if (employer.twoFactorEnabled) {
       const challengeToken = await new SignJWT({ userId: employer.id, userType: 'employer', purpose: '2fa-challenge' })
         .setProtectedHeader({ alg: 'HS256' })
@@ -121,11 +131,13 @@ export async function POST(request: NextRequest) {
       companyName: employer.companyName,
       slug: employer.slug,
       plan: employer.plan,
+      onboardingCompleted: !!employer.onboardingCompleted,
     });
 
     return NextResponse.json({
       success: true,
       emailVerified: employer.emailVerified,
+      onboardingCompleted: !!employer.onboardingCompleted,
       employer: { id: employer.id, companyName: employer.companyName, slug: employer.slug },
     });
   } catch (error: any) {

@@ -117,7 +117,7 @@ export default function ToolTagSelector({
         {selectedTags.map(tag => (
           <span
             key={tag.id}
-            className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[11px] text-gray-700 dark:text-gray-300 font-medium"
+            className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs text-gray-700 dark:text-gray-300 font-medium"
           >
             {tag.name}
             <button
@@ -146,7 +146,7 @@ export default function ToolTagSelector({
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="0 top-full left-0 right-0 mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-[280px] overflow-y-auto">
+        <div className="absolute z-dropdown top-full left-0 right-0 mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-[280px] overflow-y-auto">
           {filteredGroups.length === 0 ? (
             <div className="px-4 py-6 text-center text-sm text-gray-400">
               {query ? 'No tags match your search' : 'All tags selected'}
@@ -159,7 +159,7 @@ export default function ToolTagSelector({
               return (
                 <div key={group.id} className="border-b border-gray-100 dark:border-gray-800 last:border-0">
                   <div className="px-3 py-1.5 bg-gray-50 dark:bg-gray-800/50 sticky top-0">
-                    <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       {group.name}
                     </span>
                   </div>
@@ -170,13 +170,13 @@ export default function ToolTagSelector({
                         type="button"
                         onClick={() => addTag(tag.id)}
                         disabled={selectedTagIds.length >= maxTags}
-                        className="px-2 py-1 rounded text-[11px] text-gray-600 dark:text-gray-400 hover:bg-brand/5 hover:text-brand border border-transparent hover:border-brand/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="px-2 py-1 rounded text-xs text-gray-600 dark:text-gray-400 hover:bg-brand/5 hover:text-brand border border-transparent hover:border-brand/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         {tag.name}
                       </button>
                     ))}
                     {unselectedTags.length > (query ? 20 : 10) && (
-                      <span className="text-[10px] text-gray-400 self-center px-2">
+                      <span className="text-xs text-gray-400 self-center px-2">
                         +{unselectedTags.length - (query ? 20 : 10)} more
                       </span>
                     )}

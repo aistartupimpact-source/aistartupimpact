@@ -198,6 +198,8 @@ model AiTool {
   @@index([status, listingTier])
   @@index([deletedAt])
   @@index([createdAt])
+
+  siteAnnouncements SiteAnnouncement[]
 }
 
 model Article {
@@ -236,15 +238,36 @@ model Article {
   startupId                                     String?
   toolId                                        String?
   likeCount                                     Int                      @default(0)
+  keyTakeaways                                  Json?
+  agreeCount                                    Int                      @default(0)
+  disagreeCount                                 Int                      @default(0)
+  primaryTagId                                  String?
   searchVector                                  Unsupported("tsvector")?
+
+  // Founder content fields
+  submittedById                                 String?
+  founderAuthorId                               String?
+  moderationStatus                              ModerationStatus         @default(NONE)
+  moderationNote                                String?
+  moderatedBy                                   String?
+  moderatedAt                                   DateTime?
+  lastSavedAt                                   DateTime?
+  autoSaved                                     Boolean                  @default(false)
+
   User                                          User                     @relation(fields: [authorId], references: [id])
   Category                                      Category?                @relation(fields: [categoryId], references: [id])
   Startup                                       Startup?                 @relation(fields: [startupId], references: [id])
   AiTool                                        AiTool?                  @relation(fields: [toolId], references: [id])
+  PrimaryTag                                    Tag?                     @relation("ArticlePrimaryTag", fields: [primaryTagId], references: [id], onDelete: SetNull)
+  SubmittedByFounder                            FounderUser?             @relation("ArticleSubmittedBy", fields: [submittedById], references: [id], onDelete: SetNull)
+  FounderAuthor                                 FounderUser?             @relation("ArticleFounderAuthor", fields: [founderAuthorId], references: [id], onDelete: SetNull)
   ArticleCoAuthor                               ArticleCoAuthor[]
   ArticleTag                                    ArticleTag[]
   ArticleVersion                                ArticleVersion[]
   Comment                                       Comment[]
+  ContentActivityLog                            ContentActivityLog[]
+  ContentMedia                                  ContentMedia[]
+  FounderContentReport                           FounderContentReport[]
   RelatedArticle_RelatedArticle_fromIdToArticle RelatedArticle[]         @relation("RelatedArticle_fromIdToArticle")
   RelatedArticle_RelatedArticle_toIdToArticle   RelatedArticle[]         @relation("RelatedArticle_toIdToArticle")
 
@@ -255,6 +278,11 @@ model Article {
   @@index([status, publishedAt])
   @@index([type, status])
   @@index([deletedAt])
+  @@index([submittedById])
+  @@index([founderAuthorId])
+  @@index([moderationStatus])
+  @@index([type, moderationStatus, status])
+  @@index([primaryTagId])
 }
 
 model ArticleCoAuthor {
@@ -276,14 +304,20 @@ model ArticleTag {
 }
 
 model ArticleVersion {
-  id        String   @id
-  articleId String
-  content   Json
-  title     String
-  createdAt DateTime @default(now())
-  Article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  id            String   @id
+  articleId     String
+  versionNumber Int      @default(1)
+  content       Json
+  title         String
+  excerpt       String?
+  coverImage    String?
+  createdBy     String?
+  changeNote    String?
+  createdAt     DateTime @default(now())
+  Article       Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   @@index([articleId, createdAt])
+  @@index([articleId, versionNumber])
 }
 
 model AuditLog {
@@ -493,6 +527,10 @@ model FounderUser {
   emailChangeToken                       String?                  @unique
   emailChangeTokenExpiry                 DateTime?
 
+  // Account lifecycle
+  deactivatedAt                          DateTime?
+  deletedAt                              DateTime?
+
   // Unified identity link
   unifiedUserId                          String?                  @unique
   unifiedUser                            UnifiedUser?             @relation("FounderToUnified", fields: [unifiedUserId], references: [id], onDelete: SetNull)
@@ -506,9 +544,15 @@ model FounderUser {
   StartupVerificationLog                 StartupVerificationLog[]
   ToolReviewResponse                     ToolReviewResponse[]
   founder_settings                       founder_settings?
+  teamMembers                            FounderTeamMember[]
+  submittedArticles                      Article[]                @relation("ArticleSubmittedBy")
+  authoredArticles                       Article[]                @relation("ArticleFounderAuthor")
+  milestones                             FounderMilestone[]
+  contentActivityLogs                    ContentActivityLog[]
 
   @@index([companyDomain])
   @@index([status])
+  @@index([deactivatedAt])
 }
 
 model FundingDigest {
@@ -543,6 +587,8 @@ model FundingRound {
   @@index([announcedAt])
   @@index([roundType])
   @@index([startupId, announcedAt])
+
+  siteAnnouncements SiteAnnouncement[]
 }
 
 model GlossaryTerm {
@@ -1060,6 +1106,9 @@ model Startup {
   FeaturedCampaign                           FeaturedCampaign[]
   JobBoardEmployer                           JobBoardEmployer?
   JobBoardListings                           JobBoardListing[]
+  FounderMilestone                           FounderMilestone[]
+  ContentActivityLog                         ContentActivityLog[]
+  ContentMedia                               ContentMedia[]
 
   @@index([category])
   @@index([cityId])
@@ -1079,6 +1128,8 @@ model Startup {
   @@index([businessType])
   @@index([employeeCount])
   @@index([createdAt])
+
+  siteAnnouncements SiteAnnouncement[]
 }
 
 model StartupFAQ {
@@ -1141,8 +1192,9 @@ model Tag {
   id         String       @id
   name       String       @unique
   slug       String       @unique
-  createdAt  DateTime     @default(now())
-  ArticleTag ArticleTag[]
+  createdAt       DateTime     @default(now())
+  ArticleTag      ArticleTag[]
+  PrimaryArticles Article[]    @relation("ArticlePrimaryTag")
 
 }
 
@@ -1330,6 +1382,10 @@ model WebUser {
   emailChangeToken       String?   @unique
   emailChangeTokenExpiry DateTime?
 
+  // Account lifecycle
+  deactivatedAt          DateTime?
+  deletedAt              DateTime?
+
   StartupReview   StartupReview[]
   ToolReview      ToolReview[]
   WebUserSession  WebUserSession[]
@@ -1337,6 +1393,7 @@ model WebUser {
   SavedStartup    SavedStartup[]
   JobBoardSaved   JobBoardSaved[]
 
+  @@index([deactivatedAt])
 }
 
 model SavedTool {
@@ -1549,6 +1606,67 @@ enum ArticleType {
   COMPARISON
   REPORT
   SPONSORED
+  FOUNDER_STORY
+  STARTUP_UPDATE
+}
+
+enum ModerationStatus {
+  NONE
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  REVISION_REQUESTED
+}
+
+enum MilestoneType {
+  FUNDING
+  LAUNCH
+  PARTNERSHIP
+  ACQUISITION
+  AWARD
+  HIRING
+  REVENUE
+  USER_MILESTONE
+}
+
+enum MilestoneSource {
+  FOUNDER_SUBMITTED
+  ADMIN_CREATED
+  IMPORTED
+}
+
+enum VerificationStatus {
+  FOUNDER_REPORTED
+  PLATFORM_VERIFIED
+  DISPUTED
+}
+
+enum ContentAction {
+  CREATED
+  EDITED
+  SUBMITTED_FOR_REVIEW
+  REVISION_REQUESTED
+  RESUBMITTED
+  APPROVED
+  REJECTED
+  PUBLISHED
+  UNPUBLISHED
+  DELETED
+  RESTORED
+  AUTHOR_CHANGED
+  MILESTONE_VERIFIED
+  MILESTONE_UNVERIFIED
+  MERGED_DUPLICATE
+  REPORTED
+  REPORT_REVIEWED
+}
+
+enum ReportReason {
+  SPAM
+  MISLEADING
+  INAPPROPRIATE
+  COPYRIGHT
+  OTHER
 }
 
 enum CampaignStatus {
@@ -1918,6 +2036,13 @@ enum TeamMemberStatus {
   REVOKED
 }
 
+enum FounderTeamRole {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
 model EventOrganizer {
   id               String               @id @default(dbgenerated("gen_random_uuid()"))
   email            String               @unique
@@ -1949,6 +2074,14 @@ model EventOrganizer {
   emailChangeToken       String?        @unique
   emailChangeTokenExpiry DateTime?
 
+  // Onboarding
+  onboardingCompleted Boolean            @default(false)
+  onboardingStep      Int                @default(0)
+
+  // Account lifecycle
+  deactivatedAt    DateTime?
+  deletedAt        DateTime?
+
   // Unified identity link
   unifiedUserId    String?              @unique
   unifiedUser      UnifiedUser?         @relation("OrganizerToUnified", fields: [unifiedUserId], references: [id], onDelete: SetNull)
@@ -1959,6 +2092,7 @@ model EventOrganizer {
   teamMembers      EventTeamMember[]
 
   @@index([status])
+  @@index([deactivatedAt])
 }
 
 model EventOrganizerSession {
@@ -2030,6 +2164,131 @@ model TeamActivityLog {
   @@index([teamMemberId, createdAt])
   @@index([organizerId, createdAt])
   @@index([eventId, createdAt])
+}
+
+model FounderTeamMember {
+  id            String           @id @default(cuid())
+  founderId     String
+  email         String
+  name          String?
+  role          FounderTeamRole  @default(VIEWER)
+  status        TeamMemberStatus @default(PENDING)
+  inviteToken   String?          @unique
+  expiresAt     DateTime?
+  passwordHash  String?
+  acceptedAt    DateTime?
+  lastActiveAt  DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  founder       FounderUser      @relation(fields: [founderId], references: [id], onDelete: Cascade)
+
+  @@unique([founderId, email])
+  @@index([email])
+  @@index([inviteToken])
+  @@index([founderId])
+}
+
+model FounderMilestone {
+  id                 String             @id @default(cuid())
+  founderId          String
+  startupId          String
+  type               MilestoneType
+  title              String
+  description        String?
+  amount             Decimal?
+  currency           String?            @default("INR")
+  date               DateTime
+  source             MilestoneSource    @default(FOUNDER_SUBMITTED)
+  verificationStatus VerificationStatus @default(FOUNDER_REPORTED)
+  verifiedBy         String?
+  verifiedAt         DateTime?
+  verificationNote   String?
+  isPublic           Boolean            @default(true)
+  status             String             @default("ACTIVE")
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  founder            FounderUser        @relation(fields: [founderId], references: [id], onDelete: Cascade)
+  startup            Startup            @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  activityLogs       ContentActivityLog[]
+  media              ContentMedia[]
+  reports            FounderContentReport[]
+
+  @@index([startupId, type])
+  @@index([startupId, date])
+  @@index([founderId])
+  @@index([verificationStatus])
+  @@index([status, isPublic])
+}
+
+model ContentActivityLog {
+  id            String        @id @default(cuid())
+  contentId     String?
+  milestoneId   String?
+  startupId     String
+  actorId       String
+  actorType     String        @default("FOUNDER")
+  action        ContentAction
+  metadata      Json?
+  createdAt     DateTime      @default(now())
+
+  article       Article?           @relation(fields: [contentId], references: [id], onDelete: SetNull)
+  milestone     FounderMilestone?  @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  startup       Startup            @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  actor         FounderUser        @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([contentId, createdAt])
+  @@index([milestoneId, createdAt])
+  @@index([startupId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+model ContentMedia {
+  id            String            @id @default(cuid())
+  contentId     String?
+  milestoneId   String?
+  startupId     String
+  uploadedBy    String
+  type          String            @default("IMAGE")
+  url           String
+  thumbnailUrl  String?
+  fileName      String
+  fileSize      Int               @default(0)
+  mimeType      String
+  alt           String?
+  caption       String?
+  sortOrder     Int               @default(0)
+  createdAt     DateTime          @default(now())
+
+  article       Article?          @relation(fields: [contentId], references: [id], onDelete: SetNull)
+  milestone     FounderMilestone? @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  startup       Startup           @relation(fields: [startupId], references: [id], onDelete: Cascade)
+
+  @@index([contentId])
+  @@index([milestoneId])
+  @@index([startupId])
+}
+
+model FounderContentReport {
+  id            String            @id @default(cuid())
+  contentId     String?
+  milestoneId   String?
+  reporterType  String            @default("ANONYMOUS")
+  reporterId    String?
+  reason        ReportReason
+  description   String?
+  status        ReportStatus      @default(PENDING)
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  createdAt     DateTime          @default(now())
+
+  article       Article?          @relation(fields: [contentId], references: [id], onDelete: SetNull)
+  milestone     FounderMilestone? @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+
+  @@index([contentId])
+  @@index([milestoneId])
+  @@index([status])
 }
 
 // ============================================================
@@ -2157,6 +2416,8 @@ model Event {
   @@index([format])
   @@index([latitude, longitude])
   @@index([deletedAt])
+
+  siteAnnouncements SiteAnnouncement[]
 }
 
 model EventSlugHistory {
@@ -2621,12 +2882,21 @@ model JobBoardEmployer {
   emailChangeToken       String?    @unique
   emailChangeTokenExpiry DateTime?
 
+  // Onboarding
+  onboardingCompleted    Boolean        @default(false)
+  onboardingStep         Int            @default(0)
+
+  // Account lifecycle
+  deactivatedAt          DateTime?
+  deletedAt              DateTime?
+
   Listings        JobBoardListing[]
   Startup         Startup?          @relation(fields: [startupId], references: [id], onDelete: SetNull)
 
   @@index([startupId])
   @@index([isActive])
   @@index([plan])
+  @@index([deactivatedAt])
 }
 
 model JobBoardListing {
@@ -2685,6 +2955,8 @@ model JobBoardListing {
   @@index([expiresAt])
   @@index([searchVector], type: Gin)
   @@index([deletedAt])
+
+  siteAnnouncements SiteAnnouncement[]
 }
 
 model JobBoardApplication {
@@ -2741,4 +3013,46 @@ model EmailLog {
   @@index([to])
   @@index([type, sentAt])
   @@index([sentAt])
+}
+
+// ─── Announcement Bar ───────────────────────────────
+
+enum AnnouncementType {
+  CUSTOM
+  STARTUP
+  FUNDING
+  EVENT
+  JOB
+  TOOL
+}
+
+model SiteAnnouncement {
+  id             String           @id @default(cuid())
+  type           AnnouncementType @default(CUSTOM)
+  text           String
+  mobileText     String?
+  emoji          String           @default("📢")
+  link           String
+
+  startupId      String?
+  fundingRoundId String?
+  eventId        String?
+  jobListingId   String?
+  toolId         String?
+
+  isActive       Boolean          @default(true)
+  sortOrder      Int              @default(0)
+  startsAt       DateTime?
+  endsAt         DateTime?
+
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  startup        Startup?         @relation(fields: [startupId], references: [id], onDelete: SetNull)
+  fundingRound   FundingRound?    @relation(fields: [fundingRoundId], references: [id], onDelete: SetNull)
+  event          Event?           @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  jobListing     JobBoardListing? @relation(fields: [jobListingId], references: [id], onDelete: SetNull)
+  tool           AiTool?          @relation(fields: [toolId], references: [id], onDelete: SetNull)
+
+  @@index([isActive, sortOrder])
 }

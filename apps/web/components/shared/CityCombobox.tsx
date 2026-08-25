@@ -195,6 +195,8 @@ export default function CityCombobox({
           }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
+          inputMode="search"
+          enterKeyHint="search"
           autoComplete="off"
           className={`w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent ${className}`}
         />
@@ -206,7 +208,7 @@ export default function CityCombobox({
       {isOpen && (
         <ul
           ref={listRef}
-          className="0 w-full mt-1 max-h-60 overflow-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-1 shadow-lg focus:outline-none text-sm"
+          className="absolute z-dropdown w-full mt-1 max-h-60 overflow-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-1 shadow-lg focus:outline-none text-sm"
         >
           {suggestions.map((item, idx) => {
             const isSelected = value === item.city;

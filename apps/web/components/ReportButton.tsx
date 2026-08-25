@@ -48,7 +48,7 @@ export default function ReportButton({ entityType, entityId, entityName, entityS
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1 text-[11px] text-gray-400 hover:text-red-500 font-jakarta transition-colors">
+      <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 font-jakarta transition-colors">
         <Flag className="w-3 h-3" /> Report
       </button>
 
@@ -70,13 +70,13 @@ export default function ReportButton({ entityType, entityId, entityName, entityS
             ) : (
               <form onSubmit={handleSubmit} className="p-5 space-y-4">
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-                  <p className="text-[10px] text-gray-400 font-jakarta uppercase">Reporting</p>
+                  <p className="text-xs text-gray-400 font-jakarta uppercase">Reporting</p>
                   <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 font-jakarta">{entityName}</p>
-                  <p className="text-[10px] text-gray-400 font-jakarta">{entityType.toLowerCase()} · /{entitySlug}</p>
+                  <p className="text-xs text-gray-400 font-jakarta">{entityType.toLowerCase()} · /{entitySlug}</p>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 font-jakarta">Issue Type *</label>
+                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5 font-jakarta">Issue Type *</label>
                   <select value={reportType} onChange={e => setReportType(e.target.value)} required className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-jakarta focus:outline-none focus:ring-2 focus:ring-brand/20">
                     <option value="">Select...</option>
                     {REPORT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
@@ -84,12 +84,12 @@ export default function ReportButton({ entityType, entityId, entityName, entityS
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 font-jakarta">Description *</label>
+                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5 font-jakarta">Description *</label>
                   <textarea value={description} onChange={e => setDescription(e.target.value)} required rows={3} placeholder="Describe what's wrong..." className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-jakarta focus:outline-none focus:ring-2 focus:ring-brand/20 resize-none" maxLength={1000}/>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 font-jakarta">Your Email <span className="normal-case">(optional, for follow-up)</span></label>
+                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5 font-jakarta">Your Email <span className="normal-case">(optional, for follow-up)</span></label>
                   <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-jakarta focus:outline-none focus:ring-2 focus:ring-brand/20"/>
                 </div>
 

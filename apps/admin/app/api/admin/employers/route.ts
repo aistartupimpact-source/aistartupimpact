@@ -11,7 +11,7 @@ export async function GET() {
   try {
     const employers = await sql`
       SELECT e.id, e."companyName", e.slug, e.email, e."logoUrl", e."websiteUrl",
-             e.plan, e."isVerified", e."isActive", e."companySize", e.industry,
+             e.plan, e."isVerified", e."isActive", e."deactivatedAt"::text, e."companySize", e.industry,
              e."createdAt"::text,
              (SELECT COUNT(*)::int FROM "JobBoardListing" WHERE "employerId" = e.id AND "deletedAt" IS NULL) AS "jobCount"
       FROM "JobBoardEmployer" e

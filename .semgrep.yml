@@ -1,0 +1,4 @@
+rules: []
+
+# Use managed rulesets (p/javascript, p/typescript) via CLI flags.
+# This file configures paths and severity filtering.

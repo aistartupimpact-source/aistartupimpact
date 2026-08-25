@@ -75,7 +75,7 @@ export default async function EmployerAnalyticsPage() {
           <div key={s.label} className="card p-4 text-center">
             <s.icon className={`w-5 h-5 mx-auto mb-1 ${s.color}`} />
             <p className="font-sora font-extrabold text-lg text-navy dark:text-white">{s.value}</p>
-            <p className="text-[10px] text-gray-400 font-jakarta">{s.label}</p>
+            <p className="text-xs text-gray-400 font-jakarta">{s.label}</p>
           </div>
         ))}
       </div>
@@ -91,7 +91,7 @@ export default async function EmployerAnalyticsPage() {
               {jobStats.map((j: any, i) => (
                 <div key={i} className="flex items-center justify-between">
                   <p className="text-xs font-jakarta text-gray-700 dark:text-gray-300 truncate flex-1 mr-3">{j.title}</p>
-                  <div className="flex gap-3 text-[10px] text-gray-400 font-jakarta shrink-0">
+                  <div className="flex gap-3 text-xs text-gray-400 font-jakarta shrink-0">
                     <span>{j.viewsCount} views</span>
                     <span>{j.applicationsCount} apps</span>
                     <span>{j.savedCount} saved</span>

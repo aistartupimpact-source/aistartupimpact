@@ -18,6 +18,7 @@ interface Employer {
   plan: string;
   isVerified: boolean;
   isActive: boolean;
+  deactivatedAt?: string;
   companySize?: string;
   industry?: string;
   createdAt: string;
@@ -163,11 +164,13 @@ export default function AdminEmployersPage() {
                 </td>
                 <td className="px-6 py-4">
                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${
-                    emp.isActive
-                      ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                      : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                    emp.deactivatedAt
+                      ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                      : emp.isActive
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                        : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                   }`}>
-                    {emp.isActive ? <><CheckCircle className="w-3 h-3" /> Active</> : 'Suspended'}
+                    {emp.deactivatedAt ? 'Deactivated' : emp.isActive ? <><CheckCircle className="w-3 h-3" /> Active</> : 'Suspended'}
                   </span>
                 </td>
                 <td className="px-6 py-4">

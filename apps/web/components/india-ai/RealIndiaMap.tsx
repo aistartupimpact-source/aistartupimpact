@@ -414,7 +414,7 @@ export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps)
                   <span>Selected state</span>
                 </div>
               </div>
-              <span className="text-gray-500 flex items-center gap-2 text-[11px]">
+              <span className="text-gray-500 flex items-center gap-2 text-xs">
                 <Info className="w-3.5 h-3.5" />
                 Click state or city dot
               </span>
@@ -496,12 +496,12 @@ export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps)
                             {startup.tagline}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 rounded font-medium">
+                            <span className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 rounded font-medium">
                               {startup.stage.replace(/_/g, ' ')}
                             </span>
-                            <span className="text-[10px] text-gray-400">{startup.headquartersCity}</span>
+                            <span className="text-xs text-gray-400">{startup.headquartersCity}</span>
                             {Number(startup.totalFundingInr) > 0 && (
-                              <span className="text-[10px] font-semibold text-green-600 dark:text-green-400">
+                              <span className="text-xs font-semibold text-green-600 dark:text-green-400">
                                 {formatCurrency(startup.totalFundingInr)}
                               </span>
                             )}

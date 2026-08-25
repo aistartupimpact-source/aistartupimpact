@@ -15,15 +15,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   };
 
   try {
-
-    const jobs = await sql`
-      SELECT slug, "updatedAt", "createdAt"
-      FROM "JobBoardListing"
-      WHERE "isActive" = true AND "deletedAt" IS NULL
-        AND ("expiresAt" IS NULL OR "expiresAt" > NOW())
-      ORDER BY "publishedAt" DESC
-      LIMIT 1000
-    `;
+    const [jobs, companies] = await Promise.all([
+      sql`
+        SELECT slug, "updatedAt", "createdAt"
+        FROM "JobBoardListing"
+        WHERE "isActive" = true AND "deletedAt" IS NULL
+          AND ("expiresAt" IS NULL OR "expiresAt" > NOW())
+        ORDER BY "publishedAt" DESC
+        LIMIT 1000
+      `,
+      sql`
+        SELECT e.slug, MAX(l."updatedAt") as "lastModified"
+        FROM "JobBoardEmployer" e
+        JOIN "JobBoardListing" l ON l."employerId" = e.id
+        WHERE e."isActive" = true AND l."isActive" = true AND l."deletedAt" IS NULL
+          AND (l."expiresAt" IS NULL OR l."expiresAt" > NOW())
+        GROUP BY e.slug
+      `,
+    ]);
 
     const jobRoutes: MetadataRoute.Sitemap = (jobs as any[]).map((j) => ({
       url: `${SITE_URL}/jobs/${j.slug}`,
@@ -32,7 +41,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
 
-    return [listingPage, ...jobRoutes];
+    const companyRoutes: MetadataRoute.Sitemap = (companies as any[]).map((c) => ({
+      url: `${SITE_URL}/jobs/company/${c.slug}`,
+      lastModified: new Date(c.lastModified),
+      changeFrequency: 'weekly' as const,
+      priority: 0.6,
+    }));
+
+    return [listingPage, ...jobRoutes, ...companyRoutes];
   } catch (error) {
     console.error('Error generating jobs sitemap:', error);
     return [listingPage];

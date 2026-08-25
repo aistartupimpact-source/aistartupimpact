@@ -21,6 +21,7 @@ import { calculateImpactScore } from '@/lib/impact-score';
 import ShareButton from '@/components/ShareButton';
 import ReportButton from '@/components/ReportButton';
 import SubscribeForm from '@/components/SubscribeForm';
+import SignInGate from '@/components/SignInGate';
 
 export const revalidate = 300;
 
@@ -82,7 +83,7 @@ const getStartup = cache(async (slug: string) => {
     const city = s.headquartersCity || '';
 
     // Fetch all dependent data in parallel
-    const [rounds, news, stories, products, similarCandidates, founderProfile, boardJobs] = await Promise.all([
+    const [rounds, news, stories, products, similarCandidates, founderProfile, boardJobs, startupUpdates, startupMilestones] = await Promise.all([
       sql`
         SELECT "roundType", "amountUsd", "amountInr",
                "announcedAt"::text AS "announcedAt",
@@ -157,6 +158,22 @@ const getStartup = cache(async (slug: string) => {
         ORDER BY jl."publishedAt" DESC
         LIMIT 10
       `,
+      sql`
+        SELECT id, title, slug, excerpt, "publishedAt"::text AS "publishedAt", "contentText"
+        FROM "Article"
+        WHERE status = 'PUBLISHED' AND "deletedAt" IS NULL
+          AND type = 'STARTUP_UPDATE' AND "startupId" = ${s.id}
+        ORDER BY "publishedAt" DESC
+        LIMIT 5
+      `,
+      sql`
+        SELECT id, title, description, type, amount, currency, date::text AS date,
+               "verificationStatus", "isPublic"
+        FROM "FounderMilestone"
+        WHERE "startupId" = ${s.id} AND status = 'ACTIVE' AND "isPublic" = true
+        ORDER BY date DESC
+        LIMIT 10
+      `,
     ]);
 
     // Deduplicate similar startups by priority order (same logic, single pass)
@@ -220,7 +237,9 @@ const getStartup = cache(async (slug: string) => {
       reviewCount: 0,
       founderStories: stories,
       products,
-      jobs
+      jobs,
+      startupUpdates,
+      startupMilestones,
     };
   } catch (e) {
     console.error('[getStartup] ERROR:', e);
@@ -481,20 +500,20 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
           {/* Left Side: Tags */}
           <div className="flex flex-wrap items-center gap-2">
             {industryTag && (
-              <span className="flex items-center gap-1 text-[10px] font-bold bg-brand/10 dark:bg-brand/20 text-brand px-2.5 py-1 rounded-full uppercase">
+              <span className="flex items-center gap-1 text-xs font-bold bg-brand/10 dark:bg-brand/20 text-brand px-2.5 py-1 rounded-full uppercase">
                 <Tag className="w-3 h-3" />{industryTag}
               </span>
             )}
             {startup.businessType && (
-              <span className="flex items-center gap-1 text-[10px] font-bold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2.5 py-1 rounded-full uppercase">
+              <span className="flex items-center gap-1 text-xs font-bold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2.5 py-1 rounded-full uppercase">
                 {startup.businessType}
               </span>
             )}
-            <span className="text-[10px] font-bold bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-2.5 py-1 rounded-full uppercase">
+            <span className="text-xs font-bold bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-2.5 py-1 rounded-full uppercase">
               {stageLabel(startup.stage)}
             </span>
             {startup.status && (
-              <span className={`flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border ${
+              <span className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full uppercase border ${
                 startup.status === 'ACTIVE'
                   ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30'
                   : startup.status === 'PUBLIC'
@@ -515,15 +534,15 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
               </span>
             )}
             {startup.isFeatured && (
-              <span className="text-[10px] font-bold bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2.5 py-1 rounded-full">★ Featured</span>
+              <span className="text-xs font-bold bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2.5 py-1 rounded-full">★ Featured</span>
             )}
             {totalRaised > 0 && (
-              <span className="flex items-center gap-1 text-[10px] font-bold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-full">
+              <span className="flex items-center gap-1 text-xs font-bold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-full">
                 {formatUsd(totalRaised)} raised
               </span>
             )}
             {relativeTime && (
-              <span className="flex items-center gap-1.5 text-[10px] font-bold bg-gray-100 dark:bg-gray-800/80 text-gray-500 dark:text-gray-400 px-2.5 py-1 rounded-full">
+              <span className="flex items-center gap-1.5 text-xs font-bold bg-gray-100 dark:bg-gray-800/80 text-gray-500 dark:text-gray-400 px-2.5 py-1 rounded-full">
                 <Clock className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" /> {relativeTime}
               </span>
             )}
@@ -539,7 +558,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                 >
                   <Globe className="w-5 h-5" />
                 </a>
-                <div className="0 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-dropdown hidden group-hover:flex flex-col items-center animate-in fade-in slide-in-from-top-1 duration-150">
                   <div className="w-2.5 h-2.5 bg-black dark:bg-gray-800 rotate-45 -mb-1.5" />
                   <div className="bg-black dark:bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg font-jakarta">
                     {startup.websiteUrl.replace(/^https?:\/\/(www\.)?/, '')}
@@ -556,7 +575,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                     <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                   </svg>
                 </a>
-                <div className="0 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-dropdown hidden group-hover:flex flex-col items-center animate-in fade-in slide-in-from-top-1 duration-150">
                   <div className="w-2.5 h-2.5 bg-black dark:bg-gray-800 rotate-45 -mb-1.5" />
                   <div className="bg-black dark:bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg font-jakarta">
                     LinkedIn
@@ -573,7 +592,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                   </svg>
                 </a>
-                <div className="0 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-dropdown hidden group-hover:flex flex-col items-center animate-in fade-in slide-in-from-top-1 duration-150">
                   <div className="w-2.5 h-2.5 bg-black dark:bg-gray-800 rotate-45 -mb-1.5" />
                   <div className="bg-black dark:bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg font-jakarta">
                     Twitter / X
@@ -673,7 +692,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                   >
                     {icon}
                   </a>
-                  <div className="0 animate-in fade-in slide-in-from-top-1 duration-150">
+                  <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-dropdown hidden group-hover:flex flex-col items-center animate-in fade-in slide-in-from-top-1 duration-150">
                     <div className="w-2.5 h-2.5 bg-black dark:bg-gray-800 rotate-45 -mb-1.5" />
                     <div className="bg-black dark:bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg font-jakarta">
                       {label}
@@ -724,7 +743,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                   </span>
                   <span className="font-sora font-bold text-sm text-navy dark:text-white block">{startup.employeeCount}+</span>
                   {startup.foundedYear && (
-                    <span className="text-[10px] text-brand font-jakarta flex items-center gap-0.5 mt-0.5">
+                    <span className="text-xs text-brand font-jakarta flex items-center gap-0.5 mt-0.5">
                       <ArrowUpRight className="w-3 h-3" />
                       Growing since {startup.foundedYear}
                     </span>
@@ -755,34 +774,101 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
 
           {/* Founders */}
           {startup.foundersData?.length > 0 && (
-            <FoundersSection founders={startup.foundersData} startupName={startup.name} />
+            <FoundersSection founders={startup.foundersData} startupName={startup.name} isSignedIn={!!session} />
+          )}
+
+          {/* Startup Updates */}
+          {startup.startupUpdates?.length > 0 && (
+            <div className="card p-5 sm:p-6">
+              <h2 className="section-title mb-4 flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-brand" /> Latest Updates
+              </h2>
+              <div className="space-y-3">
+                {startup.startupUpdates.map((u: any) => (
+                  <Link key={u.id} href={`/news/${u.slug}`} className="block p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
+                    <h3 className="font-sora font-bold text-sm text-navy dark:text-white mb-1">{u.title}</h3>
+                    {u.contentText && <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta line-clamp-2">{u.contentText.slice(0, 200)}</p>}
+                    <span className="text-xs text-gray-400 font-jakarta mt-1 block">
+                      {new Date(u.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Milestones */}
+          {startup.startupMilestones?.length > 0 && (
+            <div className="card p-5 sm:p-6">
+              <h2 className="section-title mb-4 flex items-center gap-2">
+                <Star className="w-4 h-4 text-brand" /> Milestones
+              </h2>
+              <div className="relative">
+                <div className="absolute left-[19px] top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-700" />
+                <div className="space-y-4">
+                  {startup.startupMilestones.map((m: any) => {
+                    const icons: Record<string, string> = { FUNDING: '💰', LAUNCH: '🚀', PARTNERSHIP: '🤝', ACQUISITION: '🏢', AWARD: '🏆', HIRING: '👥', REVENUE: '📈', USER_MILESTONE: '🎯' };
+                    return (
+                      <div key={m.id} className="flex items-start gap-3 relative">
+                        <div className="w-10 h-10 rounded-full bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center text-lg shrink-0 z-[1]">
+                          {icons[m.type] || '📌'}
+                        </div>
+                        <div className="pt-1.5">
+                          <h3 className="font-sora font-bold text-sm text-navy dark:text-white flex items-center gap-1.5">
+                            {m.title}
+                            {m.verificationStatus === 'PLATFORM_VERIFIED' && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 font-jakarta">Verified</span>
+                            )}
+                          </h3>
+                          {m.description && <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-0.5">{m.description}</p>}
+                          <div className="flex items-center gap-2 mt-1 text-xs text-gray-400 font-jakarta">
+                            <span>{new Date(m.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                            {m.amount && <span>{m.currency} {Number(m.amount).toLocaleString()}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Funding History */}
           {startup.fundingRounds.length > 0 && (
-            <div className="card p-5 sm:p-6">
-              <h2 className="section-title mb-4 flex items-center gap-2">
-                <IndianRupee className="w-4 h-4 text-brand" /> Funding History
-              </h2>
-              <div className="space-y-3">
-                {startup.fundingRounds.map((r: any, i: number) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-brand/10 flex items-center justify-center shrink-0">
-                        <IndianRupee className="w-5 h-5 text-brand" />
+            <div className="card overflow-hidden">
+              <div className="p-5 sm:p-6">
+                <h2 className="section-title mb-4 flex items-center gap-2">
+                  <IndianRupee className="w-4 h-4 text-brand" /> Funding History
+                </h2>
+                <div className="relative">
+                  <div className="space-y-3">
+                    {(session ? startup.fundingRounds : startup.fundingRounds.slice(0, 2)).map((r: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-brand/10 flex items-center justify-center shrink-0">
+                            <IndianRupee className="w-5 h-5 text-brand" />
+                          </div>
+                          <div>
+                            <span className="font-sora font-bold text-sm text-navy dark:text-white block">{r.roundType}</span>
+                            <span className="text-xs text-gray-400 font-jakarta">
+                              {r.leadInvestors?.length > 0 ? r.leadInvestors.join(', ') : 'Undisclosed'}
+                              {r.announcedAt && ` · ${new Date(r.announcedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="font-sora font-extrabold text-brand">{formatUsd(r.amountUsd) || 'Undisclosed'}</span>
                       </div>
-                      <div>
-                        <span className="font-sora font-bold text-sm text-navy dark:text-white block">{r.roundType}</span>
-                        <span className="text-xs text-gray-400 font-jakarta">
-                          {r.leadInvestors?.length > 0 ? r.leadInvestors.join(', ') : 'Undisclosed'}
-                          {r.announcedAt && ` · ${new Date(r.announcedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="font-sora font-extrabold text-brand">{formatUsd(r.amountUsd) || 'Undisclosed'}</span>
+                    ))}
                   </div>
-                ))}
+                  {!session && startup.fundingRounds.length > 2 && (
+                    <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white dark:from-gray-900 to-transparent" />
+                  )}
+                </div>
               </div>
+              {!session && startup.fundingRounds.length > 0 && (
+                <SignInGate isSignedIn={false} blurContent={false} label={`Sign in to see all ${startup.fundingRounds.length} funding rounds`} />
+              )}
             </div>
           )}
 
@@ -808,7 +894,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                         <h4 className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand transition-colors truncate">
                           {product.name}
                         </h4>
-                        <span className="text-[9px] bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider shrink-0">
+                        <span className="text-xs bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider shrink-0">
                           {product.pricingModel}
                         </span>
                       </div>
@@ -876,7 +962,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
               <div className="p-6 text-center border border-dashed border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50/50 dark:bg-gray-900/20">
                 <Briefcase className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                 <p className="text-xs text-gray-400 font-jakarta mb-2">No open roles currently listed.</p>
-                <Link href="/employer/signup" className="text-[11px] text-brand font-semibold font-jakarta hover:underline">
+                <Link href="/employer/signup" className="text-xs text-brand font-semibold font-jakarta hover:underline">
                   Hiring for this company? Post jobs →
                 </Link>
               </div>
@@ -957,13 +1043,13 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                             <div className="flex items-center gap-2">
                               <span className="font-sora font-bold text-sm text-navy dark:text-white">{review.userName || 'Anonymous'}</span>
                               {review.isVerifiedFounder && (
-                                <span className="text-[9px] bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-1.5 py-0.5 rounded font-semibold">Verified Founder</span>
+                                <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-1.5 py-0.5 rounded font-semibold">Verified Founder</span>
                               )}
                               {review.isVerifiedInvestor && (
-                                <span className="text-[9px] bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-1.5 py-0.5 rounded font-semibold">Verified Investor</span>
+                                <span className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-1.5 py-0.5 rounded font-semibold">Verified Investor</span>
                               )}
                             </div>
-                            <span className="text-[10px] text-gray-400 font-jakarta">
+                            <span className="text-xs text-gray-400 font-jakarta">
                               {new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                             </span>
                           </div>

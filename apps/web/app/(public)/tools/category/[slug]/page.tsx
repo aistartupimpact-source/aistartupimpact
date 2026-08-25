@@ -106,7 +106,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand transition-colors truncate">{tool.name}</h3>
-                  <p className="text-[10px] text-gray-400 font-jakarta">{tool.category}</p>
+                  <p className="text-xs text-gray-400 font-jakarta">{tool.category}</p>
                 </div>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta line-clamp-2 mb-3">{tool.tagline}</p>
@@ -115,7 +115,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
                   <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
                   <span className="text-xs font-bold text-gray-600">{tool.rating}</span>
                 </div>
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 uppercase">{tool.pricing}</span>
+                <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 uppercase">{tool.pricing}</span>
               </div>
             </Link>
           ))}

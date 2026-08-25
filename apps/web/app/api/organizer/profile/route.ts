@@ -23,10 +23,12 @@ export async function PUT(request: NextRequest) {
   const { name, company, bio, website, linkedin, phone, twitter } = await request.json();
 
   if (!name) return NextResponse.json({ success: false, error: "Name is required" }, { status: 400 });
+  if (typeof bio === "string" && bio.length > 500) return NextResponse.json({ success: false, error: "Bio must be 500 characters or less" }, { status: 400 });
+  if (typeof name === "string" && name.length > 100) return NextResponse.json({ success: false, error: "Name must be 100 characters or less" }, { status: 400 });
 
   await prisma.eventOrganizer.update({
     where: { id: session.id },
-    data: { name, company: company || null, bio: bio || null, website: website || null, linkedin: linkedin || null, phone: phone || null },
+    data: { name: name.slice(0, 100), company: company?.slice(0, 100) || null, bio: bio?.slice(0, 500) || null, website: website?.slice(0, 500) || null, linkedin: linkedin?.slice(0, 500) || null, phone: phone?.slice(0, 20) || null },
   });
 
   return NextResponse.json({ success: true });

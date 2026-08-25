@@ -161,7 +161,7 @@ export default function NewsletterPopup() {
                 {/* Header Value Tag */}
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-50 dark:bg-purple-900/30 rounded-full mb-4 mx-auto">
                   <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                  <span className="text-[10px] sm:text-xs font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
+                  <span className="text-xs sm:text-xs font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
                     Join 5000+ AI Founders, Builders & Enthusiasts
                   </span>
                 </div>
@@ -177,7 +177,7 @@ export default function NewsletterPopup() {
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <label htmlFor="popup-email" className="block text-[11px] font-bold text-gray-600 dark:text-gray-400 mb-1.5 text-left pl-1 uppercase tracking-wider">
+                    <label htmlFor="popup-email" className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5 text-left pl-1 uppercase tracking-wider">
                       Enter your email address
                     </label>
                     <div className="relative">
@@ -232,16 +232,16 @@ export default function NewsletterPopup() {
 
                 {/* Trusted by teams section */}
                 <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-800/80 text-center">
-                  <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold mb-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold mb-1">
                     Read by teams at
                   </p>
-                  <p className="text-[11px] sm:text-xs font-bold text-gray-700 dark:text-gray-300 tracking-tight">
+                  <p className="text-xs sm:text-xs font-bold text-gray-700 dark:text-gray-300 tracking-tight">
                     Google, Microsoft, TCS, Flipkart & Amazon
                   </p>
                 </div>
 
                 {/* Legal footnote */}
-                <p className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400 text-center mt-3 leading-relaxed">
+                <p className="text-xs sm:text-xs text-gray-500 dark:text-gray-400 text-center mt-3 leading-relaxed">
                   By subscribing, you agree to receive marketing emails from AI Startup Impact. Unsubscribe anytime with one click. Read our{' '}
                   <a href="/privacy" className="text-purple-600 dark:text-purple-400 hover:underline font-medium">
                     Privacy Policy
@@ -275,7 +275,7 @@ export default function NewsletterPopup() {
                   <div className="space-y-1.5 sm:space-y-2 text-left">
                     <div className="flex items-start gap-2.5 sm:gap-3">
                       <div className="w-5 h-5 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-[10px] sm:text-xs font-bold text-purple-600 dark:text-purple-400">1</span>
+                        <span className="text-xs sm:text-xs font-bold text-purple-600 dark:text-purple-400">1</span>
                       </div>
                       <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
                         Confirm your email address
@@ -283,7 +283,7 @@ export default function NewsletterPopup() {
                     </div>
                     <div className="flex items-start gap-2.5 sm:gap-3">
                       <div className="w-5 h-5 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-[10px] sm:text-xs font-bold text-purple-600 dark:text-purple-400">2</span>
+                        <span className="text-xs sm:text-xs font-bold text-purple-600 dark:text-purple-400">2</span>
                       </div>
                       <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
                         Receive your first digest on Friday
@@ -291,7 +291,7 @@ export default function NewsletterPopup() {
                     </div>
                     <div className="flex items-start gap-2.5 sm:gap-3">
                       <div className="w-5 h-5 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-[10px] sm:text-xs font-bold text-purple-600 dark:text-purple-400">3</span>
+                        <span className="text-xs sm:text-xs font-bold text-purple-600 dark:text-purple-400">3</span>
                       </div>
                       <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
                         Stay updated on India's AI ecosystem

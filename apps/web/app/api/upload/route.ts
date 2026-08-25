@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getFounderSession } from '@/lib/founder-auth';
+import { apiRateLimit, getClientIdentifier, checkRateLimit } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +23,15 @@ export async function POST(request: NextRequest) {
         { error: 'Unauthorized' },
         { status: 401 }
       );
+    }
+
+    // Rate limit uploads
+    if (apiRateLimit) {
+      const identifier = getClientIdentifier(request);
+      const { success } = await checkRateLimit(apiRateLimit, identifier);
+      if (!success) {
+        return NextResponse.json({ error: 'Too many uploads. Please try again later.' }, { status: 429 });
+      }
     }
 
     const formData = await request.formData();

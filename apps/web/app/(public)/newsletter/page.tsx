@@ -257,7 +257,7 @@ export default function NewsletterPage() {
           </span>
           <div className="flex items-center gap-1.5 px-2.5 py-1 bg-brand/10 border border-brand/20 rounded-full">
             <span className="w-1.5 h-1.5 bg-brand rounded-full animate-ping" />
-            <span className="text-[9px] font-bold text-brand uppercase tracking-wider">
+            <span className="text-xs font-bold text-brand uppercase tracking-wider">
               Free Every Friday
             </span>
           </div>
@@ -268,7 +268,7 @@ export default function NewsletterPage() {
           {/* Tag */}
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-white/5 border border-white/10 rounded-full mb-2">
             <Sparkles className="w-3 h-3 text-brand" />
-            <span className="text-[9px] font-bold text-gray-200 uppercase tracking-wider">
+            <span className="text-xs font-bold text-gray-200 uppercase tracking-wider">
               Join 5000+ AI Founders, Builders & Enthusiasts
             </span>
           </div>
@@ -279,7 +279,7 @@ export default function NewsletterPage() {
           </h1>
           
           {/* Subtitle */}
-          <p className="text-gray-300 text-[11px] leading-relaxed mb-2 font-jakarta">
+          <p className="text-gray-300 text-xs leading-relaxed mb-2 font-jakarta">
             Get founder stories, AI startup news, fundings, launches, new AI tools, and AI innovations. Sent every Friday in your inbox.
           </p>
 
@@ -289,25 +289,25 @@ export default function NewsletterPage() {
               <div className="w-5.5 h-5.5 bg-red-500/20 rounded flex items-center justify-center flex-shrink-0">
                 <TrendingUp className="w-3 h-3 text-red-400" />
               </div>
-              <span className="text-[10px] font-semibold text-gray-300">Funding Alerts</span>
+              <span className="text-xs font-semibold text-gray-300">Funding Alerts</span>
             </div>
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 border border-white/10 rounded-lg">
               <div className="w-5.5 h-5.5 bg-amber-500/20 rounded flex items-center justify-center flex-shrink-0">
                 <Sparkles className="w-3 h-3 text-amber-400" />
               </div>
-              <span className="text-[10px] font-semibold text-gray-300">Founder Stories</span>
+              <span className="text-xs font-semibold text-gray-300">Founder Stories</span>
             </div>
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 border border-white/10 rounded-lg">
               <div className="w-5.5 h-5.5 bg-blue-500/20 rounded flex items-center justify-center flex-shrink-0">
                 <Target className="w-3 h-3 text-blue-400" />
               </div>
-              <span className="text-[10px] font-semibold text-gray-300">Tool Launches</span>
+              <span className="text-xs font-semibold text-gray-300">Tool Launches</span>
             </div>
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 border border-white/10 rounded-lg">
               <div className="w-5.5 h-5.5 bg-purple-500/20 rounded flex items-center justify-center flex-shrink-0">
                 <Wrench className="w-3 h-3 text-purple-400" />
               </div>
-              <span className="text-[10px] font-semibold text-gray-300">New AI Tools</span>
+              <span className="text-xs font-semibold text-gray-300">New AI Tools</span>
             </div>
           </div>
 
@@ -356,13 +356,13 @@ export default function NewsletterPage() {
 
               {/* Trust Bar just below CTA button */}
               <div className="pt-2 text-center w-full">
-                <p className="text-[9px] text-gray-400 uppercase tracking-widest font-bold mb-0.5">
+                <p className="text-xs text-gray-400 uppercase tracking-widest font-bold mb-0.5">
                   Read by teams at
                 </p>
-                <p className="text-[10px] font-bold text-gray-200 tracking-tight mb-1">
+                <p className="text-xs font-bold text-gray-200 tracking-tight mb-1">
                   Google, Microsoft, TCS, Flipkart & Amazon
                 </p>
-                <p className="text-[8px] text-gray-500 leading-relaxed">
+                <p className="text-xs text-gray-500 leading-relaxed">
                   By subscribing, you agree to receive the AI Startup Impact newsletter. <a href="/privacy" className="underline hover:text-gray-400">Unsubscribe</a> anytime.
                 </p>
               </div>
@@ -512,7 +512,7 @@ export default function NewsletterPage() {
                           </>
                         )}
                       </button>
-                      <p className="text-center text-[11px] text-gray-500 dark:text-gray-400 font-jakarta mt-2 leading-relaxed">
+                      <p className="text-center text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-2 leading-relaxed">
                         By subscribing, you agree to receive the AI Startup Impact newsletter. You can{' '}
                         <a href="/privacy" className="underline hover:text-gray-700 dark:hover:text-gray-300">unsubscribe</a> at any time.
                       </p>
@@ -728,7 +728,7 @@ export default function NewsletterPage() {
                   </>
                 )}
               </button>
-              <p className="text-center text-[11px] text-gray-500 dark:text-gray-400 font-jakarta mt-2 leading-relaxed">
+              <p className="text-center text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-2 leading-relaxed">
                 By subscribing, you agree to receive the AI Startup Impact newsletter. You can{' '}
                 <a href="/privacy" className="underline hover:text-gray-700 dark:hover:text-gray-300">unsubscribe</a> at any time.
               </p>
@@ -763,7 +763,7 @@ export default function NewsletterPage() {
                   &ldquo;{testimonial.quote}&rdquo;
                 </p>
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-brand to-red-600 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-brand flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-bold text-sm">{testimonial.avatar}</span>
                   </div>
                   <div>

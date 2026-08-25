@@ -3,37 +3,19 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { maskEmail } from "@/lib/mask";
 
 interface ProfileDropdownProps {
-  user?: { name?: string; email?: string; avatar?: string; founderId?: string; organizerId?: string } | null;
+  user?: { name?: string; email?: string; avatar?: string | null; founderId?: string | null; organizerId?: string | null } | null;
+  onLogout?: () => void;
 }
 
-export default function ProfileDropdown({ user: propUser }: ProfileDropdownProps) {
-  const router = useRouter();
+export default function ProfileDropdown({ user, onLogout }: ProfileDropdownProps) {
   const pathname = usePathname();
-  const [user, setUser] = useState<any>(propUser || null);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    // Always fetch full session to get workspace links
-    const fetchUser = async () => {
-      try {
-        const res = await fetch("/api/user/session");
-        if (res.ok) {
-          const data = await res.json();
-          if (data.user) { setUser(data.user); return; }
-        }
-      } catch {}
-      // Fallback to prop if fetch fails
-      if (propUser) setUser(propUser);
-    };
-    fetchUser();
-  }, [propUser]);
-
-  // Close on outside click
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
@@ -48,9 +30,11 @@ export default function ProfileDropdown({ user: propUser }: ProfileDropdownProps
         fetch("/api/user/auth/logout", { method: "POST" }),
         fetch("/api/auth/logout", { method: "POST" }),
       ]);
-      setUser(null);
-      router.push("/");
-      router.refresh();
+      if (onLogout) {
+        onLogout();
+      } else {
+        window.location.href = "/";
+      }
     } catch {}
   };
 
@@ -73,11 +57,11 @@ export default function ProfileDropdown({ user: propUser }: ProfileDropdownProps
       </button>
 
       {open && (
-        <div className="0">
+        <div className="absolute right-0 top-full mt-2 w-60 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden z-overlay">
           {/* User info */}
           <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
             <p className="text-[13px] font-semibold text-gray-900 dark:text-white truncate">{user.name}</p>
-            <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{user.email ? maskEmail(user.email) : ''}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email ? maskEmail(user.email) : ''}</p>
           </div>
 
           <div className="py-1">

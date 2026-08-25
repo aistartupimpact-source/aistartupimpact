@@ -79,7 +79,7 @@ export default function AttendeesPage() {
       <div className="flex flex-wrap gap-2 items-center">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"/>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, email, company..." className="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-jakarta focus:outline-none focus:ring-1 focus:ring-brand/20"/>
+          <input value={search} onChange={e => setSearch(e.target.value)} inputMode="search" enterKeyHint="search" placeholder="Search name, email, company..." className="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-jakarta focus:outline-none focus:ring-1 focus:ring-brand/20"/>
         </div>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-jakarta">
           <option value="">All Status</option>
@@ -114,13 +114,13 @@ export default function AttendeesPage() {
             <table className="min-w-full divide-y divide-gray-100 dark:divide-gray-800">
               <thead className="bg-gray-50 dark:bg-gray-800/50"><tr>
                 <th className="px-3 py-2.5 w-8"><input type="checkbox" checked={selected.size === filtered.length && filtered.length > 0} onChange={selectAll} className="w-3.5 h-3.5 rounded text-brand focus:ring-brand"/></th>
-                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-gray-500 uppercase">Name</th>
-                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-gray-500 uppercase">Email</th>
-                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-gray-500 uppercase hidden md:table-cell">Phone</th>
-                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-gray-500 uppercase hidden lg:table-cell">Company</th>
-                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-gray-500 uppercase hidden lg:table-cell">Occupation</th>
-                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-gray-500 uppercase">Event</th>
-                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-gray-500 uppercase">Status</th>
+                <th className="px-3 py-2.5 text-left text-xs font-bold text-gray-500 uppercase">Name</th>
+                <th className="px-3 py-2.5 text-left text-xs font-bold text-gray-500 uppercase">Email</th>
+                <th className="px-3 py-2.5 text-left text-xs font-bold text-gray-500 uppercase hidden md:table-cell">Phone</th>
+                <th className="px-3 py-2.5 text-left text-xs font-bold text-gray-500 uppercase hidden lg:table-cell">Company</th>
+                <th className="px-3 py-2.5 text-left text-xs font-bold text-gray-500 uppercase hidden lg:table-cell">Occupation</th>
+                <th className="px-3 py-2.5 text-left text-xs font-bold text-gray-500 uppercase">Event</th>
+                <th className="px-3 py-2.5 text-left text-xs font-bold text-gray-500 uppercase">Status</th>
               </tr></thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                 {filtered.map(r => (
@@ -146,5 +146,5 @@ export default function AttendeesPage() {
 
 function Badge({ status }: { status: string }) {
   const s: Record<string,string> = { CONFIRMED:"bg-green-100 text-green-700", CHECKED_IN:"bg-blue-100 text-blue-700", WAITLISTED:"bg-yellow-100 text-yellow-700", CANCELLED:"bg-red-100 text-red-600", PENDING_PAYMENT:"bg-gray-100 text-gray-600" };
-  return <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${s[status]||s.CONFIRMED}`}>{status.replace(/_/g," ")}</span>;
+  return <span className={`text-xs font-bold uppercase px-1.5 py-0.5 rounded ${s[status]||s.CONFIRMED}`}>{status.replace(/_/g," ")}</span>;
 }

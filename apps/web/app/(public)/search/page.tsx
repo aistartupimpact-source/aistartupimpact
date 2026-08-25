@@ -237,7 +237,7 @@ export default function SearchPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setShowSuggestions(true)}
-            placeholder="Search articles, tools, startups..."
+            inputMode="search" enterKeyHint="search" placeholder="Search articles, tools, startups..."
             className="w-full pl-12 pr-12 py-3.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-navy dark:text-white placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none transition-colors text-base"
           />
           {hasQuery && (
@@ -263,7 +263,7 @@ export default function SearchPage() {
         {showSuggestions && suggestions.length > 0 && (
           <div
             ref={suggestionsRef}
-            className="0 w-full mt-2 bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 shadow-xl overflow-hidden"
+            className="absolute z-dropdown w-full mt-2 bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 shadow-xl overflow-hidden"
           >
             <div className="p-2">
               {!hasQuery && (

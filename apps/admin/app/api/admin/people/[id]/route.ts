@@ -19,8 +19,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         u."emailVerified", u."twoFactorEnabled", u."twoFactorInherited", u."lastWorkspace",
         u."googleId",
         f.id as "founderId", f.company as "founderCompany", f.status as "founderStatus",
+        f."deactivatedAt"::text as "founderDeactivatedAt",
         f."createdAt"::text as "founderJoined",
         o.id as "organizerId", o.company as "organizerCompany", o.status as "organizerStatus",
+        o."deactivatedAt"::text as "organizerDeactivatedAt",
         o."createdAt"::text as "organizerJoined"
       FROM "UnifiedUser" u
       LEFT JOIN "FounderUser" f ON f."unifiedUserId" = u.id

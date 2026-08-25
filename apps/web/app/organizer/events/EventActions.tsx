@@ -112,7 +112,7 @@ export default function EventActions({ eventId, eventSlug, eventTitle, shortCode
             <div className="space-y-2">
               {shortCode && (
                 <div>
-                  <p className="text-[9px] font-bold text-gray-400 uppercase mb-1">Short Link (for sharing)</p>
+                  <p className="text-xs font-bold text-gray-400 uppercase mb-1">Short Link (for sharing)</p>
                   <div className="flex items-center gap-2">
                     <input type="text" readOnly value={shortUrl} className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-gray-600 dark:text-gray-300 font-jakarta font-mono" />
                     <button onClick={handleCopy} className="px-3 py-2 bg-brand text-white rounded-lg text-xs font-bold flex items-center gap-1">
@@ -122,7 +122,7 @@ export default function EventActions({ eventId, eventSlug, eventTitle, shortCode
                 </div>
               )}
               <div>
-                <p className="text-[9px] font-bold text-gray-400 uppercase mb-1">{shortCode ? "Full URL" : "Event Link"}</p>
+                <p className="text-xs font-bold text-gray-400 uppercase mb-1">{shortCode ? "Full URL" : "Event Link"}</p>
                 <div className="flex items-center gap-2">
                   <input type="text" readOnly value={publicUrl} className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-gray-600 dark:text-gray-300 font-jakarta" />
                   {!shortCode && <button onClick={handleCopy} className="px-3 py-2 bg-brand text-white rounded-lg text-xs font-bold flex items-center gap-1">{copied ? <><Check className="w-3.5 h-3.5" /> Copied</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}</button>}

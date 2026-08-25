@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       where: { email },
       select: {
         id: true, email: true, name: true, passwordHash: true, status: true,
-        twoFactorEnabled: true, failedLoginAttempts: true, lockedUntil: true,
+        twoFactorEnabled: true, failedLoginAttempts: true, lockedUntil: true, deactivatedAt: true,
       },
     });
 
@@ -99,6 +99,15 @@ export async function POST(request: NextRequest) {
       where: { id: organizer.id },
       data: { failedLoginAttempts: 0, lockedUntil: null, lastLoginAt: new Date() },
     });
+
+    if (organizer.deactivatedAt) {
+      return NextResponse.json({
+        deactivated: true,
+        deactivatedAt: organizer.deactivatedAt,
+        message: 'Your account has been deactivated. Would you like to reactivate it?',
+        reactivateUrl: '/api/organizer/reactivate',
+      });
+    }
 
     if (organizer.twoFactorEnabled) {
       const challengeToken = await new SignJWT({ userId: organizer.id, userType: 'organizer', purpose: '2fa-challenge' })

@@ -87,6 +87,9 @@ export default function CitySelect({ value, onChange, placeholder = "Search your
           }}
           onFocus={() => results.length > 0 && setOpen(true)}
           placeholder={placeholder}
+          inputMode="search"
+          enterKeyHint="search"
+          autoComplete="off"
           className="w-full pl-10 pr-8 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand text-sm font-jakarta"
         />
         {loading && (
@@ -96,7 +99,7 @@ export default function CitySelect({ value, onChange, placeholder = "Search your
 
       {/* Dropdown */}
       {open && results.length > 0 && (
-        <div className="0 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+        <div className="absolute z-dropdown mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-48 overflow-y-auto">
           {results.map((city) => (
             <button
               key={city.id}
@@ -111,7 +114,7 @@ export default function CitySelect({ value, onChange, placeholder = "Search your
                   <span className="text-gray-400">, {city.state}</span>
                 )}
               </span>
-              <span className="text-[10px] text-gray-400 ml-auto">{city.country}</span>
+              <span className="text-xs text-gray-400 ml-auto">{city.country}</span>
             </button>
           ))}
         </div>

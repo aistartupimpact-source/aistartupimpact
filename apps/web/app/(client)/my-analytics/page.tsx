@@ -100,7 +100,7 @@ export default function MyAnalyticsPage() {
                 <div className="w-full rounded-t-md bg-brand/15 dark:bg-brand/20 transition-all duration-500" style={{ height: `${(d.views / maxViews) * 100}%`, minHeight: '4px' }} />
                 <div className="w-3/5 rounded-md bg-brand transition-all duration-500" style={{ height: `${(d.clicks / maxViews) * 100}%`, minHeight: '2px' }} />
               </div>
-              <span className="text-[10px] text-gray-400 font-jakarta">{d.date}</span>
+              <span className="text-xs text-gray-400 font-jakarta">{d.date}</span>
             </div>
           ))}
         </div>
@@ -118,7 +118,7 @@ export default function MyAnalyticsPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-sora font-bold text-sm text-navy dark:text-white">{p.zone}</h3>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-red-50 dark:bg-red-900/20 text-brand">{p.tier}</span>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full uppercase bg-red-50 dark:bg-red-900/20 text-brand">{p.tier}</span>
                     </div>
                     <p className="text-sm text-gray-500 dark:text-gray-400 font-jakarta mt-1 line-clamp-1">{p.headline}</p>
                     <span className="text-xs text-gray-400 font-jakarta flex items-center gap-1 mt-1"><Calendar className="w-3 h-3" /> {p.startDate} → {p.endDate}</span>
@@ -126,7 +126,7 @@ export default function MyAnalyticsPage() {
                 </div>
                 <div className="text-right shrink-0">
                   <p className="font-sora font-extrabold text-lg text-brand">{p.paidAmount}</p>
-                  <p className="text-[10px] text-gray-400 font-jakarta">Paid</p>
+                  <p className="text-xs text-gray-400 font-jakarta">Paid</p>
                 </div>
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
@@ -139,7 +139,7 @@ export default function MyAnalyticsPage() {
                 ].map(m => (
                   <div key={m.label} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 text-center">
                     <p className="font-sora font-bold text-sm text-navy dark:text-white">{m.value}</p>
-                    <p className="text-[9px] text-gray-400 font-jakarta mt-0.5">{m.label}</p>
+                    <p className="text-xs text-gray-400 font-jakarta mt-0.5">{m.label}</p>
                   </div>
                 ))}
               </div>
@@ -159,7 +159,7 @@ export default function MyAnalyticsPage() {
                 <div>
                   <h3 className="font-sora font-bold text-sm text-navy dark:text-white">{a.title}</h3>
                   <div className="flex items-center gap-3 mt-1">
-                    <span className="badge-category text-[10px]">{a.type}</span>
+                    <span className="badge-category text-xs">{a.type}</span>
                     <span className="text-xs text-gray-400 font-jakarta flex items-center gap-1"><Calendar className="w-3 h-3" /> {a.publishDate}</span>
                   </div>
                 </div>
@@ -175,7 +175,7 @@ export default function MyAnalyticsPage() {
                 ].map(m => (
                   <div key={m.label} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 text-center">
                     <p className="font-sora font-bold text-sm text-navy dark:text-white">{m.value}</p>
-                    <p className="text-[9px] text-gray-400 font-jakarta mt-0.5">{m.label}</p>
+                    <p className="text-xs text-gray-400 font-jakarta mt-0.5">{m.label}</p>
                   </div>
                 ))}
               </div>

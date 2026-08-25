@@ -110,7 +110,7 @@ export default function ArticlesListClient({ articles }: { articles: Article[] }
         <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide pb-1">
           <button
             onClick={() => handleCategoryChange('all')}
-            className={`shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold font-jakarta transition-all ${
+            className={`shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-xs font-bold font-jakarta transition-all ${
               selectedCategory === 'all'
                 ? 'bg-brand text-white shadow-sm'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -122,7 +122,7 @@ export default function ArticlesListClient({ articles }: { articles: Article[] }
             <button
               key={cat.name}
               onClick={() => handleCategoryChange(cat.name)}
-              className={`shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold font-jakarta transition-all ${
+              className={`shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-xs font-bold font-jakarta transition-all ${
                 selectedCategory === cat.name
                   ? 'bg-brand text-white shadow-sm'
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -143,7 +143,7 @@ export default function ArticlesListClient({ articles }: { articles: Article[] }
             type="text"
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
-            placeholder="Search news..."
+            inputMode="search" enterKeyHint="search" placeholder="Search news..."
             className="w-full pl-9 sm:pl-11 pr-9 sm:pr-10 py-2 sm:py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent text-sm font-jakarta"
           />
           {searchQuery && (
@@ -165,7 +165,7 @@ export default function ArticlesListClient({ articles }: { articles: Article[] }
               <button
                 key={t.value}
                 onClick={() => handleTimeChange(t.value)}
-                className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md text-[11px] sm:text-xs font-semibold font-jakarta transition-all ${
+                className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md text-xs sm:text-xs font-semibold font-jakarta transition-all ${
                   timeRange === t.value
                     ? 'bg-white dark:bg-gray-700 text-navy dark:text-white shadow-sm'
                     : 'text-gray-500 dark:text-gray-400'
@@ -232,13 +232,13 @@ export default function ArticlesListClient({ articles }: { articles: Article[] }
                   <div>
                     {/* Category + read time */}
                     <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-brand">
+                      <span className="text-xs font-bold uppercase tracking-wider text-brand">
                         {article.category?.name || 'News'}
                       </span>
                       {article.readTimeMinutes && (
                         <>
                           <span className="text-gray-300 dark:text-gray-600">·</span>
-                          <span className="flex items-center gap-1 text-[10px] text-gray-400 font-jakarta">
+                          <span className="flex items-center gap-1 text-xs text-gray-400 font-jakarta">
                             <Clock className="w-2.5 h-2.5" />
                             {article.readTimeMinutes} min read
                           </span>
@@ -264,7 +264,7 @@ export default function ArticlesListClient({ articles }: { articles: Article[] }
                     <div className="flex items-center gap-1.5 text-xs text-gray-400 font-jakarta">
                       {article.author?.name && (
                         <>
-                          <div className="w-4 h-4 rounded-full bg-brand/10 flex items-center justify-center text-[8px] font-bold text-brand shrink-0">
+                          <div className="w-4 h-4 rounded-full bg-brand/10 flex items-center justify-center text-xs font-bold text-brand shrink-0">
                             {article.author.name.charAt(0)}
                           </div>
                           <span className="font-medium text-gray-500 dark:text-gray-400">

@@ -48,7 +48,7 @@ export default function EmbedBadge({ urlSlug, type }: EmbedBadgeProps) {
       </div>
 
       <div className="relative">
-        <pre className="text-[10px] sm:text-xs bg-gray-900 text-gray-300 p-3 rounded-lg overflow-x-auto font-mono custom-scrollbar">
+        <pre className="text-xs sm:text-xs bg-gray-900 text-gray-300 p-3 rounded-lg overflow-x-auto font-mono custom-scrollbar">
           <code>{embedCode}</code>
         </pre>
         <button

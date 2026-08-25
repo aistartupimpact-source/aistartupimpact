@@ -103,7 +103,7 @@ export default function CityAutocomplete({ value, cityId, onChange, placeholder 
 
       {/* Dropdown */}
       {open && results.length > 0 && (
-        <div className="0 mt-1 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+        <div className="absolute z-dropdown mt-1 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
           {results.map((city) => (
             <button
               key={city.id}
@@ -126,7 +126,7 @@ export default function CityAutocomplete({ value, cityId, onChange, placeholder 
       )}
 
       {open && query.length >= 2 && results.length === 0 && !loading && (
-        <div className="0 mt-1 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 text-center">
+        <div className="absolute z-dropdown mt-1 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 text-center">
           <p className="text-xs text-gray-400">No cities found for &quot;{query}&quot;</p>
         </div>
       )}

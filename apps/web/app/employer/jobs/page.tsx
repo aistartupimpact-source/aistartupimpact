@@ -53,13 +53,13 @@ export default async function EmployerJobsPage() {
                     {job.title}
                   </Link>
                   {job.isFeatured && (
-                    <span className="text-[9px] font-bold uppercase bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded">Featured</span>
+                    <span className="text-xs font-bold uppercase bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded">Featured</span>
                   )}
-                  <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${job.isActive ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-500'}`}>
+                  <span className={`text-xs font-bold uppercase px-1.5 py-0.5 rounded ${job.isActive ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-500'}`}>
                     {job.isActive ? 'Active' : 'Inactive'}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 text-[11px] text-gray-400 font-jakarta">
+                <div className="flex items-center gap-3 text-xs text-gray-400 font-jakarta">
                   <span>{job.category?.replace(/_/g, ' ')}</span>
                   <span>•</span>
                   <span>{job.workType}</span>

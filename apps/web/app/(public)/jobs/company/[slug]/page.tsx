@@ -87,7 +87,7 @@ export default async function CompanyJobsPage({ params }: PageProps) {
             <Link key={job.id} href={`/jobs/${job.slug}`} className="card p-4 sm:p-5 flex items-center justify-between hover:border-brand/30 transition-colors group">
               <div>
                 <h3 className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand">{job.title}</h3>
-                <div className="flex items-center gap-2 text-[11px] text-gray-400 font-jakarta mt-0.5">
+                <div className="flex items-center gap-2 text-xs text-gray-400 font-jakarta mt-0.5">
                   <span>{job.category?.replace(/_/g, ' ')}</span>
                   <span>•</span>
                   <span>{job.workType}</span>

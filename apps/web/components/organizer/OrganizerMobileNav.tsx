@@ -47,7 +47,7 @@ export default function OrganizerMobileNav() {
               ) : (
                 <item.icon className={`w-5 h-5 ${active ? "stroke-[2.2]" : ""}`} />
               )}
-              <span className={`text-[9px] font-jakarta font-medium ${item.highlight ? "text-brand" : ""}`}>
+              <span className={`text-xs font-jakarta font-medium ${item.highlight ? "text-brand" : ""}`}>
                 {item.label}
               </span>
             </Link>

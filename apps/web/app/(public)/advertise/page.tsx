@@ -208,7 +208,7 @@ export default function AdvertisePage() {
           <div key={s.label} className="card p-4 sm:p-5 text-center">
             <s.icon className="w-5 h-5 text-brand mx-auto mb-2" />
             <div className="font-sora font-extrabold text-xl sm:text-2xl text-brand">{s.value}</div>
-            <div className="text-[11px] text-gray-400 font-jakarta mt-1 uppercase tracking-wider font-bold">{s.label}</div>
+            <div className="text-xs text-gray-400 font-jakarta mt-1 uppercase tracking-wider font-bold">{s.label}</div>
           </div>
         ))}
       </div>
@@ -268,10 +268,10 @@ export default function AdvertisePage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-sora font-bold text-sm text-navy dark:text-white">{zone.name}</h4>
-                        <p className="text-[11px] text-brand font-jakarta font-semibold mt-0.5">{zone.location}</p>
+                        <p className="text-xs text-brand font-jakarta font-semibold mt-0.5">{zone.location}</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-2 leading-relaxed">{zone.description}</p>
                         <div className="mt-2">
-                          <span className="text-[10px] font-bold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
+                          <span className="text-xs font-bold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
                             {zone.metric}
                           </span>
                         </div>
@@ -303,7 +303,7 @@ export default function AdvertisePage() {
               className={`card p-5 sm:p-6 border-2 ${pkg.color} relative ${pkg.popular ? 'ring-2 ring-brand/20' : ''}`}
             >
               {pkg.popular && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 badge-brand text-[10px]">Most Popular</span>
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 badge-brand text-xs">Most Popular</span>
               )}
               <h3 className="font-sora font-bold text-lg text-navy dark:text-white">{pkg.name}</h3>
               <p className="text-xs text-gray-400 dark:text-gray-500 font-jakarta mt-1">{pkg.description}</p>

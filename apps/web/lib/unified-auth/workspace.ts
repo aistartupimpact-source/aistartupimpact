@@ -25,7 +25,7 @@ export async function unlockWorkspace(
 
   // Already unlocked? (profile points to this user)
   if (workspace === "organizer" && user.organizerProfile) {
-    return { status: "already_unlocked", message: "Organizer workspace already active", redirectTo: "/organizer" };
+    return { status: "already_unlocked", message: "Organizer workspace already active", redirectTo: "/organizer/events" };
   }
   if (workspace === "founder" && user.founderProfile) {
     return { status: "already_unlocked", message: "Founder workspace already active", redirectTo: "/founder" };
@@ -58,7 +58,7 @@ async function unlockOrganizer(user: any, userId: string, ipAddress?: string) {
 
     // Already linked to this user (shouldn't happen due to check above, but safety)
     if (existing.unifiedUserId === userId) {
-      return { status: "already_unlocked" as const, message: "Already linked", redirectTo: "/organizer" };
+      return { status: "already_unlocked" as const, message: "Already linked", redirectTo: "/organizer/events" };
     }
 
     // High-value check: 10+ events → require confirmation email
@@ -81,7 +81,7 @@ async function unlockOrganizer(user: any, userId: string, ipAddress?: string) {
       data: { unifiedUserId: userId },
     });
 
-    if (result.count === 0) return { status: "already_unlocked" as const, message: "Already linked", redirectTo: "/organizer" };
+    if (result.count === 0) return { status: "already_unlocked" as const, message: "Already linked", redirectTo: "/organizer/events" };
 
     // Credential merge: add-only
     if (existing.passwordHash && !user.passwordHash) {
@@ -95,7 +95,7 @@ async function unlockOrganizer(user: any, userId: string, ipAddress?: string) {
     // Update lastWorkspace
     await prisma.unifiedUser.update({ where: { id: userId }, data: { lastWorkspace: "ORGANIZER" } });
 
-    return { status: "linked" as const, message: "Organizer workspace linked!", redirectTo: "/organizer" };
+    return { status: "linked" as const, message: "Organizer workspace linked!", redirectTo: "/organizer/events" };
   } else {
     // Create fresh organizer profile linked to this UnifiedUser
     const newOrganizer = await prisma.eventOrganizer.create({
@@ -115,7 +115,7 @@ async function unlockOrganizer(user: any, userId: string, ipAddress?: string) {
 
     await prisma.unifiedUser.update({ where: { id: userId }, data: { lastWorkspace: "ORGANIZER" } });
 
-    return { status: "unlocked" as const, message: "Organizer workspace created!", redirectTo: "/organizer" };
+    return { status: "unlocked" as const, message: "Organizer workspace created!", redirectTo: "/organizer/events" };
   }
 }
 

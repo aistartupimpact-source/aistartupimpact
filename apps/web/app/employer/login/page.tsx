@@ -50,7 +50,7 @@ export default function EmployerLoginPage() {
         return;
       }
 
-      router.push('/employer/dashboard');
+      router.push(data.onboardingCompleted === false ? '/employer/onboarding' : '/employer/dashboard');
       router.refresh();
     } catch {
       setError('Something went wrong. Please try again.');
@@ -154,7 +154,7 @@ export default function EmployerLoginPage() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 font-jakarta">Password</label>
-                <Link href="/employer/forgot-password" className="text-[11px] text-brand font-semibold font-jakarta hover:underline">
+                <Link href="/employer/forgot-password" className="text-xs text-brand font-semibold font-jakarta hover:underline">
                   Forgot Password?
                 </Link>
               </div>

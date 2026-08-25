@@ -90,7 +90,7 @@ export default function ShareButton({ title, text, url, iconOnly = false, size =
                 {image && <Image src={image} alt="" className="w-full h-32 object-cover" width={400} height={128} sizes="(max-width: 768px) 100vw, 50vw" />}
                 <div className="p-3">
                   <p className="text-sm font-semibold text-gray-800 dark:text-white font-jakarta line-clamp-1">{title}</p>
-                  <p className="text-[10px] text-gray-400 font-jakarta mt-0.5 truncate">{shareUrl}</p>
+                  <p className="text-xs text-gray-400 font-jakarta mt-0.5 truncate">{shareUrl}</p>
                 </div>
               </div>
 
@@ -106,23 +106,23 @@ export default function ShareButton({ title, text, url, iconOnly = false, size =
               <div className="grid grid-cols-5 gap-2">
                 <button onClick={shareTwitter} className="flex flex-col items-center gap-1 p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center"><span className="text-white text-sm font-bold">𝕏</span></div>
-                  <span className="text-[9px] text-gray-500 font-jakarta">Twitter</span>
+                  <span className="text-xs text-gray-500 font-jakarta">Twitter</span>
                 </button>
                 <button onClick={shareLinkedIn} className="flex flex-col items-center gap-1 p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   <div className="w-10 h-10 rounded-full bg-[#0077B5] flex items-center justify-center"><span className="text-white text-sm font-bold">in</span></div>
-                  <span className="text-[9px] text-gray-500 font-jakarta">LinkedIn</span>
+                  <span className="text-xs text-gray-500 font-jakarta">LinkedIn</span>
                 </button>
                 <button onClick={shareWhatsApp} className="flex flex-col items-center gap-1 p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   <div className="w-10 h-10 rounded-full bg-[#25D366] flex items-center justify-center"><span className="text-white text-lg">💬</span></div>
-                  <span className="text-[9px] text-gray-500 font-jakarta">WhatsApp</span>
+                  <span className="text-xs text-gray-500 font-jakarta">WhatsApp</span>
                 </button>
                 <button onClick={shareFacebook} className="flex flex-col items-center gap-1 p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   <div className="w-10 h-10 rounded-full bg-[#1877F2] flex items-center justify-center"><span className="text-white text-sm font-bold">f</span></div>
-                  <span className="text-[9px] text-gray-500 font-jakarta">Facebook</span>
+                  <span className="text-xs text-gray-500 font-jakarta">Facebook</span>
                 </button>
                 <button onClick={shareTelegram} className="flex flex-col items-center gap-1 p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   <div className="w-10 h-10 rounded-full bg-[#0088cc] flex items-center justify-center"><span className="text-white text-lg">✈</span></div>
-                  <span className="text-[9px] text-gray-500 font-jakarta">Telegram</span>
+                  <span className="text-xs text-gray-500 font-jakarta">Telegram</span>
                 </button>
               </div>
             </div>

@@ -8,10 +8,10 @@ export const metadata: Metadata = {
 export default function ContentGuidelinesPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      <h1 className="font-sora font-extrabold text-2xl sm:text-3xl text-navy dark:text-white mb-6">
+      <h1 className="font-sora font-bold text-xl sm:text-2xl text-navy dark:text-white mb-6">
         Content Guidelines
       </h1>
-      <div className="prose prose-sm sm:prose-base dark:prose-invert prose-blue max-w-none">
+      <div className="prose prose-sm dark:prose-invert prose-blue max-w-none">
         <p className="text-sm text-gray-500 mb-8"><strong>Last updated:</strong> July 2026</p>
 
         <p>

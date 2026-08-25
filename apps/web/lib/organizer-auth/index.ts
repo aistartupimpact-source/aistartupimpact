@@ -17,6 +17,7 @@ export interface OrganizerSession {
   email: string;
   name: string;
   company?: string;
+  onboardingCompleted?: boolean;
 }
 
 /**
@@ -71,17 +72,18 @@ export async function getOrganizerSession(): Promise<OrganizerSession | null> {
           where: { token: sessionToken },
           include: {
             organizer: {
-              select: { id: true, email: true, name: true, company: true, status: true },
+              select: { id: true, email: true, name: true, company: true, status: true, deactivatedAt: true, onboardingCompleted: true },
             },
           },
         });
 
-        if (session && session.expiresAt >= new Date() && session.organizer.status !== "SUSPENDED") {
+        if (session && session.expiresAt >= new Date() && session.organizer.status !== "SUSPENDED" && !session.organizer.deactivatedAt) {
           return {
             id: session.organizer.id,
             email: session.organizer.email,
             name: session.organizer.name,
             company: session.organizer.company || undefined,
+            onboardingCompleted: session.organizer.onboardingCompleted,
           };
         }
       }
@@ -98,14 +100,15 @@ export async function getOrganizerSession(): Promise<OrganizerSession | null> {
       if (email) {
         const organizer = await prisma.eventOrganizer.findUnique({
           where: { email: email.toLowerCase() },
-          select: { id: true, email: true, name: true, company: true, status: true },
+          select: { id: true, email: true, name: true, company: true, status: true, deactivatedAt: true, onboardingCompleted: true },
         });
-        if (organizer && organizer.status !== "SUSPENDED") {
+        if (organizer && organizer.status !== "SUSPENDED" && !organizer.deactivatedAt) {
           return {
             id: organizer.id,
             email: organizer.email,
             name: organizer.name,
             company: organizer.company || undefined,
+            onboardingCompleted: organizer.onboardingCompleted,
           };
         }
       }
@@ -131,16 +134,17 @@ export async function getOrganizerSessionFromUserToken(): Promise<OrganizerSessi
 
     const organizer = await prisma.eventOrganizer.findUnique({
       where: { email: email.toLowerCase() },
-      select: { id: true, email: true, name: true, company: true, status: true },
+      select: { id: true, email: true, name: true, company: true, status: true, deactivatedAt: true, onboardingCompleted: true },
     });
 
-    if (!organizer || organizer.status === "SUSPENDED") return null;
+    if (!organizer || organizer.status === "SUSPENDED" || organizer.deactivatedAt) return null;
 
     return {
       id: organizer.id,
       email: organizer.email,
       name: organizer.name,
       company: organizer.company || undefined,
+      onboardingCompleted: organizer.onboardingCompleted,
     };
   } catch {
     return null;

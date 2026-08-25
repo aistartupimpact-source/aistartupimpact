@@ -89,6 +89,7 @@ export async function POST(request: NextRequest) {
       companyName: employer.companyName,
       slug: employer.slug,
       plan: employer.plan,
+      onboardingCompleted: false,
     });
 
     return NextResponse.json({

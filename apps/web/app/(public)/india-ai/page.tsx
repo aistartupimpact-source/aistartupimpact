@@ -340,13 +340,13 @@ export default async function IndiaAIPage() {
             SECTION 1: HERO WITH LIVE STATS
             ============================================ */}
         <div className="mb-8 sm:mb-12 lg:mb-16 text-center">
-          <div className="inline-flex items-center gap-2 badge-brand mb-2 sm:mb-3 text-[10px] sm:text-xs">
+          <div className="inline-flex items-center gap-2 badge-brand mb-2 sm:mb-3 text-xs sm:text-xs">
             <Flag className="w-3 h-3" /> India AI Ecosystem — Live
           </div>
           <h1 className="font-sora font-extrabold text-lg sm:text-xl md:text-2xl lg:text-3xl text-navy dark:text-white max-w-4xl mx-auto px-2">
             India&apos;s AI Revolution — Live
           </h1>
-          <p className="text-gray-600 dark:text-gray-300 font-jakarta text-[11px] sm:text-xs lg:text-sm mt-2 sm:mt-3 max-w-2xl mx-auto px-4 leading-relaxed">
+          <p className="text-gray-600 dark:text-gray-300 font-jakarta text-xs sm:text-xs lg:text-sm mt-2 sm:mt-3 max-w-2xl mx-auto px-4 leading-relaxed">
             Real-time intelligence on <strong>{startupCount} AI startups</strong>, funding, policy, and talent shaping India&apos;s AI future
           </p>
 
@@ -362,10 +362,10 @@ export default async function IndiaAIPage() {
                   <div className="font-sora font-extrabold text-base sm:text-lg md:text-xl lg:text-2xl text-brand mb-0.5 sm:mb-1">
                     {stat.metricValue}
                   </div>
-                  <div className="text-[8px] sm:text-[9px] text-gray-500 dark:text-gray-400 font-jakarta mb-1">
+                  <div className="text-xs sm:text-xs text-gray-500 dark:text-gray-400 font-jakarta mb-1">
                     {stat.metricChange}
                   </div>
-                  <div className="text-[9px] sm:text-[10px] text-gray-700 dark:text-gray-300 font-jakarta font-semibold leading-tight">
+                  <div className="text-xs sm:text-xs text-gray-700 dark:text-gray-300 font-jakarta font-semibold leading-tight">
                     {stat.metricLabel}
                   </div>
                 </div>
@@ -589,7 +589,7 @@ export default async function IndiaAIPage() {
             Get weekly insights on <strong>AI funding India</strong>, policy updates, and ecosystem trends
           </p>
           <NewsletterCapture source="india-ai-footer" />
-          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-3 sm:mt-4">
+          <p className="text-xs sm:text-xs text-gray-500 dark:text-gray-400 mt-3 sm:mt-4">
             Join 5,200+ founders, investors, and AI enthusiasts
           </p>
         </div>

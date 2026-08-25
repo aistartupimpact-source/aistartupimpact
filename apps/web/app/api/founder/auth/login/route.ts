@@ -36,7 +36,8 @@ export async function POST(request: NextRequest) {
 
     const users = await sql`
       SELECT id, email, name, "passwordHash", company, "emailVerified", status,
-             "twoFactorEnabled", "onboardingCompleted", "failedLoginAttempts", "lockedUntil"
+             "twoFactorEnabled", "onboardingCompleted", "failedLoginAttempts", "lockedUntil",
+             "deactivatedAt"
       FROM "FounderUser"
       WHERE email = ${validated.email.toLowerCase()}
       LIMIT 1
@@ -100,6 +101,15 @@ export async function POST(request: NextRequest) {
         { error: 'Please verify your email first. Check your inbox for the verification link.' },
         { status: 403 }
       );
+    }
+
+    if (user.deactivatedAt) {
+      return NextResponse.json({
+        deactivated: true,
+        deactivatedAt: user.deactivatedAt,
+        message: 'Your account has been deactivated. Would you like to reactivate it?',
+        reactivateUrl: '/api/founder/reactivate',
+      });
     }
 
     if (user.twoFactorEnabled) {

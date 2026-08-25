@@ -155,10 +155,10 @@ function EventRegCard({ reg, isPast }: { reg: Registration; isPast?: boolean }) 
           {/* Actions */}
           {!isPast && (
             <div className="flex items-center gap-2 mt-2.5">
-              <button onClick={() => setShowQr(!showQr)} className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium bg-brand/5 text-brand rounded-lg hover:bg-brand/10 transition-colors">
+              <button onClick={() => setShowQr(!showQr)} className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-brand/5 text-brand rounded-lg hover:bg-brand/10 transition-colors">
                 <QrCode className="w-3 h-3" /> {showQr ? "Hide" : "QR"}
               </button>
-              <a href={`/api/events/calendar?slug=${reg.eventSlug}`} download className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+              <a href={`/api/events/calendar?slug=${reg.eventSlug}`} download className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                 <Download className="w-3 h-3" /> Calendar
               </a>
             </div>
@@ -176,7 +176,7 @@ function EventRegCard({ reg, isPast }: { reg: Registration; isPast?: boolean }) 
       {showQr && (
         <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-col items-center gap-2">
           <Image src={qrImageUrl} alt="QR" width={140} height={140} className="rounded-lg" unoptimized />
-          <p className="text-[11px] text-gray-400">Show at check-in</p>
+          <p className="text-xs text-gray-400">Show at check-in</p>
         </div>
       )}
     </div>
@@ -191,7 +191,7 @@ function StatusBadge({ status }: { status: string }) {
     CANCELLED: "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400",
   };
   return (
-    <span className={`text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded shrink-0 ${styles[status] || styles.CONFIRMED}`}>
+    <span className={`text-xs font-semibold uppercase px-1.5 py-0.5 rounded shrink-0 ${styles[status] || styles.CONFIRMED}`}>
       {status === "CHECKED_IN" ? "Checked In" : status}
     </span>
   );

@@ -91,8 +91,8 @@ export default async function AlternativesPage({ params }: { params: { slug: str
                 </div>
                 <p className="text-sm text-gray-500 dark:text-gray-400 font-jakarta mt-1">{alt.tagline}</p>
                 <div className="flex items-center gap-3 mt-2">
-                  {alt.categoryName && <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">{alt.categoryName}</span>}
-                  {alt.pricingModel && <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 uppercase">{alt.pricingModel}</span>}
+                  {alt.categoryName && <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">{alt.categoryName}</span>}
+                  {alt.pricingModel && <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 uppercase">{alt.pricingModel}</span>}
                 </div>
               </div>
               <ExternalLink className="w-4 h-4 text-gray-300 group-hover:text-brand transition-colors shrink-0 mt-1" />

@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     const employers = await sql`
-      SELECT id, "companyName", slug, email, plan, "twoFactorEnabled", "twoFactorSecret", "twoFactorBackupCodes"
+      SELECT id, "companyName", slug, email, plan, "twoFactorEnabled", "twoFactorSecret", "twoFactorBackupCodes", "onboardingCompleted"
       FROM "JobBoardEmployer"
       WHERE id = ${userId}
       LIMIT 1
@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
       companyName: employer.companyName,
       slug: employer.slug,
       plan: employer.plan,
+      onboardingCompleted: !!employer.onboardingCompleted,
     });
 
     return NextResponse.json({

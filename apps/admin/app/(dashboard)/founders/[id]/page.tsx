@@ -27,6 +27,7 @@ interface FounderDetail {
   googleId: string | null;
   emailVerified: boolean;
   status: string;
+  deactivatedAt: string | null;
   onboardingCompleted: boolean;
   onboardingStep: number;
   avatar: string | null;
@@ -242,7 +243,12 @@ export default function FounderDetailPage({ params }: { params: { id: string } }
                 </div>
 
                 {/* Status Badge */}
-                <div>
+                <div className="flex items-center gap-2">
+                  {founder.deactivatedAt && (
+                    <span className="inline-flex items-center gap-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-sm font-semibold px-3 py-1.5 rounded-full">
+                      Deactivated
+                    </span>
+                  )}
                   {founder.status === 'ACTIVE' ? (
                     <span className="inline-flex items-center gap-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm font-semibold px-3 py-1.5 rounded-full">
                       <CheckCircle className="w-4 h-4" />

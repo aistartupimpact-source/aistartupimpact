@@ -62,7 +62,7 @@ function Section({ title, badge, badgeColor, children }: { title: string; badge:
     <div>
       <div className="flex items-center gap-2 mb-3">
         <h2 className="font-sora font-bold text-sm text-navy dark:text-white">{title}</h2>
-        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeColor}`}>{badge}</span>
+        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${badgeColor}`}>{badge}</span>
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
         {children}
@@ -88,19 +88,19 @@ function MiniToolCard({ tool }: { tool: ToolCard }) {
         </div>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-navy dark:text-white group-hover:text-brand transition-colors truncate">{tool.name}</p>
-          {tool.categoryName && <p className="text-[10px] text-gray-400 truncate">{tool.categoryName}</p>}
+          {tool.categoryName && <p className="text-xs text-gray-400 truncate">{tool.categoryName}</p>}
         </div>
       </div>
-      <p className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2 font-jakarta">{tool.tagline}</p>
+      <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 font-jakarta">{tool.tagline}</p>
       <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50 dark:border-gray-800">
         {tool.avgRating && parseFloat(String(tool.avgRating)) > 0 ? (
           <div className="flex items-center gap-0.5">
             <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-            <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400">{parseFloat(String(tool.avgRating)).toFixed(1)}</span>
+            <span className="text-xs font-bold text-gray-600 dark:text-gray-400">{parseFloat(String(tool.avgRating)).toFixed(1)}</span>
           </div>
         ) : <span />}
         {tool.pricingModel && (
-          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 uppercase">{tool.pricingModel}</span>
+          <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 uppercase">{tool.pricingModel}</span>
         )}
       </div>
     </Link>

@@ -92,7 +92,7 @@ export default function SimilarToolsCarousel({ tools, categoryName, categorySlug
                 {rating && rating > 0 && (
                   <span className="flex items-center gap-0.5 shrink-0">
                     <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                    <span className="text-[11px] font-bold text-gray-600 dark:text-gray-400">{rating.toFixed(1)}</span>
+                    <span className="text-xs font-bold text-gray-600 dark:text-gray-400">{rating.toFixed(1)}</span>
                   </span>
                 )}
               </div>
@@ -101,16 +101,16 @@ export default function SimilarToolsCarousel({ tools, categoryName, categorySlug
               <h3 className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand transition-colors line-clamp-1 mb-1">
                 {tool.name}
               </h3>
-              <p className="text-[11px] text-gray-500 dark:text-gray-400 font-jakarta leading-relaxed line-clamp-2 flex-1 mb-3">
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta leading-relaxed line-clamp-2 flex-1 mb-3">
                 {tool.tagline}
               </p>
 
               {/* Pricing badge */}
               <div className="flex items-center justify-between mt-auto">
-                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${pricingColor}`}>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full uppercase ${pricingColor}`}>
                   {tool.pricingModel}
                 </span>
-                <span className="text-[10px] text-gray-400 font-jakarta">{tool.categoryName}</span>
+                <span className="text-xs text-gray-400 font-jakarta">{tool.categoryName}</span>
               </div>
             </Link>
           );

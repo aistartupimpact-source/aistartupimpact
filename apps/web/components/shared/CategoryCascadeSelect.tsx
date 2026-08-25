@@ -161,7 +161,7 @@ export default function CategoryCascadeSelect({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search subcategories..."
+                inputMode="search" enterKeyHint="search" placeholder="Search subcategories..."
                 className="w-full pl-9 pr-4 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               />
             </div>

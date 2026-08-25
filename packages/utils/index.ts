@@ -19,6 +19,8 @@ export {
   organizerVerificationHtml,
   organizerPasswordResetHtml,
   teamInviteHtml,
+  founderTeamInviteHtml,
+  founderTeamOtpHtml,
   eventRegistrationHtml,
   eventNewsletterWelcomeHtml,
   eventCancellationHtml,

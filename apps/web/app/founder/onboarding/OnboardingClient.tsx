@@ -227,7 +227,7 @@ export default function OnboardingClient({ user, returnTo }: { user: User; retur
                      <Upload className="w-3.5 h-3.5" />
                      Upload Photo
                    </label>
-                   <p className="text-[10px] text-gray-400 font-jakarta">JPG, PNG up to 5MB</p>
+                   <p className="text-xs text-gray-400 font-jakarta">JPG, PNG up to 5MB</p>
                  </div>
                </div>
              </div>
@@ -340,7 +340,7 @@ export default function OnboardingClient({ user, returnTo }: { user: User; retur
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 font-jakarta flex justify-between items-center">
                 <span>Short Bio <span className="text-red-500">*</span></span>
-                <span className="text-[10px] font-normal text-gray-400 font-jakarta">
+                <span className="text-xs font-normal text-gray-400 font-jakarta">
                   {formData.bio.length}/800 characters
                 </span>
               </label>

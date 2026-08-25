@@ -7,6 +7,7 @@ import { getUnifiedSession } from "@/lib/unified-auth";
 import OrganizerSidebar from "@/components/organizer/OrganizerSidebar";
 import OrganizerHeader from "@/components/organizer/OrganizerHeader";
 import OrganizerMobileNav from "@/components/organizer/OrganizerMobileNav";
+import { SidebarProvider } from "@/components/ui/SidebarContext";
 
 const USER_JWT_SECRET = new TextEncoder().encode(
   process.env.USER_JWT_SECRET!
@@ -65,15 +66,17 @@ export default async function OrganizerWorkspaceLayout({
   if (!session) redirect("/organizer/login");
 
   return (
-    <div className="flex h-screen bg-page dark:bg-page-dark overflow-hidden">
-      <div className="hidden md:block">
-        <OrganizerSidebar organizer={session} />
+    <SidebarProvider storageKey="organizer-sidebar-collapsed">
+      <div className="flex h-screen bg-page dark:bg-page-dark overflow-hidden">
+        <div className="hidden md:block">
+          <OrganizerSidebar organizer={session} />
+        </div>
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <OrganizerHeader organizer={session} />
+          <main className="flex-1 overflow-y-auto p-4 pb-20 md:pb-4">{children}</main>
+        </div>
+        <OrganizerMobileNav />
       </div>
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <OrganizerHeader organizer={session} />
-        <main className="flex-1 overflow-y-auto p-4 pb-20 md:pb-4">{children}</main>
-      </div>
-      <OrganizerMobileNav />
-    </div>
+    </SidebarProvider>
   );
 }

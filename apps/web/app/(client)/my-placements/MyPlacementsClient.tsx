@@ -119,7 +119,7 @@ function CampaignList({ campaigns, expanded, setExpanded }: {
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-sora font-bold text-sm text-navy dark:text-white">{c.companyName}</h3>
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${statusStyle[c.status] || statusStyle.DRAFT}`}>
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusStyle[c.status] || statusStyle.DRAFT}`}>
                         {c.status === 'ACTIVE' ? <CheckCircle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
                         {c.status.replace(/_/g, ' ')}
                       </span>
@@ -147,7 +147,7 @@ function CampaignList({ campaigns, expanded, setExpanded }: {
                 ].map(s => (
                   <div key={s.label} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 text-center">
                     <p className="font-sora font-bold text-sm text-navy dark:text-white">{s.value}</p>
-                    <p className="text-[9px] text-gray-400 font-jakarta">{s.label}</p>
+                    <p className="text-xs text-gray-400 font-jakarta">{s.label}</p>
                   </div>
                 ))}
               </div>
@@ -166,12 +166,12 @@ function CampaignList({ campaigns, expanded, setExpanded }: {
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-bold text-brand font-jakarta">{ZONE_LABELS[cr.zone] || cr.zone}</span>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${cr.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
+                            <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${cr.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
                               {cr.isActive ? 'LIVE' : 'PAUSED'}
                             </span>
                           </div>
                           <p className="text-xs text-gray-600 dark:text-gray-300 font-jakarta mt-0.5 line-clamp-1">{cr.headline}</p>
-                          <p className="text-[10px] text-gray-400 font-jakarta mt-0.5">
+                          <p className="text-xs text-gray-400 font-jakarta mt-0.5">
                             {Number(cr.impressionCount).toLocaleString()} impressions · {Number(cr.clickCount).toLocaleString()} clicks · CTR {calcCTR(Number(cr.impressionCount), Number(cr.clickCount))}
                           </p>
                         </div>

@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight, IndianRupee, Calendar, Users, Building2, ExternalLink } from 'lucide-react';
 import { getFundingRoundBySlugDirect } from '@/lib/db';
+import { getUserSession } from '@/lib/user-session';
+import SignInGate from '@/components/SignInGate';
 
 export const revalidate = 86400; // Regenerate daily
 
@@ -41,8 +43,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 export default async function FundingRoundPage({ params }: { params: { slug: string } }) {
-  const round = await getFundingRoundBySlugDirect(params.slug);
+  const [round, session] = await Promise.all([
+    getFundingRoundBySlugDirect(params.slug),
+    getUserSession(),
+  ]);
   if (!round) notFound();
+  const isSignedIn = !!session;
   
   const pageUrl = `https://aistartupimpact.com/funding/${params.slug}`;
   
@@ -135,7 +141,7 @@ export default async function FundingRoundPage({ params }: { params: { slug: str
 
       {/* Header */}
       <div className="mb-8">
-        <div className="inline-flex items-center gap-2 badge-brand mb-3 text-[10px] sm:text-xs">
+        <div className="inline-flex items-center gap-2 badge-brand mb-3 text-xs sm:text-xs">
           <IndianRupee className="w-3 h-3" /> {round.roundType}
         </div>
         <h1 className="font-sora font-extrabold text-2xl sm:text-3xl md:text-4xl text-navy dark:text-white mb-4">
@@ -147,115 +153,123 @@ export default async function FundingRoundPage({ params }: { params: { slug: str
       </div>
 
       {/* Funding Details Card */}
-      <div className="card p-6 sm:p-8 mb-8">
+      <div className="card overflow-hidden mb-8">
+        <div className="p-6 sm:p-8">
         <h2 className="font-sora font-bold text-xl text-navy dark:text-white mb-6">Funding Details</h2>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {/* Amount */}
-          <div>
-            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm mb-2">
-              <IndianRupee className="w-4 h-4" />
-              <span>Amount Raised</span>
-            </div>
-            <p className="font-sora font-bold text-2xl text-brand">
-              ${(round.amountUsd / 1000000).toFixed(1)}M
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              ₹{(round.amountInr / 10000000).toFixed(1)} Crore
-            </p>
-          </div>
-
-          {/* Date */}
-          <div>
-            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm mb-2">
-              <Calendar className="w-4 h-4" />
-              <span>Announced Date</span>
-            </div>
-            <p className="font-sora font-bold text-lg text-navy dark:text-white">
-              {new Date(round.announcedAt).toLocaleDateString('en-US', { 
-                month: 'long', 
-                day: 'numeric', 
-                year: 'numeric' 
-              })}
-            </p>
-          </div>
-
-          {/* Location */}
-          {round.headquartersCity && (
-            <div>
-              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm mb-2">
-                <Building2 className="w-4 h-4" />
-                <span>Location</span>
+        {isSignedIn ? (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Amount */}
+              <div>
+                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm mb-2">
+                  <IndianRupee className="w-4 h-4" />
+                  <span>Amount Raised</span>
+                </div>
+                <p className="font-sora font-bold text-2xl text-brand">
+                  ${(round.amountUsd / 1000000).toFixed(1)}M
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  ₹{(round.amountInr / 10000000).toFixed(1)} Crore
+                </p>
               </div>
-              <p className="font-sora font-bold text-lg text-navy dark:text-white">
-                {round.headquartersCity}, India
-              </p>
-            </div>
-          )}
 
-          {/* Round Type */}
-          <div>
-            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm mb-2">
-              <Users className="w-4 h-4" />
-              <span>Round Type</span>
+              {/* Date */}
+              <div>
+                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm mb-2">
+                  <Calendar className="w-4 h-4" />
+                  <span>Announced Date</span>
+                </div>
+                <p className="font-sora font-bold text-lg text-navy dark:text-white">
+                  {new Date(round.announcedAt).toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </p>
+              </div>
+
+              {/* Location */}
+              {round.headquartersCity && (
+                <div>
+                  <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm mb-2">
+                    <Building2 className="w-4 h-4" />
+                    <span>Location</span>
+                  </div>
+                  <p className="font-sora font-bold text-lg text-navy dark:text-white">
+                    {round.headquartersCity}, India
+                  </p>
+                </div>
+              )}
+
+              {/* Round Type */}
+              <div>
+                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm mb-2">
+                  <Users className="w-4 h-4" />
+                  <span>Round Type</span>
+                </div>
+                <p className="font-sora font-bold text-lg text-navy dark:text-white">
+                  {round.roundType}
+                </p>
+              </div>
             </div>
-            <p className="font-sora font-bold text-lg text-navy dark:text-white">
-              {round.roundType}
-            </p>
-          </div>
+
+            {/* Lead Investors */}
+            {round.leadInvestors && round.leadInvestors.length > 0 && (
+              <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+                <h3 className="font-sora font-bold text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  Lead Investors
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {round.leadInvestors.map((investor: string, i: number) => (
+                    <span
+                      key={i}
+                      className="px-3 py-1.5 bg-brand/10 text-brand rounded-lg text-sm font-semibold"
+                    >
+                      {investor}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* All Investors */}
+            {round.allInvestors && round.allInvestors.length > 0 && (
+              <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+                <h3 className="font-sora font-bold text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  All Investors
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {round.allInvestors.map((investor: string, i: number) => (
+                    <span
+                      key={i}
+                      className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm"
+                    >
+                      {investor}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Source Link */}
+            {round.sourceUrl && (
+              <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+                <a
+                  href={round.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-brand hover:underline text-sm font-semibold"
+                >
+                  View Original Announcement
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              </div>
+            )}
+          </>
+        ) : null}
         </div>
-
-        {/* Lead Investors */}
-        {round.leadInvestors && round.leadInvestors.length > 0 && (
-          <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
-            <h3 className="font-sora font-bold text-sm text-gray-500 dark:text-gray-400 mb-3">
-              Lead Investors
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {round.leadInvestors.map((investor: string, i: number) => (
-                <span 
-                  key={i}
-                  className="px-3 py-1.5 bg-brand/10 text-brand rounded-lg text-sm font-semibold"
-                >
-                  {investor}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* All Investors */}
-        {round.allInvestors && round.allInvestors.length > 0 && (
-          <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
-            <h3 className="font-sora font-bold text-sm text-gray-500 dark:text-gray-400 mb-3">
-              All Investors
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {round.allInvestors.map((investor: string, i: number) => (
-                <span 
-                  key={i}
-                  className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm"
-                >
-                  {investor}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Source Link */}
-        {round.sourceUrl && (
-          <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
-            <a 
-              href={round.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-brand hover:underline text-sm font-semibold"
-            >
-              View Original Announcement
-              <ExternalLink className="w-4 h-4" />
-            </a>
-          </div>
+        {!isSignedIn && (
+          <SignInGate isSignedIn={false} blurContent={false} label="Sign in to view funding details" />
         )}
       </div>
 

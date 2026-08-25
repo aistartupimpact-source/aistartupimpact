@@ -97,7 +97,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
 
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
         <article className="flex-1 min-w-0 max-w-3xl mx-auto lg:mx-0 w-full">
-          <span className="badge-brand text-[10px] mb-4 inline-block">{article.category?.name || 'News'}</span>
+          <span className="badge-brand text-xs mb-4 inline-block">{article.category?.name || 'News'}</span>
 
           <h1 className="font-sora font-extrabold text-[22px] leading-[1.2] sm:text-3xl md:text-[36px] md:leading-[1.2] text-navy dark:text-white">
             {article.title}
@@ -156,7 +156,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
                 {relatedArticles.map((rela: any) => (
                   <Link key={rela.slug} href={`/news/${rela.slug}`} className="group">
                     <div className="card p-4 h-full">
-                      <span className="badge-category text-[10px] mb-2 inline-block">{rela.category?.name || 'News'}</span>
+                      <span className="badge-category text-xs mb-2 inline-block">{rela.category?.name || 'News'}</span>
                       <h3 className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand transition-colors leading-snug line-clamp-3">{rela.title}</h3>
                       <span className="text-xs text-gray-400 font-jakarta mt-2 block">{rela.readTimeMinutes} min</span>
                     </div>
@@ -170,7 +170,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
         <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-6">
           {article.linkedTool && (
             <div className="card p-5 border-brand-200 dark:border-brand-900/50 bg-gradient-to-br from-brand-50 to-white dark:from-brand-900/20 dark:to-gray-900">
-              <span className="badge-brand text-[9px] mb-2 inline-block">Featured Tool</span>
+              <span className="badge-brand text-xs mb-2 inline-block">Featured Tool</span>
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-800 flex flex-shrink-0 items-center justify-center shadow-sm">
                   {article.linkedTool.logoUrl ? (
@@ -182,8 +182,8 @@ export default async function ArticlePage({ params }: { params: { slug: string }
                 <div>
                   <h4 className="font-sora font-bold text-sm text-navy dark:text-white">{article.linkedTool.name}</h4>
                   <div className="flex items-center gap-1 mt-0.5">
-                    <span className="text-[10px] bg-yellow-50 text-yellow-700 px-1.5 py-0.5 rounded-sm font-bold block whitespace-nowrap">★ {article.linkedTool.avgRating}</span>
-                    <span className="text-[10px] text-gray-500">{article.linkedTool.pricingModel}</span>
+                    <span className="text-xs bg-yellow-50 text-yellow-700 px-1.5 py-0.5 rounded-sm font-bold block whitespace-nowrap">★ {article.linkedTool.avgRating}</span>
+                    <span className="text-xs text-gray-500">{article.linkedTool.pricingModel}</span>
                   </div>
                 </div>
               </div>

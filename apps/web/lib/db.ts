@@ -90,6 +90,504 @@ export async function getArticleBySlugDirect(slug: string) {
   }
 }
 
+// ── Opinions ──────────────────────────────────────────────────────────────────
+
+export async function getOpinionsDirect(params: {
+  tagSlug?: string;
+  limit?: number;
+  offset?: number;
+  sortBy?: 'latest' | 'trending';
+  isFeatured?: boolean;
+} = {}) {
+  const limit = params.limit || 12;
+  const offset = params.offset || 0;
+  const sortBy = params.sortBy || 'latest';
+
+  if (params.isFeatured) {
+    return cached(CK.opinionFeatured(), { ttl: 120, staleTtl: 300 }, async () => {
+      try {
+        const rows: any[] = await sql`
+          SELECT
+            a.id, a.title, a.slug, a.excerpt, a."coverImage", a."readTimeMinutes",
+            a."isFeatured", a."viewCount", a."likeCount", a."agreeCount", a."disagreeCount",
+            a."publishedAt"::text AS "publishedAt",
+            a."updatedAt"::text AS "updatedAt",
+            u.name AS "authorName", u.slug AS "authorSlug", u.avatar AS "authorAvatar", u.bio AS "authorBio",
+            fu.name AS "founderAuthorName", fu.id AS "founderAuthorId", fu.avatar AS "founderAuthorAvatar", fu.company AS "founderCompany",
+            pt.name AS "primaryTagName", pt.slug AS "primaryTagSlug"
+          FROM "Article" a
+          LEFT JOIN "User" u ON u.id = a."authorId"
+          LEFT JOIN "FounderUser" fu ON fu.id = a."founderAuthorId"
+          LEFT JOIN "Tag" pt ON pt.id = a."primaryTagId"
+          WHERE a.type = 'OPINION' AND a.status = 'PUBLISHED' AND a."deletedAt" IS NULL
+            AND a."isFeatured" = true
+          ORDER BY a."publishedAt" DESC NULLS LAST
+          LIMIT ${limit}
+        `;
+        return rows.map(mapOpinionRow);
+      } catch (e) {
+        console.error('getOpinionsDirect featured error:', e);
+        return [];
+      }
+    });
+  }
+
+  if (sortBy === 'trending') {
+    return cached(CK.opinionTrending(), { ttl: 300, staleTtl: 600 }, async () => {
+      try {
+        const rows: any[] = await sql`
+          SELECT
+            a.id, a.title, a.slug, a.excerpt, a."coverImage", a."readTimeMinutes",
+            a."isFeatured", a."viewCount", a."likeCount", a."agreeCount", a."disagreeCount",
+            a."publishedAt"::text AS "publishedAt",
+            a."updatedAt"::text AS "updatedAt",
+            u.name AS "authorName", u.slug AS "authorSlug", u.avatar AS "authorAvatar", u.bio AS "authorBio",
+            fu.name AS "founderAuthorName", fu.id AS "founderAuthorId", fu.avatar AS "founderAuthorAvatar", fu.company AS "founderCompany",
+            pt.name AS "primaryTagName", pt.slug AS "primaryTagSlug",
+            COALESCE(cc.cnt, 0)::int AS "commentCount",
+            (a."viewCount" + a."likeCount" * 3 + a."agreeCount" * 2 + a."disagreeCount" + COALESCE(cc.cnt, 0) * 4)::float
+              / POWER(EXTRACT(EPOCH FROM (NOW() - COALESCE(a."publishedAt", a."createdAt"))) / 86400 + 2, 1.5) AS "trendingScore"
+          FROM "Article" a
+          LEFT JOIN "User" u ON u.id = a."authorId"
+          LEFT JOIN "FounderUser" fu ON fu.id = a."founderAuthorId"
+          LEFT JOIN "Tag" pt ON pt.id = a."primaryTagId"
+          LEFT JOIN LATERAL (
+            SELECT COUNT(*)::int AS cnt FROM "Comment" WHERE "articleId" = a.id AND status = 'APPROVED'
+          ) cc ON true
+          WHERE a.type = 'OPINION' AND a.status = 'PUBLISHED' AND a."deletedAt" IS NULL
+          ORDER BY "trendingScore" DESC
+          LIMIT ${limit}
+        `;
+        return rows.map(mapOpinionRow);
+      } catch (e) {
+        console.error('getOpinionsDirect trending error:', e);
+        return [];
+      }
+    });
+  }
+
+  // Latest — paginated, optionally filtered by tag
+  const cacheKey = CK.opinionLatest(params.tagSlug || '', Math.floor(offset / limit));
+  return cached(cacheKey, { ttl: 120, staleTtl: 300 }, async () => {
+    try {
+      let rows: any[];
+      if (params.tagSlug) {
+        rows = await sql`
+          SELECT
+            a.id, a.title, a.slug, a.excerpt, a."coverImage", a."readTimeMinutes",
+            a."isFeatured", a."viewCount", a."likeCount", a."agreeCount", a."disagreeCount",
+            a."publishedAt"::text AS "publishedAt",
+            a."updatedAt"::text AS "updatedAt",
+            u.name AS "authorName", u.slug AS "authorSlug", u.avatar AS "authorAvatar", u.bio AS "authorBio",
+            fu.name AS "founderAuthorName", fu.id AS "founderAuthorId", fu.avatar AS "founderAuthorAvatar", fu.company AS "founderCompany",
+            pt.name AS "primaryTagName", pt.slug AS "primaryTagSlug"
+          FROM "Article" a
+          LEFT JOIN "User" u ON u.id = a."authorId"
+          LEFT JOIN "FounderUser" fu ON fu.id = a."founderAuthorId"
+          LEFT JOIN "Tag" pt ON pt.id = a."primaryTagId"
+          WHERE a.type = 'OPINION' AND a.status = 'PUBLISHED' AND a."deletedAt" IS NULL
+            AND (
+              pt.slug = ${params.tagSlug}
+              OR EXISTS (
+                SELECT 1 FROM "ArticleTag" at2
+                JOIN "Tag" t2 ON t2.id = at2."tagId"
+                WHERE at2."articleId" = a.id AND t2.slug = ${params.tagSlug}
+              )
+            )
+          ORDER BY a."publishedAt" DESC NULLS LAST
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+      } else {
+        rows = await sql`
+          SELECT
+            a.id, a.title, a.slug, a.excerpt, a."coverImage", a."readTimeMinutes",
+            a."isFeatured", a."viewCount", a."likeCount", a."agreeCount", a."disagreeCount",
+            a."publishedAt"::text AS "publishedAt",
+            a."updatedAt"::text AS "updatedAt",
+            u.name AS "authorName", u.slug AS "authorSlug", u.avatar AS "authorAvatar", u.bio AS "authorBio",
+            fu.name AS "founderAuthorName", fu.id AS "founderAuthorId", fu.avatar AS "founderAuthorAvatar", fu.company AS "founderCompany",
+            pt.name AS "primaryTagName", pt.slug AS "primaryTagSlug"
+          FROM "Article" a
+          LEFT JOIN "User" u ON u.id = a."authorId"
+          LEFT JOIN "FounderUser" fu ON fu.id = a."founderAuthorId"
+          LEFT JOIN "Tag" pt ON pt.id = a."primaryTagId"
+          WHERE a.type = 'OPINION' AND a.status = 'PUBLISHED' AND a."deletedAt" IS NULL
+          ORDER BY a."publishedAt" DESC NULLS LAST
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+      }
+      return rows.map(mapOpinionRow);
+    } catch (e) {
+      console.error('getOpinionsDirect error:', e);
+      return [];
+    }
+  });
+}
+
+export async function getOpinionBySlugDirect(slug: string) {
+  try {
+    const rows: any[] = await sql`
+      SELECT
+        a.id, a.title, a.slug, a.type, a.excerpt, a.content,
+        a."coverImage", a."thumbnailImage", a."readTimeMinutes", a."viewCount", a."isFeatured",
+        a."likeCount", a."agreeCount", a."disagreeCount", a."keyTakeaways",
+        a."publishedAt"::text AS "publishedAt",
+        a."createdAt"::text AS "createdAt",
+        a."updatedAt"::text AS "updatedAt",
+        a."toolId", a."startupId",
+        u.name AS "authorName", u.slug AS "authorSlug", u.avatar AS "authorAvatar",
+        u.bio AS "authorBio", u.twitter AS "authorTwitter", u.linkedin AS "authorLinkedin", u.role AS "authorRole",
+        fu.name AS "founderAuthorName", fu.id AS "founderAuthorId", fu.avatar AS "founderAuthorAvatar",
+        fu.bio AS "founderAuthorBio", fu.twitter AS "founderTwitter", fu.linkedin AS "founderLinkedin",
+        fu.company AS "founderCompany", fu.role AS "founderRole",
+        pt.name AS "primaryTagName", pt.slug AS "primaryTagSlug"
+      FROM "Article" a
+      LEFT JOIN "User" u ON u.id = a."authorId"
+      LEFT JOIN "FounderUser" fu ON fu.id = a."founderAuthorId"
+      LEFT JOIN "Tag" pt ON pt.id = a."primaryTagId"
+      WHERE a.slug = ${slug} AND a.type = 'OPINION' AND a.status = 'PUBLISHED' AND a."deletedAt" IS NULL
+      LIMIT 1
+    `;
+    if (!rows.length) return null;
+    const a = rows[0];
+
+    // Fetch secondary tags, linked entities, and related opinions in parallel
+    const [tags, linkedTool, linkedStartup, related] = await Promise.all([
+      sql`
+        SELECT t.name, t.slug
+        FROM "ArticleTag" at2
+        JOIN "Tag" t ON t.id = at2."tagId"
+        WHERE at2."articleId" = ${a.id}
+        ORDER BY t.name
+      `,
+      a.toolId
+        ? sql`SELECT name, slug, tagline, "logoUrl", "pricingModel", "avgRating" FROM "AiTool" WHERE id = ${a.toolId} AND "deletedAt" IS NULL LIMIT 1`.then((r: any[]) => r[0] || null)
+        : Promise.resolve(null),
+      a.startupId
+        ? sql`SELECT name, slug, founders FROM "Startup" WHERE id = ${a.startupId} AND "deletedAt" IS NULL LIMIT 1`.then((r: any[]) => r[0] || null)
+        : Promise.resolve(null),
+      sql`
+        SELECT
+          r.id, r.title, r.slug, r.excerpt, r."coverImage", r."readTimeMinutes",
+          r."publishedAt"::text AS "publishedAt",
+          u2.name AS "authorName", u2.slug AS "authorSlug",
+          pt2.name AS "primaryTagName", pt2.slug AS "primaryTagSlug",
+          (
+            CASE WHEN r."primaryTagId" = ${a.primaryTagId || ''} THEN 3 ELSE 0 END
+            + CASE WHEN r."authorId" = COALESCE(${a.authorId || ''}, '') THEN 1 ELSE 0 END
+            + (SELECT COUNT(*) FROM "ArticleTag" at3
+               WHERE at3."articleId" = r.id AND at3."tagId" IN (
+                 SELECT "tagId" FROM "ArticleTag" WHERE "articleId" = ${a.id}
+               ))::int * 2
+          ) AS "relevanceScore"
+        FROM "Article" r
+        LEFT JOIN "User" u2 ON u2.id = r."authorId"
+        LEFT JOIN "Tag" pt2 ON pt2.id = r."primaryTagId"
+        WHERE r.type = 'OPINION' AND r.status = 'PUBLISHED' AND r."deletedAt" IS NULL
+          AND r.id != ${a.id}
+        ORDER BY "relevanceScore" DESC, r."publishedAt" DESC
+        LIMIT 4
+      `,
+    ]);
+
+    const authorName = a.authorName || a.founderAuthorName || 'ASI Editorial';
+    const authorSlug = a.authorSlug || (a.founderAuthorId ? `founder-${a.founderAuthorId}` : 'editorial');
+
+    return {
+      ...a,
+      author: {
+        name: authorName,
+        slug: authorSlug,
+        avatar: a.authorAvatar || a.founderAuthorAvatar || null,
+        bio: a.authorBio || a.founderAuthorBio || null,
+        twitter: a.authorTwitter || a.founderTwitter || null,
+        linkedin: a.authorLinkedin || a.founderLinkedin || null,
+        role: a.authorRole || a.founderRole || null,
+        company: a.founderCompany || null,
+      },
+      primaryTag: a.primaryTagName ? { name: a.primaryTagName, slug: a.primaryTagSlug } : null,
+      secondaryTags: (tags as any[]).map((t: any) => ({ name: t.name, slug: t.slug })),
+      keyTakeaways: a.keyTakeaways || [],
+      linkedTool,
+      linkedStartup,
+      related: (related as any[]).map(mapOpinionRow),
+    };
+  } catch (e) {
+    console.error('getOpinionBySlugDirect error:', e);
+    return null;
+  }
+}
+
+export async function getRelatedContentForOpinion(articleId: string, tagIds: string[], primaryTagId: string | null) {
+  try {
+    const tagList = tagIds.length > 0 ? tagIds : ['__none__'];
+
+    const [relatedNews, relatedFounderStories, recommendedTools, relevantJobs] = await Promise.all([
+      sql`
+        SELECT a.title, a.slug, a.excerpt, a."coverImage", a."readTimeMinutes",
+               a."publishedAt"::text AS "publishedAt",
+               u.name AS "authorName", c.name AS "categoryName"
+        FROM "Article" a
+        LEFT JOIN "User" u ON u.id = a."authorId"
+        LEFT JOIN "Category" c ON c.id = a."categoryId"
+        WHERE a.type = 'NEWS' AND a.status = 'PUBLISHED' AND a."deletedAt" IS NULL
+          AND a.id != ${articleId}
+          AND (
+            a."primaryTagId" = ANY(${tagList}::text[])
+            OR EXISTS (
+              SELECT 1 FROM "ArticleTag" at2
+              WHERE at2."articleId" = a.id AND at2."tagId" = ANY(${tagList}::text[])
+            )
+          )
+        ORDER BY a."publishedAt" DESC NULLS LAST
+        LIMIT 4
+      ` as Promise<any[]>,
+
+      sql`
+        SELECT a.title, a.slug, a.excerpt, a."coverImage", a."readTimeMinutes",
+               a."publishedAt"::text AS "publishedAt",
+               u.name AS "authorName",
+               fu.name AS "founderName", fu.company AS "founderCompany"
+        FROM "Article" a
+        LEFT JOIN "User" u ON u.id = a."authorId"
+        LEFT JOIN "FounderUser" fu ON fu.id = a."founderAuthorId"
+        WHERE a.type = 'FOUNDER_STORY' AND a.status = 'PUBLISHED' AND a."deletedAt" IS NULL
+          AND a.id != ${articleId}
+          AND (
+            a."primaryTagId" = ANY(${tagList}::text[])
+            OR EXISTS (
+              SELECT 1 FROM "ArticleTag" at2
+              WHERE at2."articleId" = a.id AND at2."tagId" = ANY(${tagList}::text[])
+            )
+          )
+        ORDER BY a."publishedAt" DESC NULLS LAST
+        LIMIT 4
+      ` as Promise<any[]>,
+
+      sql`
+        SELECT DISTINCT t.name, t.slug, t.tagline, t."logoUrl", t."pricingModel", t."avgRating", t."isFeatured"
+        FROM "AiTool" t
+        JOIN "ToolTag" tt ON tt."toolId" = t.id
+        WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
+          AND LOWER(tt.name) IN (
+            SELECT LOWER(tg.name) FROM "Tag" tg WHERE tg.id = ANY(${tagList}::text[])
+          )
+        ORDER BY t."avgRating" DESC, t."isFeatured" DESC
+        LIMIT 4
+      ` as Promise<any[]>,
+
+      sql`
+        SELECT j.id, j.title, j.location, j.type,
+               j."salaryRangeMin", j."salaryRangeMax",
+               s.name AS "companyName", s.slug AS "companySlug", s."logoUrl" AS "companyLogo"
+        FROM "Job" j
+        JOIN "Startup" s ON s.id = j."startupId"
+        WHERE j."isActive" = true AND j."deletedAt" IS NULL
+          AND (j."expiresAt" IS NULL OR j."expiresAt" > NOW())
+          AND s."deletedAt" IS NULL
+        ORDER BY j."isFeatured" DESC, j."createdAt" DESC
+        LIMIT 3
+      ` as Promise<any[]>,
+    ]);
+
+    return { relatedNews, relatedFounderStories, recommendedTools, relevantJobs };
+  } catch (e) {
+    console.error('getRelatedContentForOpinion error:', e);
+    return { relatedNews: [], relatedFounderStories: [], recommendedTools: [], relevantJobs: [] };
+  }
+}
+
+export async function getOpinionTagsDirect() {
+  return cached(CK.OPINION_TAGS, { ttl: 300, staleTtl: 600 }, async () => {
+    try {
+      const rows: any[] = await sql`
+        SELECT t.id, t.name, t.slug, COUNT(DISTINCT a.id)::int AS "articleCount"
+        FROM "Tag" t
+        LEFT JOIN "Article" a ON a."primaryTagId" = t.id
+          AND a.type = 'OPINION' AND a.status = 'PUBLISHED' AND a."deletedAt" IS NULL
+        WHERE EXISTS (
+          SELECT 1 FROM "Article" a2
+          WHERE a2."primaryTagId" = t.id AND a2.type = 'OPINION' AND a2.status = 'PUBLISHED' AND a2."deletedAt" IS NULL
+        )
+        GROUP BY t.id, t.name, t.slug
+        ORDER BY "articleCount" DESC, t.name ASC
+      `;
+      return rows;
+    } catch (e) {
+      console.error('getOpinionTagsDirect error:', e);
+      return [];
+    }
+  });
+}
+
+export async function getOpinionContributorsDirect(limit = 12) {
+  return cached(CK.OPINION_CONTRIBUTORS, { ttl: 600, staleTtl: 1200 }, async () => {
+    try {
+      // User authors
+      const userAuthors: any[] = await sql`
+        SELECT u.name, u.slug, u.avatar, u.role, u.bio, NULL AS company,
+               COUNT(a.id)::int AS "articleCount", 'user' AS "authorType"
+        FROM "User" u
+        JOIN "Article" a ON a."authorId" = u.id
+          AND a.type = 'OPINION' AND a.status = 'PUBLISHED' AND a."deletedAt" IS NULL
+        GROUP BY u.id, u.name, u.slug, u.avatar, u.role, u.bio
+        ORDER BY "articleCount" DESC
+      `;
+      // Founder authors
+      const founderAuthors: any[] = await sql`
+        SELECT fu.name, fu.id AS slug, fu.avatar, fu.role, fu.bio, fu.company,
+               COUNT(a.id)::int AS "articleCount", 'founder' AS "authorType"
+        FROM "FounderUser" fu
+        JOIN "Article" a ON a."founderAuthorId" = fu.id
+          AND a.type = 'OPINION' AND a.status = 'PUBLISHED' AND a."deletedAt" IS NULL
+        GROUP BY fu.id, fu.name, fu.avatar, fu.role, fu.bio, fu.company
+        ORDER BY "articleCount" DESC
+      `;
+      const combined = [...userAuthors, ...founderAuthors]
+        .sort((a, b) => b.articleCount - a.articleCount)
+        .slice(0, limit);
+      return combined;
+    } catch (e) {
+      console.error('getOpinionContributorsDirect error:', e);
+      return [];
+    }
+  });
+}
+
+export async function getAuthorBySlugDirect(slug: string) {
+  return cached(CK.author(slug), { ttl: 300, staleTtl: 600 }, async () => {
+    try {
+      // Try User first
+      const users: any[] = await sql`
+        SELECT id, name, slug, avatar, bio, role, twitter, linkedin
+        FROM "User"
+        WHERE slug = ${slug} AND "isActive" = true
+        LIMIT 1
+      `;
+      if (users.length) {
+        const u = users[0];
+        const articles: any[] = await sql`
+          SELECT a.id, a.title, a.slug, a.type, a.excerpt, a."coverImage", a."readTimeMinutes",
+                 a."publishedAt"::text AS "publishedAt",
+                 pt.name AS "primaryTagName", pt.slug AS "primaryTagSlug"
+          FROM "Article" a
+          LEFT JOIN "Tag" pt ON pt.id = a."primaryTagId"
+          WHERE a."authorId" = ${u.id} AND a.status = 'PUBLISHED' AND a."deletedAt" IS NULL
+          ORDER BY a."publishedAt" DESC NULLS LAST
+        `;
+        const topicRows: any[] = await sql`
+          SELECT DISTINCT t.name, t.slug
+          FROM "Article" a
+          JOIN "Tag" t ON t.id = a."primaryTagId"
+          WHERE a."authorId" = ${u.id} AND a.type = 'OPINION' AND a.status = 'PUBLISHED' AND a."deletedAt" IS NULL
+        `;
+        return {
+          ...u,
+          authorType: 'user' as const,
+          articles: articles.map((a: any) => ({
+            ...a,
+            primaryTag: a.primaryTagName ? { name: a.primaryTagName, slug: a.primaryTagSlug } : null,
+          })),
+          topics: topicRows,
+        };
+      }
+
+      // Try FounderUser (slug = founder-{id})
+      const founderId = slug.startsWith('founder-') ? slug.slice(8) : null;
+      if (!founderId) return null;
+
+      const founders: any[] = await sql`
+        SELECT id, name, avatar, bio, role, company, twitter, linkedin, website
+        FROM "FounderUser"
+        WHERE id = ${founderId}
+        LIMIT 1
+      `;
+      if (!founders.length) return null;
+      const fu = founders[0];
+      const articles: any[] = await sql`
+        SELECT a.id, a.title, a.slug, a.type, a.excerpt, a."coverImage", a."readTimeMinutes",
+               a."publishedAt"::text AS "publishedAt",
+               pt.name AS "primaryTagName", pt.slug AS "primaryTagSlug"
+        FROM "Article" a
+        LEFT JOIN "Tag" pt ON pt.id = a."primaryTagId"
+        WHERE a."founderAuthorId" = ${founderId} AND a.status = 'PUBLISHED' AND a."deletedAt" IS NULL
+        ORDER BY a."publishedAt" DESC NULLS LAST
+      `;
+      const topicRows: any[] = await sql`
+        SELECT DISTINCT t.name, t.slug
+        FROM "Article" a
+        JOIN "Tag" t ON t.id = a."primaryTagId"
+        WHERE a."founderAuthorId" = ${founderId} AND a.type = 'OPINION' AND a.status = 'PUBLISHED' AND a."deletedAt" IS NULL
+      `;
+      return {
+        ...fu,
+        slug: `founder-${fu.id}`,
+        authorType: 'founder' as const,
+        articles: articles.map((a: any) => ({
+          ...a,
+          primaryTag: a.primaryTagName ? { name: a.primaryTagName, slug: a.primaryTagSlug } : null,
+        })),
+        topics: topicRows,
+      };
+    } catch (e) {
+      console.error('getAuthorBySlugDirect error:', e);
+      return null;
+    }
+  });
+}
+
+export async function getOpinionCountByTagDirect(tagSlug: string): Promise<number> {
+  try {
+    const rows: any[] = await sql`
+      SELECT COUNT(DISTINCT a.id)::int AS cnt
+      FROM "Article" a
+      LEFT JOIN "Tag" pt ON pt.id = a."primaryTagId"
+      WHERE a.type = 'OPINION' AND a.status = 'PUBLISHED' AND a."deletedAt" IS NULL
+        AND (
+          pt.slug = ${tagSlug}
+          OR EXISTS (
+            SELECT 1 FROM "ArticleTag" at2
+            JOIN "Tag" t2 ON t2.id = at2."tagId"
+            WHERE at2."articleId" = a.id AND t2.slug = ${tagSlug}
+          )
+        )
+    `;
+    return rows[0]?.cnt || 0;
+  } catch {
+    return 0;
+  }
+}
+
+function mapOpinionRow(a: any) {
+  const authorName = a.authorName || a.founderAuthorName || 'ASI Editorial';
+  const authorSlug = a.authorSlug || (a.founderAuthorId ? `founder-${a.founderAuthorId}` : 'editorial');
+  return {
+    id: a.id,
+    title: a.title,
+    slug: a.slug,
+    excerpt: a.excerpt,
+    coverImage: a.coverImage,
+    readTimeMinutes: a.readTimeMinutes,
+    isFeatured: a.isFeatured,
+    viewCount: a.viewCount || 0,
+    likeCount: a.likeCount || 0,
+    agreeCount: a.agreeCount || 0,
+    disagreeCount: a.disagreeCount || 0,
+    publishedAt: a.publishedAt,
+    updatedAt: a.updatedAt,
+    author: {
+      name: authorName,
+      slug: authorSlug,
+      avatar: a.authorAvatar || a.founderAuthorAvatar || null,
+      bio: a.authorBio || null,
+      company: a.founderCompany || null,
+    },
+    primaryTag: a.primaryTagName ? { name: a.primaryTagName, slug: a.primaryTagSlug } : null,
+    commentCount: a.commentCount || 0,
+    trendingScore: a.trendingScore || 0,
+  };
+}
+
 // ── Directory Entities ─────────────────────────────────────────────────────────
 
 export async function getAiToolBySlugDirect(slug: string) {
@@ -765,11 +1263,11 @@ export async function getFundingDigestsDirect(limit = 3) {
 export async function getAllFundingRoundsDirect() {
   try {
     const rows = await sql`
-      SELECT 
+      SELECT
         fr.id, fr."roundType", fr."amountInr", fr."amountUsd",
         fr."announcedAt"::text AS "announcedAt", fr."leadInvestors", fr."allInvestors",
         s.name AS "startupName", s.slug AS "startupSlug", s."headquartersCity",
-        s.category AS "startupCategory"
+        s.category AS "startupCategory", s."logoUrl" AS "startupLogoUrl"
       FROM "FundingRound" fr
       JOIN "Startup" s ON s.id = fr."startupId"
       WHERE s."deletedAt" IS NULL
@@ -1084,4 +1582,69 @@ export async function getHomepageStatsDirect() {
       return { toolCount: 0, startupCount: 0, eventCount: 0, fundingCount: 0 };
     }
   });
+}
+
+export async function getLatestJobsDirect(limit = 6) {
+  try {
+    const rows = await sql`
+      SELECT jl.id, jl.slug, jl.title, jl."shortDescription", jl.category,
+             jl."workType", jl.location, jl.city, jl.country,
+             jl."salaryMin", jl."salaryMax", jl."salaryCurrency", jl."showSalary",
+             jl."isFeatured", jl."listingTier",
+             jl."publishedAt"::text,
+             e."companyName", e.slug AS "companySlug", e."logoUrl"
+      FROM "JobBoardListing" jl
+      JOIN "JobBoardEmployer" e ON e.id = jl."employerId"
+      WHERE jl."isActive" = true
+        AND jl."deletedAt" IS NULL
+        AND (jl."expiresAt" IS NULL OR jl."expiresAt" > NOW())
+      ORDER BY jl."isFeatured" DESC, jl."publishedAt" DESC NULLS LAST
+      LIMIT ${limit}
+    `;
+    return rows as any[];
+  } catch {
+    return [];
+  }
+}
+
+export async function getUpcomingEventsDirect(limit = 4) {
+  try {
+    const rows = await sql`
+      SELECT e.id, e.slug, e.title, e.subtitle, e.category, e.format,
+             e."startAt"::text, e."endAt"::text,
+             e."venueName", e.address, e."coverImageUrl",
+             e.capacity, e."registrationCount",
+             o."organizationName"
+      FROM "Event" e
+      JOIN "EventOrganizer" o ON o.id = e."organizerId"
+      WHERE e.status = 'PUBLISHED'
+        AND e."deletedAt" IS NULL
+        AND e."startAt" > NOW()
+        AND e.visibility = 'PUBLIC'
+      ORDER BY e."startAt" ASC
+      LIMIT ${limit}
+    `;
+    return rows as any[];
+  } catch {
+    return [];
+  }
+}
+
+export async function getRecentMilestonesDirect(limit = 6) {
+  try {
+    const rows = await sql`
+      SELECT fm.id, fm.title, fm.type, fm.amount, fm.currency,
+             fm.date::text AS date, fm."verificationStatus",
+             s.name AS "startupName", s.slug AS "startupSlug"
+      FROM "FounderMilestone" fm
+      JOIN "Startup" s ON s.id = fm."startupId"
+      WHERE fm.status = 'ACTIVE' AND fm."isPublic" = true
+        AND s."isApproved" = true AND s."deletedAt" IS NULL
+      ORDER BY fm.date DESC
+      LIMIT ${limit}
+    `;
+    return rows as any[];
+  } catch {
+    return [];
+  }
 }

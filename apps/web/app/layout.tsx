@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Suspense } from 'react';
-import { Sora, Plus_Jakarta_Sans } from 'next/font/google';
+import { Sora, Plus_Jakarta_Sans, Bebas_Neue } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import ThemeProvider from '@/components/ThemeProvider';
@@ -10,6 +10,8 @@ import CookieConsent from '@/components/CookieConsent';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import ClearConsentButton from '@/components/ClearConsentButton';
 import ScrollRestoration from '@/components/ScrollRestoration';
+import dynamic from 'next/dynamic';
+const ScrollToTop = dynamic(() => import('@/components/ScrollToTop'), { ssr: false });
 import NewsletterPopup from '@/components/NewsletterPopup';
 import SignupSuccessPopup from '@/components/auth/SignupSuccessPopup';
 import { generateWebSiteSchema, generateOrganizationSchema } from '@/lib/seo';
@@ -35,10 +37,21 @@ const jakarta = Plus_Jakarta_Sans({
   weight: ['400', '500', '600', '700'],
 });
 
+const bebasNeue = Bebas_Neue({
+  subsets: ['latin'],
+  variable: '--font-bebas',
+  display: 'swap',
+  weight: '400',
+});
+
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#030712' },
+  ],
 };
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -107,11 +120,14 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${sora.variable} ${jakarta.variable}`}
+      className={`${sora.variable} ${jakarta.variable} ${bebasNeue.variable}`}
       suppressHydrationWarning
     >
       <head>
         {brand.favicon && <link rel="icon" href={brand.favicon} />}
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         {/* Dynamic Google Fonts for brand typography */}
         {(() => {
           const fontsToLoad = [brand.displayFont, brand.bodyFont].filter(Boolean) as string[];
@@ -159,6 +175,7 @@ export default async function RootLayout({
           {children}
           {/* <NewsletterPopup /> */}
           <SignupSuccessPopup />
+          <ScrollToTop />
           <CookieConsent />
           {gaId && <GoogleAnalytics measurementId={gaId} />}
           <ClearConsentButton />

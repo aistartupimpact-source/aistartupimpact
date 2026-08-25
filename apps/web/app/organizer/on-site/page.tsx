@@ -79,15 +79,15 @@ export default function OnSitePage() {
           <div className="grid grid-cols-3 gap-2">
             <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-center">
               <p className="text-lg font-bold text-navy dark:text-white font-sora">{selectedEvent.registrationCount}</p>
-              <p className="text-[9px] text-gray-500 font-jakarta">Registered</p>
+              <p className="text-xs text-gray-500 font-jakarta">Registered</p>
             </div>
             <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-center">
               <p className="text-lg font-bold text-green-600 font-sora">{selectedEvent.capacity ? selectedEvent.capacity - selectedEvent.registrationCount : "∞"}</p>
-              <p className="text-[9px] text-gray-500 font-jakarta">Remaining</p>
+              <p className="text-xs text-gray-500 font-jakarta">Remaining</p>
             </div>
             <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-center">
               <p className="text-lg font-bold text-gray-500 font-sora">{selectedEvent.capacity || "∞"}</p>
-              <p className="text-[9px] text-gray-500 font-jakarta">Capacity</p>
+              <p className="text-xs text-gray-500 font-jakarta">Capacity</p>
             </div>
           </div>
 
@@ -131,7 +131,7 @@ export default function OnSitePage() {
                     <CheckCircleIcon />
                     <p className="text-sm font-bold text-green-700 font-jakarta mt-1">Registered & Ready!</p>
                     <Image src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(walkInResult.data?.qrToken || "")}`} alt="Ticket QR" width={96} height={96} unoptimized className="w-24 h-24 mx-auto mt-2 rounded border"/>
-                    <p className="text-[9px] text-gray-400 font-jakarta mt-1">Ticket QR: {walkInResult.data?.qrToken}</p>
+                    <p className="text-xs text-gray-400 font-jakarta mt-1">Ticket QR: {walkInResult.data?.qrToken}</p>
                   </div>
                 ) : (
                   <p className="text-sm text-red-600 font-jakarta">{walkInResult.error}</p>

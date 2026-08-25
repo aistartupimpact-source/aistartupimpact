@@ -50,11 +50,11 @@ export default async function EmployerApplicationsPage() {
                 <tr key={app.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30">
                   <td className="px-4 py-3">
                     <p className="font-semibold text-navy dark:text-white font-jakarta">{app.fullName}</p>
-                    <p className="text-[11px] text-gray-400">{app.email}</p>
+                    <p className="text-xs text-gray-400">{app.email}</p>
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 font-jakarta">{app.jobTitle}</td>
                   <td className="px-4 py-3">
-                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
+                    <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded ${
                       app.status === 'APPLIED' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
                       app.status === 'SHORTLISTED' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
                       app.status === 'REJECTED' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :

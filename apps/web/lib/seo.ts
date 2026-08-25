@@ -56,6 +56,26 @@ export function generateOrganizationSchema(seo?: Partial<SeoConfig>, brand?: Par
   };
 }
 
+// ─── Central Article Type → Schema Type Mapping ────────────────────────────────
+
+export function articleTypeToSchemaType(type?: string): string {
+  switch (type) {
+    case 'NEWS':
+    case 'FOUNDER_STORY':
+    case 'STARTUP_UPDATE':
+      return 'NewsArticle';
+    case 'OPINION':
+    case 'GUIDE':
+    case 'COMPARISON':
+    case 'REPORT':
+      return 'Article';
+    case 'TOOL_REVIEW':
+      return 'Review';
+    default:
+      return 'NewsArticle';
+  }
+}
+
 // ─── Page-level schemas ───────────────────────────────────────────────────────
 
 export function generateBreadcrumbSchema(
@@ -87,6 +107,7 @@ export function generateArticleSchema(data: {
   publisherName?: string;
   publisherLogoUrl?: string;
   isStory?: boolean;
+  articleType?: string;
   founderData?: {
     name: string;
     slug: string;
@@ -108,7 +129,7 @@ export function generateArticleSchema(data: {
 
   return {
     '@context': 'https://schema.org',
-    '@type': data.isStory ? 'Article' : 'NewsArticle',
+    '@type': data.articleType ? articleTypeToSchemaType(data.articleType) : (data.isStory ? 'Article' : 'NewsArticle'),
     '@id': data.url,
     mainEntityOfPage: { '@type': 'WebPage', '@id': data.url },
     headline: data.title,
@@ -121,7 +142,7 @@ export function generateArticleSchema(data: {
     author: {
       '@type': 'Person',
       name: data.author.name,
-      url: data.author.url || `${d}/author/${data.author.slug}`,
+      url: data.author.url || `${d}/authors/${data.author.slug}`,
     },
     publisher: {
       '@type': 'Organization',
@@ -255,7 +276,7 @@ export function generatePersonSchema(data: {
     name: data.name,
     description: data.bio,
     jobTitle: data.role,
-    url: `${d}/author/${data.slug}`,
+    url: `${d}/authors/${data.slug}`,
     worksFor: {
       '@type': 'Organization',
       '@id': `${d}/#organization`,
@@ -298,7 +319,8 @@ export function buildArticleMetadata(article: {
   const siteName = seo?.metaTitle?.split('–')[0]?.trim() || DEFAULT_NAME;
   const twitterHandle = seo?.twitterHandle || DEFAULT_TWITTER;
   const isStory = article.type === 'STORY';
-  const path = isStory ? `/stories/${article.slug}` : `/news/${article.slug}`;
+  const isOpinion = article.type === 'OPINION';
+  const path = isOpinion ? `/opinions/${article.slug}` : isStory ? `/stories/${article.slug}` : `/news/${article.slug}`;
   const canonical = `${d}${path}`;
   const description = article.excerpt || '';
   const images = article.coverImage

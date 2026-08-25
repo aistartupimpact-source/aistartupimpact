@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { Bell, Search, ChevronDown, Building2, Settings, LogOut, ExternalLink } from 'lucide-react';
 import { maskEmail } from '@/lib/mask';
+import ThemeToggle from '@/components/ThemeToggle';
 
 interface Props {
   employer: {
@@ -52,7 +53,7 @@ export default function EmployerHeader({ employer }: Props) {
   };
 
   return (
-    <header className="h-14 bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between px-4 md:px-6 shrink-0">
+    <header className="h-16 bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between px-4 md:px-6 shrink-0">
       {/* Left: Mobile logo + Page title */}
       <div className="flex items-center gap-3">
         <Link href="/employer/dashboard" className="md:hidden flex items-center gap-2">
@@ -71,25 +72,12 @@ export default function EmployerHeader({ employer }: Props) {
           href={`/jobs/company/${employer.slug}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="hidden sm:flex items-center gap-1.5 text-[11px] font-jakarta font-medium text-gray-400 hover:text-brand transition-colors px-2 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
+          className="hidden sm:flex items-center gap-1.5 text-xs font-jakarta font-medium text-gray-400 hover:text-brand transition-colors px-2 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
         >
           <ExternalLink className="w-3 h-3" /> View Public Page
         </a>
 
-        {/* Dark mode toggle */}
-        <button
-          onClick={() => {
-            const html = document.documentElement;
-            const isDark = html.classList.contains('dark');
-            html.classList.toggle('dark');
-            localStorage.setItem('asi-theme', isDark ? 'light' : 'dark');
-          }}
-          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-          title="Toggle dark mode"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 hidden dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-        </button>
+        <ThemeToggle />
 
         {/* Notification bell */}
         <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg relative">
@@ -108,13 +96,13 @@ export default function EmployerHeader({ employer }: Props) {
           </button>
 
           {dropdownOpen && (
-            <div className="0 py-2">
+            <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden z-overlay py-2">
               {/* Company info */}
               <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-800">
                 <p className="text-xs font-semibold text-navy dark:text-white font-jakarta truncate">{employer.companyName}</p>
-                <p className="text-[10px] text-gray-400 font-jakarta truncate">{maskEmail(employer.email)}</p>
+                <p className="text-xs text-gray-400 font-jakarta truncate">{maskEmail(employer.email)}</p>
                 {employer.plan !== 'FREE' && (
-                  <span className="inline-block mt-1 text-[9px] font-bold uppercase tracking-wide text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 px-1.5 py-0.5 rounded">
+                  <span className="inline-block mt-1 text-xs font-bold uppercase tracking-wide text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 px-1.5 py-0.5 rounded">
                     {employer.plan}
                   </span>
                 )}

@@ -101,12 +101,17 @@ const sidebarItems = [
   { label: 'Newsletter', href: '/newsletter-admin', icon: Mail, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
   { label: 'Highlights', href: '/newsletter-highlights', icon: Sparkles, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
   { label: 'Testimonials', href: '/testimonials', icon: MessageSquare, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'AD_MANAGER'] },
+  { label: 'Announcements', href: '/announcements', icon: Megaphone, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
   { label: 'Placements', href: '/placements', icon: Megaphone, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'AD_MANAGER'] },
   { label: 'Sponsors', href: '/sponsors', icon: Building2, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'AD_MANAGER'] },
 
   { type: 'divider' as const, label: 'Analytics', roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER', 'AD_MANAGER'] },
   { label: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER', 'AD_MANAGER'] },
   { label: 'Tool Analytics', href: '/tool-analytics', icon: Sparkles, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER', 'AD_MANAGER'] },
+
+  { type: 'divider' as const, label: 'Founder Content', roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
+  { label: 'Content Review', href: '/content-review', icon: FileText, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
+  { label: 'Milestones', href: '/milestones', icon: Flag, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
 
   { type: 'divider' as const, label: 'Users', roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
   { label: 'People', href: '/people', icon: Users, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },

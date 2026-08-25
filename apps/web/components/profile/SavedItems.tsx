@@ -133,7 +133,7 @@ export default function SavedItems() {
           >
             <Wrench className="w-3.5 h-3.5" />
             Tools
-            <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+            <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-xs font-semibold ${
               activeTab === 'tools'
                 ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                 : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
@@ -151,7 +151,7 @@ export default function SavedItems() {
           >
             <Building2 className="w-3.5 h-3.5" />
             Startups
-            <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+            <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-xs font-semibold ${
               activeTab === 'startups'
                 ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                 : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
@@ -220,10 +220,10 @@ export default function SavedItems() {
                           <span>{tool.avgRating.toFixed(1)}</span>
                         </div>
                       )}
-                      <span className="text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                      <span className="text-xs font-medium uppercase tracking-wider px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
                         {tool.pricingModel}
                       </span>
-                      <div className="flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500">
+                      <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
                         <Clock className="w-3 h-3" />
                         <span>{formatDate(tool.savedAt)}</span>
                       </div>
@@ -302,16 +302,16 @@ export default function SavedItems() {
 
                     {/* Meta */}
                     <div className="hidden sm:flex items-center gap-3 shrink-0">
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/30">
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/30">
                         {startup.stage}
                       </span>
                       {startup.headquartersCity && (
-                        <div className="flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                           <MapPin className="w-3 h-3" />
                           <span className="truncate max-w-[80px]">{startup.headquartersCity}</span>
                         </div>
                       )}
-                      <div className="flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500">
+                      <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
                         <Clock className="w-3 h-3" />
                         <span>{formatDate(startup.savedAt)}</span>
                       </div>

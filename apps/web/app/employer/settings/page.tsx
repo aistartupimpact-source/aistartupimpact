@@ -10,6 +10,9 @@ export default function EmployerSettingsPage() {
   const router = useRouter();
   const [exporting, setExporting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+  const [deactivatePassword, setDeactivatePassword] = useState('');
+  const [deactivating, setDeactivating] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [deleting, setDeleting] = useState(false);
@@ -67,6 +70,23 @@ export default function EmployerSettingsPage() {
     } catch { setError('Failed to export data'); } finally { setExporting(false); }
   };
 
+  const handleDeactivate = async (e: React.FormEvent) => {
+    e.preventDefault(); setError('');
+    if (!deactivatePassword) { setError('Password is required'); return; }
+    setDeactivating(true);
+    try {
+      const res = await fetch('/api/employer/deactivate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: deactivatePassword }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSuccess('Account deactivated. Redirecting...');
+        setTimeout(() => router.push('/employer/login'), 2000);
+      } else { setError(data.error || 'Failed to deactivate account'); setDeactivating(false); }
+    } catch { setError('Failed to deactivate account'); setDeactivating(false); }
+  };
+
   const handleDelete = async (e: React.FormEvent) => {
     e.preventDefault(); setError('');
     if (deleteConfirmation !== 'DELETE') { setError('Please type DELETE to confirm'); return; }
@@ -107,7 +127,7 @@ export default function EmployerSettingsPage() {
         <div className="flex items-center justify-between">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 font-jakarta mb-1.5">Email</label>
-            <p className="text-[11px] text-gray-400 font-jakarta mt-1">Change your account email address</p>
+            <p className="text-xs text-gray-400 font-jakarta mt-1">Change your account email address</p>
           </div>
           <button
             onClick={() => setShowEmailChange(true)}
@@ -169,6 +189,20 @@ export default function EmployerSettingsPage() {
           </div>
         </div>
 
+        {/* Deactivate Account */}
+        <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+          <h3 className="font-sora font-bold text-sm text-amber-600 dark:text-amber-400 mb-3">Deactivate Account</h3>
+          <p className="text-xs text-gray-500 font-jakarta mb-3">
+            Temporarily hide your profile and close all active job listings. You can reactivate anytime by logging in again.
+          </p>
+          <button
+            onClick={() => setShowDeactivateModal(true)}
+            className="text-sm font-semibold text-amber-600 hover:text-amber-700 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+          >
+            Deactivate Account
+          </button>
+        </div>
+
         {/* Danger Zone */}
         <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
           <h3 className="font-sora font-bold text-sm text-red-600 dark:text-red-400 mb-3">Danger Zone</h3>
@@ -214,6 +248,45 @@ export default function EmployerSettingsPage() {
               </div>
               <button type="submit" disabled={changingPassword} className="w-full px-4 py-2 bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 text-white dark:text-gray-900 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                 {changingPassword ? 'Changing Password...' : 'Change Password'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Deactivate Account Modal */}
+      {showDeactivateModal && (
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-amber-200 dark:border-amber-800">
+            <button
+              onClick={() => { setShowDeactivateModal(false); setDeactivatePassword(''); setError(''); }}
+              className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Close"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+            </button>
+            <div className="text-center mb-5">
+              <div className="w-11 h-11 bg-amber-50 dark:bg-amber-900/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <svg className="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" /></svg>
+              </div>
+              <h3 className="font-semibold text-lg text-amber-600 dark:text-amber-400 mb-1">Deactivate Account</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">You can reactivate anytime by logging in again.</p>
+            </div>
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-4">
+              <p className="text-xs text-amber-800 dark:text-amber-300 font-semibold mb-1">This will temporarily:</p>
+              <ul className="text-xs text-amber-700 dark:text-amber-400 space-y-0.5 list-disc list-inside">
+                <li>Hide your employer profile</li>
+                <li>Close all active job listings</li>
+                <li>Log you out of all sessions</li>
+              </ul>
+            </div>
+            <form onSubmit={handleDeactivate} className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Enter your password to confirm</label>
+                <input type="password" autoComplete="current-password" value={deactivatePassword} onChange={(e) => setDeactivatePassword(e.target.value)} required placeholder="Your account password" className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-jakarta" />
+              </div>
+              <button type="submit" disabled={deactivating || !deactivatePassword} className="w-full px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                {deactivating ? 'Deactivating...' : 'Deactivate My Account'}
               </button>
             </form>
           </div>

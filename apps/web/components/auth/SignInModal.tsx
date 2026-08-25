@@ -17,6 +17,7 @@ type ModeType = 'signin' | 'signup';
 
 export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', defaultTab = 'user', returnTo, fullPage = false }: SignInModalProps) {
   const router = useRouter();
+  const effectiveReturnTo = returnTo || (typeof window !== 'undefined' ? window.location.pathname + window.location.search : null);
   const [mode, setMode] = useState<ModeType>(defaultMode);
   const [formData, setFormData] = useState({
     name: '',
@@ -165,7 +166,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
 
         onClose();
         resetForm();
-        router.push(returnTo || '/profile');
+        router.push(effectiveReturnTo || '/profile');
         router.refresh();
       } catch (err: any) {
         setError(err.message);
@@ -204,7 +205,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
 
       onClose();
       resetForm();
-      router.push(returnTo || '/profile');
+      router.push(effectiveReturnTo || '/profile');
       router.refresh();
     } catch (err: any) {
       setError(err.message);
@@ -267,7 +268,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
 
       onClose();
       resetForm();
-      router.push(returnTo || '/profile');
+      router.push(effectiveReturnTo || '/profile');
       router.refresh();
     } catch (err: any) {
       setError(err.message);
@@ -301,7 +302,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
   };
 
   const handleGoogleSignIn = () => {
-    const returnUrl = returnTo || '/profile';
+    const returnUrl = effectiveReturnTo || '/profile';
     window.location.href = `/api/user/auth/google?returnTo=${encodeURIComponent(returnUrl)}`;
   };
 
@@ -409,7 +410,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
                 <span className="font-semibold text-gray-700 dark:text-gray-300">Continue with Google</span>
               </button>
               {mode === 'signup' && (
-                <p className="text-[11px] text-gray-400 dark:text-gray-500 text-center mb-4">
+                <p className="text-xs text-gray-400 dark:text-gray-500 text-center mb-4">
                   By signing up with Google, you agree to receive our weekly AI newsletter. Unsubscribe anytime.
                 </p>
               )}
@@ -512,7 +513,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
                       <div className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div className={`h-full transition-all ${passwordStrength.color}`} style={{ width: `${(passwordStrength.strength / 4) * 100}%` }} />
                       </div>
-                      <span className="text-[10px] font-medium text-gray-500">{passwordStrength.label}</span>
+                      <span className="text-xs font-medium text-gray-500">{passwordStrength.label}</span>
                     </div>
                   )}
                 </div>

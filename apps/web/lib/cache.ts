@@ -221,6 +221,14 @@ export const CK = {
   toolReviewResponses: (toolId: string) => `tool:responses:${toolId}`,
   toolDirectory: (catSlug: string) => `tool:directory:${catSlug || 'all'}`,
 
+  // Opinions
+  OPINION_TAGS: 'opinion:tags',
+  OPINION_CONTRIBUTORS: 'opinion:contributors',
+  opinionLatest: (tagSlug: string, page: number) => `opinion:latest:${tagSlug || 'all'}:p${page}`,
+  opinionFeatured: () => 'opinion:featured',
+  opinionTrending: () => 'opinion:trending',
+  author: (slug: string) => `author:${slug}`,
+
   // Parameterized (functions)
   toolsPage: (hash: string, page: number) => `tools:${hash}:p${page}`,
   toolsCount: (hash: string) => `tools:${hash}:count`,

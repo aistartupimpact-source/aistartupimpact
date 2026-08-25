@@ -144,8 +144,8 @@ export default function SupportTicketList({ apiBasePath, portalPath }: SupportTi
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs font-mono text-gray-400">{t.ticketNumber}</span>
-                    <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full ${STATUS_COLORS[t.status]}`}>{STATUS_LABELS[t.status] || t.status}</span>
-                    <span className={`text-[10px] font-medium ${PRIORITY_COLORS[t.priority]}`}>{t.priority}</span>
+                    <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${STATUS_COLORS[t.status]}`}>{STATUS_LABELS[t.status] || t.status}</span>
+                    <span className={`text-xs font-medium ${PRIORITY_COLORS[t.priority]}`}>{t.priority}</span>
                   </div>
                   <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{t.subject}</p>
                   <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-400">

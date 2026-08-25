@@ -46,11 +46,21 @@ function FeaturedPartnerRotator({ partners }: { partners: Partner[] }) {
   const p = partners[active];
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-navy-800">
+    <div className="relative">
+      {/* Extended corner lines with gradient fade */}
+      <div className="absolute -top-10 left-0 w-px h-10 bg-gradient-to-t from-gray-600 to-transparent" />
+      <div className="absolute top-0 -left-10 h-px w-10 bg-gradient-to-l from-gray-600 to-transparent" />
+      <div className="absolute -top-10 right-0 w-px h-10 bg-gradient-to-t from-gray-600 to-transparent" />
+      <div className="absolute top-0 -right-10 h-px w-10 bg-gradient-to-r from-gray-600 to-transparent" />
+      <div className="absolute -bottom-10 left-0 w-px h-10 bg-gradient-to-b from-gray-600 to-transparent" />
+      <div className="absolute bottom-0 -left-10 h-px w-10 bg-gradient-to-l from-gray-600 to-transparent" />
+      <div className="absolute -bottom-10 right-0 w-px h-10 bg-gradient-to-b from-gray-600 to-transparent" />
+      <div className="absolute bottom-0 -right-10 h-px w-10 bg-gradient-to-r from-gray-600 to-transparent" />
+    <div className="relative overflow-hidden bg-navy-800">
       <div className="absolute inset-0 bg-gradient-to-r from-[#0D1B2A] via-[#0F2239] to-[#071018]" />
       <div className="absolute top-0 right-0 w-80 h-80 bg-brand/15 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/4" />
       <div
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0 opacity-[0.015]"
         style={{
           backgroundImage:
             'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
@@ -58,11 +68,11 @@ function FeaturedPartnerRotator({ partners }: { partners: Partner[] }) {
         }}
       />
 
-      <div className="relative z-10 px-5 sm:px-10 py-10 sm:py-16">
+      <div className="relative z-10 px-5 sm:px-10 pt-12 pb-5 sm:pt-20 sm:pb-14">
         {/* Top-left badge */}
-        <div className="absolute top-3 left-4 flex items-center gap-1 bg-brand/10 border border-brand/20 px-1.5 py-0.5 rounded-full">
+        <div className="absolute top-2 left-3 sm:top-3 sm:left-4 flex items-center gap-1 bg-red-500/15 border border-red-500/30 px-1.5 sm:px-2 py-px sm:py-0.5 rounded-full">
           <span className="w-1 h-1 rounded-full bg-brand animate-pulse" />
-          <span className="text-brand text-[8px] font-bold uppercase tracking-widest font-jakarta">
+          <span className="text-brand text-[7px] sm:text-[8px] font-bold uppercase tracking-widest font-jakarta">
             Featured Partner
           </span>
         </div>
@@ -117,7 +127,7 @@ function FeaturedPartnerRotator({ partners }: { partners: Partner[] }) {
                 )}
               </div>
               <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-[#0D1B2A] flex items-center justify-center">
-                <span className="text-[8px] text-white font-bold">✓</span>
+                <span className="text-xs text-white font-bold">✓</span>
               </div>
             </div>
             <div className="min-w-0">
@@ -145,7 +155,7 @@ function FeaturedPartnerRotator({ partners }: { partners: Partner[] }) {
           <div className="hidden sm:block w-px h-20 bg-white/10 shrink-0" />
 
           {/* CTA */}
-          <div className="flex items-center justify-end shrink-0 border-t border-white/10 sm:border-0 pt-4 sm:pt-0">
+          <div className="flex items-center justify-end shrink-0 border-t border-white/5 sm:border-0 pt-4 sm:pt-0">
             <Link
               href={p.ctaUrl}
               target="_blank"
@@ -178,6 +188,7 @@ function FeaturedPartnerRotator({ partners }: { partners: Partner[] }) {
           to { width: 100%; }
         }
       `}</style>
+    </div>
     </div>
   );
 }

@@ -79,7 +79,7 @@ export default function JobApplicationsPage() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-sora font-bold text-sm text-navy dark:text-white">{app.fullName}</h3>
-                    <span className={clsx('text-[9px] font-bold uppercase px-1.5 py-0.5 rounded', STATUS_COLORS[app.status] || 'bg-gray-100 text-gray-500')}>
+                    <span className={clsx('text-xs font-bold uppercase px-1.5 py-0.5 rounded', STATUS_COLORS[app.status] || 'bg-gray-100 text-gray-500')}>
                       {app.status}
                     </span>
                   </div>
@@ -129,7 +129,7 @@ export default function JobApplicationsPage() {
                       <option key={s} value={s}>{s.charAt(0) + s.slice(1).toLowerCase()}</option>
                     ))}
                   </select>
-                  <p className="text-[10px] text-gray-400 font-jakarta mt-1 text-right">
+                  <p className="text-xs text-gray-400 font-jakarta mt-1 text-right">
                     {new Date(app.appliedAt + 'Z').toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short' })}
                   </p>
                 </div>

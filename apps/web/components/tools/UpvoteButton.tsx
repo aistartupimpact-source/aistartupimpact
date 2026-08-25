@@ -83,7 +83,7 @@ export default function UpvoteButton({ toolSlug, initialCount = 0, size = 'sm' }
     >
       <ThumbsUp className={`${isSm ? 'w-3 h-3' : 'w-3.5 h-3.5'} ${upvoted ? 'fill-current' : ''}`} />
       {count >= THRESHOLD && (
-        <span className={`font-bold ${isSm ? 'text-[10px]' : 'text-xs'}`}>{count}</span>
+        <span className={`font-bold ${isSm ? 'text-xs' : 'text-xs'}`}>{count}</span>
       )}
     </button>
   );

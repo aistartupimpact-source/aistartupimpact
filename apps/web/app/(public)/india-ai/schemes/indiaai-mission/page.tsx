@@ -73,7 +73,7 @@ export default function IndiaAIMissionPage() {
 
         {/* Header */}
         <div className="mb-8">
-          <div className="inline-flex items-center gap-2 badge-brand mb-3 text-[10px] sm:text-xs">
+          <div className="inline-flex items-center gap-2 badge-brand mb-3 text-xs sm:text-xs">
             <Rocket className="w-3 h-3" /> Government Scheme
           </div>
           <h1 className="font-sora font-extrabold text-2xl sm:text-3xl md:text-4xl text-navy dark:text-white mb-4">

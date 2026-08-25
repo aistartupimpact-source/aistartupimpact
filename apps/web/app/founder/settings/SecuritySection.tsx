@@ -38,6 +38,11 @@ export default function SecuritySection() {
   // Email change state
   const [showEmailChange, setShowEmailChange] = useState(false);
 
+  // Deactivate account state
+  const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+  const [deactivatePassword, setDeactivatePassword] = useState('');
+  const [deactivateLoading, setDeactivateLoading] = useState(false);
+
   // Delete account state
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [deletePassword, setDeletePassword] = useState('');
@@ -111,6 +116,33 @@ export default function SecuritySection() {
 
   const handle2FAToggle = () => {
     setShow2FAModal(true);
+  };
+
+  const handleDeactivate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!deactivatePassword) {
+      setToast({ type: 'error', message: 'Password is required' });
+      return;
+    }
+    setDeactivateLoading(true);
+    try {
+      const res = await fetch('/api/founder/deactivate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: deactivatePassword }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setToast({ type: 'success', message: 'Account deactivated. Redirecting...' });
+        setTimeout(() => router.push('/auth/login'), 2000);
+      } else {
+        setToast({ type: 'error', message: data.error || 'Failed to deactivate' });
+        setDeactivateLoading(false);
+      }
+    } catch {
+      setToast({ type: 'error', message: 'Failed to deactivate account' });
+      setDeactivateLoading(false);
+    }
   };
 
   const handleDeleteAccount = async (e: React.FormEvent) => {
@@ -240,6 +272,14 @@ export default function SecuritySection() {
             </button>
 
             <button
+              onClick={() => setShowDeactivateModal(true)}
+              className="w-full text-left py-3 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors"
+            >
+              <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Deactivate Account</p>
+              <p className="text-xs text-amber-600/70 dark:text-amber-400/70 mt-0.5">Temporarily hide your profile — reactivate anytime by logging in</p>
+            </button>
+
+            <button
               onClick={() => setShowDeleteModal(true)}
               className="w-full text-left py-3 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors last:border-0"
             >
@@ -353,6 +393,45 @@ export default function SecuritySection() {
             setToast({ type: 'error', message });
           }}
         />
+      )}
+
+      {/* Deactivate Account Modal */}
+      {showDeactivateModal && (
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md w-full shadow-2xl border border-amber-200 dark:border-amber-800 animate-in zoom-in-95 duration-200">
+            <button
+              onClick={() => { setShowDeactivateModal(false); setDeactivatePassword(''); }}
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Shield className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+              </div>
+              <h3 className="font-semibold text-xl text-amber-600 dark:text-amber-400 mb-1">Deactivate Account</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">You can reactivate anytime by logging in again.</p>
+            </div>
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-4">
+              <p className="text-sm text-amber-800 dark:text-amber-300 font-semibold mb-2">This will temporarily:</p>
+              <ul className="text-sm text-amber-700 dark:text-amber-400 space-y-1 list-disc list-inside">
+                <li>Hide your startups from public listings</li>
+                <li>Hide your AI tools from public listings</li>
+                <li>Log you out of all sessions</li>
+              </ul>
+            </div>
+            <form onSubmit={handleDeactivate} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Enter your password to confirm</label>
+                <input type="password" autoComplete="current-password" value={deactivatePassword} onChange={(e) => setDeactivatePassword(e.target.value)} required placeholder="Your account password" className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-navy dark:text-white focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 font-jakarta text-sm transition-all" />
+              </div>
+              <button type="submit" disabled={deactivateLoading || !deactivatePassword} className="w-full px-6 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                {deactivateLoading ? 'Deactivating...' : 'Deactivate My Account'}
+              </button>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Delete Account Modal */}

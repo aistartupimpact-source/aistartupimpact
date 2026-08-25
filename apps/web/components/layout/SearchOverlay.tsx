@@ -113,7 +113,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search articles, tools, startups..."
+            inputMode="search" enterKeyHint="search" placeholder="Search articles, tools, startups..."
             className="flex-1 text-base font-jakarta text-navy dark:text-white placeholder:text-gray-400 bg-transparent focus:outline-none"
           />
           {loading && <Loader2 className="w-4 h-4 text-brand animate-spin" />}
@@ -157,13 +157,13 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-brand">
+                      <span className="text-xs font-bold uppercase tracking-wider text-brand">
                         {result.type}
                       </span>
                       {result.category && (
                         <>
                           <span className="text-gray-300 dark:text-gray-700">·</span>
-                          <span className="text-[10px] text-gray-500">{result.category}</span>
+                          <span className="text-xs text-gray-500">{result.category}</span>
                         </>
                       )}
                     </div>
@@ -290,7 +290,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
         {/* Footer Hint */}
         <div className="px-5 py-3 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
           <p className="text-xs text-gray-400 text-center font-jakarta">
-            Press <kbd className="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-mono text-[10px]">Enter</kbd> to search or <kbd className="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-mono text-[10px]">Esc</kbd> to close
+            Press <kbd className="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-mono text-xs">Enter</kbd> to search or <kbd className="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-mono text-xs">Esc</kbd> to close
           </p>
         </div>
       </div>

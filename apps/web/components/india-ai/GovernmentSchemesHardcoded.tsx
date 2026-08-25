@@ -191,7 +191,7 @@ export default function GovernmentSchemesHardcoded() {
                   <h3 className="font-sora font-bold text-base sm:text-lg text-navy dark:text-white">
                     {scheme.shortName}
                   </h3>
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold whitespace-nowrap ${getStatusColor(scheme.status)}`}>
+                  <span className={`px-2 py-0.5 rounded-full text-xs sm:text-xs font-bold whitespace-nowrap ${getStatusColor(scheme.status)}`}>
                     {scheme.status}
                   </span>
                 </div>
@@ -199,7 +199,7 @@ export default function GovernmentSchemesHardcoded() {
                   {scheme.name}
                 </p>
                 {scheme.state && (
-                  <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-brand font-medium">
+                  <span className="inline-flex items-center gap-1 text-xs sm:text-xs text-brand font-medium">
                     <Building2 className="w-3 h-3" />
                     {scheme.state}
                   </span>
@@ -218,14 +218,14 @@ export default function GovernmentSchemesHardcoded() {
               <div className="flex items-center justify-between text-xs sm:text-sm">
                 <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1.5 sm:gap-2">
                   <IndianRupee className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="text-[11px] sm:text-sm">Funding</span>
+                  <span className="text-xs sm:text-sm">Funding</span>
                 </span>
                 <span className="font-bold text-brand text-xs sm:text-sm">{scheme.fundingAmount}</span>
               </div>
               <div className="flex items-center justify-between text-xs sm:text-sm">
                 <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1.5 sm:gap-2">
                   <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="text-[11px] sm:text-sm">Deadline</span>
+                  <span className="text-xs sm:text-sm">Deadline</span>
                 </span>
                 <span className="font-medium text-gray-700 dark:text-gray-300 text-xs sm:text-sm">
                   {scheme.applicationDeadline}
@@ -235,19 +235,19 @@ export default function GovernmentSchemesHardcoded() {
 
             {/* Eligibility */}
             <div className="mb-3 sm:mb-4">
-              <div className="text-[10px] sm:text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
+              <div className="text-xs sm:text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
                 Eligibility:
               </div>
               <ul className="space-y-1">
                 {scheme.eligibility.slice(0, 2).map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-gray-600 dark:text-gray-400">
+                  <li key={idx} className="flex items-start gap-1.5 sm:gap-2 text-xs sm:text-xs text-gray-600 dark:text-gray-400">
                     <CheckCircle2 className="w-3 h-3 text-green-600 shrink-0 mt-0.5" />
                     <span className="leading-snug">{item}</span>
                   </li>
                 ))}
               </ul>
               {scheme.eligibility.length > 2 && (
-                <button className="text-[10px] sm:text-xs text-brand hover:underline mt-1">
+                <button className="text-xs sm:text-xs text-brand hover:underline mt-1">
                   +{scheme.eligibility.length - 2} more criteria
                 </button>
               )}

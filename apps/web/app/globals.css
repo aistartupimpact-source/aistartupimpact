@@ -48,6 +48,10 @@
   body {
     @apply text-[15px] leading-relaxed sm:text-base;
     overflow-x: hidden;
+    overscroll-behavior-x: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   /* Headings — mobile-first sizes */
@@ -109,6 +113,22 @@
   /* Safe area for notched phones */
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Native mobile feel — prevent unwanted browser behaviors */
+  img, video {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Horizontal scrollable areas should not trigger back/forward nav */
+  .overflow-x-auto, .overflow-x-scroll {
+    overscroll-behavior-x: contain;
   }
 
   /* Prevent horizontal overflow globally */
@@ -195,11 +215,11 @@
   /* ─── Badges ───────────────────────────────── */
 
   .badge-brand {
-    @apply inline-flex items-center gap-1 bg-brand text-white text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-sm;
+    @apply inline-flex items-center gap-1 bg-brand text-white text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-sm;
   }
 
   .badge-category {
-    @apply inline-flex items-center text-[10px] font-bold uppercase tracking-wider text-brand px-2.5 py-1 rounded-full;
+    @apply inline-flex items-center text-[11px] font-bold uppercase tracking-wider text-brand px-2.5 py-1 rounded-full;
     background-color: color-mix(in srgb, var(--brand-color) 5%, transparent);
     border: 1px solid color-mix(in srgb, var(--brand-color) 10%, transparent);
   }
@@ -230,7 +250,7 @@
   /* ─── Section title ────────────────────────── */
 
   .section-title {
-    @apply font-sora font-extrabold text-xl sm:text-2xl text-navy dark:text-white flex items-center gap-2;
+    @apply font-sora font-extrabold text-base sm:text-2xl text-navy dark:text-white flex items-center gap-2;
   }
 
   /* ─── Article content ──────────────────────── */
@@ -243,6 +263,24 @@
   }
   .dark .article-content blockquote {
     background-color: color-mix(in srgb, var(--brand-color) 10%, transparent);
+  }
+  .article-content .mention {
+    @apply font-semibold no-underline text-brand;
+    background: none;
+    border: none;
+    padding: 0;
+    transition: color 0.2s ease;
+    text-decoration: none !important;
+  }
+  .article-content .mention:hover {
+    @apply text-brand-600;
+    text-decoration: underline !important;
+  }
+  .dark .article-content .mention {
+    @apply text-brand-400;
+  }
+  .dark .article-content .mention:hover {
+    @apply text-brand-300;
   }
 }
 

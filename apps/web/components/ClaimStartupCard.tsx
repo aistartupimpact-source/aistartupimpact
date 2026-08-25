@@ -112,13 +112,13 @@ export default function ClaimStartupCard({
           <button
             onClick={handleClaim}
             disabled={loading}
-            className="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-brand to-brand/90 hover:from-brand/90 hover:to-brand text-white font-bold text-sm font-jakarta transition-all hover:shadow-lg hover:shadow-brand/30 hover:scale-[1.02] disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg bg-brand hover:bg-brand/90 text-white font-bold text-sm font-jakarta transition-all hover:shadow-lg hover:shadow-brand/30 hover:scale-[1.02] disabled:opacity-60"
           >
             <Shield className="w-4 h-4" />
             Claim This Startup
           </button>
 
-          <p className="text-[10px] text-gray-500 dark:text-gray-500 font-jakarta mt-3 text-center">
+          <p className="text-xs text-gray-500 dark:text-gray-500 font-jakarta mt-3 text-center">
             100% Free • Verified via DNS • Takes 5 minutes
           </p>
         </div>

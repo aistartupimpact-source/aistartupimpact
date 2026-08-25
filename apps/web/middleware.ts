@@ -16,18 +16,33 @@ function getSql() {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // CSRF protection: validate Origin header on state-changing requests to API routes
+  // CSRF protection: validate Origin/Referer on state-changing requests to API routes
   if (pathname.startsWith('/api/') && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)) {
     const origin = request.headers.get('origin');
+    const referer = request.headers.get('referer');
+    const allowedOrigins = [
+      process.env.NEXT_PUBLIC_WEB_URL,
+      process.env.NEXT_PUBLIC_ADMIN_URL,
+    ].filter(Boolean);
+    if (process.env.NODE_ENV !== 'production') {
+      allowedOrigins.push('http://localhost:3000', 'http://localhost:3001', 'http://localhost:4000');
+    }
+
     if (origin) {
-      const allowedOrigins = [
-        process.env.NEXT_PUBLIC_WEB_URL,
-        process.env.NEXT_PUBLIC_ADMIN_URL,
-      ].filter(Boolean);
-      if (process.env.NODE_ENV !== 'production') {
-        allowedOrigins.push('http://localhost:3000', 'http://localhost:3001', 'http://localhost:4000');
-      }
       if (!allowedOrigins.includes(origin)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    } else if (referer) {
+      const refererOrigin = new URL(referer).origin;
+      if (!allowedOrigins.includes(refererOrigin)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    } else {
+      // No Origin or Referer — block unless it's a server-to-server call (cron/webhook)
+      const isCronOrWebhook = pathname.startsWith('/api/admin/daily-digest') ||
+        pathname.startsWith('/api/admin/data-retention') ||
+        pathname.startsWith('/api/webhook');
+      if (!isCronOrWebhook) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
     }

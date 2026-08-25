@@ -83,10 +83,10 @@ export async function saveArticleAction(payload: any, articleId?: string | null)
   }
 
   try {
-    const { 
-      title, subtitle, content, type, category, tags, coverImage, thumbnailImage, 
+    const {
+      title, subtitle, content, type, category, tags, coverImage, thumbnailImage,
       seoTitle, seoDescription, focusKeyword, slug, status, canonicalUrl, ogImage, noIndex,
-      scheduledAt, isFeatured, isPinned, isSponsored 
+      scheduledAt, isFeatured, isPinned, isSponsored, keyTakeaways
     } = payload;
     const authorId = session.user.id;
 
@@ -182,6 +182,7 @@ export async function saveArticleAction(payload: any, articleId?: string | null)
           "focusKeyword" = ${data.focusKeyword || null},
           "canonicalUrl" = ${data.canonicalUrl || null},
           "ogImage" = ${data.ogImage || null},
+          "keyTakeaways" = ${keyTakeaways && keyTakeaways.length > 0 ? JSON.stringify(keyTakeaways) : null}::jsonb,
           "updatedAt" = NOW()
         WHERE id = ${articleId}
       `;
@@ -201,8 +202,8 @@ export async function saveArticleAction(payload: any, articleId?: string | null)
         INSERT INTO "Article" (
           id, title, slug, excerpt, content, type, status, "noIndex",
           "isFeatured", "isPinned", "isSponsored", "categoryId", "scheduledAt",
-          "coverImage", "thumbnailImage", "seoTitle", "seoDescription", 
-          "focusKeyword", "canonicalUrl", "ogImage",
+          "coverImage", "thumbnailImage", "seoTitle", "seoDescription",
+          "focusKeyword", "canonicalUrl", "ogImage", "keyTakeaways",
           "authorId", "createdAt", "updatedAt"
         ) VALUES (
           ${newArticleId},
@@ -225,6 +226,7 @@ export async function saveArticleAction(payload: any, articleId?: string | null)
           ${data.focusKeyword || null},
           ${data.canonicalUrl || null},
           ${data.ogImage || null},
+          ${keyTakeaways && keyTakeaways.length > 0 ? JSON.stringify(keyTakeaways) : null}::jsonb,
           ${authorId},
           NOW(),
           NOW()
@@ -332,7 +334,7 @@ export async function getArticleByIdAction(id: string) {
         a.id, a.title, a.slug, a.status, a.type, a.excerpt,
         a.content, a."coverImage", a."thumbnailImage", a."seoTitle", a."seoDescription",
         a."focusKeyword", a."isFeatured", a."isPinned", a."isSponsored",
-        a."canonicalUrl", a."ogImage", a."noIndex",
+        a."canonicalUrl", a."ogImage", a."noIndex", a."keyTakeaways",
         a."publishedAt"::text AS "publishedAt",
         a."scheduledAt"::text AS "scheduledAt",
         u.name AS "authorName",

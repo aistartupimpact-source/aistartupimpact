@@ -5,6 +5,7 @@ import { getFounderSession } from '@/lib/founder-auth';
 import { getUnifiedSession } from '@/lib/unified-auth';
 import FounderNav from '@/components/founder/FounderNav';
 import FounderSidebar from '@/components/founder/FounderSidebar';
+import { SidebarProvider } from '@/components/ui/SidebarContext';
 import { sql } from '@/lib/db';
 import DNSVerificationModal from '@/components/founder/DNSVerificationModal';
 
@@ -73,24 +74,26 @@ export default async function FounderLayout({
   `;
 
   return (
-    <div className="flex h-screen bg-page dark:bg-page-dark overflow-hidden">
-      {/* Sidebar */}
-      <div className="hidden md:block">
-        <FounderSidebar />
-      </div>
-      
-      {/* Main area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <FounderNav session={session} />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 pb-20 md:pb-6">
-          <div className="max-w-7xl mx-auto">
-            {children}
-          </div>
-        </main>
-      </div>
+    <SidebarProvider storageKey="founder-sidebar-collapsed">
+      <div className="flex h-screen bg-page dark:bg-page-dark overflow-hidden">
+        {/* Sidebar */}
+        <div className="hidden md:block">
+          <FounderSidebar />
+        </div>
 
-      {/* DNS Verification Reminder Modal */}
-      <DNSVerificationModal unverifiedStartups={unverifiedStartups as any[]} />
-    </div>
+        {/* Main area */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <FounderNav session={session} />
+          <main className="flex-1 overflow-y-auto p-4 sm:p-6 pb-20 md:pb-6">
+            <div className="max-w-7xl mx-auto">
+              {children}
+            </div>
+          </main>
+        </div>
+
+        {/* DNS Verification Reminder Modal */}
+        <DNSVerificationModal unverifiedStartups={unverifiedStartups as any[]} />
+      </div>
+    </SidebarProvider>
   );
 }

@@ -350,7 +350,7 @@ function OrganizerAuthContent() {
 
       {/* Terms */}
       {mode === "signup" && (
-        <p className="text-center text-[11px] text-gray-400 font-jakarta mt-4">
+        <p className="text-center text-xs text-gray-400 font-jakarta mt-4">
           By creating an account, you agree to our{" "}
           <Link href="/terms" className="underline">terms of service</Link> and{" "}
           <Link href="/privacy" className="underline">privacy policy</Link>.

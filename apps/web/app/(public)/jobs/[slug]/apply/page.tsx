@@ -103,7 +103,7 @@ export default function ApplyPage() {
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 font-jakarta mb-1.5">Resume URL *</label>
             <input type="url" value={form.resumeUrl} onChange={e => setForm(p => ({ ...p, resumeUrl: e.target.value }))} required className="input-field w-full" placeholder="https://drive.google.com/..." />
-            <p className="text-[11px] text-gray-400 font-jakarta mt-1">Link to your resume (Google Drive, Dropbox, or personal site)</p>
+            <p className="text-xs text-gray-400 font-jakarta mt-1">Link to your resume (Google Drive, Dropbox, or personal site)</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>

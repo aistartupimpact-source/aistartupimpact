@@ -40,7 +40,7 @@ export default function ImpactScoreBadge({ score, breakdown }: Props) {
         >
           <TrendingUp className="w-3 h-3 text-brand" />
           <span className="text-xs font-sora font-bold text-brand">{score}/100</span>
-          <span className="text-[10px] text-gray-500 dark:text-gray-400 font-jakarta hidden sm:inline">Impact Score</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 font-jakarta hidden sm:inline">Impact Score</span>
           {open ? (
             <ChevronUp className="w-3 h-3 text-brand" />
           ) : (
@@ -63,13 +63,13 @@ export default function ImpactScoreBadge({ score, breakdown }: Props) {
                 { label: 'Company Age', ...breakdown.age },
               ].map((item) => (
                 <div key={item.label} className="flex items-center gap-2">
-                  <span className="text-[11px] text-gray-500 dark:text-gray-400 font-jakarta w-24 shrink-0">{item.label}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 font-jakarta w-24 shrink-0">{item.label}</span>
                   <ProgressBar score={item.score} max={item.max} />
-                  <span className="text-[10px] font-bold text-brand w-9 text-right shrink-0">{item.score}/{item.max}</span>
+                  <span className="text-xs font-bold text-brand w-9 text-right shrink-0">{item.score}/{item.max}</span>
                 </div>
               ))}
             </div>
-            <p className="text-[10px] text-gray-400 font-jakarta mt-3 leading-relaxed border-t border-gray-100 dark:border-gray-800 pt-2">
+            <p className="text-xs text-gray-400 font-jakarta mt-3 leading-relaxed border-t border-gray-100 dark:border-gray-800 pt-2">
               Calculated from funding raised, team size, funding stage, and company age.
             </p>
           </div>

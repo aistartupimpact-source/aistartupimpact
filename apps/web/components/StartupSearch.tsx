@@ -263,11 +263,11 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
   return (
     <div className="space-y-5">
       {/* ── Sticky Category Pills ── */}
-      <div className="sticky top-0 z-sticky bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-2.5 sm:py-3 border-b border-gray-100 dark:border-gray-800">
+      <div className="sticky top-0 z-10 bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-2.5 sm:py-3 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide pb-1">
           <button
             onClick={() => handleCategoryChange('')}
-            className={`shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold font-jakarta transition-all ${
+            className={`shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-xs font-bold font-jakarta transition-all ${
               category === ''
                 ? 'bg-brand text-white shadow-sm'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -279,7 +279,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
             <button
               key={cat.value}
               onClick={() => handleCategoryChange(cat.value)}
-              className={`shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold font-jakarta transition-all ${
+              className={`shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-xs font-bold font-jakarta transition-all ${
                 category === cat.value
                   ? 'bg-brand text-white shadow-sm'
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -301,7 +301,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
               type="text"
               value={query}
               onChange={e => { hasUserInteracted.current = true; setQuery(e.target.value); }}
-              placeholder="Search startups by name, tagline, founder or category..."
+              inputMode="search" enterKeyHint="search" placeholder="Search startups by name, tagline, founder or category..."
               className="w-full pl-10 sm:pl-12 pr-10 py-2 sm:py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent text-sm font-jakarta"
             />
             {query && (
@@ -322,7 +322,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
             <SlidersHorizontal className="w-4 h-4" />
             <span>Filters</span>
             {activeFiltersCount > 0 && (
-              <span className="w-5 h-5 flex items-center justify-center bg-brand text-white text-[11px] font-bold rounded-full animate-scale-in">
+              <span className="w-5 h-5 flex items-center justify-center bg-brand text-white text-xs font-bold rounded-full animate-scale-in">
                 {activeFiltersCount}
               </span>
             )}
@@ -335,7 +335,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
           <div className="bg-gray-50/50 dark:bg-gray-900/30 border border-gray-200/60 dark:border-gray-800 rounded-2xl p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-scale-in">
             {/* Stage Filter */}
             <div className="flex flex-col">
-              <label className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Funding Stage</label>
+              <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Funding Stage</label>
               <select
                 value={stage}
                 onChange={e => { hasUserInteracted.current = true; setStage(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
@@ -348,7 +348,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
 
             {/* Business Model Filter */}
             <div className="flex flex-col">
-              <label className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Business Model</label>
+              <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Business Model</label>
               <select
                 value={businessType}
                 onChange={e => { hasUserInteracted.current = true; setBusinessType(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
@@ -360,7 +360,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
 
             {/* Company Status Filter */}
             <div className="flex flex-col">
-              <label className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Company Status</label>
+              <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Company Status</label>
               <select
                 value={status}
                 onChange={e => { hasUserInteracted.current = true; setStatus(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
@@ -372,7 +372,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
 
             {/* Employee Size Filter */}
             <div className="flex flex-col">
-              <label className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Team Size</label>
+              <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Team Size</label>
               <select
                 value={employeeRange}
                 onChange={e => { hasUserInteracted.current = true; setEmployeeRange(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
@@ -384,7 +384,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
 
             {/* Country Filter */}
             <div className="flex flex-col">
-              <label className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Country</label>
+              <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Country</label>
               <select
                 value={country}
                 onChange={e => { hasUserInteracted.current = true; setCountry(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
@@ -396,7 +396,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
 
             {/* City Filter */}
             <div className="flex flex-col">
-              <label className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Headquarters City</label>
+              <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Headquarters City</label>
               <select
                 value={city}
                 onChange={e => { hasUserInteracted.current = true; setCity(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
@@ -424,7 +424,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
           {/* Active Filter Tags */}
           {activeFiltersCount > 0 && (
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1">
-              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mr-1 font-jakarta select-none">Active Filters:</span>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wide mr-1 font-jakarta select-none">Active Filters:</span>
               {stage && (
                 <button onClick={() => removeFilter('stage')} className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand/5 border border-brand/20 text-brand hover:bg-brand/10 transition-colors font-jakarta">
                   <span>{getFilterLabel('stage', stage)}</span>
@@ -613,7 +613,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
                 <div className="grid grid-cols-2 gap-3">
                   {/* Team Size */}
                   <div className="bg-gray-900/5 dark:bg-gray-950/50 rounded-xl p-2.5 pl-5 border border-gray-200/50 dark:border-gray-700/50">
-                    <div className="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400 font-jakarta font-semibold mb-0.5">
+                    <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 font-jakarta font-semibold mb-0.5">
                       Team
                     </div>
                     <div className="font-sora font-bold text-sm text-navy dark:text-white">
@@ -623,7 +623,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
 
                   {/* Funding Raised */}
                   <div className="bg-gray-900/5 dark:bg-gray-950/50 rounded-xl p-2.5 pl-5 border border-gray-200/50 dark:border-gray-700/50">
-                    <div className="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400 font-jakarta font-semibold mb-0.5">
+                    <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 font-jakarta font-semibold mb-0.5">
                       Raised
                     </div>
                     <div className="font-sora font-bold text-sm text-emerald-600 dark:text-emerald-400">

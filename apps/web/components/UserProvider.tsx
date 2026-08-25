@@ -13,6 +13,8 @@ export interface UserSession {
   linkedin: string | null;
   termsAcceptedAt: string | null;
   termsVersion: string | null;
+  founderId?: string | null;
+  organizerId?: string | null;
 }
 
 interface UserContextType {

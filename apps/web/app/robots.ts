@@ -48,6 +48,8 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
             `${domain}/events/sitemap.xml`,
             `${domain}/jobs/sitemap.xml`,
             `${domain}/india-ai/sitemap.xml`,
+            `${domain}/opinions/sitemap.xml`,
+            `${domain}/authors/sitemap.xml`,
           ],
         }
       : {}),

@@ -41,8 +41,8 @@ export async function POST(request: NextRequest) {
   const existing = await prisma.eventTeamMember.findUnique({
     where: { organizerId_email: { organizerId: session.id, email } },
   });
-  if (existing && existing.status !== "REVOKED") {
-    return NextResponse.json({ success: false, error: "Already a team member" }, { status: 409 });
+  if (existing && existing.status === "ACTIVE") {
+    return NextResponse.json({ success: false, error: "Already an active team member" }, { status: 409 });
   }
 
   const inviteToken = crypto.randomBytes(32).toString("hex");

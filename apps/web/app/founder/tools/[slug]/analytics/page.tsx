@@ -222,7 +222,7 @@ function StatCard({ label, value, sublabel, change, icon: Icon, isText }: {
       <div className="flex items-center justify-between mb-2">
         <Icon className="w-4 h-4 text-gray-400" />
         {change !== undefined && change !== 0 && (
-          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+          <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
             change > 0
               ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
               : 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400'
@@ -235,7 +235,7 @@ function StatCard({ label, value, sublabel, change, icon: Icon, isText }: {
         {typeof value === 'number' ? value.toLocaleString() : value}
       </p>
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{label}</p>
-      {sublabel && <p className="text-[10px] text-gray-400 mt-0.5">{sublabel}</p>}
+      {sublabel && <p className="text-xs text-gray-400 mt-0.5">{sublabel}</p>}
     </div>
   );
 }

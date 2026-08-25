@@ -196,7 +196,7 @@ export default function GlobalSearch() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Search articles, tools, startups..."
+                inputMode="search" enterKeyHint="search" placeholder="Search articles, tools, startups..."
                 className="w-full pl-12 pr-12 py-4 bg-transparent text-navy dark:text-white placeholder-gray-400 focus:outline-none text-base"
                 autoComplete="off"
               />

@@ -242,7 +242,7 @@ function EventRegistrationCard({ reg, isPast }: { reg: Registration; isPast?: bo
       {showQr && (
         <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex flex-col items-center gap-2">
           <Image src={qrImageUrl} alt="Check-in QR Code" width={160} height={160} className="rounded-lg" unoptimized />
-          <p className="text-[10px] text-gray-400 font-jakarta">Show this at event check-in</p>
+          <p className="text-xs text-gray-400 font-jakarta">Show this at event check-in</p>
         </div>
       )}
     </div>
@@ -258,7 +258,7 @@ function StatusBadge({ status }: { status: string }) {
   };
 
   return (
-    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full shrink-0 ${styles[status] || styles.CONFIRMED}`}>
+    <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-full shrink-0 ${styles[status] || styles.CONFIRMED}`}>
       {status.replace(/_/g, " ")}
     </span>
   );

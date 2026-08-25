@@ -139,7 +139,7 @@ export default function EmployerCompanyPage() {
               <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-green-800 dark:text-green-300 font-jakarta">Connected to startup profile</p>
-                <p className="text-[11px] text-green-600 dark:text-green-400 font-jakarta">Jobs you post appear on this startup&apos;s page automatically.</p>
+                <p className="text-xs text-green-600 dark:text-green-400 font-jakarta">Jobs you post appear on this startup&apos;s page automatically.</p>
               </div>
             </div>
 
@@ -153,7 +153,7 @@ export default function EmployerCompanyPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-sora font-bold text-sm text-navy dark:text-white">{company.startupName}</p>
-                <div className="flex items-center gap-2 text-[11px] text-gray-400 font-jakarta mt-0.5">
+                <div className="flex items-center gap-2 text-xs text-gray-400 font-jakarta mt-0.5">
                   {company.startupCity && <span>{company.startupCity}</span>}
                   {company.startupStage && <span>• {company.startupStage}</span>}
                 </div>
@@ -168,7 +168,7 @@ export default function EmployerCompanyPage() {
               </div>
             </div>
 
-            <p className="text-[11px] text-gray-400 font-jakarta mt-3 italic">
+            <p className="text-xs text-gray-400 font-jakarta mt-3 italic">
               Company info is synced from your startup profile. To edit, update your startup listing in the directory.
             </p>
           </div>
@@ -185,7 +185,7 @@ export default function EmployerCompanyPage() {
                 type="text"
                 value={searchQuery}
                 onChange={e => handleSearch(e.target.value)}
-                placeholder="Search your startup by name..."
+                inputMode="search" enterKeyHint="search" placeholder="Search your startup by name..."
                 className="input-field w-full pl-10"
               />
             </div>
@@ -205,7 +205,7 @@ export default function EmployerCompanyPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-navy dark:text-white font-jakarta truncate">{s.name}</p>
-                      <p className="text-[10px] text-gray-400 font-jakarta">{s.headquartersCity || 'AI Startup'} {s.stage ? `• ${s.stage}` : ''}</p>
+                      <p className="text-xs text-gray-400 font-jakarta">{s.headquartersCity || 'AI Startup'} {s.stage ? `• ${s.stage}` : ''}</p>
                     </div>
                     <ArrowRight className="w-3.5 h-3.5 text-brand shrink-0" />
                   </button>
@@ -222,7 +222,7 @@ export default function EmployerCompanyPage() {
               </div>
             )}
 
-            <p className="text-[11px] text-gray-400 font-jakarta mt-3">
+            <p className="text-xs text-gray-400 font-jakarta mt-3">
               Not an AI startup? No problem — just fill in the company details below.
             </p>
           </div>

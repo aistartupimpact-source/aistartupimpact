@@ -22,7 +22,7 @@ export function VerifiedBadge({
     sm: { 
       icon: 'w-3 h-3', 
       logoIcon: 'w-2.5 h-2.5',
-      text: 'text-[10px]', 
+      text: 'text-xs', 
       padding: 'px-1.5 py-0.5', 
       badgePadding: 'p-[2px]',
     },
@@ -48,9 +48,9 @@ export function VerifiedBadge({
     <div className={`absolute z-dropdown bottom-full left-0 mb-2 w-64 bg-gray-900 dark:bg-gray-800 rounded-lg rounded-bl-none shadow-xl px-3.5 py-2.5 pointer-events-none transition-all duration-150 ${showTooltip ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1 invisible'}`}>
       <div className="flex items-center gap-1.5 mb-1">
         <BadgeCheck className="w-3.5 h-3.5 text-green-400" />
-        <span className="text-[11px] font-bold text-white font-jakarta">Verified</span>
+        <span className="text-xs font-bold text-white font-jakarta">Verified</span>
       </div>
-      <p className="text-[10px] text-gray-300 font-jakarta leading-relaxed">
+      <p className="text-xs text-gray-300 font-jakarta leading-relaxed">
         The owner of this company profile has verified ownership by completing domain verification.
       </p>
       {/* Corner tail — 45 degree from bottom-left edge */}

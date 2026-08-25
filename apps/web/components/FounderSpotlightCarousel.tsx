@@ -80,7 +80,7 @@ export default function FounderSpotlightCarousel({ items }: { items: SpotlightIt
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                 {/* Badge */}
                 <div className="absolute bottom-3 left-3">
-                  <span className="bg-brand text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm">
+                  <span className="bg-brand text-white text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm">
                     {item.category?.name || 'Founder Spotlight'}
                   </span>
                 </div>
@@ -99,7 +99,7 @@ export default function FounderSpotlightCarousel({ items }: { items: SpotlightIt
                 <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400 font-jakarta">
                   {item.author?.name && (
                     <>
-                      <div className="w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center text-[9px] text-brand font-bold shrink-0">
+                      <div className="w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center text-xs text-brand font-bold shrink-0">
                         {item.author.name.charAt(0)}
                       </div>
                       <span className="font-medium text-gray-500 dark:text-gray-400 truncate">{item.author.name}</span>

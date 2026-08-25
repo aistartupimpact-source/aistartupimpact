@@ -6,6 +6,7 @@ import Link from 'next/link';
 export default async function EmployerDashboardPage() {
   const session = await getEmployerSession();
   if (!session) redirect('/employer/login');
+  if (!session.onboardingCompleted) redirect('/employer/onboarding');
 
   // Fetch stats
   let activeJobs = 0;
@@ -76,7 +77,7 @@ export default async function EmployerDashboardPage() {
                 <p className="font-sora font-extrabold text-xl text-navy dark:text-white">
                   {stat.value}
                 </p>
-                <p className="text-[11px] text-gray-400 font-jakarta">{stat.label}</p>
+                <p className="text-xs text-gray-400 font-jakarta">{stat.label}</p>
               </div>
             </div>
           </div>
@@ -109,17 +110,17 @@ export default async function EmployerDashboardPage() {
                     {job.title}
                   </Link>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[11px] text-gray-400 font-jakarta">{job.category?.replace(/_/g, ' ')}</span>
-                    <span className="text-[11px] text-gray-300">•</span>
-                    <span className="text-[11px] text-gray-400 font-jakarta">{job.workType}</span>
+                    <span className="text-xs text-gray-400 font-jakarta">{job.category?.replace(/_/g, ' ')}</span>
+                    <span className="text-xs text-gray-300">•</span>
+                    <span className="text-xs text-gray-400 font-jakarta">{job.workType}</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="flex items-center gap-3 text-[11px] text-gray-400 font-jakarta">
+                  <div className="flex items-center gap-3 text-xs text-gray-400 font-jakarta">
                     <span>{job.viewsCount} views</span>
                     <span>{job.applicationsCount} apps</span>
                   </div>
-                  <span className={`text-[10px] font-bold uppercase ${job.isActive ? 'text-green-500' : 'text-gray-400'}`}>
+                  <span className={`text-xs font-bold uppercase ${job.isActive ? 'text-green-500' : 'text-gray-400'}`}>
                     {job.isActive ? 'Active' : 'Inactive'}
                   </span>
                 </div>

@@ -237,7 +237,7 @@ export default async function DashboardPage() {
           </div>
           <div>
             <p className="text-xs font-semibold text-navy dark:text-white font-jakarta group-hover:text-brand transition-colors">Hiring? Post a job</p>
-            <p className="text-[10px] text-gray-400 font-jakarta">Reach 45K+ AI professionals</p>
+            <p className="text-xs text-gray-400 font-jakarta">Reach 45K+ AI professionals</p>
           </div>
         </a>
         <a
@@ -249,7 +249,7 @@ export default async function DashboardPage() {
           </div>
           <div>
             <p className="text-xs font-semibold text-navy dark:text-white font-jakarta group-hover:text-brand transition-colors">Hosting an event? Create one</p>
-            <p className="text-[10px] text-gray-400 font-jakarta">List your AI event for free</p>
+            <p className="text-xs text-gray-400 font-jakarta">List your AI event for free</p>
           </div>
         </a>
       </div>

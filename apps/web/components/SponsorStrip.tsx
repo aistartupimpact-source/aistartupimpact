@@ -42,7 +42,7 @@ export default function SponsorStrip({ sponsors }: { sponsors: Sponsor[] }) {
     >
       {/* Desktop: single row. Mobile: stacked */}
       <div className="flex items-center justify-center gap-2 sm:gap-3">
-        <span className="text-[10px] sm:text-xs text-gray-400 font-jakarta uppercase tracking-wider shrink-0">
+        <span className="text-xs sm:text-xs text-gray-400 font-jakarta uppercase tracking-wider shrink-0">
           Powered by
         </span>
         {s.logoUrl && (
@@ -53,7 +53,7 @@ export default function SponsorStrip({ sponsors }: { sponsors: Sponsor[] }) {
       </div>
 
       {/* Tagline — visible on mobile, hidden on desktop (desktop shows inline) */}
-      <span className="text-gray-400 text-[11px] font-jakarta text-center sm:hidden">
+      <span className="text-gray-400 text-xs font-jakarta text-center sm:hidden">
         {s.tagline}
       </span>
       <span className="text-gray-400 dark:text-gray-500 text-xs sm:text-sm font-jakarta hidden sm:inline">

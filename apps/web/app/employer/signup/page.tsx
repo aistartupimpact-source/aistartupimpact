@@ -12,7 +12,7 @@ export default function EmployerSignupPage() {
   // If already logged in, redirect to dashboard
   useEffect(() => {
     fetch('/api/employer/session').then(r => r.json()).then(data => {
-      if (data.authenticated) router.replace('/employer/dashboard');
+      if (data.authenticated) router.replace('/employer/onboarding');
     }).catch(() => {});
   }, [router]);
 
@@ -78,7 +78,7 @@ export default function EmployerSignupPage() {
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Verification failed'); return; }
 
-      router.push('/employer/dashboard');
+      router.push('/employer/onboarding');
       router.refresh();
     } catch { setError('Something went wrong'); }
     finally { setLoading(false); }
@@ -143,7 +143,7 @@ export default function EmployerSignupPage() {
             </div>
           </div>
 
-          <p className="text-center text-[11px] text-gray-400 font-jakarta mt-4">Code expires in 10 minutes. Max 3 attempts.</p>
+          <p className="text-center text-xs text-gray-400 font-jakarta mt-4">Code expires in 10 minutes. Max 3 attempts.</p>
         </div>
       </div>
     );
@@ -208,7 +208,7 @@ export default function EmployerSignupPage() {
                       <div key={i} className={`h-1 flex-1 rounded-full ${i <= strength ? strengthColor : 'bg-gray-200 dark:bg-gray-700'}`} />
                     ))}
                   </div>
-                  <p className={`text-[10px] font-jakarta ${strength >= 4 ? 'text-green-600' : strength >= 3 ? 'text-yellow-600' : 'text-red-500'}`}>
+                  <p className={`text-xs font-jakarta ${strength >= 4 ? 'text-green-600' : strength >= 3 ? 'text-yellow-600' : 'text-red-500'}`}>
                     {strengthLabel}
                     {strength < 3 && ' — needs uppercase, lowercase & number'}
                   </p>
@@ -254,7 +254,7 @@ export default function EmployerSignupPage() {
               </div>
             </div>
 
-            <p className="text-[11px] text-gray-400 font-jakarta">
+            <p className="text-xs text-gray-400 font-jakarta">
               By creating an account, you agree to our{' '}
               <Link href="/terms" className="underline hover:text-brand">Terms of Service</Link> and{' '}
               <Link href="/privacy" className="underline hover:text-brand">Privacy Policy</Link>.

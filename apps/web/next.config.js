@@ -24,6 +24,13 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      { source: '/opinion', destination: '/opinions', permanent: true },
+      { source: '/opinion/:slug', destination: '/opinions/:slug', permanent: true },
+      { source: '/author/:slug', destination: '/authors/:slug', permanent: true },
+    ];
+  },
   async headers() {
     const isDev = process.env.NODE_ENV !== 'production';
     const csp = [

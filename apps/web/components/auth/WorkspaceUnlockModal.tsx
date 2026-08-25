@@ -209,7 +209,7 @@ export default function WorkspaceUnlockModal({
                 </button>
               )}
 
-              <p className="text-[11px] text-gray-400 text-center mt-3">
+              <p className="text-xs text-gray-400 text-center mt-3">
                 Free forever. No credit card required.
               </p>
             </>

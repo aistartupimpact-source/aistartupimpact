@@ -24,7 +24,6 @@ export default function TermsAcceptanceModal({ userName }: TermsAcceptanceModalP
       });
 
       if (res.ok) {
-        // Simply redirect - the page will reload and check terms again
         window.location.href = '/';
       } else {
         const data = await res.json();
@@ -38,21 +37,26 @@ export default function TermsAcceptanceModal({ userName }: TermsAcceptanceModalP
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      await fetch('/api/user/auth/logout', { method: 'POST' });
+    } catch {}
+    document.cookie = 'user-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    window.location.href = '/';
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-modal flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-900 rounded-lg border-l-4 border-red-600 shadow-xl max-w-2xl w-full p-6">
-        
-        {/* Title */}
+
         <h2 className="text-lg font-bold text-red-600 mb-4">Important Update</h2>
 
-        {/* Error Message */}
         {error && (
           <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-red-600 dark:text-red-400 text-sm">
             {error}
           </div>
         )}
 
-        {/* Checkbox */}
         <label className="flex items-start gap-3 cursor-pointer mb-4">
           <input
             type="checkbox"
@@ -76,7 +80,6 @@ export default function TermsAcceptanceModal({ userName }: TermsAcceptanceModalP
           </span>
         </label>
 
-        {/* Button */}
         <button
           onClick={handleAccept}
           disabled={!agreed || loading}
@@ -88,6 +91,23 @@ export default function TermsAcceptanceModal({ userName }: TermsAcceptanceModalP
         >
           {loading ? 'Processing...' : 'I Understand'}
         </button>
+
+        {error && (
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={() => window.location.reload()}
+              className="flex-1 py-2 rounded-lg text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              Retry
+            </button>
+            <button
+              onClick={handleSignOut}
+              className="flex-1 py-2 rounded-lg text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              Sign Out
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

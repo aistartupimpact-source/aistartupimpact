@@ -4,9 +4,10 @@ import dynamic from 'next/dynamic';
 import {
   ArrowRight, TrendingUp, Star, Users, ChevronRight,
   Sparkles, IndianRupee, Zap, Clock,
-  ArrowUpRight,
+  ArrowUpRight, Briefcase, MapPin, Calendar,
 } from 'lucide-react';
 import { ToolCTAButton } from '@/components/tools/ToolCTAButton';
+import HomeCTA from '@/components/HomeCTA';
 
 // ISR: revalidate every 60s — much better than force-dynamic for production
 // Hero slots change infrequently; this gives CDN caching + fresh data
@@ -26,6 +27,9 @@ import {
   getActiveHeroSlotsDirect,
   getFeaturedToolsDirect,
   getPriorityToolsDirect,
+  getRecentMilestonesDirect,
+  getLatestJobsDirect,
+  getUpcomingEventsDirect,
 } from '@/lib/db';
 import {
   getTrendingNews,
@@ -78,6 +82,9 @@ export default async function HomePage() {
     fetchedHeroSlots,
     fetchedFeaturedTools,
     fetchedPriorityTools,
+    fetchedMilestones,
+    fetchedJobs,
+    fetchedEvents,
   ] = await Promise.all([
     getHeroArticle(),
     getTrendingNews(),
@@ -95,6 +102,9 @@ export default async function HomePage() {
     getActiveHeroSlotsDirect(),
     getFeaturedToolsDirect(),
     getPriorityToolsDirect(12),
+    getRecentMilestonesDirect(6),
+    getLatestJobsDirect(6),
+    getUpcomingEventsDirect(4),
   ]);
 
   // Use fetched data, but provide elegant fallbacks if DB is empty or backend is unreachable
@@ -162,9 +172,9 @@ export default async function HomePage() {
       {/* ╔════════════════════════════════════════════╗
           ║  1. HERO — Scheduled Carousel / Ad / Article║
           ╚════════════════════════════════════════════╝ */}
-      <div className="bg-navy-900 text-center pt-0 pb-0 border-b border-white/5 px-4">
-        <h1 className="text-[9px] sm:text-[10px] text-gray-500 font-jakarta font-medium tracking-[0.2em] uppercase truncate max-w-full">
-          AI Startup Impact — #1 AI Startup India News, AI Ecosystem, and Tools
+      <div className="bg-navy-900 text-center py-2 border-b border-white/5 px-4">
+        <h1 className="text-[7px] sm:text-[10px] text-gray-500 font-jakarta font-medium tracking-[0.12em] sm:tracking-[0.15em] uppercase max-w-full leading-tight">
+          AI Startup Impact — AI Startups in India, News, Stories, Funding & AI Tools
         </h1>
       </div>
       <section>
@@ -182,7 +192,7 @@ export default async function HomePage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75" />
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-brand" />
               </span>
-              <span className="text-brand text-[9px] sm:text-[10px] font-bold uppercase tracking-wider font-sora">Live</span>
+              <span className="text-brand text-xs sm:text-xs font-bold uppercase tracking-wider font-sora">Live</span>
             </div>
             <div className="overflow-hidden flex-1">
               <div className="animate-ticker whitespace-nowrap flex gap-6 sm:gap-12">
@@ -212,15 +222,29 @@ export default async function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 cv-auto">
         <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div>
-            <h2 className="font-sora font-bold text-xl sm:text-2xl text-gray-900 dark:text-white">Latest Stories</h2>
+            <h2 className="font-sora font-bold text-base sm:text-2xl text-gray-900 dark:text-white">Latest Stories</h2>
           </div>
           <Link href="/news" className="text-red-500 hover:text-red-600 font-medium text-xs sm:text-sm flex items-center gap-1 font-jakarta">
             View All →
           </Link>
         </div>
 
-        {/* Seamless Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+        {/* Seamless Grid with extended corner lines */}
+        <div className="relative">
+          {/* Top-left */}
+          <div className="absolute -top-10 left-0 w-px h-10 bg-gradient-to-t from-gray-300 dark:from-gray-600 to-transparent" />
+          <div className="absolute top-0 -left-10 h-px w-10 bg-gradient-to-l from-gray-300 dark:from-gray-600 to-transparent" />
+          {/* Top-right */}
+          <div className="absolute -top-10 right-0 w-px h-10 bg-gradient-to-t from-gray-300 dark:from-gray-600 to-transparent" />
+          <div className="absolute top-0 -right-10 h-px w-10 bg-gradient-to-r from-gray-300 dark:from-gray-600 to-transparent" />
+          {/* Bottom-left */}
+          <div className="absolute -bottom-10 left-0 w-px h-10 bg-gradient-to-b from-gray-300 dark:from-gray-600 to-transparent" />
+          <div className="absolute bottom-0 -left-10 h-px w-10 bg-gradient-to-l from-gray-300 dark:from-gray-600 to-transparent" />
+          {/* Bottom-right */}
+          <div className="absolute -bottom-10 right-0 w-px h-10 bg-gradient-to-b from-gray-300 dark:from-gray-600 to-transparent" />
+          <div className="absolute bottom-0 -right-10 h-px w-10 bg-gradient-to-r from-gray-300 dark:from-gray-600 to-transparent" />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 border border-gray-200 dark:border-gray-700">
           {latestStories.slice(0, 8).map((story: any, idx: number, arr: any[]) => {
             const N = arr.length;
             const borderClass = [
@@ -229,22 +253,20 @@ export default async function HomePage() {
               idx % 2 === 0 ? 'sm:border-r border-gray-200 dark:border-gray-700' : ''
             ].filter(Boolean).join(' ');
             return (
-              <Link key={story.slug} href={`/news/${story.slug}`} className="group">
-                <div className={`bg-gray-50 dark:bg-gray-900 p-5 sm:p-6 relative hover:bg-white dark:hover:bg-gray-800 transition-all duration-300 ${borderClass} hover:border-l-4 hover:border-l-red-500`}>
+              <Link key={story.slug} href={`/news/${story.slug}`} className="group h-full">
+                <div className={`bg-gray-50 dark:bg-gray-900 p-5 sm:p-6 relative hover:bg-white dark:hover:bg-gray-800 transition-all duration-300 ${borderClass} hover:border-l-4 hover:border-l-red-500 h-full flex flex-col`}>
                   <div className="mb-3">
                     <span className="inline-block text-xs font-bold uppercase tracking-wider text-red-500">
                       {story.category?.name || 'News'}
                     </span>
                   </div>
-                  <p className="font-sora font-bold text-base sm:text-lg text-gray-900 dark:text-white leading-tight mb-3 group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors">
+                  <p className="font-sora font-bold text-base sm:text-lg text-gray-900 dark:text-white leading-tight mb-3 group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors line-clamp-2">
                     {story.title}
                   </p>
-                  {story.excerpt && (
-                    <p className="text-gray-600 dark:text-gray-400 font-jakarta text-sm leading-relaxed mb-4 line-clamp-3">
-                      {story.excerpt}
-                    </p>
-                  )}
-                  <div className="flex items-center gap-2 text-xs text-gray-400 font-jakarta">
+                  <p className="text-gray-600 dark:text-gray-400 font-jakarta text-sm leading-relaxed mb-4 line-clamp-3 flex-1">
+                    {story.excerpt || ' '}
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-gray-400 font-jakarta mt-auto">
                     {story.author?.name && <><span>{story.author.name}</span><span>·</span></>}
                     <span>{formatDate(story.publishedAt)}</span>
                     {story.readTimeMinutes && <><span>·</span><span>{story.readTimeMinutes} min read</span></>}
@@ -254,18 +276,19 @@ export default async function HomePage() {
             );
           })}
         </div>
+        </div>
       </section>
 
       {/* ╔════════════════════════════════════════════╗
           ║  4. SPONSOR STRIP — Native Ad               ║
           ╚════════════════════════════════════════════╝ */}
       {(sectionAd || activeSponsors.length > 0) && (
-      <section className="border-y border-brand/10 dark:border-brand/5 bg-brand/[0.02] dark:bg-brand/[0.03]">
+      <section className="border-y border-gray-100 dark:border-gray-800/60 bg-gray-50/50 dark:bg-white/[0.02]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {sectionAd ? (
             <a href={sectionAd.ctaUrl} target="_blank" rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-3.5 group">
-              <span className="text-[10px] sm:text-xs text-gray-400 font-jakarta uppercase tracking-wider">Sponsored</span>
+              <span className="text-xs sm:text-xs text-gray-400 font-jakarta uppercase tracking-wider">Sponsored</span>
               <span className="font-sora font-bold text-brand text-xs sm:text-sm group-hover:underline">{sectionAd.companyName}</span>
               <span className="text-gray-400 dark:text-gray-500 text-xs sm:text-sm font-jakarta hidden sm:inline">— {sectionAd.headline}</span>
               <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-brand opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -283,8 +306,8 @@ export default async function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 cv-auto">
         <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3">
-            <h2 className="font-sora font-bold text-xl sm:text-2xl text-gray-900 dark:text-white">Founder Spotlight</h2>
-            <span className="inline-flex items-center gap-1 bg-brand/10 text-brand text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full font-jakarta">
+            <h2 className="font-sora font-bold text-base sm:text-2xl text-gray-900 dark:text-white">Founder Spotlight</h2>
+            <span className="inline-flex items-center gap-1 bg-brand/10 text-brand text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full font-jakarta">
               <span className="w-1 h-1 rounded-full bg-brand animate-pulse" />
               Featured
             </span>
@@ -295,7 +318,16 @@ export default async function HomePage() {
         </div>
 
         {/* Premium seamless 2-col grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
+        <div className="relative">
+          <div className="absolute -top-10 left-0 w-px h-10 bg-gradient-to-t from-gray-300 dark:from-gray-600 to-transparent" />
+          <div className="absolute top-0 -left-10 h-px w-10 bg-gradient-to-l from-gray-300 dark:from-gray-600 to-transparent" />
+          <div className="absolute -top-10 right-0 w-px h-10 bg-gradient-to-t from-gray-300 dark:from-gray-600 to-transparent" />
+          <div className="absolute top-0 -right-10 h-px w-10 bg-gradient-to-r from-gray-300 dark:from-gray-600 to-transparent" />
+          <div className="absolute -bottom-10 left-0 w-px h-10 bg-gradient-to-b from-gray-300 dark:from-gray-600 to-transparent" />
+          <div className="absolute bottom-0 -left-10 h-px w-10 bg-gradient-to-l from-gray-300 dark:from-gray-600 to-transparent" />
+          <div className="absolute -bottom-10 right-0 w-px h-10 bg-gradient-to-b from-gray-300 dark:from-gray-600 to-transparent" />
+          <div className="absolute bottom-0 -right-10 h-px w-10 bg-gradient-to-r from-gray-300 dark:from-gray-600 to-transparent" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 border border-gray-200 dark:border-gray-700 overflow-hidden">
           {founderSpotlights.slice(0, 8).map((story: any, idx: number, arr: any[]) => {
             const N = arr.length;
             const borderClass = [
@@ -327,14 +359,14 @@ export default async function HomePage() {
                       </div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                    <div className="absolute top-3 left-3">
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-white bg-brand px-2 py-0.5 rounded-sm">
+                    <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
+                      <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-white bg-brand px-1.5 sm:px-2 py-0.5 rounded-sm">
                         Founder Story
                       </span>
                     </div>
                     {story.readTimeMinutes && (
                       <div className="absolute bottom-3 right-3">
-                        <span className="flex items-center gap-1 text-[10px] text-white/80 font-jakarta bg-black/40 px-1.5 py-0.5 rounded">
+                        <span className="flex items-center gap-1 text-xs text-white/80 font-jakarta bg-black/40 px-1.5 py-0.5 rounded">
                           <Clock className="w-2.5 h-2.5" />
                           {story.readTimeMinutes} min
                         </span>
@@ -358,7 +390,7 @@ export default async function HomePage() {
 
                     {/* Author row */}
                     <div className="flex items-center gap-2 pt-3 border-t border-gray-100 dark:border-gray-800 mt-auto">
-                      <div className="w-6 h-6 rounded-full bg-brand/10 flex items-center justify-center text-[10px] text-brand font-bold shrink-0">
+                      <div className="w-6 h-6 rounded-full bg-brand/10 flex items-center justify-center text-xs text-brand font-bold shrink-0">
                         {story.author?.name?.charAt(0) || 'A'}
                       </div>
                       <span className="text-xs font-medium text-gray-500 dark:text-gray-400 font-jakarta">
@@ -376,6 +408,7 @@ export default async function HomePage() {
               </Link>
             );
           })}
+        </div>
         </div>
       </section>
 
@@ -409,7 +442,16 @@ export default async function HomePage() {
         </div>
 
         {/* Seamless grid — same style as India AI Ecosystem */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
+        <div className="relative">
+          <div className="absolute -top-10 left-0 w-px h-10 bg-gradient-to-t from-gray-300 dark:from-gray-600 to-transparent" />
+          <div className="absolute top-0 -left-10 h-px w-10 bg-gradient-to-l from-gray-300 dark:from-gray-600 to-transparent" />
+          <div className="absolute -top-10 right-0 w-px h-10 bg-gradient-to-t from-gray-300 dark:from-gray-600 to-transparent" />
+          <div className="absolute top-0 -right-10 h-px w-10 bg-gradient-to-r from-gray-300 dark:from-gray-600 to-transparent" />
+          <div className="absolute -bottom-10 left-0 w-px h-10 bg-gradient-to-b from-gray-300 dark:from-gray-600 to-transparent" />
+          <div className="absolute bottom-0 -left-10 h-px w-10 bg-gradient-to-l from-gray-300 dark:from-gray-600 to-transparent" />
+          <div className="absolute -bottom-10 right-0 w-px h-10 bg-gradient-to-b from-gray-300 dark:from-gray-600 to-transparent" />
+          <div className="absolute bottom-0 -right-10 h-px w-10 bg-gradient-to-r from-gray-300 dark:from-gray-600 to-transparent" />
+        <div className="bg-white dark:bg-gray-900 overflow-hidden border border-gray-200 dark:border-gray-700">
           {/* Dark header bar */}
           <div className="bg-gray-900 dark:bg-gray-800 px-4 sm:px-6 py-4 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
@@ -419,7 +461,7 @@ export default async function HomePage() {
               </span>
             </div>
             <div className="bg-gray-800 dark:bg-gray-700 px-2 sm:px-3 py-1 rounded-full shrink-0">
-              <span className="text-gray-300 text-[10px] sm:text-xs font-medium uppercase tracking-wider">
+              <span className="text-gray-300 text-xs sm:text-xs font-medium uppercase tracking-wider">
                 {hasFunding ? "India AI" : "Founders"}
               </span>
             </div>
@@ -443,7 +485,7 @@ export default async function HomePage() {
                           <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 font-jakarta">
                             {formatDate(digest.date)}
                           </span>
-                          <span className="inline-flex items-center gap-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
+                          <span className="inline-flex items-center gap-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
                             <TrendingUp className="w-2.5 h-2.5" />
                             Weekly
                           </span>
@@ -490,7 +532,7 @@ export default async function HomePage() {
                           <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 font-jakarta">
                             {formatDate(story.publishedAt)}
                           </span>
-                          <span className="inline-flex items-center gap-1 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
+                          <span className="inline-flex items-center gap-1 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
                             Story
                           </span>
                         </div>
@@ -506,10 +548,10 @@ export default async function HomePage() {
                         )}
                         {/* Author */}
                         <div className="flex items-center gap-2 pt-2 border-t border-gray-200 dark:border-gray-700 mt-auto">
-                          <div className="w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center text-[9px] text-brand font-bold shrink-0">
+                          <div className="w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center text-xs text-brand font-bold shrink-0">
                             {story.author?.name?.charAt(0) || 'A'}
                           </div>
-                          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 font-jakarta">
+                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 font-jakarta">
                             {story.author?.name || 'Editorial'}
                           </span>
                         </div>
@@ -520,6 +562,7 @@ export default async function HomePage() {
               )}
             </div>
           </div>
+        </div>
         </div>
       </section>
       )}
@@ -541,7 +584,7 @@ export default async function HomePage() {
           {/* Header */}
           <div className="flex items-center justify-between mb-6 sm:mb-8">
             <div>
-              <h2 className="font-sora font-bold text-xl sm:text-2xl text-gray-900 dark:text-white">India AI Ecosystem</h2>
+              <h2 className="font-sora font-bold text-base sm:text-2xl text-gray-900 dark:text-white">India AI Ecosystem</h2>
             </div>
             <Link href="/startups" className="text-red-500 hover:text-red-600 font-medium text-xs sm:text-sm flex items-center gap-1 font-jakarta">
               Explore →
@@ -549,7 +592,16 @@ export default async function HomePage() {
           </div>
 
           {/* Main Container with Dark Header */}
-          <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
+          <div className="relative">
+            <div className="absolute -top-10 left-0 w-px h-10 bg-gradient-to-t from-gray-300 dark:from-gray-600 to-transparent" />
+            <div className="absolute top-0 -left-10 h-px w-10 bg-gradient-to-l from-gray-300 dark:from-gray-600 to-transparent" />
+            <div className="absolute -top-10 right-0 w-px h-10 bg-gradient-to-t from-gray-300 dark:from-gray-600 to-transparent" />
+            <div className="absolute top-0 -right-10 h-px w-10 bg-gradient-to-r from-gray-300 dark:from-gray-600 to-transparent" />
+            <div className="absolute -bottom-10 left-0 w-px h-10 bg-gradient-to-b from-gray-300 dark:from-gray-600 to-transparent" />
+            <div className="absolute bottom-0 -left-10 h-px w-10 bg-gradient-to-l from-gray-300 dark:from-gray-600 to-transparent" />
+            <div className="absolute -bottom-10 right-0 w-px h-10 bg-gradient-to-b from-gray-300 dark:from-gray-600 to-transparent" />
+            <div className="absolute bottom-0 -right-10 h-px w-10 bg-gradient-to-r from-gray-300 dark:from-gray-600 to-transparent" />
+          <div className="bg-white dark:bg-gray-900 overflow-hidden border border-gray-200 dark:border-gray-700">
             {/* Dark Header */}
             <div className="bg-gray-900 dark:bg-gray-800 px-4 sm:px-6 py-4 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -561,7 +613,7 @@ export default async function HomePage() {
                 </div>
               </div>
               <div className="bg-gray-800 dark:bg-gray-700 px-2 sm:px-3 py-1 rounded-full shrink-0">
-                <span className="text-gray-300 text-[10px] sm:text-xs font-medium uppercase tracking-wider">INDIA-FIRST</span>
+                <span className="text-gray-300 text-xs sm:text-xs font-medium uppercase tracking-wider">INDIA-FIRST</span>
               </div>
             </div>
 
@@ -596,8 +648,151 @@ export default async function HomePage() {
               </div>
             </div>
           </div>
+          </div>
         </div>
       </section>
+
+      {/* ╔════════════════════════════════════════════╗
+          ║  9b. AI JOBS                                 ║
+          ╚════════════════════════════════════════════╝ */}
+      {fetchedJobs && fetchedJobs.length > 0 && (
+      <section className="py-8 sm:py-12 cv-auto border-t border-gray-100 dark:border-gray-800/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-6 sm:mb-8">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Briefcase className="w-5 h-5 sm:w-6 sm:h-6 text-brand" />
+              <h2 className="font-sora font-bold text-base sm:text-2xl text-gray-900 dark:text-white">Latest AI Jobs</h2>
+            </div>
+            <Link href="/jobs" className="text-brand font-semibold text-xs sm:text-sm hover:underline flex items-center gap-1 font-jakarta">
+              View All Jobs <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {fetchedJobs.map((job: any) => (
+              <Link
+                key={job.id}
+                href={`/jobs/${job.slug}`}
+                className="group bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 rounded-xl p-4 sm:p-5 hover:border-brand/30 hover:shadow-md transition-all"
+              >
+                <div className="flex items-start gap-3">
+                  {job.logoUrl ? (
+                    <Image src={job.logoUrl} alt={job.companyName} width={40} height={40} className="w-10 h-10 rounded-lg object-contain bg-gray-50 dark:bg-gray-700 shrink-0" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-lg bg-brand/10 flex items-center justify-center shrink-0">
+                      <Briefcase className="w-5 h-5 text-brand" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-sora font-semibold text-sm text-gray-900 dark:text-white group-hover:text-brand transition-colors line-clamp-1">
+                      {job.title}
+                    </h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-0.5">{job.companyName}</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 mt-3">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-jakarta">
+                    <MapPin className="w-2.5 h-2.5" />
+                    {job.workType === 'REMOTE' ? 'Remote' : job.workType === 'HYBRID' ? 'Hybrid' : job.city || job.location || 'On-site'}
+                  </span>
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-jakarta">
+                    {job.category?.replace(/_/g, ' ') || 'AI'}
+                  </span>
+                  {job.showSalary && job.salaryMax && (
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 font-jakarta">
+                      {job.salaryCurrency === 'INR' ? '₹' : '$'}{(job.salaryMax / 100000).toFixed(0)}L+
+                    </span>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <div className="mt-6 text-center">
+            <Link href="/employer/signup" className="inline-flex items-center gap-2 text-xs font-jakarta text-gray-500 dark:text-gray-400 hover:text-brand transition-colors">
+              <Briefcase className="w-3.5 h-3.5" />
+              Post a Job — Reach 5,000+ AI professionals
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+      )}
+
+      {/* ╔════════════════════════════════════════════╗
+          ║  9c. UPCOMING EVENTS                        ║
+          ╚════════════════════════════════════════════╝ */}
+      {fetchedEvents && fetchedEvents.length > 0 && (
+      <section className="py-8 sm:py-12 cv-auto border-t border-gray-100 dark:border-gray-800/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-6 sm:mb-8">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-brand" />
+              <h2 className="font-sora font-bold text-base sm:text-2xl text-gray-900 dark:text-white">Upcoming Events</h2>
+            </div>
+            <Link href="/events" className="text-brand font-semibold text-xs sm:text-sm hover:underline flex items-center gap-1 font-jakarta">
+              View All Events <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {fetchedEvents.map((event: any) => {
+              const start = new Date(event.startAt);
+              const month = start.toLocaleDateString('en-US', { month: 'short' });
+              const day = start.getDate();
+              return (
+                <Link
+                  key={event.id}
+                  href={`/events/${event.slug}`}
+                  className="group bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 rounded-xl overflow-hidden hover:border-brand/30 hover:shadow-md transition-all"
+                >
+                  {event.coverImageUrl ? (
+                    <div className="relative h-32 bg-gray-100 dark:bg-gray-700">
+                      <Image src={event.coverImageUrl} alt={event.title} fill className="object-cover" sizes="(max-width: 640px) 100vw, 25vw" />
+                      <div className="absolute top-2 left-2 bg-white dark:bg-gray-900 rounded-lg px-2 py-1 text-center shadow-sm">
+                        <p className="text-[10px] font-bold uppercase text-brand font-jakarta leading-none">{month}</p>
+                        <p className="text-lg font-bold text-gray-900 dark:text-white leading-none">{day}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative h-32 bg-gradient-to-br from-brand/10 to-brand/5 dark:from-brand/20 dark:to-brand/5 flex items-center justify-center">
+                      <Calendar className="w-8 h-8 text-brand/30" />
+                      <div className="absolute top-2 left-2 bg-white dark:bg-gray-900 rounded-lg px-2 py-1 text-center shadow-sm">
+                        <p className="text-[10px] font-bold uppercase text-brand font-jakarta leading-none">{month}</p>
+                        <p className="text-lg font-bold text-gray-900 dark:text-white leading-none">{day}</p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="p-3 sm:p-4">
+                    <h3 className="font-sora font-semibold text-sm text-gray-900 dark:text-white group-hover:text-brand transition-colors line-clamp-2 leading-snug">
+                      {event.title}
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 font-jakarta">
+                        {event.format === 'VIRTUAL' ? 'Online' : event.format === 'HYBRID' ? 'Hybrid' : 'In-Person'}
+                      </span>
+                      {event.venueName && (
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400 font-jakarta flex items-center gap-0.5">
+                          <MapPin className="w-2.5 h-2.5" /> {event.venueName}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+
+          <div className="mt-6 text-center">
+            <Link href="/organizer/signup" className="inline-flex items-center gap-2 text-xs font-jakarta text-gray-500 dark:text-gray-400 hover:text-brand transition-colors">
+              <Calendar className="w-3.5 h-3.5" />
+              Host Your Event — Submit for free listing
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+      )}
 
       {/* ╔════════════════════════════════════════════╗
           ║  10. AI TOOL PICKS — Seamless Grid          ║
@@ -607,14 +802,23 @@ export default async function HomePage() {
           <div className="flex items-center justify-between mb-6 sm:mb-8">
             <div className="flex items-center gap-2 sm:gap-3">
               <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-brand" />
-              <h2 className="font-sora font-bold text-xl sm:text-2xl text-gray-900 dark:text-white">AI Tool Picks</h2>
+              <h2 className="font-sora font-bold text-base sm:text-2xl text-gray-900 dark:text-white">AI Tool Picks</h2>
             </div>
             <Link href="/tools" className="text-brand font-semibold text-xs sm:text-sm hover:underline flex items-center gap-1 font-jakarta">
               Browse All <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
 
-          <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
+          <div className="relative">
+            <div className="absolute -top-10 left-0 w-px h-10 bg-gradient-to-t from-gray-300 dark:from-gray-600 to-transparent" />
+            <div className="absolute top-0 -left-10 h-px w-10 bg-gradient-to-l from-gray-300 dark:from-gray-600 to-transparent" />
+            <div className="absolute -top-10 right-0 w-px h-10 bg-gradient-to-t from-gray-300 dark:from-gray-600 to-transparent" />
+            <div className="absolute top-0 -right-10 h-px w-10 bg-gradient-to-r from-gray-300 dark:from-gray-600 to-transparent" />
+            <div className="absolute -bottom-10 left-0 w-px h-10 bg-gradient-to-b from-gray-300 dark:from-gray-600 to-transparent" />
+            <div className="absolute bottom-0 -left-10 h-px w-10 bg-gradient-to-l from-gray-300 dark:from-gray-600 to-transparent" />
+            <div className="absolute -bottom-10 right-0 w-px h-10 bg-gradient-to-b from-gray-300 dark:from-gray-600 to-transparent" />
+            <div className="absolute bottom-0 -right-10 h-px w-10 bg-gradient-to-r from-gray-300 dark:from-gray-600 to-transparent" />
+          <div className="bg-white dark:bg-gray-900 overflow-hidden border border-gray-200 dark:border-gray-700">
             {/* Dark header */}
             <div className="bg-gray-900 dark:bg-gray-800 px-4 sm:px-6 py-4 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
@@ -622,7 +826,7 @@ export default async function HomePage() {
                 <span className="text-white font-bold text-xs sm:text-sm uppercase tracking-wider">Top Rated AI Tools</span>
               </div>
               <div className="bg-gray-800 dark:bg-gray-700 px-2 sm:px-3 py-1 rounded-full shrink-0">
-                <span className="text-gray-300 text-[10px] sm:text-xs font-medium uppercase tracking-wider">Editor Picks</span>
+                <span className="text-gray-300 text-xs sm:text-xs font-medium uppercase tracking-wider">Editor Picks</span>
               </div>
             </div>
 
@@ -678,7 +882,7 @@ export default async function HomePage() {
                         {/* Category & CTA */}
                         <div className="mt-auto space-y-2">
                           <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-brand">{tool.category?.name || 'Tool'}</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-brand">{tool.category?.name || 'Tool'}</span>
                           </div>
                           <ToolCTAButton
                             toolId={tool.id}
@@ -698,150 +902,55 @@ export default async function HomePage() {
               </div>
             </div>
           </div>
-        </div>
-      </section>
-      {/* ╔════════════════════════════════════════════╗
-          ║  11. FOR FOUNDERS CTA — Conversion Section ║
-          ╚════════════════════════════════════════════╝ */}
-      <section className="py-8 sm:py-10 relative overflow-hidden">
-        {/* Premium gradient background with texture */}
-        <div className="absolute inset-0 bg-gradient-to-br from-brand/5 via-purple-500/5 to-blue-500/5 dark:from-brand/10 dark:via-purple-500/10 dark:to-blue-500/10" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(239,68,68,0.1),transparent_50%)] dark:bg-[radial-gradient(circle_at_30%_50%,rgba(239,68,68,0.15),transparent_50%)]" />
-        
-        {/* Subtle dot pattern texture */}
-        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" style={{
-          backgroundImage: `radial-gradient(circle, currentColor 1px, transparent 1px)`,
-          backgroundSize: '24px 24px'
-        }} />
-        
-        {/* Decorative corner elements */}
-        <div className="absolute top-0 left-0 w-40 h-40 border-t-2 border-l-2 border-brand/10 rounded-tl-3xl" />
-        <div className="absolute bottom-0 right-0 w-40 h-40 border-b-2 border-r-2 border-purple-500/10 rounded-br-3xl" />
-        
-        {/* Floating gradient orbs */}
-        <div className="absolute top-10 right-20 w-32 h-32 bg-gradient-to-br from-brand/20 to-purple-500/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-10 left-20 w-24 h-24 bg-gradient-to-br from-blue-500/20 to-brand/20 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1s' }} />
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="max-w-5xl mx-auto">
-            {/* Premium card container with enhanced design */}
-            <div className="relative bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl border border-gray-200/60 dark:border-gray-800/60 shadow-2xl shadow-brand/10 p-6 sm:p-8 overflow-hidden">
-              {/* Inner glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-br from-brand/5 via-transparent to-purple-500/5 pointer-events-none" />
-              
-              {/* Subtle grid overlay on card */}
-              <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03]" style={{
-                backgroundImage: `linear-gradient(rgba(239, 68, 68, 0.3) 1px, transparent 1px),
-                                 linear-gradient(90deg, rgba(239, 68, 68, 0.3) 1px, transparent 1px)`,
-                backgroundSize: '40px 40px'
-              }} />
-              
-              <div className="relative z-10 flex flex-col lg:flex-row items-center gap-6 lg:gap-10">
-                {/* Left: Header & CTA */}
-                <div className="flex-1 text-center lg:text-left">
-                  <div className="inline-flex items-center gap-2 bg-gradient-to-r from-brand/10 via-purple-500/10 to-brand/10 border border-brand/20 px-3 py-1 rounded-full mb-3 shadow-sm backdrop-blur-sm">
-                    <div className="w-2 h-2 bg-brand rounded-full animate-pulse" />
-                    <Users className="w-3.5 h-3.5 text-brand" />
-                    <span className="text-brand text-[10px] font-bold uppercase tracking-wider font-jakarta">
-                      For Founders
-                    </span>
-                  </div>
-                  <h2 className="font-sora font-extrabold text-xl sm:text-2xl lg:text-3xl bg-gradient-to-r from-gray-900 via-brand to-purple-600 dark:from-white dark:via-brand dark:to-purple-400 bg-clip-text text-transparent leading-tight mb-2">
-                    Get Discovered by India&apos;s Top VCs, Buyers, and 5,000+ AI Founders
-                  </h2>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm font-jakarta leading-relaxed mb-5">
-                    List your AI tool or startup and get in front of the investors, enterprise buyers, and founders who are actively looking for what you built.
-                  </p>
-                  
-                  {/* CTA Buttons - Premium style with enhanced effects */}
-                  <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
-                    <Link
-                      href="/auth/signup"
-                      className="group inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-brand via-brand to-brand/90 text-white font-bold text-sm font-jakarta hover:shadow-xl hover:shadow-brand/40 transition-all hover:scale-105 w-full sm:w-auto relative overflow-hidden"
-                    >
-                      {/* Shimmer effect */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                      {/* Subtle inner glow */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <span className="relative z-10">Create Free Account</span>
-                    </Link>
-                    <Link
-                      href="/auth/login"
-                      className="group inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold text-sm font-jakarta hover:border-brand dark:hover:border-brand hover:shadow-lg transition-all w-full sm:w-auto relative overflow-hidden"
-                    >
-                      <Users className="w-4 h-4 relative z-10" />
-                      <span className="relative z-10">Founder Login</span>
-                    </Link>
-                  </div>
-                  
-                  {/* Trust Badge - Enhanced with premium styling */}
-                  <div className="flex items-center justify-center lg:justify-start gap-2 mt-4">
-                    <div className="flex -space-x-2">
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 border-2 border-white dark:border-gray-900 shadow-md shadow-emerald-500/30" />
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 border-2 border-white dark:border-gray-900 shadow-md shadow-blue-500/30" />
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 border-2 border-white dark:border-gray-900 shadow-md shadow-purple-500/30" />
-                    </div>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 font-jakarta">
-                      Trusted by <span className="text-brand font-bold">500+</span> AI founders
-                    </p>
-                  </div>
-                </div>
-
-                {/* Right: Benefits Grid - Premium cards with enhanced styling */}
-                <div className="flex-1 grid grid-cols-1 gap-3 w-full">
-                  <div className="group relative flex items-start gap-3 bg-gradient-to-br from-white via-white to-gray-50/50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900/50 rounded-xl p-3.5 border border-gray-200 dark:border-gray-700 hover:border-brand/50 dark:hover:border-brand/50 transition-all hover:shadow-lg hover:shadow-brand/10 overflow-hidden">
-                    {/* Card inner glow */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-brand/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-brand/20 via-brand/15 to-brand/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm relative z-10">
-                      <TrendingUp className="w-4 h-4 text-brand" />
-                    </div>
-                    <div className="relative z-10">
-                      <h3 className="font-sora font-bold text-xs text-gray-900 dark:text-white mb-0.5">
-                        Real-Time Analytics
-                      </h3>
-                      <p className="text-[11px] text-gray-600 dark:text-gray-400 font-jakarta leading-snug">
-                        Track views, clicks, and engagement
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="group relative flex items-start gap-3 bg-gradient-to-br from-white via-white to-gray-50/50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900/50 rounded-xl p-3.5 border border-gray-200 dark:border-gray-700 hover:border-purple-500/50 dark:hover:border-purple-500/50 transition-all hover:shadow-lg hover:shadow-purple-500/10 overflow-hidden">
-                    {/* Card inner glow */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500/20 via-purple-500/15 to-purple-500/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm relative z-10">
-                      <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                    </div>
-                    <div className="relative z-10">
-                      <h3 className="font-sora font-bold text-xs text-gray-900 dark:text-white mb-0.5">
-                        Premium Visibility
-                      </h3>
-                      <p className="text-[11px] text-gray-600 dark:text-gray-400 font-jakarta leading-snug">
-                        Featured in newsletter & homepage
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="group relative flex items-start gap-3 bg-gradient-to-br from-white via-white to-gray-50/50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900/50 rounded-xl p-3.5 border border-gray-200 dark:border-gray-700 hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-all hover:shadow-lg hover:shadow-blue-500/10 overflow-hidden">
-                    {/* Card inner glow */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500/20 via-blue-500/15 to-blue-500/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm relative z-10">
-                      <Zap className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div className="relative z-10">
-                      <h3 className="font-sora font-bold text-xs text-gray-900 dark:text-white mb-0.5">
-                        Easy Management
-                      </h3>
-                      <p className="text-[11px] text-gray-600 dark:text-gray-400 font-jakarta leading-snug">
-                        Update listings anytime from dashboard
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
+      {/* ╔════════════════════════════════════════════╗
+          ║  10b. STARTUP MILESTONES                    ║
+          ╚════════════════════════════════════════════╝ */}
+      {fetchedMilestones && fetchedMilestones.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 cv-auto">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="font-sora font-extrabold text-lg sm:text-xl text-navy dark:text-white">
+                Startup Milestones
+              </h2>
+              <p className="text-gray-500 dark:text-gray-400 font-jakarta text-xs sm:text-sm mt-0.5">
+                Recent achievements from the ecosystem
+              </p>
+            </div>
+            <Link href="/milestones" className="text-brand font-semibold text-xs sm:text-sm hover:underline flex items-center gap-1 font-jakarta">
+              View all <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {fetchedMilestones.map((m: any) => {
+              const icons: Record<string, string> = { FUNDING: '💰', LAUNCH: '🚀', PARTNERSHIP: '🤝', ACQUISITION: '🏢', AWARD: '🏆', HIRING: '👥', REVENUE: '📈', USER_MILESTONE: '🎯' };
+              return (
+                <Link key={m.id} href={`/startups/${m.startupSlug}`} className="card p-4 hover:border-brand/20 transition-colors group">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">{icons[m.type] || '📌'}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand transition-colors truncate">{m.title}</p>
+                      <p className="text-xs text-brand font-jakarta font-medium mt-0.5">{m.startupName}</p>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-gray-400 font-jakarta">
+                        <span>{new Date(m.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                        {m.amount && <span className="font-medium text-gray-600 dark:text-gray-300">{m.currency} {Number(m.amount).toLocaleString()}</span>}
+                        {m.verificationStatus === 'PLATFORM_VERIFIED' && <span className="text-green-500">✓ Verified</span>}
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ╔════════════════════════════════════════════╗
+          ║  11. CTA — Founders / Organizers / Employers║
+          ╚════════════════════════════════════════════╝ */}
+      <HomeCTA />
 
       {/* ╔════════════════════════════════════════════╗
           ║  12. EXPLORE SITE (INTERNAL LINKS)         ║

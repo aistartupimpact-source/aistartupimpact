@@ -61,6 +61,7 @@ const config: Config = {
       fontFamily: {
         sora: ['var(--font-sora)', 'sans-serif'],
         jakarta: ['var(--font-jakarta)', 'sans-serif'],
+        bebas: ['var(--font-bebas)', 'sans-serif'],
         mono: ['var(--font-jetbrains)', 'monospace'],
       },
       borderRadius: {
