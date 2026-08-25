@@ -89,7 +89,7 @@ test.describe('Employer portal', () => {
 
     test('signup page has company name field', async ({ page }) => {
       await page.goto('/employer/signup');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       const body = await page.textContent('body');
       expect(
         body?.includes('Company') || body?.includes('company') || body?.includes('Organization')

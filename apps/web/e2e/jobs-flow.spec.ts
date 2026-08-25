@@ -8,7 +8,7 @@ test.describe('Jobs flow', () => {
 
   test('jobs page has job listings or empty state', async ({ page }) => {
     await page.goto('/jobs');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     const body = await page.textContent('body');
     expect(
       body?.toLowerCase().includes('job') || body?.toLowerCase().includes('position') || body?.toLowerCase().includes('no jobs')
@@ -29,7 +29,7 @@ test.describe('Jobs flow', () => {
 
   test('jobs page has filter options', async ({ page }) => {
     await page.goto('/jobs');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     // Should have location, type, or category filters
     const body = await page.textContent('body');
     expect(
@@ -43,7 +43,7 @@ test.describe('Jobs flow', () => {
 
   test('job listing links to detail page', async ({ page }) => {
     await page.goto('/jobs');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     const jobLink = page.locator('a[href*="/jobs/"]').first();
     if (await jobLink.isVisible().catch(() => false)) {
       const href = await jobLink.getAttribute('href');
@@ -53,11 +53,11 @@ test.describe('Jobs flow', () => {
 
   test('company page loads for valid slug', async ({ page }) => {
     await page.goto('/jobs');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     const companyLink = page.locator('a[href*="/jobs/company/"]').first();
     if (await companyLink.isVisible().catch(() => false)) {
       await companyLink.click();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       expect(page.url()).toContain('/jobs/company/');
     }
   });

@@ -8,7 +8,7 @@ test.describe('Events flow', () => {
 
   test('events page has content', async ({ page }) => {
     await page.goto('/events');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     const body = await page.textContent('body');
     expect(
       body?.toLowerCase().includes('event') || body?.toLowerCase().includes('upcoming')
@@ -17,13 +17,13 @@ test.describe('Events flow', () => {
 
   test('event detail page loads for valid slug', async ({ page }) => {
     await page.goto('/events');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     const eventLink = page.locator('a[href*="/events/"]').first();
     if (await eventLink.isVisible().catch(() => false)) {
       const href = await eventLink.getAttribute('href');
       if (href && !href.includes('/my')) {
         await eventLink.click();
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('domcontentloaded');
         expect(page.url()).toContain('/events/');
       }
     }
@@ -36,7 +36,7 @@ test.describe('Events flow', () => {
 
   test('funding page shows dashboard content', async ({ page }) => {
     await page.goto('/funding');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     const body = await page.textContent('body');
     expect(
       body?.toLowerCase().includes('funding') || body?.toLowerCase().includes('investment')

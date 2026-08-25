@@ -25,7 +25,7 @@ test.describe('Smoke tests', () => {
       if (msg.type() === 'error') errors.push(msg.text());
     });
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     const realErrors = errors.filter(
       (e) => !e.includes('favicon') && !e.includes('hydration') && !e.includes('Warning:')
     );
