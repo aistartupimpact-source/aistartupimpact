@@ -278,20 +278,20 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
   // Chart Data: Momentum (Sum by Month/Year in USD Millions)
   const chartData = useMemo(() => {
     const map = new Map<string, number>();
-    const sorted = [...data].sort((a, b) => new Date(a.announcedAt).getTime() - new Date(b.announcedAt).getTime());
+    const validData = data.filter(row => row.announcedAt && !isNaN(new Date(row.announcedAt).getTime()));
+    const sorted = [...validData].sort((a, b) => new Date(a.announcedAt).getTime() - new Date(b.announcedAt).getTime());
 
     sorted.forEach((row) => {
       const d = new Date(row.announcedAt);
       const monthYear = d.toLocaleString('default', { month: 'short', year: '2-digit' });
       const currentSum = map.get(monthYear) || 0;
-      // Convert cents to USD millions for the chart
       map.set(monthYear, currentSum + Number(row.amountUsd || 0) / 100_000_000);
     });
 
     return Array.from(map.entries()).map(([month, amount]) => ({
       name: month,
       amount: Math.round(amount)
-    })).slice(-12); // Show last 12 months momentum
+    })).slice(-12);
   }, [data]);
 
   // Handle PDF download with email gate
@@ -326,13 +326,13 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-8">
       {/* Email Gate Modal */}
       {showEmailModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-modal p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md w-full shadow-2xl">
-            <h3 className="font-sora font-bold text-2xl mb-2">Download AI Startups Funding Report 2026</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 sm:p-8 max-w-md w-full shadow-2xl">
+            <h3 className="font-sora font-bold text-lg sm:text-2xl mb-1.5 sm:mb-2">Download AI Startups Funding Report 2026</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4 sm:mb-6 text-xs sm:text-sm">
               Get the complete analysis with sector breakdowns, investor profiles, and city-wise funding distribution.
             </p>
             <form onSubmit={(e) => {
@@ -374,58 +374,58 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
       )}
 
       {/* Hero CTA Banner */}
-      <div className="card p-8 bg-gradient-to-br from-brand-50 via-purple-50 to-pink-50 dark:from-brand-900/20 dark:via-purple-900/20 dark:to-pink-900/20 border-2 border-brand/20">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="card p-4 sm:p-8 bg-gradient-to-br from-brand-50 via-purple-50 to-pink-50 dark:from-brand-900/20 dark:via-purple-900/20 dark:to-pink-900/20 border-2 border-brand/20">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-6">
           <div className="flex-1">
-            <h2 className="font-sora font-extrabold text-3xl mb-2 text-navy dark:text-white">
+            <h2 className="font-sora font-extrabold text-base sm:text-3xl mb-1 sm:mb-2 text-navy dark:text-white">
               AI Startups Funding Tracker
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 text-lg">
+            <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-lg">
               Complete analysis of {data.length} funding rounds • Sector breakdowns • Investor profiles • City distribution
             </p>
           </div>
           <button
             onClick={handleDownloadReport}
-            className="flex items-center gap-3 px-8 py-4 bg-brand text-white rounded-xl hover:bg-brand-600 transition-all shadow-lg hover:shadow-xl font-semibold text-lg whitespace-nowrap"
+            className="flex items-center gap-2 px-4 py-2.5 sm:px-8 sm:py-4 bg-brand text-white rounded-lg sm:rounded-xl hover:bg-brand-600 transition-all shadow-lg hover:shadow-xl font-semibold text-xs sm:text-lg whitespace-nowrap"
           >
-            <Download className="w-5 h-5" />
+            <Download className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
             Download Free PDF
           </button>
         </div>
       </div>
 
       {/* Top Stats Cards - Redesigned with Trend Deltas */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         {/* Total Capital Raised */}
-        <div className="card p-4 sm:p-6 bg-gradient-to-br from-brand-50 to-white dark:from-brand-900/20 dark:to-gray-900">
-          <div className="text-xs sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-2 sm:mb-3">
+        <div className="card p-3 sm:p-6 bg-gradient-to-br from-brand-50 to-white dark:from-brand-900/20 dark:to-gray-900">
+          <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-1 sm:mb-3">
             Total Capital Raised
           </div>
-          <div className="font-sora font-extrabold text-2xl sm:text-4xl text-navy dark:text-white mb-1 sm:mb-2">
+          <div className="font-sora font-extrabold text-lg sm:text-4xl text-navy dark:text-white mb-0.5 sm:mb-2">
             {totalDisplay}+
           </div>
           {yoyGrowth && (
-            <div className={`text-xs sm:text-sm font-semibold ${Number(yoyGrowth) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`text-[10px] sm:text-sm font-semibold ${Number(yoyGrowth) > 0 ? 'text-green-600' : 'text-red-600'}`}>
               {Number(yoyGrowth) > 0 ? '↑' : '↓'} {Math.abs(Number(yoyGrowth))}% vs {new Date().getFullYear() - 1}
             </div>
           )}
         </div>
 
         {/* Total Deals */}
-        <div className="card p-4 sm:p-6">
-          <div className="text-xs sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-2 sm:mb-3">
+        <div className="card p-3 sm:p-6">
+          <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-1 sm:mb-3">
             AI-only deals tracked
           </div>
-          <div className="font-sora font-extrabold text-2xl sm:text-4xl text-navy dark:text-white mb-1 sm:mb-2">
+          <div className="font-sora font-extrabold text-lg sm:text-4xl text-navy dark:text-white mb-0.5 sm:mb-2">
             {data.length}
           </div>
           {dealCountGrowth && (
-            <div className={`text-xs sm:text-sm font-semibold ${Number(dealCountGrowth) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`text-[10px] sm:text-sm font-semibold ${Number(dealCountGrowth) > 0 ? 'text-green-600' : 'text-red-600'}`}>
               {Number(dealCountGrowth) > 0 ? '↑' : '↓'} {Math.abs(Number(dealCountGrowth))}% YoY
             </div>
           )}
           {!dealCountGrowth && (
-            <div className="text-xs sm:text-sm text-gray-500">
+            <div className="text-[10px] sm:text-sm text-gray-500">
               <a href="/submit-tool" className="text-brand hover:underline font-medium">Submit yours →</a>
             </div>
           )}
@@ -433,52 +433,52 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
 
         {/* Largest Single Round */}
         {largestRound && (
-          <div className="card p-4 sm:p-6 bg-gradient-to-br from-green-50 to-white dark:from-green-900/20 dark:to-gray-900">
-            <div className="text-xs sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-2 sm:mb-3">
+          <div className="card p-3 sm:p-6 bg-gradient-to-br from-green-50 to-white dark:from-green-900/20 dark:to-gray-900">
+            <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-1 sm:mb-3">
               Largest Round
             </div>
-            <div className="font-sora font-extrabold text-2xl sm:text-4xl text-navy dark:text-white mb-1 sm:mb-2">
+            <div className="font-sora font-extrabold text-lg sm:text-4xl text-navy dark:text-white mb-0.5 sm:mb-2">
               {largestRound.amount}
             </div>
-            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
+            <div className="text-[10px] sm:text-sm text-gray-600 dark:text-gray-400 truncate">
               {largestRound.startup} · {largestRound.date}
             </div>
           </div>
         )}
 
         {/* YTD Period */}
-        <div className="card p-4 sm:p-6">
-          <div className="text-xs sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-2 sm:mb-3">
+        <div className="card p-3 sm:p-6">
+          <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-1 sm:mb-3">
             {ytdStats.label}
           </div>
-          <div className="font-sora font-extrabold text-2xl sm:text-4xl text-navy dark:text-white mb-1 sm:mb-2">
+          <div className="font-sora font-extrabold text-lg sm:text-4xl text-navy dark:text-white mb-0.5 sm:mb-2">
             {ytdStats.display}+
           </div>
-          <div className="text-xs sm:text-sm text-gray-500">
+          <div className="text-[10px] sm:text-sm text-gray-500">
             {ytdStats.deals} deals · Updated daily
           </div>
         </div>
       </div>
 
-      {/* Sector Breakdown - NEW FEATURE */}
-      <div className="card p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <Building2 className="w-5 h-5 text-brand" />
+      {/* Sector Breakdown */}
+      <div className="card p-4 sm:p-6">
+        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-6">
+          <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-brand" />
           <h3 className="section-title">AI Sector Breakdown</h3>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-2.5 sm:space-y-3">
           {sectorData.map((sector, idx) => {
             const maxAmount = sectorData[0]?.amount || 1;
             const percentage = (sector.amount / maxAmount) * 100;
             return (
               <div key={sector.name}>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{sector.name}</span>
-                  <span className="text-xs text-gray-500">{sector.count} deals • ${(sector.amount / 1e6).toFixed(1)}M</span>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">{sector.name}</span>
+                  <span className="text-[10px] sm:text-xs text-gray-500">{sector.count} deals • ${(sector.amount / 1e6).toFixed(1)}M</span>
                 </div>
-                <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5">
+                <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 sm:h-2.5">
                   <div
-                    className="bg-gradient-to-r from-brand to-purple-500 h-2.5 rounded-full transition-all duration-500"
+                    className="bg-gradient-to-r from-brand to-purple-500 h-2 sm:h-2.5 rounded-full transition-all duration-500"
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
@@ -490,28 +490,28 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
 
 
 
-      {/* City Distribution - NEW FEATURE */}
-      <div className="card p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <MapIcon className="w-5 h-5 text-brand" />
+      {/* City Distribution */}
+      <div className="card p-4 sm:p-6">
+        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-6">
+          <MapIcon className="w-4 h-4 sm:w-5 sm:h-5 text-brand" />
           <h3 className="section-title">Funding by City</h3>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-2.5 sm:space-y-3">
           {cityData.slice(0, 10).map((city, idx) => {
             const maxAmount = cityData[0]?.amount || 1;
             const percentage = (city.amount / maxAmount) * 100;
             return (
               <div key={city.name}>
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-3.5 h-3.5 text-brand" />
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{city.name}</span>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-brand" />
+                    <span className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">{city.name}</span>
                   </div>
-                  <span className="text-xs text-gray-500">{city.count} startups • ${(city.amount / 1e6).toFixed(1)}M</span>
+                  <span className="text-[10px] sm:text-xs text-gray-500">{city.count} startups • ${(city.amount / 1e6).toFixed(1)}M</span>
                 </div>
-                <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2">
+                <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 sm:h-2">
                   <div
-                    className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all duration-500"
+                    className="bg-gradient-to-r from-green-500 to-emerald-500 h-1.5 sm:h-2 rounded-full transition-all duration-500"
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
@@ -522,10 +522,10 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
       </div>
 
       {/* Embedded Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="card p-6 lg:col-span-2">
-          <h3 className="section-title mb-6">Funding Momentum (Last 12 Months)</h3>
-          <div className="h-64 sm:h-80 w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+        <div className="card p-4 sm:p-6 lg:col-span-2">
+          <h3 className="section-title mb-3 sm:mb-6">Funding Momentum (Last 12 Months)</h3>
+          <div className="h-48 sm:h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 10, right: 5, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" opacity={0.2} />
@@ -542,9 +542,9 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
           </div>
         </div>
 
-        <div className="card p-6">
-          <h3 className="section-title mb-6">Dist. by Stage</h3>
-          <div className="h-56 sm:h-64 w-full flex flex-col items-center justify-center">
+        <div className="card p-4 sm:p-6">
+          <h3 className="section-title mb-3 sm:mb-6">Dist. by Stage</h3>
+          <div className="h-44 sm:h-64 w-full flex flex-col items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie 
@@ -573,13 +573,13 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center mt-4">
+          <div className="flex flex-wrap gap-x-3 sm:gap-x-4 gap-y-1.5 sm:gap-y-2 justify-center mt-2 sm:mt-4">
             {stageData.map((entry, index) => {
               const total = stageData.reduce((sum, e) => sum + e.value, 0);
               const percent = ((entry.value / total) * 100).toFixed(0);
               return (
-                <div key={entry.name} className="flex items-center gap-1.5 text-xs text-gray-500 font-jakarta whitespace-nowrap">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[index % PIE_COLORS.length] }} />
+                <div key={entry.name} className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-gray-500 font-jakarta whitespace-nowrap">
+                  <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[index % PIE_COLORS.length] }} />
                   {entry.name} <span className="text-gray-400 font-medium">({entry.value} • {percent}%)</span>
                 </div>
               );
@@ -594,7 +594,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
 
 
         {/* Filters Top Bar */}
-        <div className="p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
+        <div className="p-3 sm:p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
           
           {/* Active Investor Filter Badge */}
           {filterInvestor !== 'All' && (
@@ -608,78 +608,80 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
             </div>
           )}
 
-          {/* Title & All Filters in One Row */}
-          <div className="flex items-center gap-3 overflow-x-auto">
-            <h3 className="font-sora font-bold text-lg whitespace-nowrap">All Rounds</h3>
-            
-            <div className="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
-            
-            <select className="input-field py-2 px-3 shadow-sm text-sm w-[130px] cursor-pointer flex-shrink-0" value={filterStage} onChange={(e) => setFilterStage(e.target.value)}>
-              <option value="All">All Stages</option>
-              <option value="Seed">Pre-Seed & Seed</option>
-              <option value="Series A">Series A</option>
-              <option value="Series B">Series B</option>
-            </select>
-            
-            <select className="input-field py-2 px-3 shadow-sm text-sm w-[110px] cursor-pointer flex-shrink-0" value={filterYear} onChange={(e) => setFilterYear(e.target.value)}>
-              <option value="All">All Years</option>
-              <option value="2026">2026</option>
-              <option value="2025">2025</option>
-              <option value="2024">2024</option>
-            </select>
-            
-            <select className="input-field py-2 px-3 shadow-sm text-sm w-[130px] cursor-pointer flex-shrink-0" value={filterSector} onChange={(e) => setFilterSector(e.target.value)}>
-              <option value="All">All Sectors</option>
-              {sectorData.map(s => (
-                <option key={s.name} value={s.name}>{s.name}</option>
-              ))}
-            </select>
-            
-            <select className="input-field py-2 px-3 shadow-sm text-sm w-[110px] cursor-pointer flex-shrink-0" value={filterCity} onChange={(e) => setFilterCity(e.target.value)}>
-              <option value="All">All Cities</option>
-              {cityData.slice(0, 10).map(c => (
-                <option key={c.name} value={c.name}>{c.name}</option>
-              ))}
-            </select>
-            
-            <select 
-              className="input-field py-2 px-3 shadow-sm text-sm w-[130px] cursor-pointer flex-shrink-0" 
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === 'All') {
-                  setFilterAmountMin(0);
-                  setFilterAmountMax(Infinity);
-                } else if (val === '0-1M') {
-                  setFilterAmountMin(0);
-                  setFilterAmountMax(1e6);
-                } else if (val === '1M-10M') {
-                  setFilterAmountMin(1e6);
-                  setFilterAmountMax(10e6);
-                } else if (val === '10M-50M') {
-                  setFilterAmountMin(10e6);
-                  setFilterAmountMax(50e6);
-                } else if (val === '50M+') {
-                  setFilterAmountMin(50e6);
-                  setFilterAmountMax(Infinity);
-                }
-              }}
-            >
-              <option value="All">All Amounts</option>
-              <option value="0-1M">$0 - $1M</option>
-              <option value="1M-10M">$1M - $10M</option>
-              <option value="10M-50M">$10M - $50M</option>
-              <option value="50M+">$50M+</option>
-            </select>
+          {/* Title & Filters */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <h3 className="font-sora font-bold text-sm sm:text-lg whitespace-nowrap flex-shrink-0">All Rounds</h3>
+
+            <div className="hidden sm:block w-px h-6 bg-gray-300 dark:bg-gray-600 flex-shrink-0"></div>
+
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
+              <select className="input-field !min-h-0 py-1 sm:py-2 px-1.5 sm:px-3 shadow-sm text-[11px] sm:text-sm min-w-0 w-auto cursor-pointer rounded-lg sm:rounded-xl" value={filterStage} onChange={(e) => setFilterStage(e.target.value)}>
+                <option value="All">All Stages</option>
+                <option value="Seed">Pre-Seed & Seed</option>
+                <option value="Series A">Series A</option>
+                <option value="Series B">Series B</option>
+              </select>
+
+              <select className="input-field !min-h-0 py-1 sm:py-2 px-1.5 sm:px-3 shadow-sm text-[11px] sm:text-sm min-w-0 w-auto cursor-pointer rounded-lg sm:rounded-xl" value={filterYear} onChange={(e) => setFilterYear(e.target.value)}>
+                <option value="All">All Years</option>
+                <option value="2026">2026</option>
+                <option value="2025">2025</option>
+                <option value="2024">2024</option>
+              </select>
+
+              <select className="input-field !min-h-0 py-1 sm:py-2 px-1.5 sm:px-3 shadow-sm text-[11px] sm:text-sm min-w-0 w-auto cursor-pointer rounded-lg sm:rounded-xl" value={filterSector} onChange={(e) => setFilterSector(e.target.value)}>
+                <option value="All">All Sectors</option>
+                {sectorData.map(s => (
+                  <option key={s.name} value={s.name}>{s.name}</option>
+                ))}
+              </select>
+
+              <select className="input-field !min-h-0 py-1 sm:py-2 px-1.5 sm:px-3 shadow-sm text-[11px] sm:text-sm min-w-0 w-auto cursor-pointer rounded-lg sm:rounded-xl" value={filterCity} onChange={(e) => setFilterCity(e.target.value)}>
+                <option value="All">All Cities</option>
+                {cityData.slice(0, 10).map(c => (
+                  <option key={c.name} value={c.name}>{c.name}</option>
+                ))}
+              </select>
+
+              <select
+                className="input-field !min-h-0 py-1 sm:py-2 px-1.5 sm:px-3 shadow-sm text-[11px] sm:text-sm min-w-0 w-auto cursor-pointer rounded-lg sm:rounded-xl"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === 'All') {
+                    setFilterAmountMin(0);
+                    setFilterAmountMax(Infinity);
+                  } else if (val === '0-1M') {
+                    setFilterAmountMin(0);
+                    setFilterAmountMax(1e6);
+                  } else if (val === '1M-10M') {
+                    setFilterAmountMin(1e6);
+                    setFilterAmountMax(10e6);
+                  } else if (val === '10M-50M') {
+                    setFilterAmountMin(10e6);
+                    setFilterAmountMax(50e6);
+                  } else if (val === '50M+') {
+                    setFilterAmountMin(50e6);
+                    setFilterAmountMax(Infinity);
+                  }
+                }}
+              >
+                <option value="All">All Amounts</option>
+                <option value="0-1M">$0 - $1M</option>
+                <option value="1M-10M">$1M - $10M</option>
+                <option value="10M-50M">$10M - $50M</option>
+                <option value="50M+">$50M+</option>
+              </select>
+            </div>
           </div>
         </div>
         
         <div className="overflow-x-auto relative">
-          <table className="w-full text-left font-jakarta">
-            <thead className="bg-gray-50 dark:bg-gray-800/50 text-xs uppercase text-gray-500 font-semibold border-b border-gray-100 dark:border-gray-800">
+          <table className="w-full sm:min-w-[900px] text-left font-jakarta">
+            <thead className="bg-gray-50 dark:bg-gray-800/50 text-[10px] sm:text-xs uppercase text-gray-500 font-semibold border-b border-gray-100 dark:border-gray-800">
               <tr>
-                <th className="px-6 py-4">Startup</th>
-                <th className="px-6 py-4">Round</th>
-                <th className="px-6 py-4">Amount</th>
+                <th className="px-3 sm:px-6 py-2.5 sm:py-4">Startup</th>
+                <th className="px-2 sm:px-6 py-2.5 sm:py-4">Round</th>
+                <th className="px-2 sm:px-6 py-2.5 sm:py-4">Amount</th>
                 <th className="px-6 py-4 hidden xl:table-cell">Sector</th>
                 <th className="px-6 py-4 hidden sm:table-cell">Lead Investors</th>
                 <th className="px-6 py-4 hidden lg:table-cell">Other Investors</th>
@@ -694,45 +696,45 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
                 
                 return (
                   <tr key={row.id} className={`transition-colors ${topDeals.has(row.id) ? 'bg-amber-50/30 hover:bg-amber-50/60 dark:bg-amber-900/5 dark:hover:bg-amber-900/10' : 'hover:bg-gray-50/50 dark:hover:bg-gray-800/20'}`}>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         {row.startupLogoUrl ? (
-                          <img src={row.startupLogoUrl} alt="" className="w-8 h-8 rounded-lg object-contain bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex-shrink-0" />
+                          <img src={row.startupLogoUrl} alt="" className="w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg object-contain bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex-shrink-0" />
                         ) : (
-                          <div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center flex-shrink-0">
-                            <span className="text-xs font-bold text-brand">{row.startupName?.charAt(0)}</span>
+                          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-brand/10 flex items-center justify-center flex-shrink-0">
+                            <span className="text-[10px] sm:text-xs font-bold text-brand">{row.startupName?.charAt(0)}</span>
                           </div>
                         )}
                         <div className="min-w-0">
-                          <a href={`/startups/${row.startupSlug}`} className="font-sora font-bold text-sm text-navy dark:text-white hover:text-brand transition-colors block truncate">
+                          <a href={`/startups/${row.startupSlug}`} className="font-sora font-bold text-xs sm:text-sm text-navy dark:text-white hover:text-brand transition-colors block whitespace-nowrap">
                             {row.startupName}
                             {topDeals.has(row.id) && (
-                              <span className="ml-2 px-1.5 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 align-middle">FEATURED</span>
+                              <span className="ml-1.5 px-1 py-0.5 rounded text-[9px] sm:text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 align-middle">FEATURED</span>
                             )}
                           </a>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full inline-block font-semibold">
+                          <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
+                            <span className="text-[10px] sm:text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 px-1.5 sm:px-2 py-0.5 rounded-full inline-block font-semibold">
                               AI Startup
                             </span>
                             {row.headquartersCity && (
-                              <span className="text-xs text-gray-400 flex items-center gap-0.5">
-                                <MapPin className="w-3 h-3" />{row.headquartersCity}
+                              <span className="text-[10px] sm:text-xs text-gray-400 flex items-center gap-0.5">
+                                <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3" />{row.headquartersCity}
                               </span>
                             )}
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="text-xs font-bold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 py-1 rounded-full uppercase">{row.roundType}</span>
+                    <td className="px-2 sm:px-6 py-3 sm:py-4">
+                      <span className="text-[10px] font-semibold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded-full uppercase whitespace-nowrap">{row.roundType}</span>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="font-sora font-extrabold text-sm text-brand block">
+                    <td className="px-2 sm:px-6 py-3 sm:py-4">
+                      <span className="font-sora font-extrabold text-xs sm:text-sm text-brand block">
                         {formatAmount(row)}
                       </span>
                     </td>
                     <td className="px-6 py-4 hidden xl:table-cell">
-                      <span className="text-xs font-bold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2 py-1 rounded-full uppercase whitespace-nowrap">
+                      <span className="text-[10px] font-semibold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-1.5 py-0.5 rounded-full uppercase whitespace-nowrap">
                         {sector}
                       </span>
                     </td>
@@ -758,7 +760,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
                       </div>
                     </td>
                     <td className="px-6 py-4 hidden xl:table-cell">
-                      <span className={`text-xs font-bold px-2 py-1 rounded-full uppercase whitespace-nowrap ${trend.color}`}>
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full uppercase whitespace-nowrap ${trend.color}`}>
                         ↑ {trend.label}
                       </span>
                     </td>
@@ -782,25 +784,25 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
 
         {/* Sign-in CTA for non-authenticated users */}
         {!user && filteredData.length > FREE_ROWS_LIMIT && (
-          <div className="border-t border-gray-100 dark:border-gray-800 bg-gradient-to-b from-gray-50/80 to-white dark:from-gray-800/40 dark:to-gray-900 px-6 py-10 text-center">
+          <div className="border-t border-gray-100 dark:border-gray-800 bg-gradient-to-b from-gray-50/80 to-white dark:from-gray-800/40 dark:to-gray-900 px-3 sm:px-6 py-4 sm:py-10 text-center">
             <div className="max-w-md mx-auto">
-              <div className="w-14 h-14 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Lock className="w-6 h-6 text-brand" />
+              <div className="w-8 h-8 sm:w-14 sm:h-14 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-4">
+                <Lock className="w-3.5 h-3.5 sm:w-6 sm:h-6 text-brand" />
               </div>
-              <h3 className="font-sora font-bold text-xl text-navy dark:text-white mb-2">
+              <h3 className="font-sora font-bold text-sm sm:text-xl text-navy dark:text-white mb-1 sm:mb-2">
                 Sign in to see all {filteredData.length} rounds
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 font-jakarta">
-                Create a free account to unlock the full funding table with filters, investor details, and trend signals.
+              <p className="text-[11px] sm:text-sm text-gray-500 dark:text-gray-400 mb-3 sm:mb-6 font-jakarta leading-relaxed">
+                Unlock the full funding table with filters, investor details, and trend signals.
               </p>
               <button
                 onClick={() => signIn('/funding')}
-                className="btn-brand px-10 py-3.5 text-sm mb-4"
+                className="inline-flex items-center justify-center bg-brand hover:bg-brand-600 text-white font-bold font-jakarta rounded-lg sm:rounded-xl transition-all px-4 sm:px-10 py-1.5 sm:py-3 text-[11px] sm:text-sm mb-2 sm:mb-4"
               >
                 Sign In — It&apos;s Free
               </button>
-              <p className="text-xs text-gray-400 dark:text-gray-500 font-jakarta">
-                No credit card required · Google sign-in · Takes 5 seconds
+              <p className="text-[9px] sm:text-xs text-gray-400 dark:text-gray-500 font-jakarta">
+                No credit card · Google sign-in · 5 seconds
               </p>
             </div>
           </div>
@@ -819,12 +821,12 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
 
       {/* Most Active Investors in Indian AI */}
       {topInvestors.length > 0 && (
-      <div className="card p-6 sm:p-8">
-        <h2 className="font-sora font-bold text-xl sm:text-2xl mb-6 sm:mb-8 text-navy dark:text-white">
+      <div className="card p-4 sm:p-8">
+        <h2 className="font-sora font-bold text-sm sm:text-2xl mb-3 sm:mb-8 text-navy dark:text-white">
           Most active investors in {new Date().getFullYear()}
         </h2>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-6">
           {topInvestors.slice(0, 8).map((investor, idx) => {
             // Get portfolio companies and their deal info for this investor
             const investorDeals = data
@@ -841,22 +843,22 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
                 : `$${Math.round(totalAmount / 1e3)}K`;
             
             return (
-              <div key={investor.name} className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-6 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-700">
-                <div className="mb-4">
-                  <h3 className="font-sora font-bold text-lg text-navy dark:text-white mb-2">
+              <div key={investor.name} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg sm:rounded-xl p-3 sm:p-6 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-700">
+                <div className="mb-2 sm:mb-4">
+                  <h3 className="font-sora font-bold text-xs sm:text-lg text-navy dark:text-white mb-1 sm:mb-2 truncate">
                     {investor.name}
                   </h3>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                    <span className="font-semibold text-brand">{investor.deals}</span> AI deals · 2026
+                  <div className="text-[10px] sm:text-sm text-gray-600 dark:text-gray-400 mb-0.5 sm:mb-1">
+                    <span className="font-semibold text-brand">{investor.deals}</span> AI deals
                   </div>
                   {totalAmount >= 1e6 && (
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                    <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                       {displayAmount} total
                     </div>
                   )}
                 </div>
-                
-                <div className="mb-4">
+
+                <div className="mb-2 sm:mb-4 hidden sm:block">
                   <div className="space-y-1.5">
                     {investorDeals.length > 0 ? (
                       investorDeals.map((deal, dealIdx) => (
@@ -876,12 +878,12 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
                     )}
                   </div>
                 </div>
-                
+
                 <button
                   onClick={() => setFilterInvestor(investor.name)}
-                  className="text-sm font-semibold text-brand hover:text-brand-600 transition-colors flex items-center gap-1 w-full justify-center py-2 px-3 rounded-lg border border-brand/20 hover:border-brand/40 hover:bg-brand/5"
+                  className="text-[10px] sm:text-sm font-semibold text-brand hover:text-brand-600 transition-colors flex items-center gap-1 w-full justify-center py-1.5 sm:py-2 px-2 sm:px-3 rounded-md sm:rounded-lg border border-brand/20 hover:border-brand/40 hover:bg-brand/5"
                 >
-                  View all deals →
+                  View deals →
                 </button>
               </div>
             );

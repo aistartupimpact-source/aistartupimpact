@@ -2,7 +2,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { Clock, Calendar, Bookmark, ChevronRight } from 'lucide-react';
+import { Clock, Calendar, ChevronRight } from 'lucide-react';
+import StorySaveButton from '@/components/StorySaveButton';
 import { sql, getArticleBySlugDirect, getArticlesDirect } from '@/lib/db';
 import { buildArticleMetadata, generateArticleSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import { sanitizeHtml } from '@/lib/sanitize';
@@ -74,7 +75,7 @@ export default async function OpinionArticlePage({ params }: { params: { slug: s
   ]);
 
   return (
-    <div className="max-w-7xl mx-auto px-0 sm:px-2 lg:px-4 py-6 sm:py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
@@ -124,7 +125,7 @@ export default async function OpinionArticlePage({ params }: { params: { slug: s
             </div>
             <div className="flex items-center gap-2">
               <ShareButton title={article.title} />
-              <button className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Bookmark className="w-4 h-4 text-gray-400" /></button>
+              <StorySaveButton slug={article.slug} />
             </div>
           </div>
 

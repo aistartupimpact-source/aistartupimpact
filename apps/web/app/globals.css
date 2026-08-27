@@ -176,6 +176,30 @@
     --tw-shadow-color: color-mix(in srgb, var(--brand-color) 25%, transparent);
   }
 
+  /* ─── Magnetic Subscribe Button ─────────── */
+
+  .magnetic-subscribe {
+    @apply relative overflow-hidden bg-brand text-white font-bold font-jakarta px-6 py-2.5 text-sm rounded-lg cursor-pointer;
+    will-change: transform;
+    isolation: isolate;
+  }
+
+  .magnetic-subscribe-glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    border-radius: inherit;
+    z-index: 0;
+  }
+
+  .magnetic-subscribe-text {
+    position: relative;
+    z-index: 1;
+    will-change: transform;
+    pointer-events: none;
+  }
+
   .btn-outline {
     @apply inline-flex items-center justify-center border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-700 font-medium font-jakarta px-5 py-3 sm:px-5 sm:py-2.5 text-sm rounded-xl transition-all duration-200 active:scale-[0.97] min-h-[44px] sm:min-h-0;
   }

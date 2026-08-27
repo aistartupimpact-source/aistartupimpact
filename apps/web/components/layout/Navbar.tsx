@@ -14,6 +14,7 @@ import SearchOverlay from './SearchOverlay';
 import SignInModal from '@/components/auth/SignInModal';
 import ProfileDropdown from '@/components/ProfileDropdown';
 import Logo from '@/components/Logo';
+import MagneticSubscribeButton from '@/components/MagneticSubscribeButton';
 
 const mainNav = [
   // { label: 'News', href: '/news' }, // temporarily hidden
@@ -209,12 +210,7 @@ export default function Navbar({ hasSession = false }: { hasSession?: boolean })
               ) : null}
 
               {/* Subscribe CTA — hidden on small mobile */}
-              <Link
-                href="/newsletter"
-                className="bg-brand hover:bg-brand-600 text-white font-bold font-jakarta px-6 py-2.5 text-sm rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-brand/25 hidden sm:inline-flex items-center justify-center"
-              >
-                Subscribe
-              </Link>
+              <MagneticSubscribeButton />
 
               {/* Mobile hamburger — visible below lg */}
               <button
@@ -236,14 +232,14 @@ export default function Navbar({ hasSession = false }: { hasSession?: boolean })
           <div className="h-[3px] bg-brand w-full" />
 
           {/* Header */}
-          <div className="flex items-center justify-between px-5 h-14 border-b border-gray-100 dark:border-gray-800">
-            <Logo height={28} />
+          <div className="flex items-center justify-between px-5 h-[72px] border-b border-gray-100 dark:border-gray-800">
+            <Logo height={52} />
             <button
               onClick={() => setMobileOpen(false)}
               aria-label="Close menu"
-              className="w-11 h-11 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 active:scale-90 transition-transform"
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 active:scale-90 transition-transform"
             >
-              <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <X className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
             </button>
           </div>
 

@@ -2,7 +2,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { Clock, Calendar, Bookmark, ChevronRight, Users } from 'lucide-react';
+import { Clock, Calendar, ChevronRight, Users } from 'lucide-react';
+import StorySaveButton from '@/components/StorySaveButton';
 import { sql, getArticleBySlugDirect, getArticlesDirect } from '@/lib/db';
 import { defaultFounderSpotlights } from '@/lib/fallbacks';
 import { buildArticleMetadata, generateArticleSchema, generateBreadcrumbSchema } from '@/lib/seo';
@@ -83,7 +84,7 @@ export default async function StoryDetailPage({ params }: { params: { slug: stri
   ]);
 
   return (
-    <div className="max-w-7xl mx-auto px-0 sm:px-2 lg:px-4 py-6 sm:py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
@@ -129,7 +130,7 @@ export default async function StoryDetailPage({ params }: { params: { slug: stri
             </div>
             <div className="flex items-center gap-2">
               <ShareButton title={story.title} />
-              <button className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Bookmark className="w-4 h-4 text-gray-400" /></button>
+              <StorySaveButton slug={story.slug} />
             </div>
           </div>
 

@@ -1006,6 +1006,58 @@ model ResearchHub {
   updatedAt       DateTime? @default(now()) @db.Timestamp(6)
 }
 
+model AIResearchInstitution {
+  id            String   @id
+  name          String
+  city          String
+  state         String
+  tag           String
+  category      String
+  aiCentre      String?
+  dept          String?
+  faculty       String?
+  students      String?
+  programs      String?
+  fundedBy      String?
+  bharatGen     String?
+  appliedAI     String?
+  researchAreas String[]
+  labs          Json     @default("[]")
+  link          String
+  linkLabel     String
+  displayOrder  Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([category])
+}
+
+model AITalentStats {
+  id           String   @id
+  label        String
+  value        String
+  section      String
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([section])
+}
+
+model AITalentProgramme {
+  id           String   @id
+  description  String
+  note         String?
+  link         String?
+  linkLabel    String?
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
 model SearchQuery {
   id                String   @id
   query             String

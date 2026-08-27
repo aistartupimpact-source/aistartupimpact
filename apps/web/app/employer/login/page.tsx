@@ -3,7 +3,40 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Briefcase, Mail, Lock, ArrowRight, Eye, EyeOff, Shield } from 'lucide-react';
+import { Briefcase, Mail, Lock, ArrowRight, Eye, EyeOff, Shield, Users, BarChart3, Building2, Globe, Zap, UserPlus } from 'lucide-react';
+
+const benefits = [
+  {
+    icon: Briefcase,
+    title: 'AI Job Listings',
+    desc: 'Post jobs to reach 45K+ AI professionals',
+  },
+  {
+    icon: Users,
+    title: 'Talent Pipeline',
+    desc: 'Access pre-screened candidates with AI skills',
+  },
+  {
+    icon: BarChart3,
+    title: 'Hiring Analytics',
+    desc: 'Track applications, views & conversion rates',
+  },
+  {
+    icon: Building2,
+    title: 'Company Profile',
+    desc: 'Showcase your company to the AI community',
+  },
+  {
+    icon: Globe,
+    title: 'Industry Reach',
+    desc: "Connect with India's fastest-growing AI talent pool",
+  },
+  {
+    icon: Zap,
+    title: 'Quick Setup',
+    desc: 'Post your first job in under 5 minutes',
+  },
+];
 
 export default function EmployerLoginPage() {
   const router = useRouter();
@@ -80,117 +113,201 @@ export default function EmployerLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-page dark:bg-page-dark flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-brand rounded-2xl flex items-center justify-center mx-auto mb-4">
-            {requires2FA ? <Shield className="w-7 h-7 text-white" /> : <Briefcase className="w-7 h-7 text-white" />}
-          </div>
-          <h1 className="font-sora font-extrabold text-2xl text-navy dark:text-white">
-            {requires2FA ? 'Two-Factor Authentication' : 'Employer Portal'}
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 font-jakarta mt-2">
-            {requires2FA ? 'Enter the 6-digit code from your authenticator app' : 'Sign in to manage your AI job listings'}
-          </p>
-        </div>
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center py-8 px-4">
+      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-0 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700/60 bg-white dark:bg-gray-900 shadow-xl shadow-gray-200/50 dark:shadow-black/30">
 
-        {/* Form */}
-        <div className="card p-6 sm:p-8">
-          {requires2FA ? (
-            <div className="space-y-4">
-              {error && (
-                <div className="rounded-lg p-3 text-sm border bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800">
-                  {error}
+        {/* Left — Benefits panel */}
+        <div className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 p-5 sm:p-6 lg:p-12 flex flex-col justify-between overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 0h40v40H0z\' fill=\'none\'/%3E%3Cpath d=\'M20 0v40M0 20h40\' stroke=\'%23fff\' stroke-width=\'.5\'/%3E%3C/svg%3E")', backgroundSize: '40px 40px' }} />
+
+          <div className="relative z-10">
+            {/* Compact mobile header */}
+            <div className="flex items-center gap-2.5 mb-4 lg:mb-8">
+              <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                {requires2FA ? <Shield className="w-4 h-4 lg:w-5 lg:h-5 text-white" /> : <Briefcase className="w-4 h-4 lg:w-5 lg:h-5 text-white" />}
+              </div>
+              <span className="font-sora font-bold text-white text-xs lg:text-sm tracking-wide uppercase">Employer Portal</span>
+            </div>
+
+            <h2 className="font-sora font-extrabold text-xl lg:text-3xl text-white leading-tight mb-2 lg:mb-3">
+              {requires2FA ? 'Two-Factor Authentication' : 'Welcome Back'}
+            </h2>
+            <p className="text-white/80 text-xs lg:text-sm font-jakarta leading-relaxed mb-4 lg:mb-8 max-w-sm">
+              {requires2FA
+                ? 'Enter the 6-digit code from your authenticator app to continue.'
+                : 'Sign in to manage your AI job listings & hiring pipeline.'}
+            </p>
+
+            {/* Mobile: 3 compact chips in a row */}
+            <div className="flex flex-wrap gap-2 lg:hidden">
+              {benefits.slice(0, 3).map((b) => (
+                <div key={b.title} className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm rounded-full px-3 py-1.5">
+                  <b.icon className="w-3.5 h-3.5 text-white" />
+                  <span className="text-white text-xs font-semibold font-jakarta">{b.title}</span>
                 </div>
-              )}
-              <input
-                type="text"
-                value={twoFACode}
-                onChange={(e) => setTwoFACode(e.target.value.replace(/\D/g, '').slice(0, useBackupCode ? 20 : 6))}
-                placeholder={useBackupCode ? 'Backup code' : '000000'}
-                maxLength={useBackupCode ? 20 : 6}
-                className="w-full px-4 py-3 text-center text-xl font-mono tracking-widest border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
-                autoFocus
-              />
-              <button
-                onClick={handleVerify2FA}
-                disabled={loading || (!useBackupCode && twoFACode.length !== 6) || (useBackupCode && !twoFACode)}
-                className="btn-brand w-full py-3 disabled:opacity-50"
-              >
-                {loading ? 'Verifying...' : 'Verify'}
-              </button>
-              <div className="flex items-center justify-between text-xs">
-                <button
-                  onClick={() => { setUseBackupCode(!useBackupCode); setTwoFACode(''); }}
-                  className="text-brand font-semibold hover:underline"
-                >
-                  {useBackupCode ? 'Use authenticator code' : 'Use backup code'}
-                </button>
-                <button
-                  onClick={() => { setRequires2FA(false); setTwoFACode(''); setChallengeToken(''); setError(''); }}
-                  className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                >
-                  Back to login
-                </button>
-              </div>
-            </div>
-          ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className={`rounded-lg p-3 text-sm border ${error.includes('locked') || error.includes('Locked') ? 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800' : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'}`}>
-                {error}
-              </div>
-            )}
-
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 font-jakarta mb-1.5">Email</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="company@example.com" required className="input-field pl-10 w-full" />
-              </div>
+              ))}
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 font-jakarta">Password</label>
-                <Link href="/employer/forgot-password" className="text-xs text-brand font-semibold font-jakarta hover:underline">
-                  Forgot Password?
-                </Link>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  autoComplete="current-password"
-                  className="input-field pl-10 pr-10 w-full"
-                />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
+            {/* Desktop: full benefit cards grid */}
+            <div className="hidden lg:grid grid-cols-2 gap-4">
+              {benefits.map((b) => (
+                <div key={b.title} className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-white/15 backdrop-blur-sm flex items-center justify-center shrink-0 mt-0.5">
+                    <b.icon className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold text-sm font-jakarta">{b.title}</p>
+                    <p className="text-white/65 text-xs font-jakarta leading-snug mt-0.5">{b.desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
+          </div>
 
-            <button type="submit" disabled={loading} className="btn-brand w-full flex items-center justify-center gap-2 py-3 disabled:opacity-50">
-              {loading ? 'Signing in...' : 'Sign In'}
-              {!loading && <ArrowRight className="w-4 h-4" />}
-            </button>
-          </form>
-          )}
-
-          <p className="text-center text-sm text-gray-500 dark:text-gray-400 font-jakarta mt-5">
-            Don&apos;t have an account?{' '}
-            <Link href="/employer/signup" className="text-brand font-semibold hover:underline">Create Employer Account</Link>
-          </p>
+          {/* Social proof — compact on mobile */}
+          <div className="relative z-10 mt-4 lg:mt-8 pt-4 lg:pt-6 border-t border-white/15">
+            <div className="flex items-center gap-2.5">
+              <div className="flex -space-x-1.5 lg:-space-x-2">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="w-6 h-6 lg:w-7 lg:h-7 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center">
+                    <UserPlus className="w-2.5 h-2.5 lg:w-3 lg:h-3 text-white/80" />
+                  </div>
+                ))}
+              </div>
+              <p className="text-white/75 text-[11px] lg:text-xs font-jakarta">
+                Trusted by <span className="text-white font-semibold">500+</span> companies hiring AI talent
+              </p>
+            </div>
+          </div>
         </div>
 
-        <p className="text-center text-xs text-gray-400 font-jakarta mt-6">
-          <Link href="/" className="hover:text-brand">← Back to AI Startup Impact</Link>
-        </p>
+        {/* Right — Form panel */}
+        <div className="p-5 sm:p-8 lg:p-12 flex flex-col justify-center">
+          <div className="w-full max-w-sm mx-auto">
+            {/* Form header */}
+            <div className="mb-5 lg:mb-6">
+              <h1 className="font-sora font-extrabold text-lg sm:text-xl lg:text-2xl text-gray-900 dark:text-white">
+                {requires2FA ? 'Verify your identity' : 'Sign in to your account'}
+              </h1>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-jakarta mt-1">
+                {requires2FA ? 'Two-factor authentication required' : 'Enter your credentials to continue'}
+              </p>
+            </div>
+
+            {/* 2FA Verification */}
+            {requires2FA ? (
+              <div className="space-y-4">
+                <div className="text-center mb-4">
+                  <div className="w-12 h-12 mx-auto bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-3">
+                    <Shield className="w-6 h-6 text-green-600 dark:text-green-400" />
+                  </div>
+                  <h2 className="font-sora font-bold text-lg text-gray-900 dark:text-white">Two-Factor Authentication</h2>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter the 6-digit code from your authenticator app</p>
+                </div>
+
+                {error && (
+                  <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-xl">
+                    <span className="text-red-500 text-sm">⚠</span>
+                    <p className="text-sm text-red-600 dark:text-red-400 font-jakarta">{error}</p>
+                  </div>
+                )}
+
+                <input
+                  type="text"
+                  value={twoFACode}
+                  onChange={(e) => setTwoFACode(e.target.value.replace(/\D/g, '').slice(0, useBackupCode ? 20 : 6))}
+                  placeholder={useBackupCode ? 'Backup code' : '000000'}
+                  maxLength={useBackupCode ? 20 : 6}
+                  className="w-full px-4 py-3 text-center text-xl font-mono tracking-widest border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+                  autoFocus
+                />
+
+                <button
+                  onClick={handleVerify2FA}
+                  disabled={loading || (!useBackupCode && twoFACode.length !== 6) || (useBackupCode && !twoFACode)}
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold font-jakarta text-sm rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {loading && <ArrowRight className="w-4 h-4 animate-pulse" />}
+                  {loading ? 'Verifying...' : 'Verify'}
+                </button>
+
+                <div className="flex items-center justify-between text-xs">
+                  <button onClick={() => { setUseBackupCode(!useBackupCode); setTwoFACode(''); }} className="text-blue-600 font-semibold hover:underline">
+                    {useBackupCode ? 'Use authenticator code' : 'Use backup code'}
+                  </button>
+                  <button onClick={() => { setRequires2FA(false); setTwoFACode(''); setChallengeToken(''); setError(''); }} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                    Back to login
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 font-jakarta mb-1.5">Email Address</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="company@example.com"
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm font-jakarta focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:bg-white dark:focus:bg-gray-800 placeholder-gray-400 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 font-jakarta">Password</label>
+                      <Link href="/employer/forgot-password" className="text-xs text-blue-600 font-semibold font-jakarta hover:underline">
+                        Forgot password?
+                      </Link>
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        autoComplete="current-password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter your password"
+                        className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm font-jakarta focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:bg-white dark:focus:bg-gray-800 placeholder-gray-400 transition-colors"
+                      />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-xl">
+                      <span className="text-red-500 text-sm">⚠</span>
+                      <p className="text-sm text-red-600 dark:text-red-400 font-jakarta">{error}</p>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold font-jakarta text-sm rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
+                  >
+                    {loading ? 'Signing in...' : 'Sign In'}
+                    {!loading && <ArrowRight className="w-4 h-4" />}
+                  </button>
+                </form>
+
+                <p className="text-center text-sm text-gray-500 dark:text-gray-400 font-jakarta mt-5">
+                  Don&apos;t have an account?{' '}
+                  <Link href="/employer/signup" className="text-blue-600 font-semibold hover:underline">Create Employer Account</Link>
+                </p>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

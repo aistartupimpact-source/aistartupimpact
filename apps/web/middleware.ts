@@ -22,8 +22,9 @@ export async function middleware(request: NextRequest) {
     const referer = request.headers.get('referer');
     const allowedOrigins = [
       process.env.NEXT_PUBLIC_WEB_URL,
+      process.env.NEXT_PUBLIC_SITE_URL,
       process.env.NEXT_PUBLIC_ADMIN_URL,
-    ].filter(Boolean);
+    ].filter(Boolean) as string[];
     if (process.env.NODE_ENV !== 'production') {
       allowedOrigins.push('http://localhost:3000', 'http://localhost:3001', 'http://localhost:4000');
     }

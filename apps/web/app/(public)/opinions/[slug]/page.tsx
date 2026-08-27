@@ -141,7 +141,7 @@ export default async function OpinionDetailPage({ params }: { params: { slug: st
   const { relatedNews, relatedFounderStories, recommendedTools, relevantJobs } = relatedContent;
 
   return (
-    <div className="max-w-7xl mx-auto px-0 sm:px-2 lg:px-4 py-6 sm:py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }} />
@@ -161,7 +161,7 @@ export default async function OpinionDetailPage({ params }: { params: { slug: st
       </nav>
 
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
-        <article className="flex-1 min-w-0 max-w-3xl mx-auto lg:mx-0 w-full px-4 sm:px-0">
+        <article className="flex-1 min-w-0 max-w-3xl mx-auto lg:mx-0 w-full">
           <div className="flex items-center gap-2 mb-3">
             <span className="badge-brand text-xs">Opinion</span>
             {article.primaryTag && (

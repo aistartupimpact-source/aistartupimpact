@@ -254,7 +254,8 @@ export default async function HomePage() {
             ].filter(Boolean).join(' ');
             return (
               <Link key={story.slug} href={`/news/${story.slug}`} className="group h-full">
-                <div className={`bg-gray-50 dark:bg-gray-900 p-5 sm:p-6 relative hover:bg-white dark:hover:bg-gray-800 transition-all duration-300 ${borderClass} hover:border-l-4 hover:border-l-red-500 h-full flex flex-col`}>
+                <div className={`bg-gray-50 dark:bg-gray-900 p-5 sm:p-6 relative hover:bg-white dark:hover:bg-gray-800 transition-all duration-300 ${borderClass} h-full flex flex-col`}>
+                  <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-r-sm" />
                   <div className="mb-3">
                     <span className="inline-block text-xs font-bold uppercase tracking-wider text-red-500">
                       {story.category?.name || 'News'}

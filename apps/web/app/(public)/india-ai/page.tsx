@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import Link from 'next/link';
 import nextDynamic from 'next/dynamic';
 import {
   Flag,
@@ -8,29 +7,89 @@ import {
   Trophy,
   IndianRupee,
   Users,
-  BookOpen,
   GraduationCap,
-  ArrowRight,
-  TrendingUp,
-  Building2,
   FileText,
   Newspaper
 } from 'lucide-react';
 import { sql } from '@/lib/db';
-import IndiaAIHero from '@/components/india-ai/IndiaAIHero';
 import FundingTracker from '@/components/india-ai/FundingTracker';
 import NewsletterCapture from '@/components/india-ai/NewsletterCapture';
-import GovernmentSchemesHardcoded from '@/components/india-ai/GovernmentSchemesHardcoded';
-import PolicyLiveFeedHardcoded from '@/components/india-ai/PolicyLiveFeedHardcoded';
+import GovernmentSchemes from '@/components/india-ai/GovernmentSchemes';
+import PolicyLiveFeed from '@/components/india-ai/PolicyLiveFeed';
+import AITalentResearchHubsDB from '@/components/india-ai/AITalentResearchHubsDB';
 
 const RealIndiaMap = nextDynamic(() => import('@/components/india-ai/RealIndiaMap'), { ssr: false });
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
+
+interface StatItem {
+  id: string;
+  metricKey: string;
+  metricLabel: string;
+  metricValue: string;
+  metricChange: string | null;
+  metricIcon: string | null;
+  displayOrder?: number;
+}
+
+interface DisbursementStat {
+  metricKey: string;
+  metricValue: string;
+  metricChange: string | null;
+  source: string | null;
+}
+
+interface MissionPillar {
+  id: string;
+  component: string;
+  budgetAllocated: string | bigint;
+  budgetDisbursed: string | bigint | null;
+  description: string | null;
+  keyInitiatives: string[];
+  displayOrder: number | null;
+}
+
+interface CityRow {
+  id: string;
+  cityName: string;
+  slug: string;
+  state: string;
+  latitude: number;
+  longitude: number;
+  topSectors: string[];
+  totalFunding: string;
+  aliases: string[];
+  totalStartups: number;
+}
+
+interface StartupRow {
+  id: string;
+  name: string;
+  slug: string;
+  tagline: string;
+  logoUrl: string | null;
+  headquartersCity: string;
+  stage: string;
+  totalFundingInr: string;
+  foundedYear: number;
+}
+
+interface FundingRow {
+  id: string;
+  roundType: string;
+  amountInr: string;
+  announcedAt: string;
+  leadInvestors: string[];
+  startupName: string;
+  startupSlug: string;
+  startupLogo: string | null;
+  headquartersCity: string | null;
+}
 
 // SEO Metadata with target keywords
 export const metadata: Metadata = {
-  title: 'India AI Startups 2026 - Live Ecosystem Map | IndiaAI Mission, Funding & Policy',
-  description: 'Discover 3,247+ AI startups in India, ₹28,470Cr funding tracked, IndiaAI Mission updates, AI policy, and top AI companies in Bangalore, Mumbai, Hyderabad. Real-time intelligence on India\'s AI revolution.',
+  title: 'India AI Startups - Live Ecosystem Map | IndiaAI Mission, Funding & Policy',
+  description: 'Explore India\'s AI ecosystem — thousands of startups, live funding data, IndiaAI Mission ₹10,372Cr budget tracker, AI policy updates, and top AI companies in Bangalore, Mumbai, Hyderabad. Real-time intelligence on India\'s AI revolution.',
   keywords: [
     'India AI startups',
     'AI funding India',
@@ -46,24 +105,15 @@ export const metadata: Metadata = {
     'AI research India'
   ],
   openGraph: {
-    title: 'India AI Startups 2026 - Live Ecosystem Map',
-    description: '3,247+ AI startups, ₹28,470Cr funding tracked. Explore India\'s AI revolution with real-time data on startups, funding, policy, and talent.',
+    title: 'India AI Startups - Live Ecosystem Map',
+    description: 'Explore India\'s AI revolution with real-time data on startups, funding, IndiaAI Mission tracker, policy updates, and talent insights.',
     type: 'website',
     url: 'https://aistartupimpact.com/india-ai',
-    images: [
-      {
-        url: '/og-images/india-ai-ecosystem.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'India AI Ecosystem Map 2026',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'India AI Startups 2026 - Live Ecosystem Map',
-    description: '3,247+ AI startups, ₹28,470Cr funding tracked. Real-time intelligence on India\'s AI revolution.',
-    images: ['/og-images/india-ai-ecosystem.jpg'],
+    title: 'India AI Startups - Live Ecosystem Map',
+    description: 'Real-time intelligence on India\'s AI revolution — startups, funding, policy, and IndiaAI Mission tracker.',
   },
   alternates: {
     canonical: 'https://aistartupimpact.com/india-ai',
@@ -72,7 +122,7 @@ export const metadata: Metadata = {
 
 // Fetch all data server-side
 async function getIndiaAIData() {
-  const [computedStartupCount, thisMonthStartups, totalFundingResult, thisMonthFundingResult, manualStats, cities, mission, researchHubs, recentFunding, allStartups] = await Promise.all([
+  const [computedStartupCount, thisMonthStartups, totalFundingResult, thisMonthFundingResult, manualStats, cities, mission, missionDisbursement, , recentFunding, allStartups] = await Promise.all([
     // Live computed: total startups
     sql`
       SELECT COUNT(*)::int as count
@@ -109,7 +159,8 @@ async function getIndiaAIData() {
     `,
     // Manual stats (AI Engineers, Global Rank — can't be auto-computed)
     sql`
-      SELECT * FROM "IndiaAIStats"
+      SELECT "metricKey", "metricLabel", "metricValue", "metricChange", "metricIcon", source
+      FROM "IndiaAIStats"
       WHERE "isActive" = true
         AND "metricKey" IN ('ai_engineers', 'global_rank')
       ORDER BY "displayOrder" ASC
@@ -148,13 +199,23 @@ async function getIndiaAIData() {
     `,
     // IndiaAI Mission
     sql`
-      SELECT * FROM "IndiaAIMissionTracker"
+      SELECT id, component, "budgetAllocated", "budgetDisbursed", description, "keyInitiatives", "displayOrder"
+      FROM "IndiaAIMissionTracker"
       WHERE "isActive" = true
+      ORDER BY "displayOrder" ASC
+    `,
+    // Mission disbursement summary
+    sql`
+      SELECT "metricKey", "metricValue", "metricChange", source
+      FROM "IndiaAIStats"
+      WHERE "isActive" = true
+        AND "metricKey" LIKE 'mission_%'
       ORDER BY "displayOrder" ASC
     `,
     // Research Hubs
     sql`
-      SELECT * FROM "ResearchHub"
+      SELECT id, name, slug, type, city, description, "focusAreas", "phdPrograms", "researchPapers", "notableProjects", website, latitude, longitude
+      FROM "ResearchHub"
       WHERE "isActive" = true
       ORDER BY "displayOrder" ASC
       LIMIT 5
@@ -197,7 +258,7 @@ async function getIndiaAIData() {
         AND "headquartersCity" IS NOT NULL
         AND "headquartersCity" != ''
       ORDER BY "totalFundingInr" DESC
-      LIMIT 1000
+      LIMIT 500
     `,
   ]);
 
@@ -243,19 +304,26 @@ async function getIndiaAIData() {
       metricIcon: 'currency',
       displayOrder: 2,
     },
-    ...(manualStats as any[]),
+    ...(manualStats as StatItem[]),
   ];
 
   // Add sector mapping (you can enhance this based on your data)
-  const startupsWithSectors = allStartups.map((s: any) => ({
+  const startupsWithSectors = (allStartups as StartupRow[]).map((s) => ({
     ...s,
-    sector: s.stage?.includes('FinTech') ? 'FinTech' : 
+    sector: s.stage?.includes('FinTech') ? 'FinTech' :
             s.stage?.includes('Health') ? 'HealthTech' :
-            s.stage?.includes('Ed') ? 'EdTech' : 'SaaS', // Default
+            s.stage?.includes('Ed') ? 'EdTech' : 'SaaS',
     headquartersCity: s.headquartersCity || 'Other',
   }));
 
-  return { stats, cities, mission, researchHubs, recentFunding, allStartups: startupsWithSectors };
+  return {
+    stats,
+    cities: cities as CityRow[],
+    mission: mission as MissionPillar[],
+    missionDisbursement: missionDisbursement as DisbursementStat[],
+    recentFunding: recentFunding as FundingRow[],
+    allStartups: startupsWithSectors,
+  };
 }
 
 function formatCurrency(paise: number): string {
@@ -267,12 +335,12 @@ function formatCurrency(paise: number): string {
   return `₹${Math.round(inr).toLocaleString('en-IN')}`;
 }
 
-function formatBudget(paise: number): string {
-  const crores = paise / 10000000000;
-  return `₹${crores.toLocaleString()} Cr`;
+function formatBudget(value: number | string | bigint): string {
+  const crores = Number(value) / 10000000000;
+  return `₹${crores.toLocaleString('en-IN', { maximumFractionDigits: 2 })} Cr`;
 }
 
-const iconMap: Record<string, any> = {
+const iconMap: Record<string, typeof Rocket> = {
   rocket: Rocket,
   currency: IndianRupee,
   users: Users,
@@ -280,16 +348,21 @@ const iconMap: Record<string, any> = {
 };
 
 export default async function IndiaAIPage() {
-  const { stats, cities, mission, researchHubs, recentFunding, allStartups } = await getIndiaAIData();
+  const { stats, cities, mission, missionDisbursement, recentFunding, allStartups } = await getIndiaAIData();
 
   // Extract computed startup count for dynamic subtitle
-  const startupStat = stats.find((s: any) => s.metricKey === 'total_startups');
+  const startupStat = stats.find((s) => s.metricKey === 'total_startups');
   const startupCount = startupStat?.metricValue || '3,000+';
 
-  // Calculate mission totals
+  // Calculate mission totals — total budget from pillars, disbursement from official stat
   const totalBudget = mission.reduce((sum, item) => sum + Number(item.budgetAllocated), 0);
-  const totalDisbursed = mission.reduce((sum, item) => sum + Number(item.budgetDisbursed), 0);
+  const disbursedStat = missionDisbursement.find((s) => s.metricKey === 'mission_total_disbursed');
+  const totalDisbursedCr = disbursedStat ? parseFloat(disbursedStat.metricValue) : 0;
+  const totalDisbursed = totalDisbursedCr * 10000000000;
   const disbursementPercentage = totalBudget > 0 ? (totalDisbursed / totalBudget) * 100 : 0;
+  const fy25Stat = missionDisbursement.find((s) => s.metricKey === 'mission_fy25_released');
+  const fy26Stat = missionDisbursement.find((s) => s.metricKey === 'mission_fy26_released');
+  const fy27Stat = missionDisbursement.find((s) => s.metricKey === 'mission_fy27_be');
 
   // JSON-LD Schema Markup for SEO
   const organizationSchema = {
@@ -335,11 +408,11 @@ export default async function IndiaAIPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(datasetSchema) }}
       />
 
-      <div className="max-w-7xl mx-auto px-0 sm:px-2 lg:px-4 py-4 sm:py-6 lg:py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-10">
         {/* ============================================
             SECTION 1: HERO WITH LIVE STATS
             ============================================ */}
-        <div className="mb-8 sm:mb-12 lg:mb-16 text-center">
+        <section aria-label="India AI live statistics" className="mb-8 sm:mb-12 lg:mb-16 text-center">
           <div className="inline-flex items-center gap-2 badge-brand mb-2 sm:mb-3 text-xs sm:text-xs">
             <Flag className="w-3 h-3" /> India AI Ecosystem — Live
           </div>
@@ -352,8 +425,8 @@ export default async function IndiaAIPage() {
 
           {/* Live Stats Counters */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mt-5 sm:mt-6 lg:mt-8">
-            {stats.map((stat: any) => {
-              const Icon = iconMap[stat.metricIcon] || Rocket;
+            {stats.map((stat) => {
+              const Icon = (stat.metricIcon && iconMap[stat.metricIcon]) || Rocket;
               return (
                 <div key={stat.id} className="card p-3 sm:p-4 lg:p-5 text-center hover:shadow-lg transition-shadow">
                   <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-brand/10 dark:bg-brand/20 flex items-center justify-center mx-auto mb-2">
@@ -374,12 +447,12 @@ export default async function IndiaAIPage() {
           </div>
           {/* Newsletter CTA */}
           <NewsletterCapture source="india-ai-hero" />
-        </div>
+        </section>
 
         {/* ============================================
             SECTION 2: INTERACTIVE INDIA AI MAP
             ============================================ */}
-        <div className="mb-8 sm:mb-12 lg:mb-16">
+        <section aria-label="Interactive India AI ecosystem map" className="mb-8 sm:mb-12 lg:mb-16">
           <h2 className="section-title justify-center mb-2 sm:mb-3 text-xl sm:text-2xl">
             <MapPin className="w-5 h-5 sm:w-6 sm:h-6" />
             Live India AI Ecosystem Map
@@ -389,18 +462,18 @@ export default async function IndiaAIPage() {
           </p>
 
           {/* Interactive Map Component */}
-          <RealIndiaMap cities={cities as any} allStartups={allStartups as any} />
-        </div>
+          <RealIndiaMap cities={cities} allStartups={allStartups} />
+        </section>
 
         {/* ============================================
             SECTION 3: LIVE AI FUNDING TRACKER
             ============================================ */}
-        <FundingTracker recentFunding={recentFunding as any} />
+        <FundingTracker recentFunding={recentFunding} />
 
         {/* ============================================
             SECTION 4: INDIAAI MISSION TRACKER
             ============================================ */}
-        <div className="mb-12 sm:mb-16">
+        <section aria-label="IndiaAI Mission budget tracker" className="mb-12 sm:mb-16">
           <h2 className="section-title justify-center mb-3">
             <Flag className="w-6 h-6" />
             IndiaAI Mission Tracker
@@ -410,85 +483,127 @@ export default async function IndiaAIPage() {
           </p>
 
           {/* Mission Summary */}
-          <div className="card p-6 mb-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="card p-4 sm:p-6 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-brand mb-1">
+                <div className="text-xl sm:text-3xl font-bold text-brand mb-1">
                   {formatBudget(totalBudget)}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Total Budget Allocated</div>
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total Outlay (2024–29)</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
+                <div className="text-xl sm:text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
                   {formatBudget(totalDisbursed)}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Amount Disbursed</div>
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Funds Released</div>
+                {disbursedStat?.metricChange && (
+                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5">{disbursedStat.metricChange}</div>
+                )}
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+                <div className="text-xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
                   {disbursementPercentage.toFixed(1)}%
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Disbursement Rate</div>
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Disbursement Rate</div>
               </div>
             </div>
 
             {/* Progress Bar */}
-            <div className="mt-6">
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+            <div className="mb-4 sm:mb-6">
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3" role="progressbar" aria-valuenow={Math.round(disbursementPercentage)} aria-valuemin={0} aria-valuemax={100} aria-label="Mission fund disbursement progress">
                 <div
                   className="bg-gradient-to-r from-brand to-green-500 h-3 rounded-full transition-all"
-                  style={{ width: `${disbursementPercentage}%` }}
+                  style={{ width: `${Math.min(disbursementPercentage, 100)}%` }}
                 />
               </div>
             </div>
+
+            {/* Year-wise Breakdown */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+              {fy25Stat && (
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2.5 sm:p-3 text-center">
+                  <div className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">₹{fy25Stat.metricValue} Cr</div>
+                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">FY 2024–25 Released</div>
+                  <div className="text-[10px] text-gray-400 dark:text-gray-500">{fy25Stat.metricChange}</div>
+                </div>
+              )}
+              {fy26Stat && (
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2.5 sm:p-3 text-center">
+                  <div className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">₹{fy26Stat.metricValue} Cr</div>
+                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">FY 2025–26 Released</div>
+                  <div className="text-[10px] text-gray-400 dark:text-gray-500">{fy26Stat.metricChange}</div>
+                </div>
+              )}
+              {fy27Stat && (
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2.5 sm:p-3 text-center">
+                  <div className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">₹{fy27Stat.metricValue} Cr</div>
+                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">FY 2026–27 (BE)</div>
+                  <div className="text-[10px] text-gray-400 dark:text-gray-500">{fy27Stat.metricChange}</div>
+                </div>
+              )}
+            </div>
+            <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
+              Source: Rajya Sabha reply by MoS Jitin Prasada (April 2026); PIB; IndiaAI portal
+            </p>
           </div>
 
-          {/* Mission Components */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            {mission.map((component: any) => (
-              <div key={component.id} className="card p-5 sm:p-6">
-                <h3 className="font-sora font-bold text-base sm:text-lg text-navy dark:text-white mb-3">
-                  {component.component}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                  {component.description}
-                </p>
+          {/* 7 Official Pillars */}
+          <h3 className="font-sora font-bold text-sm sm:text-base text-navy dark:text-white mb-3 text-center">
+            Official 7-Pillar Structure
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            {mission.filter((c) => c.component !== 'Overheads & Contingency').map((component) => {
+              const pctOfTotal = totalBudget > 0 ? ((Number(component.budgetAllocated) / totalBudget) * 100).toFixed(1) : '0';
+              const initiatives: string[] = component.keyInitiatives || [];
+              return (
+                <div key={component.id} className="card p-4 sm:p-5">
+                  <div className="flex items-start justify-between mb-2">
+                    <h4 className="font-sora font-bold text-sm sm:text-base text-navy dark:text-white leading-tight flex-1">
+                      {component.component}
+                    </h4>
+                    <span className="text-xs font-semibold text-brand bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full ml-2 shrink-0">
+                      {pctOfTotal}%
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-3 leading-relaxed">
+                    {component.description}
+                  </p>
 
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">Allocated:</span>
+                  <div className="flex justify-between text-xs sm:text-sm mb-2">
+                    <span className="text-gray-500 dark:text-gray-400">Approved Outlay:</span>
                     <span className="font-bold text-brand">
                       {formatBudget(component.budgetAllocated)}
                     </span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">Disbursed:</span>
-                    <span className="font-bold text-green-600 dark:text-green-400">
-                      {formatBudget(component.budgetDisbursed)}
-                    </span>
-                  </div>
-                </div>
 
-                {/* Component Progress */}
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div
-                    className="bg-brand h-2 rounded-full transition-all"
-                    style={{
-                      width: `${
-                        (Number(component.budgetDisbursed) / Number(component.budgetAllocated)) * 100
-                      }%`,
-                    }}
-                  />
+                  {/* Allocation bar */}
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                    <div
+                      className="bg-brand h-1.5 rounded-full transition-all"
+                      style={{ width: `${pctOfTotal}%` }}
+                    />
+                  </div>
+
+                  {initiatives.length > 0 && (
+                    <ul className="mt-3 space-y-1">
+                      {initiatives.slice(0, 3).map((item: string, idx: number) => (
+                        <li key={idx} className="flex items-start gap-1.5 text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
+                          <span className="text-brand mt-0.5">•</span>
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-        </div>
+        </section>
 
         {/* ============================================
             SECTION 5: GOVERNMENT SCHEMES & POLICY HUB
             ============================================ */}
-        <div className="mb-8 sm:mb-12 lg:mb-16">
+        <section aria-label="Government AI schemes and policy hub" className="mb-8 sm:mb-12 lg:mb-16">
           <h2 className="section-title justify-center mb-2 sm:mb-3 text-xl sm:text-2xl">
             <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
             Government Schemes & Policy Hub
@@ -502,7 +617,7 @@ export default async function IndiaAIPage() {
               <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-brand" />
               Available Schemes & Programs
             </h3>
-            <GovernmentSchemesHardcoded />
+            <GovernmentSchemes />
           </div>
 
           <div>
@@ -513,70 +628,24 @@ export default async function IndiaAIPage() {
             <p className="text-center text-gray-600 dark:text-gray-300 mb-4 sm:mb-6 max-w-2xl mx-auto text-xs sm:text-sm px-4 leading-relaxed">
               Latest updates from MeitY, NITI Aayog, Data Protection Board, and AI Safety Committee
             </p>
-            <PolicyLiveFeedHardcoded />
+            <PolicyLiveFeed />
           </div>
-        </div>
+        </section>
 
         {/* ============================================
             SECTION 6: AI TALENT & RESEARCH
             ============================================ */}
-        <div className="mb-12 sm:mb-16">
+        <section aria-label="AI talent and research hubs" className="mb-12 sm:mb-16">
           <h2 className="section-title justify-center mb-3">
             <GraduationCap className="w-6 h-6" />
             AI Talent & Research Hubs
           </h2>
-          <p className="text-center text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-            India&apos;s leading <strong>AI research institutions</strong> and talent development centers
+          <p className="text-center text-gray-600 dark:text-gray-300 mb-4 max-w-2xl mx-auto text-sm sm:text-base">
+            India&apos;s Leading AI Research Institutions & Talent Centers
           </p>
 
-          {/* Research Hubs */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {researchHubs.map((hub: any) => (
-              <div key={hub.id} className="card p-5 sm:p-6">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="font-sora font-bold text-base sm:text-lg text-navy dark:text-white">
-                      {hub.name}
-                    </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{hub.city}</p>
-                  </div>
-                  <BookOpen className="w-5 h-5 text-brand" />
-                </div>
-
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
-                  {hub.description}
-                </p>
-
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">PhD Programs:</span>
-                    <span className="font-bold text-brand">{hub.phdPrograms}+</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">Type:</span>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">{hub.type}</span>
-                  </div>
-                </div>
-
-                {hub.focusAreas && hub.focusAreas.length > 0 && (
-                  <div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">Focus Areas:</div>
-                    <div className="flex flex-wrap gap-1">
-                      {hub.focusAreas.slice(0, 3).map((area: string, idx: number) => (
-                        <span
-                          key={idx}
-                          className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
-                        >
-                          {area}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+          <AITalentResearchHubsDB />
+        </section>
 
         {/* ============================================
             FINAL CTA BLOCK

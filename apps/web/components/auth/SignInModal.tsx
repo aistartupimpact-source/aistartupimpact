@@ -11,11 +11,12 @@ interface SignInModalProps {
   defaultTab?: 'user' | 'founder';
   returnTo?: string | null;
   fullPage?: boolean;
+  embedded?: boolean;
 }
 
 type ModeType = 'signin' | 'signup';
 
-export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', defaultTab = 'user', returnTo, fullPage = false }: SignInModalProps) {
+export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', defaultTab = 'user', returnTo, fullPage = false, embedded = false }: SignInModalProps) {
   const router = useRouter();
   const effectiveReturnTo = returnTo || (typeof window !== 'undefined' ? window.location.pathname + window.location.search : null);
   const [mode, setMode] = useState<ModeType>(defaultMode);
@@ -315,11 +316,14 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
     ? "fixed inset-0 z-modal flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 p-4"
     : "fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm";
 
-  return (
-    <div className={wrapperClass}>
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-800" onClick={(e) => e.stopPropagation()}>
+  const cardClass = embedded
+    ? "w-full"
+    : "bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-800";
+
+  const cardContent = (
+      <div className={cardClass} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800">
+        <div className={`flex items-center justify-between ${embedded ? 'pb-4' : 'p-6 border-b border-gray-200 dark:border-gray-800'}`}>
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               {requires2FA ? 'Verify Identity' : mode === 'signin' ? 'Sign In' : 'Create Account'}
@@ -332,7 +336,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
                   : 'Join us and start your journey'}
             </p>
           </div>
-          {!fullPage && (
+          {!fullPage && !embedded && (
             <button
               onClick={() => { onClose(); resetForm(); }}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -660,6 +664,13 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
           </>
         )}
       </div>
+  );
+
+  if (embedded) return cardContent;
+
+  return (
+    <div className={wrapperClass}>
+      {cardContent}
     </div>
   );
 }

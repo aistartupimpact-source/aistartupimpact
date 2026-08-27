@@ -16,9 +16,9 @@ interface City {
   totalStartups: number;
   totalFunding: string;
   topSectors: string[];
-  recentFundings: any[];
-  keyAccelerators: string[];
-  notableCompanies: string[];
+  recentFundings?: unknown[];
+  keyAccelerators?: string[];
+  notableCompanies?: string[];
   aliases?: string[];
 }
 
@@ -347,7 +347,7 @@ export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps)
                         onMouseLeave={() => setHoveredCity(null)}
                         onClick={() => handleCityClick(city)}
                       >
-                        <g style={{ cursor: 'pointer' }}>
+                        <g style={{ cursor: 'pointer' }} transform={`scale(${1 / position.zoom})`}>
                           {/* Pulse ring for selected */}
                           {isSelected && (
                             <circle r={markerSize + 10} fill="rgba(59, 130, 246, 0.15)" className="animate-ping" />

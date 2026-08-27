@@ -20,7 +20,6 @@ interface Scheme {
 
 export default async function GovernmentSchemes() {
   try {
-    // Fetch schemes from database
     const schemes = await prisma.governmentScheme.findMany({
       where: { isActive: true },
       orderBy: [
@@ -29,7 +28,11 @@ export default async function GovernmentSchemes() {
       ],
     });
 
-    return <GovernmentSchemesClient schemes={schemes as Scheme[]} />;
+    const lastUpdated = schemes.length > 0
+      ? new Date(Math.max(...schemes.map(s => s.updatedAt.getTime()))).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+      : undefined;
+
+    return <GovernmentSchemesClient schemes={schemes as Scheme[]} lastUpdated={lastUpdated} />;
   } catch (error) {
     console.error('Error fetching government schemes:', error);
     // Return empty state instead of crashing

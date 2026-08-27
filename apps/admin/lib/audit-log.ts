@@ -45,7 +45,10 @@ export type ResourceType =
   | 'SETTINGS'
   | 'PEOPLE_EXPORT'
   | 'EVENT_EXPORT'
-  | 'INDIA_AI_STATS';
+  | 'INDIA_AI_STATS'
+  | 'INDIAAI_MISSION_TRACKER'
+  | 'INDIAAI_RESEARCH_HUB'
+  | 'AI_RESEARCH_INSTITUTION';
 
 interface AuditLogEntry {
   action: AuditAction;

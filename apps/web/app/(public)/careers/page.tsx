@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { Briefcase, ChevronRight, CheckCircle2, Loader2, ChevronDown, Upload, X } from 'lucide-react';
 
 const JOB_ROLES = [
@@ -253,17 +252,6 @@ export default function CareersPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      {/* Breadcrumb */}
-      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <nav className="flex items-center gap-1.5 text-xs sm:text-sm font-jakarta text-gray-400">
-            <Link href="/" className="hover:text-brand">Home</Link>
-            <ChevronRight className="w-3 h-3" />
-            <span className="text-gray-600 dark:text-gray-300">Careers</span>
-          </nav>
-        </div>
-      </div>
-
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Header */}
         <div className="text-center mb-12">
