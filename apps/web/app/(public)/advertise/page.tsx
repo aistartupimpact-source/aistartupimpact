@@ -1,16 +1,11 @@
 import Link from 'next/link';
 import {
   Megaphone, Users, BarChart3, Globe, Mail, ArrowRight, Check,
-  Zap, Newspaper, TrendingUp, Star, BookOpen, IndianRupee, Crown,
+  Zap, Newspaper, TrendingUp, Star, BookOpen, IndianRupee, Crown, Linkedin,
 } from 'lucide-react';
+import { sql } from '@/lib/db';
 
-/* ── Audience Stats ─────────────────────── */
-const stats = [
-  { value: '10K+', label: 'Monthly Pageviews', icon: BarChart3 },
-  { value: '1,000+', label: 'Newsletter Subscribers', icon: Mail },
-  { value: '4.2 min', label: 'Avg. Time on Page', icon: Globe },
-  { value: '60%', label: 'Organic / Direct Traffic', icon: TrendingUp },
-];
+export const revalidate = 3600;
 
 /* ── Placement Zones ────────────────────── */
 const placements = [
@@ -37,7 +32,7 @@ const placements = [
         name: 'Newsletter Featured Story',
         icon: Mail,
         location: 'Weekly newsletter — top position',
-        description: 'Your story as the lead article in our newsletter sent to 1,000+ founders, engineers, and AI enthusiasts.',
+        description: 'Your story as the lead article in our newsletter sent to our growing list of founders, engineers, and AI enthusiasts.',
         metric: '42% open rate',
       },
     ],
@@ -108,7 +103,7 @@ const placements = [
         icon: Mail,
         location: 'Weekly newsletter — brief mention',
         description: 'A brief mention of your startup in our weekly newsletter with a link to your full story or product page.',
-        metric: '1,000+ subscribers',
+        metric: 'Growing subscriber base',
       },
     ],
   },
@@ -158,7 +153,7 @@ const packages = [
       'Everything in Growth, plus:',
       'Hero Cover Story on homepage',
       'Breaking Ticker headline',
-      'Newsletter lead story (1K+ subscribers)',
+      'Newsletter lead story',
       'Unlimited stories per month',
       'Dedicated account manager',
       'Priority editorial support',
@@ -177,7 +172,30 @@ const audience = [
   { segment: 'Tech Journalists & Researchers', pct: 5 },
 ];
 
-export default function AdvertisePage() {
+export default async function AdvertisePage() {
+  const [startupCountResult, articleCountResult, toolCountResult, newsletterCountResult] = await Promise.all([
+    sql`SELECT COUNT(*)::int as count FROM "Startup" WHERE "isIndian" = true AND "deletedAt" IS NULL AND "isApproved" = true`,
+    sql`SELECT COUNT(*)::int as count FROM "Article" WHERE status = 'PUBLISHED'`,
+    sql`SELECT COUNT(*)::int as count FROM "AiTool" WHERE status IN ('APPROVED', 'FEATURED') AND "deletedAt" IS NULL`,
+    sql`SELECT COUNT(*)::int as count FROM "NewsletterSubscriber" WHERE "isActive" = true`.catch(() => [{ count: 0 }]),
+  ]);
+
+  const startupCount = startupCountResult[0]?.count || 0;
+  const articleCount = articleCountResult[0]?.count || 0;
+  const toolCount = toolCountResult[0]?.count || 0;
+  const newsletterCount = newsletterCountResult[0]?.count || 0;
+
+  const stats = [
+    { value: '50K+', label: 'LinkedIn Followers', icon: Linkedin },
+    { value: `${startupCount.toLocaleString('en-IN')}+`, label: 'AI Startups Listed', icon: BarChart3 },
+    { value: `${articleCount > 0 ? articleCount.toLocaleString('en-IN') : '200'}+`, label: 'Published Stories', icon: Newspaper },
+    { value: `${toolCount > 0 ? toolCount.toLocaleString('en-IN') : '500'}+`, label: 'AI Tools Reviewed', icon: Star },
+    { value: newsletterCount > 1000 ? `${(newsletterCount / 1000).toFixed(1)}K+` : `${newsletterCount.toLocaleString('en-IN')}+`, label: 'Newsletter Subscribers', icon: Mail },
+    { value: '4.2 min', label: 'Avg. Time on Page', icon: Globe },
+    { value: '60%', label: 'Organic / Direct Traffic', icon: TrendingUp },
+    { value: '42%', label: 'Newsletter Open Rate', icon: Mail },
+  ];
+
   return (
     <div className="max-w-6xl mx-auto px-0 sm:px-2 lg:px-4 py-8 sm:py-12">
       {/* ─── Hero ────────────────── */}
@@ -190,7 +208,7 @@ export default function AdvertisePage() {
           Put your startup story<br className="hidden sm:block" /> in front of India&apos;s AI decision-makers
         </h1>
         <p className="text-gray-500 dark:text-gray-400 font-jakarta text-base sm:text-lg mt-4 max-w-2xl mx-auto leading-relaxed">
-          We don&apos;t run banner ads. We feature your startup as editorial content — placed in premium positions based on your plan. Real stories, real engagement.
+          We don&apos;t run banner ads. We feature your startup as editorial content — placed in premium positions based on your plan. Real stories, real engagement. Trusted by <strong>50K+ LinkedIn followers</strong> and India&apos;s top AI founders.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6">
           <Link href="/client-portal" className="btn-brand text-sm">
@@ -205,10 +223,10 @@ export default function AdvertisePage() {
       {/* ─── Stats Bar ───────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-12 sm:mb-16">
         {stats.map((s) => (
-          <div key={s.label} className="card p-4 sm:p-5 text-center">
-            <s.icon className="w-5 h-5 text-brand mx-auto mb-2" />
-            <div className="font-sora font-extrabold text-xl sm:text-2xl text-brand">{s.value}</div>
-            <div className="text-xs text-gray-400 font-jakarta mt-1 uppercase tracking-wider font-bold">{s.label}</div>
+          <div key={s.label} className="card p-3 sm:p-4 text-center">
+            <s.icon className="w-4 h-4 sm:w-5 sm:h-5 text-brand mx-auto mb-1.5" />
+            <div className="font-sora font-extrabold text-lg sm:text-xl text-brand">{s.value}</div>
+            <div className="text-[10px] sm:text-xs text-gray-400 font-jakarta mt-1 uppercase tracking-wider font-bold">{s.label}</div>
           </div>
         ))}
       </div>
