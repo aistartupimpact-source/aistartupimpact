@@ -6,7 +6,7 @@ import { Building2, ChevronRight, CheckCircle2, Loader2, Plus, X } from 'lucide-
 import { STARTUP_CATEGORIES, USE_CASES } from '@/lib/categories';
 import CityCombobox from '@/components/shared/CityCombobox';
 
-const STAGES = ['BOOTSTRAPPED', 'IDEA', 'PRE_SEED', 'SEED', 'PRE_SERIES_A', 'SERIES_A', 'SERIES_B', 'SERIES_C', 'GROWTH', 'PUBLIC'];
+const STAGES = ['BOOTSTRAPPED', 'IDEA', 'PRE_SEED', 'SEED', 'PRE_SERIES_A', 'SERIES_A', 'PRE_SERIES_B', 'SERIES_B', 'PRE_SERIES_C', 'SERIES_C', 'PRE_SERIES_D', 'SERIES_D', 'SERIES_E', 'SERIES_F', 'SERIES_G', 'SERIES_I', 'SERIES_J', 'GROWTH', 'PUBLIC'];
 const STAGE_LABELS: Record<string, string> = {
   BOOTSTRAPPED: 'Bootstrapped',
   IDEA: 'Idea',
@@ -14,8 +14,17 @@ const STAGE_LABELS: Record<string, string> = {
   SEED: 'Seed',
   PRE_SERIES_A: 'Pre-Series A',
   SERIES_A: 'Series A',
+  PRE_SERIES_B: 'Pre-Series B',
   SERIES_B: 'Series B',
+  PRE_SERIES_C: 'Pre-Series C',
   SERIES_C: 'Series C',
+  PRE_SERIES_D: 'Pre-Series D',
+  SERIES_D: 'Series D',
+  SERIES_E: 'Series E',
+  SERIES_F: 'Series F',
+  SERIES_G: 'Series G',
+  SERIES_I: 'Series I',
+  SERIES_J: 'Series J',
   GROWTH: 'Growth',
   PUBLIC: 'Public',
 };
