@@ -113,7 +113,13 @@ export const supportMessageSchema = z.object({
 
 // Strip HTML tags from plain text inputs to prevent XSS
 export function sanitizeText(input: string): string {
-  return input.replace(/<[^>]*>/g, '').trim();
+  let result = input;
+  let prev: string;
+  do {
+    prev = result;
+    result = result.replace(/<[^>]*>/g, '');
+  } while (result !== prev);
+  return result.trim();
 }
 
 // Helper function to validate and sanitize input

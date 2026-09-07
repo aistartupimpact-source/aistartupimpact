@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Password must contain a number." }, { status: 400 });
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (typeof email !== 'string' || email.length > 255 || !email.includes('@') || !email.split('@')[1]?.includes('.')) {
       return NextResponse.json({ success: false, error: "Invalid email address." }, { status: 400 });
     }
 

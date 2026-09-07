@@ -3,13 +3,11 @@ import { prisma } from '@aistartupimpact/database';
 
 export const dynamic = 'force-dynamic';
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 export async function POST(req: NextRequest) {
   try {
     const { email, subscribeNewsletter } = await req.json();
 
-    if (!email || !EMAIL_REGEX.test(email)) {
+    if (!email || typeof email !== 'string' || email.length > 255 || !email.includes('@') || !email.split('@')[1]?.includes('.')) {
       return NextResponse.json({ success: false, error: 'Valid email required' }, { status: 400 });
     }
 

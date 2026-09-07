@@ -3,16 +3,31 @@ import * as cheerio from 'cheerio';
 
 export const dynamic = 'force-dynamic';
 
+function isAllowedUrl(raw: string): URL | null {
+  try {
+    const parsed = new URL(raw.startsWith('http') ? raw : `https://${raw}`);
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return null;
+    const hostname = parsed.hostname.toLowerCase();
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' ||
+        hostname === '0.0.0.0' || hostname.endsWith('.local') || hostname.endsWith('.internal') ||
+        /^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.)/.test(hostname)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const { url } = await req.json();
     if (!url) return NextResponse.json({ error: 'URL required' }, { status: 400 });
 
-    const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
+    const parsedUrl = isAllowedUrl(url);
+    if (!parsedUrl) return NextResponse.json({ error: 'Invalid or disallowed URL' }, { status: 400 });
 
-    const response = await fetch(normalizedUrl, {
+    const response = await fetch(parsedUrl.href, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; AIStartupImpactBot/1.0)' },
-      // timeout handling just in case
+      redirect: 'error',
       signal: AbortSignal.timeout(5000)
     });
 
@@ -29,7 +44,7 @@ export async function POST(req: Request) {
 
     let finalLogo = logo;
     if (logo && !logo.startsWith('http')) {
-      const urlObj = new URL(normalizedUrl);
+      const urlObj = parsedUrl;
       finalLogo = `${urlObj.protocol}//${urlObj.host}${logo.startsWith('/') ? '' : '/'}${logo}`;
     }
 

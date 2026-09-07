@@ -60,7 +60,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendResult> {
     });
 
     if (error) {
-      console.error(`Email send failed [${opts.subject}]:`, error);
+      console.error('Email send failed:', opts.type || 'unknown', error);
       logEmail({ type: opts.type || 'unknown', to: opts.to, subject: opts.subject, status: 'failed', error: error.message });
       return { success: false, error: error.message };
     }
@@ -68,7 +68,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendResult> {
     logEmail({ type: opts.type || 'unknown', to: opts.to, subject: opts.subject, status: 'sent', resendId: data?.id });
     return { success: true, resendId: data?.id };
   } catch (err: any) {
-    console.error(`Email send error [${opts.subject}]:`, err);
+    console.error('Email send error:', opts.type || 'unknown', err);
     logEmail({ type: opts.type || 'unknown', to: opts.to, subject: opts.subject, status: 'failed', error: err.message });
     return { success: false, error: err.message };
   }

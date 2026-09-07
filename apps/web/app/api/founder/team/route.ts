@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     if (!email || typeof email !== "string") return NextResponse.json({ success: false, error: "Email is required" }, { status: 400 });
     const cleanEmail = email.toLowerCase().trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) return NextResponse.json({ success: false, error: "Invalid email" }, { status: 400 });
+    if (cleanEmail.length > 255 || !cleanEmail.includes('@') || !cleanEmail.split('@')[1]?.includes('.')) return NextResponse.json({ success: false, error: "Invalid email" }, { status: 400 });
     if (cleanEmail === session.email.toLowerCase()) return NextResponse.json({ success: false, error: "You cannot invite yourself" }, { status: 400 });
 
     const assignRole = VALID_ROLES.includes(role) ? role : "VIEWER";

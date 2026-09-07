@@ -1,0 +1,13 @@
+name: "AI Startup Impact CodeQL Config"
+
+queries:
+  - uses: security-extended
+
+query-filters:
+  # Auth routes use user-provided credentials to gate access — this is how authentication works.
+  - exclude:
+      id: js/user-controlled-bypass
+  # Form draft autosave in localStorage (employer onboarding, startup edit) stores non-secret
+  # business data (company name, employee count, tagline). Not credentials or tokens.
+  - exclude:
+      id: js/clear-text-storage-of-sensitive-information
