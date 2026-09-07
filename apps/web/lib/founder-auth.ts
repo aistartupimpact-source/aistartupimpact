@@ -1,14 +1,15 @@
 import { cookies } from 'next/headers';
 import { SignJWT, jwtVerify } from 'jose';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { prisma } from '@aistartupimpact/database';
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.FOUNDER_JWT_SECRET || 'founder-secret-change-in-production'
+  process.env.FOUNDER_JWT_SECRET!
 );
 
 const USER_JWT_SECRET = new TextEncoder().encode(
-  process.env.USER_JWT_SECRET || 'user-secret-change-in-production'
+  process.env.USER_JWT_SECRET!
 );
 
 export interface FounderSession {
@@ -47,7 +48,14 @@ export async function getFounderSession(): Promise<FounderSession | null> {
   const token = cookieStore.get('founder-token')?.value;
   if (token) {
     const session = await verifyFounderToken(token);
-    if (session) return session;
+    if (session) {
+      const founder = await prisma.founderUser.findUnique({
+        where: { id: session.userId },
+        select: { status: true, deactivatedAt: true },
+      });
+      if (!founder || founder.status === 'SUSPENDED' || founder.deactivatedAt) return null;
+      return session;
+    }
   }
   
   // 2. Fallback: user-token cookie → find FounderUser by email
@@ -59,9 +67,9 @@ export async function getFounderSession(): Promise<FounderSession | null> {
       if (email) {
         const founder = await prisma.founderUser.findUnique({
           where: { email: email.toLowerCase() },
-          select: { id: true, email: true, name: true, onboardingCompleted: true, status: true },
+          select: { id: true, email: true, name: true, onboardingCompleted: true, status: true, deactivatedAt: true },
         });
-        if (founder && founder.status !== 'SUSPENDED') {
+        if (founder && founder.status !== 'SUSPENDED' && !founder.deactivatedAt) {
           return {
             userId: founder.id,
             email: founder.email,
@@ -119,5 +127,5 @@ export async function requireFounderAuth(): Promise<FounderSession> {
 
 // Generate verification token
 export function generateToken(): string {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+  return crypto.randomBytes(32).toString('hex');
 }

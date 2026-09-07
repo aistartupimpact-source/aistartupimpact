@@ -115,12 +115,12 @@ export default async function ToolsPage({ searchParams }: { searchParams: { cate
         {/* Search Suggestions as Filter Shortcuts */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs text-gray-400 font-jakarta">Popular:</span>
-          <Link href="/tools/category/writing-content" className="px-3 py-1 rounded-full text-[11px] font-semibold font-jakarta bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-brand/10 hover:text-brand transition-colors">Write blog posts</Link>
-          <Link href="/tools/category/image-generation-editing" className="px-3 py-1 rounded-full text-[11px] font-semibold font-jakarta bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-brand/10 hover:text-brand transition-colors">Generate images</Link>
-          <Link href="/tools/category/code-development" className="px-3 py-1 rounded-full text-[11px] font-semibold font-jakarta bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-brand/10 hover:text-brand transition-colors">Code assistant</Link>
-          <Link href="/tools?tag=completely-free" className="px-3 py-1 rounded-full text-[11px] font-semibold font-jakarta bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-100 transition-colors">Free tools</Link>
-          <Link href="/tools/category/customer-experience" className="px-3 py-1 rounded-full text-[11px] font-semibold font-jakarta bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-brand/10 hover:text-brand transition-colors">AI chatbots</Link>
-          <Link href="/tools/category/video" className="px-3 py-1 rounded-full text-[11px] font-semibold font-jakarta bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-brand/10 hover:text-brand transition-colors">Video creation</Link>
+          <Link href="/tools/category/writing-content" className="px-3 py-1 rounded-full text-xs font-semibold font-jakarta bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-brand/10 hover:text-brand transition-colors">Write blog posts</Link>
+          <Link href="/tools/category/image-generation-editing" className="px-3 py-1 rounded-full text-xs font-semibold font-jakarta bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-brand/10 hover:text-brand transition-colors">Generate images</Link>
+          <Link href="/tools/category/code-development" className="px-3 py-1 rounded-full text-xs font-semibold font-jakarta bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-brand/10 hover:text-brand transition-colors">Code assistant</Link>
+          <Link href="/tools?tag=completely-free" className="px-3 py-1 rounded-full text-xs font-semibold font-jakarta bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-100 transition-colors">Free tools</Link>
+          <Link href="/tools/category/customer-experience" className="px-3 py-1 rounded-full text-xs font-semibold font-jakarta bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-brand/10 hover:text-brand transition-colors">AI chatbots</Link>
+          <Link href="/tools/category/video" className="px-3 py-1 rounded-full text-xs font-semibold font-jakarta bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-brand/10 hover:text-brand transition-colors">Video creation</Link>
         </div>
       </div>
 
@@ -145,7 +145,7 @@ export default async function ToolsPage({ searchParams }: { searchParams: { cate
               >
                 {cat.icon && <span className="text-lg block mb-1">{cat.icon}</span>}
                 <p className="font-sora font-semibold text-xs text-navy dark:text-white group-hover:text-brand transition-colors leading-tight">{cat.name}</p>
-                <p className="text-[10px] text-gray-400 font-jakarta mt-0.5">{cat.toolCount} tools</p>
+                <p className="text-xs text-gray-400 font-jakarta mt-0.5">{cat.toolCount} tools</p>
               </Link>
             ))}
           </div>

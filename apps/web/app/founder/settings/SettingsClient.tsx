@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Bell, Eye, Mail } from 'lucide-react';
 import Toggle from '@/components/Toggle';
 import Toast from '@/components/Toast';
+import CompanyEmailSection from '@/components/CompanyEmailSection';
 
 type ToastType = {
   type: 'success' | 'error' | 'info';
@@ -98,6 +99,9 @@ export default function SettingsClient() {
           onClose={() => setToast(null)}
         />
       )}
+
+      {/* Company Email Verification */}
+      <CompanyEmailSection apiBasePath="/api/founder" />
 
       {/* Notifications */}
       <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">

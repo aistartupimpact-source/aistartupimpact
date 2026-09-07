@@ -205,7 +205,7 @@ export default function CheckInPage() {
                 {result.attendee && (
                   <div className="mt-1">
                     <p className="text-sm text-gray-700 dark:text-gray-200 font-jakarta font-medium">{result.attendee.guestName}</p>
-                    <p className="text-[10px] text-gray-500 font-jakarta">{[result.attendee.guestCompany, result.attendee.guestOccupation, result.attendee.ticketTier?.name].filter(Boolean).join(" · ")}</p>
+                    <p className="text-xs text-gray-500 font-jakarta">{[result.attendee.guestCompany, result.attendee.guestOccupation, result.attendee.ticketTier?.name].filter(Boolean).join(" · ")}</p>
                   </div>
                 )}
               </div>
@@ -216,26 +216,26 @@ export default function CheckInPage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-3 text-center border border-green-100 dark:border-green-900/20">
               <p className="text-2xl font-sora font-extrabold text-green-600">{stats.checkedIn}</p>
-              <p className="text-[9px] text-green-600/70 font-jakarta">Checked In</p>
+              <p className="text-xs text-green-600/70 font-jakarta">Checked In</p>
             </div>
             <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-center border border-gray-200 dark:border-gray-700">
               <p className="text-2xl font-sora font-extrabold text-gray-500">{stats.scans}</p>
-              <p className="text-[9px] text-gray-500 font-jakarta">Total Scans</p>
+              <p className="text-xs text-gray-500 font-jakarta">Total Scans</p>
             </div>
           </div>
 
           {/* Recent */}
           {recentScans.length > 0 && (
             <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
-              <p className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase font-jakarta border-b border-gray-100 dark:border-gray-800">Recent</p>
+              <p className="px-4 py-2 text-xs font-bold text-gray-400 uppercase font-jakarta border-b border-gray-100 dark:border-gray-800">Recent</p>
               <div className="divide-y divide-gray-100 dark:divide-gray-800 max-h-48 overflow-y-auto">
                 {recentScans.map((s, i) => (
                   <div key={i} className="px-4 py-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full ${s.scanStatus === "CHECKED_IN" ? "bg-green-500" : s.scanStatus === "ALREADY_CHECKED_IN" ? "bg-yellow-500" : "bg-red-500"}`}/>
-                      <div><p className="text-xs text-gray-700 dark:text-gray-200 font-jakarta">{s.guestName}</p><p className="text-[9px] text-gray-400">{s.time}</p></div>
+                      <div><p className="text-xs text-gray-700 dark:text-gray-200 font-jakarta">{s.guestName}</p><p className="text-xs text-gray-400">{s.time}</p></div>
                     </div>
-                    {s.scanStatus === "CHECKED_IN" && <button onClick={() => handleUndo(s)} className="text-[9px] text-gray-400 hover:text-red-500 font-jakarta"><RotateCcw className="w-3 h-3"/></button>}
+                    {s.scanStatus === "CHECKED_IN" && <button onClick={() => handleUndo(s)} className="text-xs text-gray-400 hover:text-red-500 font-jakarta"><RotateCcw className="w-3 h-3"/></button>}
                   </div>
                 ))}
               </div>

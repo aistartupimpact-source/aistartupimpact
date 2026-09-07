@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 
 export const runtime = 'edge';
 export const revalidate = 60; // Revalidate every 1 minute
 
 export async function GET() {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
     
     const cities = await sql`
       SELECT 

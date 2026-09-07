@@ -1,14 +1,12 @@
 import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
+import { requireApiAuth } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * POST /api/india-ai/refresh-stats
- * Admin-triggered refresh of ecosystem stats.
- * Computes real values from Startup + FundingRound tables and persists to IndiaAIStats.
- */
 export async function POST() {
+  const { error } = await requireApiAuth(['SUPER_ADMIN', 'EDITOR_IN_CHIEF']);
+  if (error) return error;
   try {
     const sql = neon(process.env.DATABASE_URL!);
 

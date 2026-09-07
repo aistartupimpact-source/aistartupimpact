@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { clearFounderSession } from '@/lib/founder-auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     await clearFounderSession();

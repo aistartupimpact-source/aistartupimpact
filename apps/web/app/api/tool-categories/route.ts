@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@aistartupimpact/database';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const format = searchParams.get('format') || 'flat'; // 'flat' | 'tree'
@@ -51,7 +53,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Error fetching tool categories:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to fetch categories', categories: [] },
+      { success: false, error: 'Failed to fetch categories', categories: [] },
       { status: 500 }
     );
   }

@@ -1,5 +1,5 @@
 import { requireFounderAuth } from '@/lib/founder-auth';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import { 
   TrendingUp, 
   Eye, 
@@ -8,9 +8,6 @@ import {
   ArrowDown,
   Minus
 } from 'lucide-react';
-
-const sql = neon(process.env.DATABASE_URL!);
-
 export default async function AnalyticsPage() {
   const session = await requireFounderAuth();
 

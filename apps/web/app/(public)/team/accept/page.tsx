@@ -45,8 +45,8 @@ function AcceptContent() {
         <p className="text-sm text-gray-500 font-jakarta mt-1">Set your password to join the team</p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input type="password" required minLength={8} value={password} onChange={e => setPassword(e.target.value)} placeholder="Password (min 8)" className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-jakarta focus:outline-none focus:ring-2 focus:ring-brand/30"/>
-        <input type="password" required minLength={8} value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Confirm password" className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-jakarta focus:outline-none focus:ring-2 focus:ring-brand/30"/>
+        <input type="password" required minLength={8} autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password (min 8)" className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-jakarta focus:outline-none focus:ring-2 focus:ring-brand/30"/>
+        <input type="password" required minLength={8} autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Confirm password" className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-jakarta focus:outline-none focus:ring-2 focus:ring-brand/30"/>
         {error && <p className="text-sm text-red-500 font-jakarta">{error}</p>}
         <button type="submit" disabled={loading} className="w-full py-3 bg-brand hover:bg-brand-600 text-white font-bold text-sm rounded-xl font-jakarta disabled:opacity-50 flex items-center justify-center gap-2">
           {loading && <Loader2 className="w-4 h-4 animate-spin"/>} Set Password & Join

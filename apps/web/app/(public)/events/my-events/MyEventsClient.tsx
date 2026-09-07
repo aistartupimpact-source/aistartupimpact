@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Calendar, MapPin, Video, QrCode, Download, Clock, CheckCircle, Loader2 } from "lucide-react";
 
 interface Registration {
@@ -32,11 +33,7 @@ export default function MyEventsClient() {
   const fetchRegistrations = async () => {
     setLoading(true); setError("");
     try {
-      const sessionRes = await fetch("/api/user/session");
-      if (!sessionRes.ok) { setError("Please sign in to view your events."); setLoading(false); return; }
-      const sessionData = await sessionRes.json();
-      if (!sessionData.user?.email) { setError("Please sign in to view your events."); setLoading(false); return; }
-      const res = await fetch(`/api/events/my?email=${encodeURIComponent(sessionData.user.email)}`);
+      const res = await fetch("/api/events/my");
       const data = await res.json();
       if (data.success) { setRegistrations(data.registrations || []); }
       else { setError(data.error || "Failed to fetch."); }
@@ -127,7 +124,7 @@ function EventRegCard({ reg, isPast }: { reg: Registration; isPast?: boolean }) 
         {/* Cover */}
         <div className="w-[72px] h-[72px] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 shrink-0">
           {reg.eventCoverImageUrl ? (
-            <img src={reg.eventCoverImageUrl} alt="" className="w-full h-full object-cover" />
+            <Image src={reg.eventCoverImageUrl} alt="" width={72} height={72} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center"><Calendar className="w-6 h-6 text-gray-300" /></div>
           )}
@@ -158,10 +155,10 @@ function EventRegCard({ reg, isPast }: { reg: Registration; isPast?: boolean }) 
           {/* Actions */}
           {!isPast && (
             <div className="flex items-center gap-2 mt-2.5">
-              <button onClick={() => setShowQr(!showQr)} className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium bg-brand/5 text-brand rounded-lg hover:bg-brand/10 transition-colors">
+              <button onClick={() => setShowQr(!showQr)} className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-brand/5 text-brand rounded-lg hover:bg-brand/10 transition-colors">
                 <QrCode className="w-3 h-3" /> {showQr ? "Hide" : "QR"}
               </button>
-              <a href={`/api/events/calendar?slug=${reg.eventSlug}`} download className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+              <a href={`/api/events/calendar?slug=${reg.eventSlug}`} download className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                 <Download className="w-3 h-3" /> Calendar
               </a>
             </div>
@@ -178,8 +175,8 @@ function EventRegCard({ reg, isPast }: { reg: Registration; isPast?: boolean }) 
       {/* QR */}
       {showQr && (
         <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-col items-center gap-2">
-          <img src={qrImageUrl} alt="QR" width={140} height={140} className="rounded-lg" />
-          <p className="text-[11px] text-gray-400">Show at check-in</p>
+          <Image src={qrImageUrl} alt="QR" width={140} height={140} className="rounded-lg" unoptimized />
+          <p className="text-xs text-gray-400">Show at check-in</p>
         </div>
       )}
     </div>
@@ -194,7 +191,7 @@ function StatusBadge({ status }: { status: string }) {
     CANCELLED: "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400",
   };
   return (
-    <span className={`text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded shrink-0 ${styles[status] || styles.CONFIRMED}`}>
+    <span className={`text-xs font-semibold uppercase px-1.5 py-0.5 rounded shrink-0 ${styles[status] || styles.CONFIRMED}`}>
       {status === "CHECKED_IN" ? "Checked In" : status}
     </span>
   );

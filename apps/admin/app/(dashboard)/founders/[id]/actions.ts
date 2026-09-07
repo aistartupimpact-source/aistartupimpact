@@ -25,6 +25,7 @@ export async function getFounderByIdAction(founderId: string) {
         "googleId",
         "emailVerified",
         status,
+        "deactivatedAt"::text AS "deactivatedAt",
         "onboardingCompleted",
         "onboardingStep",
         avatar,

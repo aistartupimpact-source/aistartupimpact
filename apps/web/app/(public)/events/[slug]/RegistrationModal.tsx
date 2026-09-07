@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { X, CheckCircle, Loader2, Calendar, MapPin, Video } from "lucide-react";
 import CitySelect from "@/components/events/CitySelect";
 
@@ -39,8 +40,8 @@ export default function RegistrationModal({ event, customQuestions, ticketTiers,
   const [company, setCompany] = useState("");
   const [occupation, setOccupation] = useState("");
   const [locationCity, setLocationCity] = useState("");
-  const [newsletterConsent, setNewsletterConsent] = useState(true);
-  const [whatsappConsent, setWhatsappConsent] = useState(true);
+  const [newsletterConsent, setNewsletterConsent] = useState(false);
+  const [whatsappConsent, setWhatsappConsent] = useState(false);
   const [ticketTierId, setTicketTierId] = useState(ticketTiers.length > 0 ? ticketTiers[0].id : "");
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
@@ -79,7 +80,7 @@ export default function RegistrationModal({ event, customQuestions, ticketTiers,
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
         {/* Header */}
         <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
@@ -122,7 +123,7 @@ export default function RegistrationModal({ event, customQuestions, ticketTiers,
               {/* Cover image (16:9) */}
               {event.coverImageUrl && (
                 <div style={{ aspectRatio: "16/9" }} className="w-full">
-                  <img src={event.coverImageUrl} alt="" className="w-full h-full object-cover" />
+                  <Image src={event.coverImageUrl} alt="" width={400} height={225} sizes="(max-width: 768px) 100vw, 50vw" className="w-full h-full object-cover" />
                 </div>
               )}
               <div className="p-3">
@@ -155,14 +156,14 @@ export default function RegistrationModal({ event, customQuestions, ticketTiers,
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase mb-1 font-jakarta">Email *</label>
               <input type="email" required value={email} onChange={(e) => validateEmail(e.target.value)} placeholder="you@company.com" className={`w-full px-4 py-2.5 rounded-xl border bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 text-sm font-jakarta ${emailError ? "border-red-300 focus:ring-red-200 focus:border-red-400" : "border-gray-200 dark:border-gray-700 focus:ring-brand/30 focus:border-brand"}`} />
-              {emailError && <p className="text-[10px] text-red-500 font-jakarta mt-0.5">{emailError}</p>}
+              {emailError && <p className="text-xs text-red-500 font-jakarta mt-0.5">{emailError}</p>}
             </div>
 
             {/* Phone */}
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase mb-1 font-jakarta">Phone <span className="normal-case text-gray-400">(Optional)</span></label>
               <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 98765 43210" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand text-sm font-jakarta" />
-              <p className="text-[10px] text-gray-400 font-jakarta mt-0.5">Used for event reminders and important updates</p>
+              <p className="text-xs text-gray-400 font-jakarta mt-0.5">Used for event reminders and important updates</p>
             </div>
 
             {/* Company / Organization */}
@@ -184,7 +185,7 @@ export default function RegistrationModal({ event, customQuestions, ticketTiers,
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase mb-1 font-jakarta">Your City</label>
               <CitySelect value={locationCity} onChange={(city) => setLocationCity(city.name)} placeholder="Search your city..." />
-              <p className="text-[10px] text-gray-400 font-jakarta mt-0.5">Helps us notify you about events near you</p>
+              <p className="text-xs text-gray-400 font-jakarta mt-0.5">Helps us notify you about events near you</p>
             </div>
 
             {/* Ticket Tier */}
@@ -244,7 +245,7 @@ export default function RegistrationModal({ event, customQuestions, ticketTiers,
               {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Registering...</> : "Complete Registration"}
             </button>
 
-            <p className="text-[10px] text-gray-400 font-jakarta text-center">By registering, you agree to our terms of service and privacy policy.</p>
+            <p className="text-xs text-gray-400 font-jakarta text-center">By registering, you agree to our terms of service and privacy policy.</p>
           </form>
         )}
       </div>

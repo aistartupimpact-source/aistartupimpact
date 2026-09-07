@@ -6,13 +6,14 @@ import {
   ArrowLeft, Save, ChevronDown, ChevronUp, Image as ImageIcon, Hash, Clock, Globe,
   Settings2, X, CheckCircle, Upload, Bold, Italic, Underline,
   Heading1, Heading2, Quote, List, ListOrdered, Code, Link2, Minus, Type, Eye,
-  Plus, ImagePlus,
+  Plus, ImagePlus, Lightbulb, Trash2,
 } from 'lucide-react';
 
 import { uploadMediaAction, saveArticleAction, getArticleByIdAction, getCategoriesAction } from '../actions';
 import MediaPicker from '../../../../components/MediaPicker';
 import SEOScorePanel from '../../../../components/SEOScorePanel';
 import ImageAltTextManager from '../../../../components/ImageAltTextManager';
+import MentionPopup from '../../../../components/MentionPopup';
 
 export default function EditArticlePage({ params }: { params: { id: string } }) {
   const [title, setTitle] = useState('');
@@ -36,6 +37,12 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
   const [showPlusMenu, setShowPlusMenu] = useState(false);
   const [plusBtnPos, setPlusBtnPos] = useState<number | null>(null);
 
+  // Mentions
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionPos, setMentionPos] = useState({ x: 0, y: 0 });
+  const mentionAnchorRef = useRef<{ node: Node; offset: number } | null>(null);
+
   // Preview
   const [showPreview, setShowPreview] = useState(false);
 
@@ -53,6 +60,9 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
   const [noIndex, setNoIndex] = useState(false);
   const [seoPanelOpen, setSeoPanelOpen] = useState(true);
   const [isMediaPickerOpen, setMediaPickerOpen] = useState(false);
+
+  const [keyTakeaways, setKeyTakeaways] = useState<string[]>([]);
+  const [newTakeaway, setNewTakeaway] = useState('');
 
   const [featured, setFeatured] = useState(false);
   const [pinned, setPinned] = useState(false);
@@ -158,6 +168,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       setScheduleDate(a.scheduledAt || '');
       setSeoTitle(a.seoTitle || '');
       setMetaDesc(a.seoDescription || '');
+      setSlug(a.slug || '');
       setFocusKeyword(a.focusKeyword || '');
       setCanonicalUrl(a.canonicalUrl || '');
       setOgImage(a.ogImage || '');
@@ -167,6 +178,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       setSponsored(a.isSponsored || false);
       setCoverImage(a.coverImage || null);
       setThumbnailImage(a.thumbnailImage || null);
+      if (Array.isArray(a.keyTakeaways)) setKeyTakeaways(a.keyTakeaways);
       if (editorRef.current && a.content) {
         const html = typeof a.content === 'object' && a.content.html
           ? a.content.html
@@ -258,6 +270,82 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     setLinkUrl('');
   };
 
+  const handleMentionSelect = useCallback((mention: { type: string; id: string; name: string; slug: string }) => {
+    if (!editorRef.current || !mentionAnchorRef.current) { setShowMentions(false); return; }
+
+    const sel = window.getSelection();
+    if (!sel) { setShowMentions(false); return; }
+
+    const { node, offset } = mentionAnchorRef.current;
+    const text = node.textContent || '';
+    const atPos = offset - 1;
+    const cursorPos = sel.anchorOffset;
+    const before = text.slice(0, atPos);
+    const after = text.slice(cursorPos);
+
+    const href = mention.type === 'startup' ? `/startups/${mention.slug}` : mention.type === 'tool' ? `/tools/${mention.slug}` : `/founders/${mention.slug}`;
+    const mentionHtml = `${before}<a href="${href}" class="mention" data-mention-type="${mention.type}" data-mention-id="${mention.id}" contenteditable="false">${mention.name}</a>${after || ' '}`;
+
+    const parent = node.parentNode;
+    if (!parent) { setShowMentions(false); return; }
+
+    const wrapper = document.createElement('span');
+    wrapper.innerHTML = mentionHtml;
+
+    while (wrapper.firstChild) {
+      parent.insertBefore(wrapper.firstChild, node);
+    }
+    parent.removeChild(node);
+
+    const mentionEl = editorRef.current.querySelector(`a[data-mention-id="${mention.id}"]`);
+    if (mentionEl && mentionEl.nextSibling) {
+      const range = document.createRange();
+      const textAfter = mentionEl.nextSibling;
+      range.setStart(textAfter, textAfter.nodeType === Node.TEXT_NODE ? 1 : 0);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    setShowMentions(false);
+    setMentionQuery('');
+    mentionAnchorRef.current = null;
+    editorRef.current.focus();
+    updateStats();
+  }, [updateStats]);
+
+  const checkForMention = useCallback(() => {
+    if (!editorRef.current || !editorWrapRef.current) return;
+    const sel = window.getSelection();
+    if (!sel || !sel.anchorNode || !editorRef.current.contains(sel.anchorNode)) return;
+
+    const node = sel.anchorNode;
+    if (node.nodeType !== Node.TEXT_NODE) { setShowMentions(false); return; }
+
+    const text = node.textContent || '';
+    const offset = sel.anchorOffset;
+    const textBefore = text.slice(0, offset);
+    const atMatch = textBefore.match(/@([\w\s]*)$/);
+
+    if (atMatch) {
+      const query = atMatch[1].trim();
+      const atOffset = atMatch.index!;
+
+      const range = document.createRange();
+      range.setStart(node, atOffset);
+      range.setEnd(node, atOffset + 1);
+      const rect = range.getBoundingClientRect();
+      const wrapRect = editorWrapRef.current!.getBoundingClientRect();
+
+      mentionAnchorRef.current = { node, offset: atOffset + 1 };
+      setMentionQuery(query);
+      setMentionPos({ x: rect.left - wrapRect.left, y: rect.bottom - wrapRect.top });
+      setShowMentions(true);
+    } else {
+      setShowMentions(false);
+    }
+  }, []);
+
   const doSave = async (newStatus?: string) => {
     const targetStatus = newStatus || status;
     if (newStatus) setStatus(newStatus);
@@ -284,7 +372,8 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         scheduledAt: scheduleDate || null,
         isFeatured: featured,
         isPinned: pinned,
-        isSponsored: sponsored
+        isSponsored: sponsored,
+        keyTakeaways: keyTakeaways.filter(t => t.trim()),
       };
 
       const json = await saveArticleAction(payload, params.id);
@@ -323,6 +412,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     { id: 'status', label: 'Status & Schedule', icon: Clock },
     { id: 'category', label: 'Category & Tags', icon: Hash },
     { id: 'cover', label: 'Cover Image', icon: ImageIcon },
+    ...(articleType === 'OPINION' ? [{ id: 'takeaways', label: 'Key Takeaways', icon: Lightbulb }] : []),
     { id: 'options', label: 'Article Options', icon: Settings2 },
   ];
 
@@ -355,7 +445,8 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     [&_code]:bg-gray-100 dark:[&_code]:bg-gray-800 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm [&_code]:font-mono [&_code]:text-brand
     [&_hr]:my-8 [&_hr]:border-gray-200 dark:[&_hr]:border-gray-700
     [&_figure]:my-6 [&_figcaption]:text-center [&_figcaption]:text-sm [&_figcaption]:text-gray-400 [&_figcaption]:mt-2
-    [&_img]:rounded-xl [&_img]:w-full [&_p]:mb-4 [&_b]:font-bold [&_strong]:font-bold [&_i]:italic [&_em]:italic`;
+    [&_img]:rounded-xl [&_img]:w-full [&_p]:mb-4 [&_b]:font-bold [&_strong]:font-bold [&_i]:italic [&_em]:italic
+    [&_.mention]:bg-brand/10 [&_.mention]:text-brand [&_.mention]:font-semibold [&_.mention]:no-underline [&_.mention]:px-1 [&_.mention]:py-0.5 [&_.mention]:rounded [&_.mention]:text-[16px] [&_.mention]:cursor-default`;
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] -m-6">
@@ -474,8 +565,8 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
 
               {/* Editor */}
               <div ref={editorRef} contentEditable suppressContentEditableWarning
-                onInput={() => { updateStats(); trackCursorLine(); }}
-                onKeyUp={trackCursorLine}
+                onInput={() => { updateStats(); trackCursorLine(); checkForMention(); }}
+                onKeyUp={() => { trackCursorLine(); checkForMention(); }}
                 onClick={trackCursorLine}
                 onKeyDown={(e) => {
                   if (e.key === 'Tab') { e.preventDefault(); format('insertText', '    '); }
@@ -491,6 +582,16 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                 data-placeholder="Write your story… Press / to insert blocks"
                 className={editorClasses}
               />
+
+              {/* @Mention Popup */}
+              {showMentions && (
+                <MentionPopup
+                  query={mentionQuery}
+                  position={mentionPos}
+                  onSelect={handleMentionSelect}
+                  onClose={() => { setShowMentions(false); setMentionQuery(''); }}
+                />
+              )}
             </div>
 
             {/* Footer stats */}
@@ -680,6 +781,43 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
                                 </>
                               )}
                             </div>
+                          </div>
+                        </div>
+                      )}
+                      {panel.id === 'takeaways' && (
+                        <div className="space-y-3">
+                          <p className="text-xs text-gray-400 font-jakarta">Add key points readers should take away from this opinion.</p>
+                          {keyTakeaways.map((t, i) => (
+                            <div key={i} className="flex items-start gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2.5 shrink-0" />
+                              <span className="flex-1 text-sm text-navy dark:text-white font-jakarta">{t}</span>
+                              <button onClick={() => setKeyTakeaways(keyTakeaways.filter((_, j) => j !== i))} className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors shrink-0">
+                                <Trash2 className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" />
+                              </button>
+                            </div>
+                          ))}
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              className="input-field text-sm flex-1"
+                              placeholder="Add a takeaway…"
+                              value={newTakeaway}
+                              onChange={(e) => setNewTakeaway(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && newTakeaway.trim()) {
+                                  e.preventDefault();
+                                  setKeyTakeaways([...keyTakeaways, newTakeaway.trim()]);
+                                  setNewTakeaway('');
+                                }
+                              }}
+                            />
+                            <button
+                              onClick={() => { if (newTakeaway.trim()) { setKeyTakeaways([...keyTakeaways, newTakeaway.trim()]); setNewTakeaway(''); } }}
+                              disabled={!newTakeaway.trim()}
+                              className="p-2 bg-brand text-white rounded-lg disabled:opacity-40 hover:bg-brand/90 transition-colors shrink-0"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
                           </div>
                         </div>
                       )}

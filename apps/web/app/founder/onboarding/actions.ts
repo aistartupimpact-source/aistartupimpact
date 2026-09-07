@@ -19,18 +19,25 @@ export async function completeOnboardingAction(data: {
   try {
     const session = await requireFounderAuth();
 
+    if (data.bio && data.bio.length > 1000) {
+      return { success: false, error: 'Bio must be 1000 characters or less' };
+    }
+    if (data.name.length > 100) {
+      return { success: false, error: 'Name must be 100 characters or less' };
+    }
+
     await prisma.founderUser.update({
       where: { id: session.userId },
       data: {
-        name: data.name,
-        company: data.company,
-        previousCompany: data.previousCompany || null,
-        role: data.role,
-        phone: data.phone || null,
-        linkedin: data.linkedin || null,
-        twitter: data.twitter || null,
-        website: data.website || null,
-        bio: data.bio || null,
+        name: data.name.slice(0, 100),
+        company: data.company.slice(0, 100),
+        previousCompany: data.previousCompany?.slice(0, 200) || null,
+        role: data.role.slice(0, 100),
+        phone: data.phone?.slice(0, 20) || null,
+        linkedin: data.linkedin?.slice(0, 500) || null,
+        twitter: data.twitter?.slice(0, 500) || null,
+        website: data.website?.slice(0, 500) || null,
+        bio: data.bio?.slice(0, 1000) || null,
         avatar: data.avatar || null,
         onboardingCompleted: true,
         onboardingStep: 2,

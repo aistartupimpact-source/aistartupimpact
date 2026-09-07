@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Lock, X, AlertTriangle, Shield, Trash2 } from 'lucide-react';
+import { Lock, X, AlertTriangle, Shield, Trash2, Mail } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Toast from '@/components/Toast';
 import TwoFactorSetup from './SecuritySection2FA';
+import EmailChangeModal from '@/components/EmailChangeModal';
 
 type ToastType = {
   type: 'success' | 'error' | 'info';
@@ -31,8 +32,20 @@ export default function SecuritySection() {
   const [twoFALoading, setTwoFALoading] = useState(false);
   const [twoFAFetching, setTwoFAFetching] = useState(true);
 
+  // Export data state
+  const [exportLoading, setExportLoading] = useState(false);
+
+  // Email change state
+  const [showEmailChange, setShowEmailChange] = useState(false);
+
+  // Deactivate account state
+  const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+  const [deactivatePassword, setDeactivatePassword] = useState('');
+  const [deactivateLoading, setDeactivateLoading] = useState(false);
+
   // Delete account state
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Fetch current 2FA status on mount
@@ -105,11 +118,43 @@ export default function SecuritySection() {
     setShow2FAModal(true);
   };
 
+  const handleDeactivate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!deactivatePassword) {
+      setToast({ type: 'error', message: 'Password is required' });
+      return;
+    }
+    setDeactivateLoading(true);
+    try {
+      const res = await fetch('/api/founder/deactivate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: deactivatePassword }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setToast({ type: 'success', message: 'Account deactivated. Redirecting...' });
+        setTimeout(() => router.push('/auth/login'), 2000);
+      } else {
+        setToast({ type: 'error', message: data.error || 'Failed to deactivate' });
+        setDeactivateLoading(false);
+      }
+    } catch {
+      setToast({ type: 'error', message: 'Failed to deactivate account' });
+      setDeactivateLoading(false);
+    }
+  };
+
   const handleDeleteAccount = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (deleteConfirmation !== 'DELETE') {
       setToast({ type: 'error', message: 'Please type DELETE to confirm' });
+      return;
+    }
+
+    if (!deletePassword) {
+      setToast({ type: 'error', message: 'Please enter your password to confirm' });
       return;
     }
 
@@ -122,6 +167,8 @@ export default function SecuritySection() {
     try {
       const res = await fetch('/api/founder/delete-account', {
         method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: deletePassword }),
       });
 
       const data = await res.json();
@@ -176,6 +223,14 @@ export default function SecuritySection() {
             </button>
 
             <button
+              onClick={() => setShowEmailChange(true)}
+              className="w-full text-left py-3 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors last:border-0"
+            >
+              <p className="text-sm font-medium text-gray-900 dark:text-white">Change Email</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Update your account email address</p>
+            </button>
+
+            <button
               onClick={() => setShow2FAModal(true)}
               disabled={twoFAFetching}
               className="w-full text-left py-3 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed last:border-0"
@@ -196,6 +251,35 @@ export default function SecuritySection() {
             </button>
 
             <button
+              onClick={async () => {
+                setExportLoading(true);
+                try {
+                  const res = await fetch('/api/founder/export-data');
+                  if (!res.ok) { setToast({ type: 'error', message: 'Failed to export data' }); return; }
+                  const blob = await res.blob();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a'); a.href = url;
+                  a.download = `aistartupimpact-founder-data-${new Date().toISOString().split('T')[0]}.json`;
+                  a.click(); URL.revokeObjectURL(url);
+                  setToast({ type: 'success', message: 'Data exported successfully' });
+                } catch { setToast({ type: 'error', message: 'Failed to export data' }); } finally { setExportLoading(false); }
+              }}
+              disabled={exportLoading}
+              className="w-full text-left py-3 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors disabled:opacity-50"
+            >
+              <p className="text-sm font-medium text-gray-900 dark:text-white">{exportLoading ? 'Exporting...' : 'Export Data'}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Download all your personal data as JSON (DPDP Act Sec 11)</p>
+            </button>
+
+            <button
+              onClick={() => setShowDeactivateModal(true)}
+              className="w-full text-left py-3 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors"
+            >
+              <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Deactivate Account</p>
+              <p className="text-xs text-amber-600/70 dark:text-amber-400/70 mt-0.5">Temporarily hide your profile — reactivate anytime by logging in</p>
+            </button>
+
+            <button
               onClick={() => setShowDeleteModal(true)}
               className="w-full text-left py-3 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors last:border-0"
             >
@@ -208,11 +292,12 @@ export default function SecuritySection() {
 
       {/* Change Password Modal */}
       {showPasswordModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md w-full shadow-2xl border border-gray-200 dark:border-gray-800 animate-in zoom-in-95 duration-200">
             <button
               onClick={() => setShowPasswordModal(false)}
               className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Close"
             >
               <X className="w-5 h-5" />
             </button>
@@ -236,6 +321,7 @@ export default function SecuritySection() {
                 </label>
                 <input
                   type="password"
+                  autoComplete="current-password"
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                   required
@@ -249,6 +335,7 @@ export default function SecuritySection() {
                 </label>
                 <input
                   type="password"
+                  autoComplete="new-password"
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                   required
@@ -263,6 +350,7 @@ export default function SecuritySection() {
                 </label>
                 <input
                   type="password"
+                  autoComplete="new-password"
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                   required
@@ -307,13 +395,53 @@ export default function SecuritySection() {
         />
       )}
 
+      {/* Deactivate Account Modal */}
+      {showDeactivateModal && (
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md w-full shadow-2xl border border-amber-200 dark:border-amber-800 animate-in zoom-in-95 duration-200">
+            <button
+              onClick={() => { setShowDeactivateModal(false); setDeactivatePassword(''); }}
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Shield className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+              </div>
+              <h3 className="font-semibold text-xl text-amber-600 dark:text-amber-400 mb-1">Deactivate Account</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">You can reactivate anytime by logging in again.</p>
+            </div>
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-4">
+              <p className="text-sm text-amber-800 dark:text-amber-300 font-semibold mb-2">This will temporarily:</p>
+              <ul className="text-sm text-amber-700 dark:text-amber-400 space-y-1 list-disc list-inside">
+                <li>Hide your startups from public listings</li>
+                <li>Hide your AI tools from public listings</li>
+                <li>Log you out of all sessions</li>
+              </ul>
+            </div>
+            <form onSubmit={handleDeactivate} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Enter your password to confirm</label>
+                <input type="password" autoComplete="current-password" value={deactivatePassword} onChange={(e) => setDeactivatePassword(e.target.value)} required placeholder="Your account password" className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-navy dark:text-white focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 font-jakarta text-sm transition-all" />
+              </div>
+              <button type="submit" disabled={deactivateLoading || !deactivatePassword} className="w-full px-6 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                {deactivateLoading ? 'Deactivating...' : 'Deactivate My Account'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Delete Account Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md w-full shadow-2xl border border-red-200 dark:border-red-800 animate-in zoom-in-95 duration-200">
             <button
-              onClick={() => setShowDeleteModal(false)}
+              onClick={() => { setShowDeleteModal(false); setDeletePassword(''); setDeleteConfirmation(''); }}
               className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Close"
             >
               <X className="w-5 h-5" />
             </button>
@@ -345,6 +473,21 @@ export default function SecuritySection() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Enter your password
+                </label>
+                <input
+                  type="password"
+                  autoComplete="current-password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-navy dark:text-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 font-jakarta text-sm transition-all"
+                  placeholder="Your account password"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Type <span className="font-bold text-red-600">DELETE</span> to confirm
                 </label>
                 <input
@@ -359,7 +502,7 @@ export default function SecuritySection() {
 
               <button
                 type="submit"
-                disabled={deleteLoading || deleteConfirmation !== 'DELETE'}
+                disabled={deleteLoading || deleteConfirmation !== 'DELETE' || !deletePassword}
                 className="w-full px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {deleteLoading ? 'Deleting Account...' : 'Delete My Account'}
@@ -367,6 +510,15 @@ export default function SecuritySection() {
             </form>
           </div>
         </div>
+      )}
+
+      {showEmailChange && (
+        <EmailChangeModal
+          apiPath="/api/founder/change-email"
+          onClose={() => setShowEmailChange(false)}
+          onSuccess={(msg) => { setToast({ type: 'success', message: msg }); }}
+          onError={(msg) => { setToast({ type: 'error', message: msg }); }}
+        />
       )}
     </>
   );

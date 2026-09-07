@@ -138,17 +138,12 @@ export default function NewsletterPage() {
 
   const fetchTestimonials = async () => {
     try {
-      console.log('Fetching testimonials...');
-      // Add timestamp to prevent caching
       const res = await fetch(`/api/testimonials?t=${Date.now()}`, {
         cache: 'no-store',
       });
-      console.log('Response status:', res.status);
       const data = await res.json();
-      console.log('Testimonials data:', data);
       if (data.success) {
         setTestimonials(data.testimonials);
-        console.log('Testimonials set:', data.testimonials.length);
       }
     } catch (error) {
       console.error('Error fetching testimonials:', error);
@@ -250,7 +245,7 @@ export default function NewsletterPage() {
 
   return (
     <div className="bg-white dark:bg-gray-950">
-      <div className="md:hidden fixed top-14 bottom-0 left-0 right-0 z-[20] flex flex-col justify-between p-3.5 bg-gradient-to-br from-[#0a1628] via-[#0f1f3a] to-[#1a2942] text-white overflow-hidden pb-4 sm:pb-5">
+      <div className="md:hidden fixed top-14 bottom-0 left-0 right-0 z-10 flex flex-col justify-between p-3.5 bg-gradient-to-br from-navy-900 via-navy-800 to-navy-700 text-white overflow-hidden pb-4 sm:pb-5">
         {/* Glowing background orbs */}
         <div className="absolute -top-12 -right-12 w-64 h-64 bg-brand/15 rounded-full blur-[80px] animate-pulse" />
         <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-blue-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1.5s' }} />
@@ -262,7 +257,7 @@ export default function NewsletterPage() {
           </span>
           <div className="flex items-center gap-1.5 px-2.5 py-1 bg-brand/10 border border-brand/20 rounded-full">
             <span className="w-1.5 h-1.5 bg-brand rounded-full animate-ping" />
-            <span className="text-[9px] font-bold text-brand uppercase tracking-wider">
+            <span className="text-xs font-bold text-brand uppercase tracking-wider">
               Free Every Friday
             </span>
           </div>
@@ -273,7 +268,7 @@ export default function NewsletterPage() {
           {/* Tag */}
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-white/5 border border-white/10 rounded-full mb-2">
             <Sparkles className="w-3 h-3 text-brand" />
-            <span className="text-[9px] font-bold text-gray-200 uppercase tracking-wider">
+            <span className="text-xs font-bold text-gray-200 uppercase tracking-wider">
               Join 5000+ AI Founders, Builders & Enthusiasts
             </span>
           </div>
@@ -284,7 +279,7 @@ export default function NewsletterPage() {
           </h1>
           
           {/* Subtitle */}
-          <p className="text-gray-300 text-[11px] leading-relaxed mb-2 font-jakarta">
+          <p className="text-gray-300 text-xs leading-relaxed mb-2 font-jakarta">
             Get founder stories, AI startup news, fundings, launches, new AI tools, and AI innovations. Sent every Friday in your inbox.
           </p>
 
@@ -294,25 +289,25 @@ export default function NewsletterPage() {
               <div className="w-5.5 h-5.5 bg-red-500/20 rounded flex items-center justify-center flex-shrink-0">
                 <TrendingUp className="w-3 h-3 text-red-400" />
               </div>
-              <span className="text-[10px] font-semibold text-gray-300">Funding Alerts</span>
+              <span className="text-xs font-semibold text-gray-300">Funding Alerts</span>
             </div>
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 border border-white/10 rounded-lg">
               <div className="w-5.5 h-5.5 bg-amber-500/20 rounded flex items-center justify-center flex-shrink-0">
                 <Sparkles className="w-3 h-3 text-amber-400" />
               </div>
-              <span className="text-[10px] font-semibold text-gray-300">Founder Stories</span>
+              <span className="text-xs font-semibold text-gray-300">Founder Stories</span>
             </div>
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 border border-white/10 rounded-lg">
               <div className="w-5.5 h-5.5 bg-blue-500/20 rounded flex items-center justify-center flex-shrink-0">
                 <Target className="w-3 h-3 text-blue-400" />
               </div>
-              <span className="text-[10px] font-semibold text-gray-300">Tool Launches</span>
+              <span className="text-xs font-semibold text-gray-300">Tool Launches</span>
             </div>
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 border border-white/10 rounded-lg">
               <div className="w-5.5 h-5.5 bg-purple-500/20 rounded flex items-center justify-center flex-shrink-0">
                 <Wrench className="w-3 h-3 text-purple-400" />
               </div>
-              <span className="text-[10px] font-semibold text-gray-300">New AI Tools</span>
+              <span className="text-xs font-semibold text-gray-300">New AI Tools</span>
             </div>
           </div>
 
@@ -361,14 +356,14 @@ export default function NewsletterPage() {
 
               {/* Trust Bar just below CTA button */}
               <div className="pt-2 text-center w-full">
-                <p className="text-[9px] text-gray-400 uppercase tracking-widest font-bold mb-0.5">
+                <p className="text-xs text-gray-400 uppercase tracking-widest font-bold mb-0.5">
                   Read by teams at
                 </p>
-                <p className="text-[10px] font-bold text-gray-200 tracking-tight mb-1">
+                <p className="text-xs font-bold text-gray-200 tracking-tight mb-1">
                   Google, Microsoft, TCS, Flipkart & Amazon
                 </p>
-                <p className="text-[8px] text-gray-500 leading-none">
-                  No credit card required · Unsubscribe anytime
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  By subscribing, you agree to receive the AI Startup Impact newsletter. <a href="/privacy" className="underline hover:text-gray-400">Unsubscribe</a> anytime.
                 </p>
               </div>
             </form>
@@ -397,7 +392,7 @@ export default function NewsletterPage() {
       {/* Desktop view: original scrollable content */}
       <div className="hidden md:block">
         {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-[#0a1628] via-[#0f1f3a] to-[#1a2942] border-b border-white/10">
+        <section className="relative overflow-hidden bg-gradient-to-br from-navy-900 via-navy-800 to-navy-700 border-b border-white/10">
         {/* Animated gradient orbs */}
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand/10 rounded-full blur-[150px] animate-pulse" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
@@ -517,8 +512,12 @@ export default function NewsletterPage() {
                           </>
                         )}
                       </button>
-                      <p className="text-center text-xs text-gray-500 dark:text-gray-400 font-jakarta">
-                        Free forever · No spam · Unsubscribe anytime
+                      <p className="text-center text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-2 leading-relaxed">
+                        By subscribing, you agree to receive the AI Startup Impact newsletter. You can{' '}
+                        <a href="/privacy" className="underline hover:text-gray-700 dark:hover:text-gray-300">unsubscribe</a> at any time.
+                      </p>
+                      <p className="text-center text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-1">
+                        Free forever · No spam
                       </p>
                     </form>
                   ) : (
@@ -676,7 +675,7 @@ export default function NewsletterPage() {
 
       {/* Newsletter Signup Modal for Highlights */}
       {showHighlightModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md w-full shadow-2xl border border-gray-200 dark:border-gray-800 animate-in zoom-in-95 duration-200">
             <button
               onClick={() => setShowHighlightModal(false)}
@@ -729,8 +728,12 @@ export default function NewsletterPage() {
                   </>
                 )}
               </button>
-              <p className="text-center text-xs text-gray-500 dark:text-gray-400 font-jakarta">
-                Free forever · No spam · Unsubscribe anytime
+              <p className="text-center text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-2 leading-relaxed">
+                By subscribing, you agree to receive the AI Startup Impact newsletter. You can{' '}
+                <a href="/privacy" className="underline hover:text-gray-700 dark:hover:text-gray-300">unsubscribe</a> at any time.
+              </p>
+              <p className="text-center text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-1">
+                Free forever · No spam
               </p>
             </form>
           </div>
@@ -760,7 +763,7 @@ export default function NewsletterPage() {
                   &ldquo;{testimonial.quote}&rdquo;
                 </p>
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-brand to-red-600 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-brand flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-bold text-sm">{testimonial.avatar}</span>
                   </div>
                   <div>
@@ -840,7 +843,7 @@ export default function NewsletterPage() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#0a1628] via-[#0f1f3a] to-[#1a2942] py-16 sm:py-20">
+      <section className="relative overflow-hidden bg-gradient-to-br from-navy-900 via-navy-800 to-navy-700 py-16 sm:py-20">
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-brand/10 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
         

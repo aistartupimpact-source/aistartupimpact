@@ -1,14 +1,36 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
+import { paymentSuccessHtml } from '@aistartupimpact/utils';
+import { sendEmailFireAndForget } from '../lib/email-send';
+import { rateLimit } from '../middleware/rateLimit';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// In production, you would verify the Resend Webhook signature here
-// using `resend.webhooks.verify`
-router.post('/resend', async (req: Request, res: Response) => {
+const webhookRateLimit = rateLimit(100, 60000);
+
+router.post('/resend', webhookRateLimit, async (req: Request, res: Response) => {
   try {
+    // Verify Resend webhook signature via Svix
+    const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
+    if (webhookSecret) {
+      try {
+        const { Webhook } = await import('svix');
+        const wh = new Webhook(webhookSecret);
+        wh.verify(JSON.stringify(req.body), {
+          'svix-id': req.headers['svix-id'] as string,
+          'svix-timestamp': req.headers['svix-timestamp'] as string,
+          'svix-signature': req.headers['svix-signature'] as string,
+        });
+      } catch (verifyErr) {
+        console.error('Resend webhook signature verification failed:', verifyErr);
+        return res.status(401).send('Invalid webhook signature');
+      }
+    } else {
+      console.warn('RESEND_WEBHOOK_SECRET not set — skipping signature verification');
+    }
+
     const { type, data } = req.body;
 
     if (!type || !data || !data.to) {
@@ -19,7 +41,7 @@ router.post('/resend', async (req: Request, res: Response) => {
 
     // If a user complains (marks as spam) or bounces (hard bounce), instantly deactivate them
     if (type === 'email.bounced' || type === 'email.complained') {
-      console.log(`Resend Webhook: Setting subscriber ${email} as inactive due to ${type}`);
+      console.log(`Resend Webhook: deactivating subscriber due to ${type}`);
 
       await prisma.newsletterSubscriber.updateMany({
         where: { email },
@@ -43,10 +65,14 @@ router.post('/resend', async (req: Request, res: Response) => {
 });
 
 // Razorpay Idempotent Webhook
-router.post('/razorpay', async (req: Request, res: Response): Promise<any> => {
+router.post('/razorpay', webhookRateLimit, async (req: Request, res: Response): Promise<any> => {
   try {
     const signature = req.headers['x-razorpay-signature'] as string;
-    const secret = process.env.RAZORPAY_WEBHOOK_SECRET || 'fallback_secret';
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    if (!secret) {
+      console.error('RAZORPAY_WEBHOOK_SECRET is not configured');
+      return res.status(500).send('Webhook secret not configured');
+    }
 
     const shasum = crypto.createHmac('sha256', secret);
     shasum.update(JSON.stringify(req.body));
@@ -90,7 +116,25 @@ router.post('/razorpay', async (req: Request, res: Response): Promise<any> => {
         }
       });
 
-      // 4. In a real system, trigger workers/transactional.ts to send "Payment Success" email here.
+      // Send payment success email to tool owner
+      if (tool.ownerId) {
+        try {
+          const owner = await prisma.founderUser.findUnique({
+            where: { id: tool.ownerId },
+            select: { email: true, name: true },
+          });
+          if (owner?.email) {
+            sendEmailFireAndForget({
+              to: owner.email,
+              subject: `Payment confirmed — ${tool.name} upgraded to ${tool.pendingTier || 'Premium'}`,
+              html: paymentSuccessHtml(tool.name, owner.name || 'there', tool.pendingTier || 'Premium'),
+              type: 'payment_success',
+            });
+          }
+        } catch (emailErr) {
+          console.error('Failed to send payment success email:', emailErr);
+        }
+      }
       console.log(`Razorpay success! Activated Premium for tool: ${tool.name}`);
     }
 

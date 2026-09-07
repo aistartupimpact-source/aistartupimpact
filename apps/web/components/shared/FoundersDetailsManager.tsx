@@ -148,7 +148,7 @@ export default function FoundersDetailsManager({ founders, onChange, maxFounders
                   )}
                 </button>
               )}
-              <span className="text-[9px] text-gray-400 mt-1 text-center leading-tight">JPG/PNG<br/>Max 5MB</span>
+              <span className="text-xs text-gray-400 mt-1 text-center leading-tight">JPG/PNG<br/>Max 5MB</span>
             </div>
 
             {/* Name + Role */}
@@ -173,7 +173,7 @@ export default function FoundersDetailsManager({ founders, onChange, maxFounders
           {/* Row 2: LinkedIn + Twitter */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">LinkedIn URL</label>
+              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">LinkedIn URL</label>
               <input
                 type="url"
                 value={founder.linkedin || ''}
@@ -183,7 +183,7 @@ export default function FoundersDetailsManager({ founders, onChange, maxFounders
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Twitter URL</label>
+              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Twitter URL</label>
               <input
                 type="url"
                 value={founder.twitter || ''}
@@ -197,8 +197,8 @@ export default function FoundersDetailsManager({ founders, onChange, maxFounders
           {/* Row 3: Bio */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase">Short Bio</label>
-              <span className="text-[10px] text-gray-400">{(founder.bio || '').length}/800</span>
+              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Short Bio</label>
+              <span className="text-xs text-gray-400">{(founder.bio || '').length}/800</span>
             </div>
             <textarea
               value={founder.bio || ''}

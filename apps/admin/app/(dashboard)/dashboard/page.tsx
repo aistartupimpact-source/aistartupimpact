@@ -1,75 +1,114 @@
 import { prisma } from '@aistartupimpact/database';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import Link from 'next/link';
 import {
-  Eye,
   FileText,
   Users,
-  IndianRupee,
   TrendingUp,
   AlertCircle,
-  ArrowUpRight,
   Clock,
   Edit3,
   CheckCircle,
+  Wrench,
+  Building2,
+  Mail,
+  CalendarDays,
+  Megaphone,
+  UserPlus,
 } from 'lucide-react';
 
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHr = Math.floor(diffMs / 3600000);
+  const diffDay = Math.floor(diffMs / 86400000);
+
+  if (diffMin < 1) return 'Just now';
+  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffHr < 24) return `${diffHr}h ago`;
+  if (diffDay === 1) return 'Yesterday';
+  if (diffDay < 7) return `${diffDay}d ago`;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 export default async function DashboardPage() {
+  const session = await getServerSession(authOptions);
+  const userName = session?.user?.name?.split(' ')[0] || 'Admin';
+
   const [
-    totalUsers,
     totalArticles,
-    pendingReviews,
     publishedCount,
-    adCampaigns
+    pendingReviews,
+    totalStartups,
+    pendingStartups,
+    totalTools,
+    pendingTools,
+    totalSubscribers,
+    totalEvents,
+    totalWebUsers,
+    totalFounders,
   ] = await Promise.all([
-    prisma.user.count(),
     prisma.article.count(),
-    prisma.article.count({ where: { status: 'IN_REVIEW' } }),
     prisma.article.count({ where: { status: 'PUBLISHED' } }),
-    prisma.adCampaign.findMany({ select: { totalBudgetPaise: true } })
+    prisma.article.count({ where: { status: 'IN_REVIEW' } }),
+    prisma.startup.count(),
+    prisma.startup.count({ where: { isApproved: false } }),
+    prisma.aiTool.count(),
+    prisma.aiTool.count({ where: { status: 'PENDING' } }),
+    prisma.newsletterSubscriber.count(),
+    prisma.event.count({ where: { deletedAt: null } }),
+    prisma.webUser.count(),
+    prisma.unifiedUser.count({ where: { founderProfile: { isNot: null } } }),
   ]);
 
-  // Aggregate dummy revenue from active campaigns (or placeholder if zero)
-  const totalRevenuePaise = adCampaigns.reduce((acc, curr) => acc + Number(curr.totalBudgetPaise), 0);
-  const displayRevenue = totalRevenuePaise > 0 ? `₹${(totalRevenuePaise / 100).toLocaleString()}` : "₹0";
+  const totalPendingApprovals = pendingStartups + pendingTools + pendingReviews;
 
   const metrics = [
     {
-      label: "Today's Pageviews",
-      value: 'Analytics Pending',
-      icon: Eye,
-    },
-    {
-      label: 'Articles Drafted & Published',
+      label: 'Articles',
       value: totalArticles.toString(),
       badge: `${publishedCount} Published`,
       icon: FileText,
     },
     {
-      label: 'Team Members',
-      value: totalUsers.toString(),
-      change: 'Active',
-      positive: true,
-      icon: Users,
+      label: 'Startups',
+      value: totalStartups.toString(),
+      badge: pendingStartups > 0 ? `${pendingStartups} Pending` : undefined,
+      icon: Building2,
     },
     {
-      label: 'Est. Ad Revenue',
-      value: displayRevenue,
-      icon: IndianRupee,
+      label: 'AI Tools',
+      value: totalTools.toString(),
+      badge: pendingTools > 0 ? `${pendingTools} Pending` : undefined,
+      icon: Wrench,
     },
     {
-      label: 'Top Article Today',
-      value: 'Pending Analytics',
-      icon: TrendingUp,
+      label: 'Subscribers',
+      value: totalSubscribers.toLocaleString(),
+      icon: Mail,
     },
     {
-      label: 'Pending Reviews',
-      value: pendingReviews.toString(),
-      urgent: pendingReviews > 0,
+      label: 'Events',
+      value: totalEvents.toString(),
+      icon: CalendarDays,
+    },
+    {
+      label: 'Pending Approvals',
+      value: totalPendingApprovals.toString(),
+      urgent: totalPendingApprovals > 0,
       icon: AlertCircle,
     },
   ];
 
-  // Fetch recent articles (as a proxy for activity)
   const recentArticles = await prisma.article.findMany({
     take: 5,
     orderBy: { createdAt: 'desc' },
@@ -77,6 +116,7 @@ export default async function DashboardPage() {
       id: true,
       title: true,
       status: true,
+      createdAt: true,
       User: {
         select: { name: true }
       }
@@ -87,35 +127,46 @@ export default async function DashboardPage() {
     user: a.User?.name || 'Unknown',
     action: a.status === 'PUBLISHED' ? 'Published' : a.status === 'IN_REVIEW' ? 'Submitted for review' : 'Updated',
     item: a.title,
-    time: "Recently",
+    time: formatRelativeTime(a.createdAt),
     type: a.status === 'PUBLISHED' ? 'publish' : a.status === 'IN_REVIEW' ? 'submit' : 'draft'
   }));
 
-  // Fetch upcoming scheduled articles
   const scheduledArticlesRaw = await prisma.article.findMany({
     where: { status: 'SCHEDULED' },
     take: 5,
+    orderBy: { scheduledAt: 'asc' },
     select: {
       id: true,
       title: true,
-      status: true
+      status: true,
+      scheduledAt: true,
     }
   });
 
   const scheduledArticles = scheduledArticlesRaw.map(a => ({
     title: a.title,
-    date: 'Upcoming',
+    date: a.scheduledAt
+      ? a.scheduledAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+      : 'Upcoming',
     status: 'scheduled'
   }));
+
+  const todayFormatted = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
 
   return (
     <div className="space-y-8">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-sora font-extrabold text-2xl text-navy dark:text-white">Dashboard</h1>
+          <h1 className="font-sora font-extrabold text-2xl text-navy dark:text-white">
+            {getGreeting()}, {userName}
+          </h1>
           <p className="text-gray-400 dark:text-gray-500 text-sm font-jakarta mt-1">
-            Welcome back. Here&apos;s your live platform activity.
+            {todayFormatted} &mdash; Here&apos;s your platform overview.
           </p>
         </div>
         <div className="flex gap-3">
@@ -144,14 +195,6 @@ export default async function DashboardPage() {
                 className={`w-5 h-5 ${'urgent' in metric && metric.urgent ? 'text-brand' : 'text-gray-400 dark:text-gray-500'
                   }`}
               />
-              {'change' in metric && metric.change && (
-                <span
-                  className={`text-xs font-semibold flex items-center gap-0.5 ${metric.positive ? 'text-green-600 dark:text-green-400' : 'text-red-500'
-                    }`}
-                >
-                  {metric.change}
-                </span>
-              )}
             </div>
             <p className="font-sora font-extrabold text-xl text-navy dark:text-white">{metric.value}</p>
             <p className="text-xs text-gray-400 dark:text-gray-500 font-jakarta mt-1">{metric.label}</p>
@@ -167,7 +210,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Activity Feed */}
         <div className="lg:col-span-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6">
-          <h2 className="font-sora font-bold text-lg text-navy dark:text-white mb-4">Recent Article Activity</h2>
+          <h2 className="font-sora font-bold text-lg text-navy dark:text-white mb-4">Recent Activity</h2>
           {recentActivity.length === 0 ? (
             <p className="text-sm text-gray-500 dark:text-gray-400 font-jakarta">No recent activity found.</p>
           ) : (
@@ -177,14 +220,12 @@ export default async function DashboardPage() {
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${item.type === 'publish'
                       ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                      : item.type === 'approve'
-                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                        : item.type === 'submit'
-                          ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
-                          : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+                      : item.type === 'submit'
+                        ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                       }`}
                   >
-                    {item.type === 'publish' || item.type === 'approve' ? (
+                    {item.type === 'publish' ? (
                       <CheckCircle className="w-4 h-4" />
                     ) : (
                       <Edit3 className="w-4 h-4" />
@@ -207,40 +248,38 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        {/* Scheduled Articles */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6">
-          <h2 className="font-sora font-bold text-lg text-navy dark:text-white mb-4">Upcoming Schedule</h2>
-          {scheduledArticles.length === 0 ? (
-            <p className="text-sm text-gray-500 dark:text-gray-400 font-jakarta">No articles scheduled yet.</p>
-          ) : (
-            <div className="space-y-3">
-              {scheduledArticles.map((article, i) => (
-                <div
-                  key={i}
-                  className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 hover:bg-brand-50/30 dark:hover:bg-brand-900/10 transition-colors cursor-pointer"
-                >
-                  <h4 className="font-sora font-semibold text-sm text-navy dark:text-white">{article.title}</h4>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-xs text-gray-400 dark:text-gray-500 font-jakarta flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {article.date}
-                    </span>
-                    <span
-                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase ${article.status === 'scheduled'
-                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                        : 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                        }`}
-                    >
-                      {article.status}
-                    </span>
+        {/* Sidebar */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Scheduled Articles */}
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6">
+            <h2 className="font-sora font-bold text-lg text-navy dark:text-white mb-4">Upcoming Schedule</h2>
+            {scheduledArticles.length === 0 ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400 font-jakarta">No articles scheduled yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {scheduledArticles.map((article, i) => (
+                  <div
+                    key={i}
+                    className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 hover:bg-brand-50/30 dark:hover:bg-brand-900/10 transition-colors cursor-pointer"
+                  >
+                    <h4 className="font-sora font-semibold text-sm text-navy dark:text-white">{article.title}</h4>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-xs text-gray-400 dark:text-gray-500 font-jakarta flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {article.date}
+                      </span>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                        {article.status}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Quick Actions */}
-          <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6">
             <h3 className="font-sora font-semibold text-sm text-navy dark:text-white mb-3">Quick Actions</h3>
             <div className="grid grid-cols-2 gap-2">
               <Link
@@ -248,15 +287,57 @@ export default async function DashboardPage() {
                 className="p-3 rounded-lg bg-brand/5 dark:bg-brand/10 hover:bg-brand/10 dark:hover:bg-brand/20 text-center transition-colors"
               >
                 <Edit3 className="w-4 h-4 text-brand mx-auto mb-1" />
-                <span className="text-xs font-medium text-navy dark:text-white">New Article</span>
+                <span className="text-xs font-medium text-navy dark:text-white font-jakarta">New Article</span>
               </Link>
               <Link
                 href="/tools-dir"
                 className="p-3 rounded-lg bg-brand/5 dark:bg-brand/10 hover:bg-brand/10 dark:hover:bg-brand/20 text-center transition-colors"
               >
-                <FileText className="w-4 h-4 text-brand mx-auto mb-1" />
-                <span className="text-xs font-medium text-navy dark:text-white">Add Tool</span>
+                <Wrench className="w-4 h-4 text-brand mx-auto mb-1" />
+                <span className="text-xs font-medium text-navy dark:text-white font-jakarta">Add Tool</span>
               </Link>
+              <Link
+                href="/startups-dir/new"
+                className="p-3 rounded-lg bg-brand/5 dark:bg-brand/10 hover:bg-brand/10 dark:hover:bg-brand/20 text-center transition-colors"
+              >
+                <Building2 className="w-4 h-4 text-brand mx-auto mb-1" />
+                <span className="text-xs font-medium text-navy dark:text-white font-jakarta">Add Startup</span>
+              </Link>
+              <Link
+                href="/newsletter-admin"
+                className="p-3 rounded-lg bg-brand/5 dark:bg-brand/10 hover:bg-brand/10 dark:hover:bg-brand/20 text-center transition-colors"
+              >
+                <Mail className="w-4 h-4 text-brand mx-auto mb-1" />
+                <span className="text-xs font-medium text-navy dark:text-white font-jakarta">New Campaign</span>
+              </Link>
+              <Link
+                href="/subscribers"
+                className="p-3 rounded-lg bg-brand/5 dark:bg-brand/10 hover:bg-brand/10 dark:hover:bg-brand/20 text-center transition-colors"
+              >
+                <Users className="w-4 h-4 text-brand mx-auto mb-1" />
+                <span className="text-xs font-medium text-navy dark:text-white font-jakarta">Subscribers</span>
+              </Link>
+              <Link
+                href="/people"
+                className="p-3 rounded-lg bg-brand/5 dark:bg-brand/10 hover:bg-brand/10 dark:hover:bg-brand/20 text-center transition-colors"
+              >
+                <UserPlus className="w-4 h-4 text-brand mx-auto mb-1" />
+                <span className="text-xs font-medium text-navy dark:text-white font-jakarta">People</span>
+              </Link>
+            </div>
+
+            {/* Platform stats */}
+            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+              <div className="grid grid-cols-2 gap-3 text-center">
+                <div>
+                  <p className="font-sora font-bold text-lg text-navy dark:text-white">{totalFounders}</p>
+                  <p className="text-[10px] text-gray-400 font-jakarta uppercase tracking-wide">Founders</p>
+                </div>
+                <div>
+                  <p className="font-sora font-bold text-lg text-navy dark:text-white">{totalWebUsers}</p>
+                  <p className="text-[10px] text-gray-400 font-jakarta uppercase tracking-wide">Web Users</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

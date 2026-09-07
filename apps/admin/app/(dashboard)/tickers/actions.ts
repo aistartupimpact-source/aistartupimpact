@@ -2,6 +2,7 @@
 
 import { neon } from '@neondatabase/serverless';
 import { revalidatePath } from 'next/cache';
+import { requireActionAuth } from '@/lib/api-auth';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -10,6 +11,8 @@ const sql = neon(process.env.DATABASE_URL!);
 // ═══════════════════════════════════════════════════════
 
 export async function getBreakingTickersAction() {
+  const { error } = await requireActionAuth();
+  if (error) return [];
   try {
     const tickers = await sql`
       SELECT id, text, "isActive", "sortOrder", "createdAt", "updatedAt"
@@ -24,6 +27,8 @@ export async function getBreakingTickersAction() {
 }
 
 export async function createBreakingTickerAction(text: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     // Get the next sort order
     const maxOrder = await sql`
@@ -46,6 +51,8 @@ export async function createBreakingTickerAction(text: string) {
 }
 
 export async function updateBreakingTickerAction(id: string, text: string, isActive: boolean) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`
       UPDATE "BreakingTicker"
@@ -62,6 +69,8 @@ export async function updateBreakingTickerAction(id: string, text: string, isAct
 }
 
 export async function deleteBreakingTickerAction(id: string) {
+  const { error } = await requireActionAuth(['SUPER_ADMIN']);
+  if (error) return { success: false, error };
   try {
     await sql`
       DELETE FROM "BreakingTicker" WHERE id = ${id}
@@ -76,6 +85,8 @@ export async function deleteBreakingTickerAction(id: string) {
 }
 
 export async function reorderBreakingTickersAction(tickerIds: string[]) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     for (let i = 0; i < tickerIds.length; i++) {
       await sql`
@@ -98,6 +109,8 @@ export async function reorderBreakingTickersAction(tickerIds: string[]) {
 // ═══════════════════════════════════════════════════════
 
 export async function getLiveTickersAction() {
+  const { error } = await requireActionAuth();
+  if (error) return [];
   try {
     const tickers = await sql`
       SELECT id, text, "isActive", "sortOrder", "createdAt", "updatedAt"
@@ -112,6 +125,8 @@ export async function getLiveTickersAction() {
 }
 
 export async function createLiveTickerAction(text: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     // Get the next sort order
     const maxOrder = await sql`
@@ -134,6 +149,8 @@ export async function createLiveTickerAction(text: string) {
 }
 
 export async function updateLiveTickerAction(id: string, text: string, isActive: boolean) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`
       UPDATE "LiveTicker"
@@ -150,6 +167,8 @@ export async function updateLiveTickerAction(id: string, text: string, isActive:
 }
 
 export async function deleteLiveTickerAction(id: string) {
+  const { error } = await requireActionAuth(['SUPER_ADMIN']);
+  if (error) return { success: false, error };
   try {
     await sql`
       DELETE FROM "LiveTicker" WHERE id = ${id}
@@ -164,6 +183,8 @@ export async function deleteLiveTickerAction(id: string) {
 }
 
 export async function reorderLiveTickersAction(tickerIds: string[]) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     for (let i = 0; i < tickerIds.length; i++) {
       await sql`

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Building2, User, Briefcase, Phone, Linkedin, Twitter, Globe, ArrowRight, CheckCircle, Upload } from 'lucide-react';
 import { completeOnboardingAction } from './actions';
 
@@ -201,7 +202,7 @@ export default function OnboardingClient({ user, returnTo }: { user: User; retur
                <div className="flex items-center gap-6 w-full">
                  <div className="relative w-20 h-20 rounded-full overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
                    {formData.avatar ? (
-                     <img src={formData.avatar} alt="Avatar preview" className="w-full h-full object-cover" />
+                     <Image src={formData.avatar} alt="Avatar preview" width={80} height={80} unoptimized className="w-full h-full object-cover" />
                    ) : (
                      <User className="w-10 h-10 text-gray-400" />
                    )}
@@ -226,7 +227,7 @@ export default function OnboardingClient({ user, returnTo }: { user: User; retur
                      <Upload className="w-3.5 h-3.5" />
                      Upload Photo
                    </label>
-                   <p className="text-[10px] text-gray-400 font-jakarta">JPG, PNG up to 5MB</p>
+                   <p className="text-xs text-gray-400 font-jakarta">JPG, PNG up to 5MB</p>
                  </div>
                </div>
              </div>
@@ -339,7 +340,7 @@ export default function OnboardingClient({ user, returnTo }: { user: User; retur
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 font-jakarta flex justify-between items-center">
                 <span>Short Bio <span className="text-red-500">*</span></span>
-                <span className="text-[10px] font-normal text-gray-400 font-jakarta">
+                <span className="text-xs font-normal text-gray-400 font-jakarta">
                   {formData.bio.length}/800 characters
                 </span>
               </label>

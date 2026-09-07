@@ -57,17 +57,22 @@ export async function checkRateLimit(
   ratelimit: Ratelimit | null,
   identifier: string
 ): Promise<{ success: boolean; limit: number; remaining: number; reset: number }> {
-  // If rate limiting is disabled, always allow
   if (!ratelimit || !rateLimitingEnabled) {
+    if (process.env.NODE_ENV === 'production') {
+      console.warn(`[SECURITY] Rate limiting unavailable — Redis not configured. Blocking request.`);
+      return { success: false, limit: 0, remaining: 0, reset: 0 };
+    }
     return { success: true, limit: 999, remaining: 999, reset: 0 };
   }
-  
+
   try {
     const { success, limit, remaining, reset } = await ratelimit.limit(identifier);
     return { success, limit, remaining, reset };
   } catch (error) {
-    console.error('Rate limit check failed:', error);
-    // On error, allow the request (fail open)
+    if (process.env.NODE_ENV === 'production') {
+      console.error(`[SECURITY] Rate limit check failed — blocking request.`);
+      return { success: false, limit: 0, remaining: 0, reset: 0 };
+    }
     return { success: true, limit: 999, remaining: 999, reset: 0 };
   }
 }

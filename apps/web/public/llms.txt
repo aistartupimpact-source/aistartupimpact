@@ -1,13 +1,123 @@
 # AI Startup Impact
 
-> AI Startup Impact is the premier platform for Indian AI news. Discover top artificial intelligence startups, funding, tools, and founder stories.
+> AI Startup Impact is India's independent platform for tracking the AI startup ecosystem — discover startups, funding rounds, AI tools, founder stories, jobs, and events.
 
-AI Startup Impact aggregates news, tools, metrics, funding data and founder stories for the AI ecosystem in India. 
+AI Startup Impact aggregates and curates news, startup profiles, funding data, AI tools, founder stories, job listings, and events across the Indian artificial intelligence ecosystem. The platform is editorially independent with no pay-to-play listings or sponsored rankings. Built by Lahori Venkatesh.
 
-## Structure
-- Home: General news and comprehensive platform introduction.
-- Funding Dashboard `/funding`: Tracks capital raised by AI companies in India.
-- Directory `/tools`: Library of native AI tools developed by Indian founders.
+Website: https://aistartupimpact.com
+Contact: privacy@aistartupimpact.com
 
-## Mission
-Our mission is to track, boost, and highlight the Indian artificial intelligence ecosystem, showcasing the impact that Indian companies have globally.
+## Core Sections
+
+### Homepage `/`
+The main feed featuring trending AI news, featured startups, founder spotlights, latest AI tools, job listings, and upcoming events. Curated daily with editorial picks.
+
+### AI News `/news`
+Breaking news and analysis covering the Indian AI ecosystem — funding announcements, product launches, policy updates, partnerships, and industry trends. Articles are editorially reviewed before publishing.
+
+### Founder Stories `/stories`
+In-depth profiles of the people building AI startups — their journeys, decisions, and lessons. First-hand narratives from founders across all stages, from pre-seed to public.
+
+### Opinion & Analysis `/opinion`
+Expert commentary, op-eds, and analysis on AI trends, policy, and the startup landscape in India.
+
+### AI Startups Directory `/startups`
+A structured, searchable directory of AI startups with profiles including team, technology, stage, funding history, products, and impact scores. Filter by sector, stage, location, and more. Startups can be submitted by anyone and are approved after review.
+
+- Individual startup profiles: `/startups/{slug}`
+- Submit a startup: `/submit-startup`
+
+### AI Tools Directory `/tools`
+A catalogue of AI tools and products built by Indian startups, independently reviewed and organized for discovery. Includes pricing models, ratings, and categories.
+
+- Individual tool profiles: `/tools/{slug}`
+- Browse by category: `/tools/category/{slug}`
+- Compare tools: `/tools/compare/{slug-vs-slug}`
+- Tool alternatives: `/tools/alternatives/{slug}`
+- Submit a tool: `/submit-tool`
+
+### Funding Dashboard `/funding`
+A live tracker of AI startup funding in India — rounds, amounts, investors, and capital flow trends. Filterable by stage, year, investor, sector, city, and amount range. Includes investor leaderboards and trend charts.
+
+- Individual funding rounds: `/funding/{slug}`
+
+### AI Jobs `/jobs`
+Job listings from AI startups across India — engineering, research, product, design, and operations roles. Searchable by company, location, and work type.
+
+- Individual job listings: `/jobs/{slug}`
+- Apply to a job: `/jobs/{slug}/apply`
+- Company job pages: `/jobs/company/{slug}`
+
+### AI Events `/events`
+Conferences, hackathons, meetups, and workshops in the AI space. Discover upcoming events, register, and connect with the community.
+
+- Individual events: `/events/{slug}`
+
+### IndiaAI Hub `/india-ai`
+A dedicated resource for India's AI policy landscape — government schemes, support programs, and the IndiaAI Mission.
+
+- Government schemes: `/india-ai/schemes`
+- IndiaAI Mission: `/india-ai/schemes/indiaai-mission`
+- MeitY Grants: `/india-ai/schemes/meity-grants`
+- Startup India Seed Fund: `/india-ai/schemes/startup-india-seed-fund`
+- AI city hubs: `/india-ai/cities/{slug}`
+
+### Newsletter `/newsletter`
+A weekly digest of the most important AI startup news, funding rounds, and ecosystem developments in India. Free to subscribe.
+
+### Author Pages `/author/{slug}`
+Individual author profiles with their published articles and stories.
+
+### Startup Milestones `/milestones`
+Track the latest milestones from AI startups — funding rounds, product launches, partnerships, awards, hiring, and revenue milestones in a timeline view.
+
+### Search `/search`
+Full-text search across startups, tools, news, stories, jobs, and events.
+
+## Platform Features
+
+- **Impact Score**: A proprietary 0–100 score for each startup based on funding, team size, stage, and growth trajectory.
+- **Verified Badges**: Startups can claim and verify their profiles via DNS verification.
+- **Bookmarks**: Signed-in users can bookmark startups, tools, and articles.
+- **Newsletter Subscription**: Free weekly email digest.
+- **Dark Mode**: Full dark/light/system theme support.
+
+## User Portals
+
+- **Founder Portal** `/founder`: Dashboard for startup founders to manage profiles, analytics, team, content, and milestones.
+- **Employer Portal** `/employer`: Dashboard for employers to post and manage AI job listings.
+- **Organizer Portal** `/organizer`: Dashboard for event organizers to create and manage AI events, attendees, and check-in.
+
+## Legal & Policies
+
+- Privacy Policy: `/privacy`
+- Terms of Service: `/terms`
+- Cookie Policy: `/cookie-policy`
+- Content Guidelines: `/content-guidelines`
+- Copyright: `/copyright`
+- Trademark: `/trademark`
+- Verification Policy: `/verification-policy`
+- Disclaimer: `/disclaimer`
+- Refund Policy: `/refund`
+
+## About & Company
+
+- About: `/about`
+- Advertise: `/advertise`
+- Contact: `/contact`
+- Careers: `/careers`
+
+## Machine-Readable Feeds
+
+- RSS Feed: `/rss.xml`
+- Sitemap: `/sitemap.xml`
+- Robots: `/robots.txt`
+- LLMs: `/llms.txt`
+
+## Technical Details
+
+- Built with Next.js 14 (App Router), TypeScript, Tailwind CSS, PostgreSQL (Neon), Prisma ORM
+- Hosted on Vercel
+- ISR (Incremental Static Regeneration) for performance
+- DPDP Act 2023 compliant (India's data protection law)
+- Structured data (JSON-LD) for SEO on all pages

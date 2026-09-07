@@ -1,8 +1,12 @@
 "use server";
 
 import { prisma } from "@aistartupimpact/database";
+import { getFounderSession } from "@/lib/founder-auth";
 
 export async function getClientPortalDataAction() {
+  const session = await getFounderSession();
+  if (!session) return { success: false, error: "Authentication required", data: null };
+
   try {
     const [campaigns, creatives, articles] = await Promise.all([
       prisma.$queryRaw<any[]>`
@@ -53,7 +57,8 @@ export async function getClientPortalDataAction() {
         },
       },
     };
-  } catch (e: any) {
-    return { success: false, error: e.message, data: null };
+  } catch (e) {
+    console.error("Error fetching client portal data:", e);
+    return { success: false, error: "Failed to load data", data: null };
   }
 }

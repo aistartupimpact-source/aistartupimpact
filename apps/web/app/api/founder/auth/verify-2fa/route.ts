@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import { jwtVerify } from 'jose';
+import { sql } from '@/lib/db';
 import { setFounderSession } from '@/lib/founder-auth';
 import { verifyTOTPToken, decryptSecret, verifyBackupCode } from '@/lib/two-factor';
 
-const sql = neon(process.env.DATABASE_URL!);
+export const dynamic = 'force-dynamic';
+
+const CHALLENGE_SECRET = new TextEncoder().encode(process.env.FOUNDER_JWT_SECRET!);
 
 /**
  * POST /api/founder/auth/verify-2fa
@@ -12,16 +15,31 @@ const sql = neon(process.env.DATABASE_URL!);
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, token, isBackupCode } = body;
+    const { challengeToken, userId: legacyUserId, token, isBackupCode } = body;
 
-    if (!userId || !token) {
+    if ((!challengeToken && !legacyUserId) || !token) {
       return NextResponse.json(
-        { error: 'User ID and token are required' },
+        { error: 'Challenge token and verification code are required' },
         { status: 400 }
       );
     }
 
-    // Get user
+    let userId: string;
+
+    if (challengeToken) {
+      try {
+        const { payload } = await jwtVerify(challengeToken, CHALLENGE_SECRET);
+        if (payload.purpose !== '2fa-challenge') {
+          return NextResponse.json({ error: 'Invalid challenge token' }, { status: 400 });
+        }
+        userId = payload.userId as string;
+      } catch {
+        return NextResponse.json({ error: 'Challenge expired. Please log in again.' }, { status: 401 });
+      }
+    } else {
+      userId = legacyUserId;
+    }
+
     const users = await sql`
       SELECT id, email, name, company, "twoFactorEnabled", "twoFactorSecret", "twoFactorBackupCodes", "onboardingCompleted"
       FROM "FounderUser"
@@ -31,8 +49,8 @@ export async function POST(request: NextRequest) {
 
     if (users.length === 0) {
       return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
+        { error: 'Invalid challenge' },
+        { status: 400 }
       );
     }
 
@@ -47,7 +65,6 @@ export async function POST(request: NextRequest) {
 
     let isValid = false;
 
-    // Check if using backup code
     if (isBackupCode) {
       if (!user.twoFactorBackupCodes || user.twoFactorBackupCodes.length === 0) {
         return NextResponse.json(
@@ -56,16 +73,14 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Verify backup code
       const codeIndex = await verifyBackupCode(token, user.twoFactorBackupCodes);
-      
+
       if (codeIndex >= 0) {
         isValid = true;
-        
-        // Remove used backup code
+
         const updatedCodes = [...user.twoFactorBackupCodes];
         updatedCodes.splice(codeIndex, 1);
-        
+
         await sql`
           UPDATE "FounderUser"
           SET "twoFactorBackupCodes" = ${updatedCodes}, "updatedAt" = NOW()
@@ -73,7 +88,6 @@ export async function POST(request: NextRequest) {
         `;
       }
     } else {
-      // Verify TOTP token
       if (!user.twoFactorSecret) {
         return NextResponse.json(
           { error: '2FA secret not found' },
@@ -92,20 +106,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update last login
     await sql`
       UPDATE "FounderUser"
       SET "lastLoginAt" = NOW(), "updatedAt" = NOW()
       WHERE id = ${userId}
     `;
 
-    // Set session
     await setFounderSession(user.id, user.email, user.name, !!user.onboardingCompleted);
 
     return NextResponse.json({
       success: true,
       user: {
-        id: user.id,
         name: user.name,
         email: user.email,
         company: user.company,

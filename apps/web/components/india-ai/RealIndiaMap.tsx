@@ -16,9 +16,9 @@ interface City {
   totalStartups: number;
   totalFunding: string;
   topSectors: string[];
-  recentFundings: any[];
-  keyAccelerators: string[];
-  notableCompanies: string[];
+  recentFundings?: unknown[];
+  keyAccelerators?: string[];
+  notableCompanies?: string[];
   aliases?: string[];
 }
 
@@ -347,7 +347,7 @@ export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps)
                         onMouseLeave={() => setHoveredCity(null)}
                         onClick={() => handleCityClick(city)}
                       >
-                        <g style={{ cursor: 'pointer' }}>
+                        <g style={{ cursor: 'pointer' }} transform={`scale(${1 / position.zoom})`}>
                           {/* Pulse ring for selected */}
                           {isSelected && (
                             <circle r={markerSize + 10} fill="rgba(59, 130, 246, 0.15)" className="animate-ping" />
@@ -414,7 +414,7 @@ export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps)
                   <span>Selected state</span>
                 </div>
               </div>
-              <span className="text-gray-500 flex items-center gap-2 text-[11px]">
+              <span className="text-gray-500 flex items-center gap-2 text-xs">
                 <Info className="w-3.5 h-3.5" />
                 Click state or city dot
               </span>
@@ -483,7 +483,7 @@ export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps)
                       <div className="flex items-start gap-3">
                         <div className="w-9 h-9 rounded bg-white dark:bg-gray-700 flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-gray-600">
                           {startup.logoUrl ? (
-                            <Image src={startup.logoUrl} alt={startup.name} width={28} height={28} className="object-contain" />
+                            <Image src={startup.logoUrl} alt={startup.name} width={28} height={28} sizes="28px" className="object-contain" />
                           ) : (
                             <Building2 className="w-4 h-4 text-gray-400" />
                           )}
@@ -496,12 +496,12 @@ export default function RealIndiaMap({ cities, allStartups }: RealIndiaMapProps)
                             {startup.tagline}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 rounded font-medium">
+                            <span className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 rounded font-medium">
                               {startup.stage.replace(/_/g, ' ')}
                             </span>
-                            <span className="text-[10px] text-gray-400">{startup.headquartersCity}</span>
+                            <span className="text-xs text-gray-400">{startup.headquartersCity}</span>
                             {Number(startup.totalFundingInr) > 0 && (
-                              <span className="text-[10px] font-semibold text-green-600 dark:text-green-400">
+                              <span className="text-xs font-semibold text-green-600 dark:text-green-400">
                                 {formatCurrency(startup.totalFundingInr)}
                               </span>
                             )}

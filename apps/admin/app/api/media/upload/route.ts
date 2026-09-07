@@ -33,6 +33,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: "File too large. Maximum size is 10MB." }, { status: 400 });
+    }
+
+    const ALLOWED_TYPES = [
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+      'image/avif', 'application/pdf',
+    ];
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return NextResponse.json({ error: "File type not allowed. Accepted: JPEG, PNG, GIF, WebP, SVG, AVIF, PDF." }, { status: 400 });
+    }
+
+    const ALLOWED_EXTENSIONS = /\.(jpe?g|png|gif|webp|svg|avif|pdf)$/i;
+    if (!ALLOWED_EXTENSIONS.test(file.name)) {
+      return NextResponse.json({ error: "File extension not allowed." }, { status: 400 });
+    }
+
     const bucket = process.env.R2_BUCKET_NAME;
     if (!bucket) {
       return NextResponse.json({ error: "R2 bucket name is not configured" }, { status: 500 });
@@ -59,7 +77,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("API media upload error:", error);
     return NextResponse.json(
-      { error: error.message || "Upload failed" },
+      { error: "Upload failed" },
       { status: 500 }
     );
   }

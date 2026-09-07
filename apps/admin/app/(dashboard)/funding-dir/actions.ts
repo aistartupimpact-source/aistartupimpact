@@ -2,10 +2,13 @@
 
 import { neon } from '@neondatabase/serverless';
 import { revalidatePath } from 'next/cache';
+import { requireActionAuth } from '@/lib/api-auth';
 
 const sql = neon(process.env.DATABASE_URL!);
 
 export async function getFundingDigestsAction() {
+  const { error } = await requireActionAuth();
+  if (error) return [];
   try {
     console.log('getFundingDigestsAction: Fetching funding digests...');
     const digests = await sql`
@@ -30,6 +33,8 @@ export async function createFundingDigestAction(data: {
   totalRaised: string;
   deals: any[];
 }) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`
       INSERT INTO "FundingDigest" (
@@ -57,6 +62,8 @@ export async function updateFundingDigestAction(id: string, data: {
   totalRaised: string;
   deals: any[];
 }) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`
       UPDATE "FundingDigest"
@@ -79,6 +86,8 @@ export async function updateFundingDigestAction(id: string, data: {
 }
 
 export async function deleteFundingDigestAction(id: string) {
+  const { error } = await requireActionAuth(['SUPER_ADMIN']);
+  if (error) return { success: false, error };
   try {
     await sql`
       DELETE FROM "FundingDigest" WHERE id = ${id}
@@ -93,6 +102,8 @@ export async function deleteFundingDigestAction(id: string) {
 }
 
 export async function toggleFundingDigestStatusAction(id: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`
       UPDATE "FundingDigest"
@@ -114,6 +125,8 @@ export async function toggleFundingDigestStatusAction(id: string) {
 // ── Funding Rounds (individual deals) ────────────────────────────────────────
 
 export async function getFundingRoundsDirectAction() {
+  const { error } = await requireActionAuth();
+  if (error) return [];
   try {
     const rows = await sql`
       SELECT
@@ -145,6 +158,8 @@ export async function createFundingRoundDirectAction(data: {
   headquartersCity?: string;
   sector?: string;
 }) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     // Find or create startup by name
     let startupId: string;
@@ -194,6 +209,8 @@ export async function updateFundingRoundDirectAction(id: string, data: {
   headquartersCity?: string;
   sector?: string;
 }) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`
       UPDATE "FundingRound" SET
@@ -214,6 +231,8 @@ export async function updateFundingRoundDirectAction(id: string, data: {
 }
 
 export async function deleteFundingRoundDirectAction(id: string) {
+  const { error } = await requireActionAuth(['SUPER_ADMIN']);
+  if (error) return { success: false, error };
   try {
     await sql`DELETE FROM "FundingRound" WHERE id = ${id}`;
     revalidatePath('/funding-dir');

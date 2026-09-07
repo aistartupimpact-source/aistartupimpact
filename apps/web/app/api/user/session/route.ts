@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 
-const sql = neon(process.env.DATABASE_URL!);
-
+export const dynamic = 'force-dynamic';
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.USER_JWT_SECRET || 'user-secret-change-in-production'
+  process.env.USER_JWT_SECRET!
 );
 
 export async function GET(request: NextRequest) {
@@ -26,7 +25,7 @@ export async function GET(request: NextRequest) {
     const users = await sql`
       SELECT 
         id, email, name, avatar, slug, bio, twitter, linkedin, instagram, facebook, github,
-        "isActive", "termsAcceptedAt"::text as "termsAcceptedAt"
+        "isActive", "termsAcceptedAt"::text as "termsAcceptedAt", "termsVersion"
       FROM "WebUser"
       WHERE id = ${payload.userId}
       LIMIT 1
@@ -88,6 +87,7 @@ export async function GET(request: NextRequest) {
         facebook: user.facebook,
         github: user.github,
         termsAcceptedAt: user.termsAcceptedAt,
+        termsVersion: user.termsVersion,
         // Workspace links
         founderId,
         organizerId,

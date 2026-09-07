@@ -2,6 +2,7 @@
 
 import { useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Building2, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface SimilarStartup {
@@ -82,8 +83,7 @@ export default function SimilarStartupsCarousel({ startups }: Props) {
             {/* Logo */}
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand/10 to-gray-100 dark:from-brand/20 dark:to-gray-800 flex items-center justify-center overflow-hidden mb-3 shrink-0">
               {s.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={s.logoUrl} alt={s.name} className="w-10 h-10 object-contain" />
+                <Image src={s.logoUrl} alt={s.name} className="w-10 h-10 object-contain" width={40} height={40} sizes="40px" />
               ) : (
                 <Building2 className="w-6 h-6 text-brand" />
               )}
@@ -93,26 +93,26 @@ export default function SimilarStartupsCarousel({ startups }: Props) {
             <h3 className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand transition-colors line-clamp-1 mb-1">
               {s.name}
             </h3>
-            <p className="text-[11px] text-gray-500 dark:text-gray-400 font-jakarta leading-relaxed line-clamp-2 flex-1 mb-3">
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta leading-relaxed line-clamp-2 flex-1 mb-3">
               {s.tagline}
             </p>
 
             {/* Meta */}
             <div className="space-y-1.5 mt-auto">
               {s.headquartersCity && (
-                <span className="flex items-center gap-1 text-[10px] text-gray-400 font-jakarta">
+                <span className="flex items-center gap-1 text-xs text-gray-400 font-jakarta">
                   <MapPin className="w-2.5 h-2.5 shrink-0" />
                   {s.headquartersCity}
                 </span>
               )}
               <div className="flex items-center gap-1.5 flex-wrap">
                 {s.stage && (
-                  <span className="text-[9px] font-bold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded-full uppercase">
+                  <span className="text-xs font-bold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded-full uppercase">
                     {STAGE_LABELS[s.stage] || s.stage}
                   </span>
                 )}
                 {s.matchReason && (
-                  <span className="text-[9px] font-bold bg-brand/10 text-brand px-1.5 py-0.5 rounded-full">
+                  <span className="text-xs font-bold bg-brand/10 text-brand px-1.5 py-0.5 rounded-full">
                     {s.matchReason}
                   </span>
                 )}

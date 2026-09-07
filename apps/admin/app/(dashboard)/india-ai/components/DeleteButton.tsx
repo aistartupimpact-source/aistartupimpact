@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
+import { ConfirmModal } from '@/components/ConfirmModal';
 
 interface DeleteButtonProps {
   itemId: string;
@@ -9,13 +11,9 @@ interface DeleteButtonProps {
 }
 
 export function DeleteButton({ itemId, itemName, deleteEndpoint }: DeleteButtonProps) {
-  const handleDelete = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!confirm(`Are you sure you want to delete ${itemName}?`)) {
-      return;
-    }
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
+  const handleDelete = async () => {
     try {
       const response = await fetch(deleteEndpoint, {
         method: 'POST',
@@ -33,13 +31,28 @@ export function DeleteButton({ itemId, itemName, deleteEndpoint }: DeleteButtonP
   };
 
   return (
-    <form onSubmit={handleDelete}>
+    <>
       <button
-        type="submit"
+        type="button"
+        onClick={() => setConfirmDelete(true)}
         className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
       >
         <Trash2 className="w-4 h-4" />
       </button>
-    </form>
+
+      <ConfirmModal
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        onConfirm={() => {
+          handleDelete();
+          setConfirmDelete(false);
+        }}
+        title="Delete Item"
+        message={`Are you sure you want to delete ${itemName}?`}
+        confirmLabel="Delete"
+        variant="danger"
+        requireTyping={true}
+      />
+    </>
   );
 }

@@ -177,14 +177,14 @@ export default function PolicyLiveFeedHardcoded() {
             <div className="flex items-start justify-between gap-3 sm:gap-4 mb-2 sm:mb-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 sm:gap-2 mb-2 flex-wrap">
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold ${getSourceColor(update.source)}`}>
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full text-xs sm:text-xs font-bold ${getSourceColor(update.source)}`}>
                     {getSourceIcon(update.source)}
                     <span>{update.source}</span>
                   </span>
-                  <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold whitespace-nowrap ${getImpactBadge(update.impact)}`}>
+                  <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs sm:text-xs font-bold whitespace-nowrap ${getImpactBadge(update.impact)}`}>
                     {update.impact}
                   </span>
-                  <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
+                  <span className="inline-flex items-center gap-1 text-xs sm:text-xs text-gray-500 dark:text-gray-400">
                     <Clock className="w-3 h-3" />
                     <span>{formatDate(update.date)}</span>
                   </span>

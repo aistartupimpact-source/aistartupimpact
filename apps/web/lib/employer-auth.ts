@@ -1,12 +1,13 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
+import { prisma } from '@aistartupimpact/database';
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.USER_JWT_SECRET || 'employer-secret-change-in-production'
+  process.env.EMPLOYER_JWT_SECRET!
 );
 
 const COOKIE_NAME = 'employer_session';
-const SESSION_EXPIRY_DAYS = 30;
+const SESSION_EXPIRY_DAYS = 7;
 
 export interface EmployerSession {
   id: string;
@@ -14,6 +15,7 @@ export interface EmployerSession {
   companyName: string;
   slug: string;
   plan: string;
+  onboardingCompleted: boolean;
 }
 
 /**
@@ -25,6 +27,7 @@ export async function setEmployerSession(employer: {
   companyName: string;
   slug: string;
   plan: string;
+  onboardingCompleted: boolean;
 }): Promise<void> {
   const jwt = await new SignJWT({
     employerId: employer.id,
@@ -32,6 +35,7 @@ export async function setEmployerSession(employer: {
     companyName: employer.companyName,
     slug: employer.slug,
     plan: employer.plan,
+    onboardingCompleted: employer.onboardingCompleted,
   })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -59,12 +63,19 @@ export async function getEmployerSession(): Promise<EmployerSession | null> {
 
     const { payload } = await jwtVerify(cookie.value, JWT_SECRET);
 
+    const employer = await prisma.jobBoardEmployer.findUnique({
+      where: { id: payload.employerId as string },
+      select: { isActive: true, deactivatedAt: true },
+    });
+    if (!employer || !employer.isActive || employer.deactivatedAt) return null;
+
     return {
       id: payload.employerId as string,
       email: payload.email as string,
       companyName: payload.companyName as string,
       slug: payload.slug as string,
       plan: payload.plan as string,
+      onboardingCompleted: !!payload.onboardingCompleted,
     };
   } catch {
     return null;

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@aistartupimpact/database";
 import { getOrganizerSession } from "@/lib/organizer-auth";
+import { eventCancellationHtml } from "@aistartupimpact/utils";
+import { sendEmailFireAndForget } from "@/lib/email/send";
 
 export const dynamic = "force-dynamic";
 
@@ -11,11 +13,41 @@ export async function DELETE(request: NextRequest, { params }: { params: { event
   const session = await getOrganizerSession();
   if (!session) return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
 
-  const event = await prisma.event.findUnique({ where: { id: params.eventId }, select: { organizerId: true } });
+  const event = await prisma.event.findUnique({
+    where: { id: params.eventId },
+    select: { organizerId: true, title: true, startAt: true, timezone: true },
+  });
   if (!event) return NextResponse.json({ success: false, error: "Event not found" }, { status: 404 });
   if (event.organizerId !== session.id) return NextResponse.json({ success: false, error: "Not authorized" }, { status: 403 });
 
+  // Fetch confirmed attendees before soft-deleting
+  const attendees = await prisma.eventRegistration.findMany({
+    where: { eventId: params.eventId, deletedAt: null, status: "CONFIRMED" },
+    select: { guestEmail: true, guestName: true },
+  });
+
   await prisma.event.update({ where: { id: params.eventId }, data: { deletedAt: new Date() } });
+
+  // Notify attendees about cancellation
+  if (attendees.length > 0) {
+    const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "no-reply@aistartupimpact.com";
+    const tz = event.timezone || "Asia/Kolkata";
+    const dateStr = event.startAt
+      ? new Date(event.startAt).toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: tz })
+      : "TBA";
+
+    for (const attendee of attendees) {
+      if (!attendee.guestEmail) continue;
+      sendEmailFireAndForget({
+        to: attendee.guestEmail,
+        from: `AI Startup Impact Events <${FROM_EMAIL}>`,
+        subject: `Event Cancelled: ${event.title}`,
+        html: eventCancellationHtml(attendee.guestName || "there", event.title, dateStr),
+        type: "event_cancellation",
+      });
+    }
+  }
+
   return NextResponse.json({ success: true });
 }
 

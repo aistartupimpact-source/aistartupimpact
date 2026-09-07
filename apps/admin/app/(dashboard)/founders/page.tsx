@@ -1,9 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Users, Building2, Mail, Calendar, CheckCircle, XCircle, Clock, Eye, Search, Filter } from 'lucide-react';
 import { getFoundersAction } from './actions';
 import Link from 'next/link';
+import { Pagination } from '@/components/Pagination';
+import { TableEmptyState } from '@/components/EmptyState';
+import { UserCog } from 'lucide-react';
+
+const PAGE_SIZE = 20;
 
 interface Founder {
   id: string;
@@ -30,6 +35,7 @@ export default function FoundersPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     loadFounders();
@@ -61,6 +67,13 @@ export default function FoundersPage() {
     
     return matchesSearch && matchesStatus;
   });
+
+  // Reset page when filters change
+  useMemo(() => { setPage(1); }, [searchQuery, statusFilter]);
+
+  const totalFiltered = filteredFounders.length;
+  const totalPages = Math.ceil(totalFiltered / PAGE_SIZE);
+  const paginatedFounders = filteredFounders.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const stats = {
     total: founders.length,
@@ -183,7 +196,7 @@ export default function FoundersPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredFounders.map((founder) => (
+              {paginatedFounders.map((founder) => (
                 <tr key={founder.id} className="border-t border-gray-50 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
                   <td className="px-6 py-4">
                     <div>
@@ -281,16 +294,19 @@ export default function FoundersPage() {
                   </td>
                 </tr>
               ))}
-              {filteredFounders.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-400 font-jakarta text-sm">
-                    No founders found matching your criteria
-                  </td>
-                </tr>
+              {paginatedFounders.length === 0 && (
+                <TableEmptyState colSpan={7} icon={UserCog} title="No founders found" description="Try adjusting your search or filters" />
               )}
             </tbody>
           </table>
         </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          total={totalFiltered}
+          pageSize={PAGE_SIZE}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   );

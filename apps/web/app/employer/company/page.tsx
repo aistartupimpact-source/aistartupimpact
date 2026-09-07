@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Building2, Save, Link2, Unlink, Search, ExternalLink, CheckCircle2, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
@@ -138,21 +139,21 @@ export default function EmployerCompanyPage() {
               <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-green-800 dark:text-green-300 font-jakarta">Connected to startup profile</p>
-                <p className="text-[11px] text-green-600 dark:text-green-400 font-jakarta">Jobs you post appear on this startup&apos;s page automatically.</p>
+                <p className="text-xs text-green-600 dark:text-green-400 font-jakarta">Jobs you post appear on this startup&apos;s page automatically.</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
               <div className="w-11 h-11 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center overflow-hidden shrink-0">
                 {company.startupLogo ? (
-                  <img src={company.startupLogo} alt="" className="w-full h-full object-cover" />
+                  <Image src={company.startupLogo} alt="" width={44} height={44} sizes="44px" className="w-full h-full object-cover" />
                 ) : (
                   <Building2 className="w-5 h-5 text-gray-400" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-sora font-bold text-sm text-navy dark:text-white">{company.startupName}</p>
-                <div className="flex items-center gap-2 text-[11px] text-gray-400 font-jakarta mt-0.5">
+                <div className="flex items-center gap-2 text-xs text-gray-400 font-jakarta mt-0.5">
                   {company.startupCity && <span>{company.startupCity}</span>}
                   {company.startupStage && <span>• {company.startupStage}</span>}
                 </div>
@@ -167,7 +168,7 @@ export default function EmployerCompanyPage() {
               </div>
             </div>
 
-            <p className="text-[11px] text-gray-400 font-jakarta mt-3 italic">
+            <p className="text-xs text-gray-400 font-jakarta mt-3 italic">
               Company info is synced from your startup profile. To edit, update your startup listing in the directory.
             </p>
           </div>
@@ -184,7 +185,7 @@ export default function EmployerCompanyPage() {
                 type="text"
                 value={searchQuery}
                 onChange={e => handleSearch(e.target.value)}
-                placeholder="Search your startup by name..."
+                inputMode="search" enterKeyHint="search" placeholder="Search your startup by name..."
                 className="input-field w-full pl-10"
               />
             </div>
@@ -200,11 +201,11 @@ export default function EmployerCompanyPage() {
                     className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 text-left transition-colors disabled:opacity-50 border-b border-gray-100 dark:border-gray-800 last:border-0"
                   >
                     <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
-                      {s.logoUrl ? <img src={s.logoUrl} alt="" className="w-full h-full object-cover" /> : <Building2 className="w-4 h-4 text-gray-400" />}
+                      {s.logoUrl ? <Image src={s.logoUrl} alt="" width={32} height={32} sizes="32px" className="w-full h-full object-cover" /> : <Building2 className="w-4 h-4 text-gray-400" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-navy dark:text-white font-jakarta truncate">{s.name}</p>
-                      <p className="text-[10px] text-gray-400 font-jakarta">{s.headquartersCity || 'AI Startup'} {s.stage ? `• ${s.stage}` : ''}</p>
+                      <p className="text-xs text-gray-400 font-jakarta">{s.headquartersCity || 'AI Startup'} {s.stage ? `• ${s.stage}` : ''}</p>
                     </div>
                     <ArrowRight className="w-3.5 h-3.5 text-brand shrink-0" />
                   </button>
@@ -221,7 +222,7 @@ export default function EmployerCompanyPage() {
               </div>
             )}
 
-            <p className="text-[11px] text-gray-400 font-jakarta mt-3">
+            <p className="text-xs text-gray-400 font-jakarta mt-3">
               Not an AI startup? No problem — just fill in the company details below.
             </p>
           </div>

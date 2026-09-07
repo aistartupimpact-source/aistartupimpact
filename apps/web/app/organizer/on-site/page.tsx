@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { QrCode, Copy, Download, Maximize, Check, Users, Loader2, UserPlus } from "lucide-react";
 
 export default function OnSitePage() {
@@ -50,8 +51,8 @@ export default function OnSitePage() {
   // Full screen QR
   if (fullScreen && selectedEvent) {
     return (
-      <div className="fixed inset-0 z-50 bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-6" onClick={() => setFullScreen(false)}>
-        <img src={qrUrl} alt="QR Code" className="w-72 h-72 sm:w-96 sm:h-96"/>
+      <div className="fixed inset-0 z-modal bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-6" onClick={() => setFullScreen(false)}>
+        <Image src={qrUrl} alt="QR Code" width={384} height={384} unoptimized className="w-72 h-72 sm:w-96 sm:h-96"/>
         <p className="text-lg font-sora font-bold text-navy dark:text-white mt-6 text-center">{selectedEvent.title}</p>
         <p className="text-sm text-gray-500 font-jakarta mt-2">Scan to register</p>
         <p className="text-xs text-gray-400 font-jakarta mt-6">Tap anywhere to close</p>
@@ -78,22 +79,22 @@ export default function OnSitePage() {
           <div className="grid grid-cols-3 gap-2">
             <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-center">
               <p className="text-lg font-bold text-navy dark:text-white font-sora">{selectedEvent.registrationCount}</p>
-              <p className="text-[9px] text-gray-500 font-jakarta">Registered</p>
+              <p className="text-xs text-gray-500 font-jakarta">Registered</p>
             </div>
             <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-center">
               <p className="text-lg font-bold text-green-600 font-sora">{selectedEvent.capacity ? selectedEvent.capacity - selectedEvent.registrationCount : "∞"}</p>
-              <p className="text-[9px] text-gray-500 font-jakarta">Remaining</p>
+              <p className="text-xs text-gray-500 font-jakarta">Remaining</p>
             </div>
             <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-center">
               <p className="text-lg font-bold text-gray-500 font-sora">{selectedEvent.capacity || "∞"}</p>
-              <p className="text-[9px] text-gray-500 font-jakarta">Capacity</p>
+              <p className="text-xs text-gray-500 font-jakarta">Capacity</p>
             </div>
           </div>
 
           {/* QR Code Display */}
           <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5 text-center">
             <p className="text-xs font-bold text-gray-400 uppercase font-jakarta mb-3">Event Registration QR</p>
-            <img src={qrUrl} alt="Registration QR" className="w-48 h-48 mx-auto rounded-lg border border-gray-100 dark:border-gray-800"/>
+            <Image src={qrUrl} alt="Registration QR" width={192} height={192} unoptimized className="w-48 h-48 mx-auto rounded-lg border border-gray-100 dark:border-gray-800"/>
             <p className="text-xs text-gray-500 font-jakarta mt-3">Visitors scan this to register on their phone</p>
             <div className="flex items-center justify-center gap-2 mt-4">
               <button onClick={handleCopy} className="px-3 py-2 text-xs font-semibold border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 font-jakarta flex items-center gap-1.5">
@@ -129,8 +130,8 @@ export default function OnSitePage() {
                   <div className="text-center">
                     <CheckCircleIcon />
                     <p className="text-sm font-bold text-green-700 font-jakarta mt-1">Registered & Ready!</p>
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(walkInResult.data?.qrToken || "")}`} alt="Ticket QR" className="w-24 h-24 mx-auto mt-2 rounded border"/>
-                    <p className="text-[9px] text-gray-400 font-jakarta mt-1">Ticket QR: {walkInResult.data?.qrToken}</p>
+                    <Image src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(walkInResult.data?.qrToken || "")}`} alt="Ticket QR" width={96} height={96} unoptimized className="w-24 h-24 mx-auto mt-2 rounded border"/>
+                    <p className="text-xs text-gray-400 font-jakarta mt-1">Ticket QR: {walkInResult.data?.qrToken}</p>
                   </div>
                 ) : (
                   <p className="text-sm text-red-600 font-jakarta">{walkInResult.error}</p>

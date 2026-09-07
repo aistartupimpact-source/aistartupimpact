@@ -11,12 +11,14 @@ interface SignInModalProps {
   defaultTab?: 'user' | 'founder';
   returnTo?: string | null;
   fullPage?: boolean;
+  embedded?: boolean;
 }
 
 type ModeType = 'signin' | 'signup';
 
-export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', defaultTab = 'user', returnTo, fullPage = false }: SignInModalProps) {
+export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', defaultTab = 'user', returnTo, fullPage = false, embedded = false }: SignInModalProps) {
   const router = useRouter();
+  const effectiveReturnTo = returnTo || (typeof window !== 'undefined' ? window.location.pathname + window.location.search : null);
   const [mode, setMode] = useState<ModeType>(defaultMode);
   const [formData, setFormData] = useState({
     name: '',
@@ -37,9 +39,10 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
 
   // 2FA state
   const [requires2FA, setRequires2FA] = useState(false);
-  const [userId, setUserId] = useState('');
+  const [challengeToken, setChallengeToken] = useState('');
   const [twoFACode, setTwoFACode] = useState('');
   const [useBackupCode, setUseBackupCode] = useState(false);
+  const [twoFAUserType, setTwoFAUserType] = useState<string>('founder');
 
   // OTP verification state (for signup)
   const [otpStep, setOtpStep] = useState(false);
@@ -66,7 +69,8 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
     setResendSuccess(false);
     setRequires2FA(false);
     setTwoFACode('');
-    setUserId('');
+    setChallengeToken('');
+    setTwoFAUserType('founder');
     setOtpStep(false);
     setOtpCode('');
   };
@@ -163,7 +167,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
 
         onClose();
         resetForm();
-        router.push(returnTo || '/profile');
+        router.push(effectiveReturnTo || '/profile');
         router.refresh();
       } catch (err: any) {
         setError(err.message);
@@ -191,17 +195,18 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
         throw new Error(data.error || 'Login failed');
       }
 
-      // Check if 2FA is required (founder accounts)
+      // Check if 2FA is required
       if (data.requires2FA) {
         setRequires2FA(true);
-        setUserId(data.userId);
+        setChallengeToken(data.challengeToken);
+        setTwoFAUserType(data.userType || 'founder');
         setLoading(false);
         return;
       }
 
       onClose();
       resetForm();
-      router.push(returnTo || '/profile');
+      router.push(effectiveReturnTo || '/profile');
       router.refresh();
     } catch (err: any) {
       setError(err.message);
@@ -237,31 +242,34 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
     setLoading(true);
 
     try {
-      // Verify 2FA through founder endpoint
-      const res = await fetch('/api/founder/auth/verify-2fa', {
+      const verifyEndpoint = twoFAUserType === 'webuser' || twoFAUserType === 'organizer'
+        ? '/api/user/auth/verify-2fa'
+        : '/api/founder/auth/verify-2fa';
+
+      const res = await fetch(verifyEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, token: twoFACode, isBackupCode: useBackupCode }),
+        body: JSON.stringify({ challengeToken, token: twoFACode, isBackupCode: useBackupCode }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || '2FA verification failed');
 
-      // Also create a web user session so navbar works (bridge login)
-      // The founder is now authenticated — create/find their WebUser and set user-token
-      try {
-        await fetch('/api/user/auth/bridge-session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ founderId: userId }),
-        });
-      } catch {
-        // Non-critical — founder session still works
+      if (twoFAUserType === 'founder') {
+        try {
+          await fetch('/api/user/auth/bridge-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}),
+          });
+        } catch {
+          // Non-critical — founder session still works
+        }
       }
 
       onClose();
       resetForm();
-      router.push(returnTo || '/profile');
+      router.push(effectiveReturnTo || '/profile');
       router.refresh();
     } catch (err: any) {
       setError(err.message);
@@ -295,7 +303,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
   };
 
   const handleGoogleSignIn = () => {
-    const returnUrl = returnTo || '/profile';
+    const returnUrl = effectiveReturnTo || '/profile';
     window.location.href = `/api/user/auth/google?returnTo=${encodeURIComponent(returnUrl)}`;
   };
 
@@ -305,14 +313,17 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
   };
 
   const wrapperClass = fullPage
-    ? "fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 p-4"
-    : "fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm";
+    ? "fixed inset-0 z-modal flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 p-4"
+    : "fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm";
 
-  return (
-    <div className={wrapperClass}>
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-800" onClick={(e) => e.stopPropagation()}>
+  const cardClass = embedded
+    ? "w-full"
+    : "bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-800";
+
+  const cardContent = (
+      <div className={cardClass} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800">
+        <div className={`flex items-center justify-between ${embedded ? 'pb-4' : 'p-6 border-b border-gray-200 dark:border-gray-800'}`}>
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               {requires2FA ? 'Verify Identity' : mode === 'signin' ? 'Sign In' : 'Create Account'}
@@ -325,7 +336,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
                   : 'Join us and start your journey'}
             </p>
           </div>
-          {!fullPage && (
+          {!fullPage && !embedded && (
             <button
               onClick={() => { onClose(); resetForm(); }}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -379,7 +390,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
 
             <button
               type="button"
-              onClick={() => { setRequires2FA(false); setTwoFACode(''); setUserId(''); setError(''); }}
+              onClick={() => { setRequires2FA(false); setTwoFACode(''); setChallengeToken(''); setTwoFAUserType('founder'); setError(''); }}
               className="w-full text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
             >
               Back to login
@@ -403,7 +414,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
                 <span className="font-semibold text-gray-700 dark:text-gray-300">Continue with Google</span>
               </button>
               {mode === 'signup' && (
-                <p className="text-[11px] text-gray-400 dark:text-gray-500 text-center mb-4">
+                <p className="text-xs text-gray-400 dark:text-gray-500 text-center mb-4">
                   By signing up with Google, you agree to receive our weekly AI newsletter. Unsubscribe anytime.
                 </p>
               )}
@@ -487,6 +498,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
+                      autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white pr-11 text-sm"
@@ -505,7 +517,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
                       <div className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div className={`h-full transition-all ${passwordStrength.color}`} style={{ width: `${(passwordStrength.strength / 4) * 100}%` }} />
                       </div>
-                      <span className="text-[10px] font-medium text-gray-500">{passwordStrength.label}</span>
+                      <span className="text-xs font-medium text-gray-500">{passwordStrength.label}</span>
                     </div>
                   )}
                 </div>
@@ -518,6 +530,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
                       <input
                         type={showConfirmPassword ? 'text' : 'password'}
                         required
+                        autoComplete="new-password"
                         value={formData.confirmPassword}
                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                         className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white pr-11 text-sm ${
@@ -651,6 +664,13 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
           </>
         )}
       </div>
+  );
+
+  if (embedded) return cardContent;
+
+  return (
+    <div className={wrapperClass}>
+      {cardContent}
     </div>
   );
 }

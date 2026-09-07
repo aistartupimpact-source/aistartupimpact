@@ -11,17 +11,23 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          DEFAULT: '#FF3131',
+          DEFAULT: 'var(--brand-color, #FF3131)',
           50: '#FFF0F0',
           100: '#FFE0E0',
           200: '#FFC2C2',
           300: '#FF9494',
           400: '#FF5E5E',
-          500: '#FF3131',
+          500: 'var(--brand-color, #FF3131)',
           600: '#E51A1A',
           700: '#C01010',
           800: '#9C1010',
           900: '#821414',
+        },
+        'brand-secondary': {
+          DEFAULT: 'var(--brand-secondary, #1B3A5C)',
+        },
+        'brand-tertiary': {
+          DEFAULT: 'var(--brand-tertiary, #F59E0B)',
         },
         navy: {
           DEFAULT: '#0D1B2A',
@@ -37,10 +43,25 @@ const config: Config = {
           900: '#08111B',
         },
         charcoal: '#2C2C2C',
+        link: {
+          DEFAULT: '#1B75E6',
+          hover: '#1558B0',
+          dark: '#60A5FA',
+          'dark-hover': '#93C5FD',
+        },
+        page: {
+          DEFAULT: '#F9FAFB',
+          dark: '#030712',
+        },
+        surface: {
+          DEFAULT: '#FFFFFF',
+          dark: '#111827',
+        },
       },
       fontFamily: {
         sora: ['var(--font-sora)', 'sans-serif'],
         jakarta: ['var(--font-jakarta)', 'sans-serif'],
+        bebas: ['var(--font-bebas)', 'sans-serif'],
         mono: ['var(--font-jetbrains)', 'monospace'],
       },
       borderRadius: {
@@ -49,12 +70,21 @@ const config: Config = {
         md: '8px',
         lg: '12px',
         xl: '16px',
+        '2xl': '20px',
       },
       maxWidth: {
         article: '720px',
       },
       transitionDuration: {
         DEFAULT: '200ms',
+      },
+      zIndex: {
+        dropdown: '100',
+        sticky: '200',
+        overlay: '300',
+        modal: '400',
+        toast: '500',
+        critical: '600',
       },
       animation: {
         'slide-up': 'slideUp 0.3s ease-out',

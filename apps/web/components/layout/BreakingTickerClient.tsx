@@ -29,8 +29,8 @@ function BreakingTickerClient({ items }: BreakingTickerClientProps) {
         </span>
 
         {/* Breaking chip — desktop only */}
-        <span className="hidden sm:flex items-center gap-1 bg-brand text-white text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.3 rounded shrink-0">
-          <span className="text-[8px]">⚡</span> Breaking
+        <span className="hidden sm:flex items-center gap-1 bg-brand text-white text-xs font-bold uppercase tracking-wider px-1.5 py-0.3 rounded shrink-0">
+          <span className="text-xs">⚡</span> Breaking
         </span>
 
         {/* Scrolling marquee */}
@@ -38,7 +38,7 @@ function BreakingTickerClient({ items }: BreakingTickerClientProps) {
           <div className="flex whitespace-nowrap animate-breaking-ticker">
             {all.map((item, i) => (
               <span key={i} className="text-gray-200 text-xs font-jakarta inline-flex items-center gap-3 pr-12">
-                <span className="text-brand font-bold text-[10px]">◆</span>
+                <span className="text-brand font-bold text-xs">◆</span>
                 {item}
               </span>
             ))}

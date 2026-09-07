@@ -11,6 +11,9 @@ declare module "next-auth" {
       slug: string;
       role: UserRole;
     };
+    twoFactorEnabled: boolean;
+    twoFactorVerified: boolean;
+    require2FA: boolean;
   }
 
   interface User {
@@ -28,5 +31,10 @@ declare module "next-auth/jwt" {
     id: string;
     role: UserRole;
     slug: string;
+    twoFactorEnabled?: boolean;
+    twoFactorVerified?: boolean;
+    twoFactorPassed?: boolean;
+    require2FA?: boolean;
+    lastActivity?: number;
   }
 }

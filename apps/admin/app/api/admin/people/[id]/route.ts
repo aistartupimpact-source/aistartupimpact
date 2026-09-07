@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { neon } from "@neondatabase/serverless";
+import { logAuditEvent } from "@/lib/audit-log";
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -18,8 +19,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         u."emailVerified", u."twoFactorEnabled", u."twoFactorInherited", u."lastWorkspace",
         u."googleId",
         f.id as "founderId", f.company as "founderCompany", f.status as "founderStatus",
+        f."deactivatedAt"::text as "founderDeactivatedAt",
         f."createdAt"::text as "founderJoined",
         o.id as "organizerId", o.company as "organizerCompany", o.status as "organizerStatus",
+        o."deactivatedAt"::text as "organizerDeactivatedAt",
         o."createdAt"::text as "organizerJoined"
       FROM "UnifiedUser" u
       LEFT JOIN "FounderUser" f ON f."unifiedUserId" = u.id
@@ -54,6 +57,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       `;
     }
 
+    logAuditEvent({ action: 'ACCESS', resourceType: 'USER', resourceId: params.id, resourceName: person.name || person.email });
+
     return NextResponse.json({ success: true, person, startups, events });
   } catch (error) {
     console.error("People detail error:", error);
@@ -72,22 +77,25 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   try {
     switch (action) {
       case "suspend": {
-        // Suspend founder + organizer workspaces
         await sql`UPDATE "FounderUser" SET status = 'SUSPENDED' WHERE "unifiedUserId" = ${params.id}`;
         await sql`UPDATE "EventOrganizer" SET status = 'SUSPENDED' WHERE "unifiedUserId" = ${params.id}`;
+        logAuditEvent({ action: 'SUSPEND', resourceType: 'USER', resourceId: params.id });
         return NextResponse.json({ success: true, message: "Account suspended" });
       }
       case "unsuspend": {
         await sql`UPDATE "FounderUser" SET status = 'ACTIVE' WHERE "unifiedUserId" = ${params.id}`;
         await sql`UPDATE "EventOrganizer" SET status = 'ACTIVE' WHERE "unifiedUserId" = ${params.id}`;
+        logAuditEvent({ action: 'UNSUSPEND', resourceType: 'USER', resourceId: params.id });
         return NextResponse.json({ success: true, message: "Account unsuspended" });
       }
       case "unlink_founder": {
         await sql`UPDATE "FounderUser" SET "unifiedUserId" = NULL WHERE "unifiedUserId" = ${params.id}`;
+        logAuditEvent({ action: 'UPDATE', resourceType: 'USER', resourceId: params.id, after: { action: 'unlink_founder' } });
         return NextResponse.json({ success: true, message: "Founder workspace unlinked" });
       }
       case "unlink_organizer": {
         await sql`UPDATE "EventOrganizer" SET "unifiedUserId" = NULL WHERE "unifiedUserId" = ${params.id}`;
+        logAuditEvent({ action: 'UPDATE', resourceType: 'USER', resourceId: params.id, after: { action: 'unlink_organizer' } });
         return NextResponse.json({ success: true, message: "Organizer workspace unlinked" });
       }
       default:

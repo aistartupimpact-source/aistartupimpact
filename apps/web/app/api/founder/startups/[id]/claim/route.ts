@@ -3,6 +3,8 @@ import { requireFounderAuth } from '@/lib/founder-auth';
 import { prisma } from '@aistartupimpact/database';
 import crypto from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 // Generate secure random token
 function generateToken(): string {
   return crypto.randomBytes(16).toString('hex');

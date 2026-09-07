@@ -5,6 +5,7 @@ import { getArticlesDirect, getActiveCreativeForZone } from '@/lib/db';
 import { generateCollectionPageSchema, generateItemListSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import ArticlesListClient from '@/components/ArticlesListClient';
 import SubscribeForm from '@/components/SubscribeForm';
+import EmptyState from '@/components/ui/EmptyState';
 
 export const metadata: Metadata = {
   title: 'Latest AI News — India & Global',
@@ -35,7 +36,7 @@ export const revalidate = 60;
 
 export default async function NewsPage() {
   const [articles, inArticleAd] = await Promise.all([
-    getArticlesDirect({ type: 'NEWS', limit: 500 }) as Promise<any[]>,
+    getArticlesDirect({ type: 'NEWS', limit: 100 }) as Promise<any[]>,
     getActiveCreativeForZone('A1_IN_ARTICLE'),
   ]);
   const allArticles = articles || [];
@@ -90,7 +91,7 @@ export default async function NewsPage() {
       </div>
 
       {allArticles.length === 0 && (
-        <p className="text-gray-400 font-jakarta text-center py-20">No articles published yet.</p>
+        <EmptyState title="No articles yet" description="Check back soon for the latest AI news and updates." />
       )}
 
       <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 lg:gap-10">
@@ -106,7 +107,7 @@ export default async function NewsPage() {
         <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-6">
           {/* Newsletter CTA */}
           <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-brand mb-2">Free Weekly</div>
+            <div className="text-xs font-bold uppercase tracking-wider text-brand mb-2">Free Weekly</div>
             <h3 className="font-sora font-bold text-base text-navy dark:text-white leading-snug mb-1">
               India AI Digest
             </h3>

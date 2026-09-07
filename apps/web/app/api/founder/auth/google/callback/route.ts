@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import { verifyGoogleToken, isCompanyEmail, extractCompanyDomain, getCompanyNameFromDomain } from '@/lib/google-oauth';
 import { setFounderSession } from '@/lib/founder-auth';
 
-const sql = neon(process.env.DATABASE_URL!);
-
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -103,12 +102,15 @@ export async function GET(request: NextRequest) {
     // Set session
     await setFounderSession(user[0].id, user[0].email, user[0].name, !!user[0].onboardingCompleted);
 
-    // Parse state to get return URL
+    // Parse state to get return URL (validated to prevent open redirects)
     let returnTo = '/founder/dashboard';
     if (state) {
       try {
         const decoded = JSON.parse(Buffer.from(state, 'base64').toString());
-        returnTo = decoded.returnTo || returnTo;
+        const candidate = decoded.returnTo || returnTo;
+        if (typeof candidate === 'string' && candidate.startsWith('/') && !candidate.startsWith('//')) {
+          returnTo = candidate;
+        }
       } catch (e) {
         // Invalid state, use default
       }

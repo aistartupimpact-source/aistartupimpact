@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import { SignJWT } from 'jose';
 import { randomBytes } from 'crypto';
+import { getFounderSession } from '@/lib/founder-auth';
 
-const sql = neon(process.env.DATABASE_URL!);
+export const dynamic = 'force-dynamic';
+
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.USER_JWT_SECRET || 'user-secret-change-in-production'
+  process.env.USER_JWT_SECRET!
 );
 
 function generateId(): string {
@@ -20,21 +22,19 @@ function generateSlug(name: string): string {
 /**
  * POST /api/user/auth/bridge-session
  * Creates a WebUser session for a founder who just completed 2FA.
- * This bridges the founder's auth to the community session system.
- * Only callable after successful founder 2FA verification (founder_session cookie must be set).
+ * Uses the founder-token cookie for authentication — no client-provided IDs.
  */
 export async function POST(request: NextRequest) {
   try {
-    const { founderId } = await request.json();
-    if (!founderId) {
-      return NextResponse.json({ error: 'Missing founderId' }, { status: 400 });
+    const founderSession = await getFounderSession();
+    if (!founderSession) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    // Get founder data
     const founders = await sql`
       SELECT id, email, name, avatar
       FROM "FounderUser"
-      WHERE id = ${founderId}
+      WHERE id = ${founderSession.userId}
       LIMIT 1
     `;
 
@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
 
     const founder = founders[0];
 
-    // Find or create WebUser for this email
     let webUsers = await sql`
       SELECT id, email, name, avatar, slug
       FROM "WebUser"
@@ -67,7 +66,6 @@ export async function POST(request: NextRequest) {
 
     const user = webUsers[0];
 
-    // Create session token
     const sessionId = generateId();
     const token = await new SignJWT({
       userId: user.id,
@@ -77,10 +75,10 @@ export async function POST(request: NextRequest) {
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime('30d')
+      .setExpirationTime('7d')
       .sign(JWT_SECRET);
 
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await sql`
       INSERT INTO "WebUserSession" (id, "webUserId", "refreshToken", "expiresAt", "ipAddress", "userAgent", "createdAt")
       VALUES (${sessionId}, ${user.id}, ${token}, ${expiresAt.toISOString()}, 'bridge', 'bridge', NOW())
@@ -91,7 +89,7 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge: 7 * 24 * 60 * 60,
       path: '/',
     });
 

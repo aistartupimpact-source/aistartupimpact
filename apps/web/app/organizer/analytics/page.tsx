@@ -17,7 +17,7 @@ export default async function AnalyticsPage() {
       </div>
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
         <h2 className="text-sm font-sora font-semibold text-navy dark:text-white mb-4">Event Performance</h2>
-        <div className="space-y-2">{events.map(e => <div key={e.id} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0"><div><p className="text-sm text-gray-700 dark:text-gray-200 font-jakarta">{e.title}</p><p className="text-[10px] text-gray-400">{new Date(e.startAt).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}</p></div><span className="text-sm font-bold text-navy dark:text-white font-sora">{e.registrationCount}</span></div>)}</div>
+        <div className="space-y-2">{events.map(e => <div key={e.id} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0"><div><p className="text-sm text-gray-700 dark:text-gray-200 font-jakarta">{e.title}</p><p className="text-xs text-gray-400">{new Date(e.startAt).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}</p></div><span className="text-sm font-bold text-navy dark:text-white font-sora">{e.registrationCount}</span></div>)}</div>
       </div>
     </div>
   );

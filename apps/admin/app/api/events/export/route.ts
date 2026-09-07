@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@aistartupimpact/database";
+import { logAuditEvent } from "@/lib/audit-log";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +45,12 @@ export async function GET() {
   ]);
 
   const csv = [headers.join(","), ...rows.map(row => row.map(v => `"${(v || "").replace(/"/g, '""')}"`).join(","))].join("\n");
+
+  logAuditEvent({
+    action: 'EXPORT',
+    resourceType: 'EVENT_EXPORT',
+    after: { recordCount: registrations.length, fields: headers },
+  });
 
   return new NextResponse(csv, {
     headers: {

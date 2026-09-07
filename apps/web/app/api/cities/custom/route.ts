@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     const { cityName } = await req.json();
@@ -12,12 +14,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const cleanName = cityName.trim();
+    const cleanName = cityName.trim().slice(0, 100);
     const slug = cleanName
       .toLowerCase()
       .replace(/[^\w\s-]/g, '')
-      .replace(/[\s_-]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+      .split(/[\s_-]+/)
+      .filter(Boolean)
+      .join('-');
 
     // Check if city already exists (standard or custom)
     const existing = await sql`

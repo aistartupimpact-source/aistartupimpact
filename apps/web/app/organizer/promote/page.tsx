@@ -83,11 +83,12 @@ export default function PromotePage() {
   };
 
   // Email preview HTML
+  const escapeHtml = (str: string) => str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   const emailPreviewHtml = selectedEvent ? `
     <div style="font-family:-apple-system,sans-serif;max-width:100%;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;">
       <div style="padding:20px;">
-        <h2 style="font-size:18px;font-weight:700;color:#0D1B2A;margin:0 0 12px;">${selectedEvent.title}</h2>
-        <div style="font-size:13px;color:#6b7280;line-height:1.7;white-space:pre-wrap;">${emailBody}</div>
+        <h2 style="font-size:18px;font-weight:700;color:#0D1B2A;margin:0 0 12px;">${escapeHtml(selectedEvent.title)}</h2>
+        <div style="font-size:13px;color:#6b7280;line-height:1.7;white-space:pre-wrap;">${escapeHtml(emailBody)}</div>
         <div style="margin:20px 0;"><a style="background:#FF3131;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:700;font-size:13px;">Register Now →</a></div>
         <p style="font-size:10px;color:#9ca3af;">AI Startup Impact Events · Unsubscribe</p>
       </div>
@@ -104,9 +105,9 @@ export default function PromotePage() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 flex items-center gap-3"><Mail className="w-4 h-4 text-blue-500"/><div><p className="text-lg font-bold text-navy dark:text-white">{totalPromotable}</p><p className="text-[9px] text-gray-400">Promotable</p></div></div>
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 flex items-center gap-3"><MapPin className="w-4 h-4 text-green-500"/><div><p className="text-lg font-bold text-navy dark:text-white">{topCities.length}</p><p className="text-[9px] text-gray-400">Cities</p></div></div>
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 flex items-center gap-3"><Briefcase className="w-4 h-4 text-purple-500"/><div><p className="text-lg font-bold text-navy dark:text-white">{topOccupations.length}</p><p className="text-[9px] text-gray-400">Occupations</p></div></div>
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 flex items-center gap-3"><Mail className="w-4 h-4 text-blue-500"/><div><p className="text-lg font-bold text-navy dark:text-white">{totalPromotable}</p><p className="text-xs text-gray-400">Promotable</p></div></div>
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 flex items-center gap-3"><MapPin className="w-4 h-4 text-green-500"/><div><p className="text-lg font-bold text-navy dark:text-white">{topCities.length}</p><p className="text-xs text-gray-400">Cities</p></div></div>
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 flex items-center gap-3"><Briefcase className="w-4 h-4 text-purple-500"/><div><p className="text-lg font-bold text-navy dark:text-white">{topOccupations.length}</p><p className="text-xs text-gray-400">Occupations</p></div></div>
       </div>
 
       {/* Campaign Builder */}
@@ -140,8 +141,8 @@ export default function PromotePage() {
         {selectedEventId && (channels.email || channels.whatsapp) && (
           <Step num={3} title="Target Audience">
             <div className="grid grid-cols-2 gap-3">
-              <div><label className="block text-[10px] font-bold text-gray-400 uppercase mb-1 font-jakarta">City</label><select value={filterCity} onChange={e=>setFilterCity(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs font-jakarta"><option value="">All Cities</option>{topCities.map(c=><option key={c.city} value={c.city}>{c.city} ({c.count})</option>)}</select></div>
-              <div><label className="block text-[10px] font-bold text-gray-400 uppercase mb-1 font-jakarta">Occupation</label><select value={filterOccupation} onChange={e=>setFilterOccupation(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs font-jakarta"><option value="">All</option>{topOccupations.map(o=><option key={o.occupation} value={o.occupation}>{o.occupation} ({o.count})</option>)}</select></div>
+              <div><label className="block text-xs font-bold text-gray-400 uppercase mb-1 font-jakarta">City</label><select value={filterCity} onChange={e=>setFilterCity(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs font-jakarta"><option value="">All Cities</option>{topCities.map(c=><option key={c.city} value={c.city}>{c.city} ({c.count})</option>)}</select></div>
+              <div><label className="block text-xs font-bold text-gray-400 uppercase mb-1 font-jakarta">Occupation</label><select value={filterOccupation} onChange={e=>setFilterOccupation(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs font-jakarta"><option value="">All</option>{topOccupations.map(o=><option key={o.occupation} value={o.occupation}>{o.occupation} ({o.count})</option>)}</select></div>
             </div>
           </Step>
         )}
@@ -151,16 +152,16 @@ export default function PromotePage() {
           <Step num={4} title="Compose Message">
             {channels.email && (
               <div className="space-y-2 mb-4">
-                <p className="text-[10px] font-bold text-gray-400 uppercase font-jakarta flex items-center gap-1"><Mail className="w-3 h-3"/>Email</p>
+                <p className="text-xs font-bold text-gray-400 uppercase font-jakarta flex items-center gap-1"><Mail className="w-3 h-3"/>Email</p>
                 <input value={subject} onChange={e=>setSubject(e.target.value)} placeholder="Subject line" className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm font-jakarta focus:outline-none focus:ring-2 focus:ring-brand/20"/>
                 <textarea value={emailBody} onChange={e=>setEmailBody(e.target.value)} rows={5} placeholder="Email body..." className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm font-jakarta focus:outline-none focus:ring-2 focus:ring-brand/20 resize-y"/>
               </div>
             )}
             {channels.whatsapp && (
               <div className="space-y-2">
-                <p className="text-[10px] font-bold text-gray-400 uppercase font-jakarta flex items-center gap-1"><MessageCircle className="w-3 h-3"/>WhatsApp</p>
+                <p className="text-xs font-bold text-gray-400 uppercase font-jakarta flex items-center gap-1"><MessageCircle className="w-3 h-3"/>WhatsApp</p>
                 <textarea value={whatsappBody} onChange={e=>{if(e.target.value.length<=1024)setWhatsappBody(e.target.value)}} rows={4} placeholder="WhatsApp message..." className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm font-jakarta focus:outline-none focus:ring-2 focus:ring-brand/20 resize-y" maxLength={1024}/>
-                <p className="text-[9px] text-gray-400 text-right font-jakarta">{whatsappBody.length}/1024</p>
+                <p className="text-xs text-gray-400 text-right font-jakarta">{whatsappBody.length}/1024</p>
               </div>
             )}
           </Step>
@@ -175,19 +176,19 @@ export default function PromotePage() {
             {showPreview && (
               <div className="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {channels.email && (
-                  <div><p className="text-[9px] font-bold text-gray-400 uppercase mb-2 font-jakarta">📧 Email</p>
+                  <div><p className="text-xs font-bold text-gray-400 uppercase mb-2 font-jakarta">📧 Email</p>
                     <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 max-h-[350px] overflow-y-auto">
-                      <div className="bg-white dark:bg-gray-900 rounded p-2 mb-2 text-[9px] text-gray-400"><strong className="text-gray-600">Subject:</strong> {subject}</div>
+                      <div className="bg-white dark:bg-gray-900 rounded p-2 mb-2 text-xs text-gray-400"><strong className="text-gray-600">Subject:</strong> {subject}</div>
                       <div dangerouslySetInnerHTML={{__html:emailPreviewHtml}}/>
                     </div>
                   </div>
                 )}
                 {channels.whatsapp && (
-                  <div><p className="text-[9px] font-bold text-gray-400 uppercase mb-2 font-jakarta">💬 WhatsApp</p>
+                  <div><p className="text-xs font-bold text-gray-400 uppercase mb-2 font-jakarta">💬 WhatsApp</p>
                     <div className="bg-[#e5ddd5] dark:bg-[#0b141a] rounded-lg p-3 max-h-[350px] overflow-y-auto">
                       <div className="max-w-[260px] bg-white dark:bg-[#1f2c33] rounded-xl rounded-tl-sm shadow-sm p-3">
                         <p className="text-[12px] text-gray-900 dark:text-gray-100 whitespace-pre-wrap leading-relaxed" style={{fontFamily:"Helvetica,Arial,sans-serif"}}>{whatsappBody}</p>
-                        <p className="text-[9px] text-gray-400 text-right mt-1">10:30 AM <span className="text-blue-500">✓✓</span></p>
+                        <p className="text-xs text-gray-400 text-right mt-1">10:30 AM <span className="text-blue-500">✓✓</span></p>
                       </div>
                     </div>
                   </div>
@@ -216,7 +217,7 @@ function Step({ num, title, children }: { num: number; title: string; children: 
   return (
     <div>
       <h2 className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2 font-jakarta">
-        <span className="w-5 h-5 bg-brand text-white text-[10px] font-bold rounded-full flex items-center justify-center shrink-0">{num}</span>{title}
+        <span className="w-5 h-5 bg-brand text-white text-xs font-bold rounded-full flex items-center justify-center shrink-0">{num}</span>{title}
       </h2>
       <div className="pl-7">{children}</div>
     </div>

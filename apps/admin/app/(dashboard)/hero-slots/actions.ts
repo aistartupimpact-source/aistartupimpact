@@ -2,10 +2,13 @@
 
 import { neon } from '@neondatabase/serverless';
 import { revalidatePath } from 'next/cache';
+import { requireActionAuth } from '@/lib/api-auth';
 
 const sql = neon(process.env.DATABASE_URL!);
 
 export async function getHeroSlotsAction() {
+  const { error } = await requireActionAuth();
+  if (error) return [];
   try {
     const rows = await sql`
       SELECT id, title, excerpt, "coverImage", "ctaUrl", "ctaLabel", "badgeText",
@@ -29,6 +32,8 @@ export async function createHeroSlotAction(data: {
   sortOrder?: number; isActive?: boolean;
   startDate?: string; endDate?: string;
 }) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`
       INSERT INTO "HeroSlot" (id, title, excerpt, "coverImage", "ctaUrl", "ctaLabel", "badgeText",
@@ -57,6 +62,8 @@ export async function updateHeroSlotAction(id: string, data: {
   sortOrder?: number; isActive?: boolean;
   startDate?: string; endDate?: string;
 }) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`
       UPDATE "HeroSlot" SET
@@ -78,6 +85,8 @@ export async function updateHeroSlotAction(id: string, data: {
 }
 
 export async function deleteHeroSlotAction(id: string) {
+  const { error } = await requireActionAuth(['SUPER_ADMIN']);
+  if (error) return { success: false, error };
   try {
     await sql`DELETE FROM "HeroSlot" WHERE id = ${id}`;
     revalidatePath('/hero-slots');
@@ -88,6 +97,8 @@ export async function deleteHeroSlotAction(id: string) {
 }
 
 export async function toggleHeroSlotAction(id: string, current: boolean) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`UPDATE "HeroSlot" SET "isActive" = ${!current}, "updatedAt" = NOW() WHERE id = ${id}`;
     revalidatePath('/hero-slots');
@@ -98,6 +109,8 @@ export async function toggleHeroSlotAction(id: string, current: boolean) {
 }
 
 export async function reorderHeroSlotAction(id: string, sortOrder: number) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`UPDATE "HeroSlot" SET "sortOrder" = ${sortOrder}, "updatedAt" = NOW() WHERE id = ${id}`;
     revalidatePath('/hero-slots');
@@ -108,6 +121,8 @@ export async function reorderHeroSlotAction(id: string, sortOrder: number) {
 }
 
 export async function getPublishedArticlesForHeroAction() {
+  const { error } = await requireActionAuth();
+  if (error) return [];
   try {
     const rows = await sql`
       SELECT a.id, a.title, a.slug, a.excerpt, a."coverImage", a."readTimeMinutes",

@@ -2,6 +2,7 @@
 
 import { X, Linkedin, Twitter, Globe, Briefcase, Building2, Shield, CheckCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { createPortal } from 'react-dom';
 
 interface FounderProfileModalProps {
@@ -50,12 +51,12 @@ export default function FounderProfileModal({ founder, isOpen, onClose, startupN
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] transition-opacity duration-300"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-toast transition-opacity duration-300"
         onClick={onClose}
       />
       
       {/* Modal Container */}
-      <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-critical flex items-center justify-center p-4">
         <div 
           className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl max-w-xl w-full h-auto max-h-[90vh] sm:max-h-[85vh] overflow-hidden border border-gray-200 dark:border-gray-800 animate-in fade-in zoom-in-95 duration-200 flex flex-col relative"
           onClick={(e) => e.stopPropagation()}
@@ -106,10 +107,13 @@ export default function FounderProfileModal({ founder, isOpen, onClose, startupN
               <div className="flex items-end gap-3 sm:gap-4 -mt-14 mb-4 relative z-10">
                 <div className="w-24 h-24 rounded-2xl bg-white dark:bg-gray-850 border-4 border-white dark:border-gray-900 shadow-xl flex items-center justify-center font-sora font-extrabold text-3xl text-navy dark:text-white overflow-hidden shrink-0">
                   {founder.avatar ? (
-                    <img 
-                      src={founder.avatar} 
-                      alt={founder.name} 
+                    <Image
+                      src={founder.avatar}
+                      alt={founder.name}
                       className="w-full h-full object-cover"
+                      width={96}
+                      height={96}
+                      sizes="96px"
                     />
                   ) : (
                     <span>{founder.name.charAt(0).toUpperCase()}</span>

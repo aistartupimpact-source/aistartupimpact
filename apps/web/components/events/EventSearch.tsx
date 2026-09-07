@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Search, X, Calendar, MapPin, Video, Users, Loader2 } from "lucide-react";
 
@@ -133,7 +134,7 @@ export default function EventSearch({ initialEvents }: Props) {
           type="text"
           value={query}
           onChange={(e) => { hasInteracted.current = true; setQuery(e.target.value); }}
-          placeholder="Search AI events..."
+          inputMode="search" enterKeyHint="search" placeholder="Search AI events..."
           className="w-full pl-12 pr-10 py-3.5 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-base text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
         />
         {query && <button onClick={() => { hasInteracted.current = true; setQuery(""); }} className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-gray-400"><X className="w-5 h-5" /></button>}
@@ -245,7 +246,7 @@ function EventTimelineCard({ event }: { event: Event }) {
   const city = extractCity(event.address || event.venueName || "");
 
   return (
-    <Link href={`/events/${event.slug}`} className="group block">
+    <Link href={`/events/${event.slug}`} prefetch={false} className="group block">
       <div className="flex gap-3 sm:gap-4 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 active:scale-[0.99] hover:border-gray-200 dark:hover:border-gray-700 transition-all">
         {/* Content */}
         <div className="flex-1 min-w-0">
@@ -253,7 +254,7 @@ function EventTimelineCard({ event }: { event: Event }) {
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[13px] font-medium text-gray-500 dark:text-gray-400">{time}</span>
             {relativeLabel && (
-              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${relativeLabel === "Live Now" ? "bg-red-100 dark:bg-red-900/30 text-red-600" : "bg-brand/10 text-brand"}`}>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${relativeLabel === "Live Now" ? "bg-red-100 dark:bg-red-900/30 text-red-600" : "bg-brand/10 text-brand"}`}>
                 {relativeLabel}
               </span>
             )}
@@ -291,7 +292,7 @@ function EventTimelineCard({ event }: { event: Event }) {
               <span className="text-[13px] text-gray-400 flex items-center gap-1.5 ml-1">
                 <span className="flex -space-x-1.5">
                   {[...Array(Math.min(event.registrationCount, 3))].map((_, i) => (
-                    <span key={i} className={`w-5 h-5 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center text-[8px] font-bold text-white ${["bg-brand", "bg-purple-500", "bg-blue-500"][i]}`}>
+                    <span key={i} className={`w-5 h-5 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center text-xs font-bold text-white ${["bg-brand", "bg-purple-500", "bg-blue-500"][i]}`}>
                       {String.fromCharCode(65 + i)}
                     </span>
                   ))}
@@ -307,7 +308,7 @@ function EventTimelineCard({ event }: { event: Event }) {
         <div className="shrink-0 self-start">
           {event.coverImageUrl ? (
             <div className="w-[110px] h-[110px] sm:w-[140px] sm:h-[140px] rounded-[10px] overflow-hidden bg-gray-100 dark:bg-gray-800">
-              <img src={event.coverImageUrl} alt="" className="w-full h-full object-cover" />
+              <Image src={event.coverImageUrl} alt="" className="w-full h-full object-cover" width={140} height={140} sizes="140px" />
             </div>
           ) : (
             <div className="w-[110px] h-[110px] sm:w-[140px] sm:h-[140px] rounded-[10px] bg-gradient-to-br from-brand/5 to-brand/10 flex items-center justify-center">
@@ -329,7 +330,7 @@ function Badge({ color, children }: { color: "green" | "red" | "orange" | "gray"
     orange: "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400",
     gray: "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400",
   };
-  return <span className={`text-[10px] font-medium px-1.5 py-[2px] rounded ${styles[color]}`}>{children}</span>;
+  return <span className={`text-xs font-medium px-1.5 py-[2px] rounded ${styles[color]}`}>{children}</span>;
 }
 
 // ─── Helpers ──────────────────────────────────────────

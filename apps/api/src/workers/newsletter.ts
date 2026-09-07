@@ -23,7 +23,7 @@ export async function sendNewsletterBatch(campaignId: string) {
 
     // Fetch active subscribers
     const subscribers = await prisma.newsletterSubscriber.findMany({
-      where: { isActive: true },
+      where: { isActive: true, emailVerified: true },
       select: { email: true, name: true },
     });
 
@@ -46,6 +46,7 @@ export async function sendNewsletterBatch(campaignId: string) {
 
     // Build the payload for Resend Batch API
     // Resend allows sending up to 100 emails per batch request
+    const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://aistartupimpact.com';
     const batchPayload = subscribers.map((sub) => ({
       from: FROM_EMAIL,
       to: [sub.email],
@@ -55,6 +56,10 @@ export async function sendNewsletterBatch(campaignId: string) {
         previewText: campaign.previewText || '',
         articles: articles,
       }) as React.ReactElement,
+      headers: {
+        'List-Unsubscribe': `<${SITE_URL}/api/newsletter/unsubscribe?email=${encodeURIComponent(sub.email)}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
     }));
 
     // Chunk into batches of 100 based on Resend limits

@@ -2,10 +2,13 @@
 
 import { neon } from '@neondatabase/serverless';
 import { revalidatePath } from 'next/cache';
+import { requireActionAuth } from '@/lib/api-auth';
 
 const sql = neon(process.env.DATABASE_URL!);
 
 export async function getFundingRoundsAction() {
+  const { error } = await requireActionAuth();
+  if (error) return [];
   try {
     const fundingRounds = await sql`
       SELECT 
@@ -25,6 +28,8 @@ export async function getFundingRoundsAction() {
 }
 
 export async function getStartupsForDropdownAction() {
+  const { error } = await requireActionAuth();
+  if (error) return [];
   try {
     const startups = await sql`
       SELECT id, name
@@ -47,6 +52,8 @@ export async function createFundingRoundAction(data: {
   leadInvestors: string[];
   sourceUrl?: string;
 }) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`
       INSERT INTO "FundingRound" (
@@ -76,6 +83,8 @@ export async function updateFundingRoundAction(id: string, data: {
   leadInvestors: string[];
   sourceUrl?: string;
 }) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`
       UPDATE "FundingRound"
@@ -97,6 +106,8 @@ export async function updateFundingRoundAction(id: string, data: {
 }
 
 export async function deleteFundingRoundAction(id: string) {
+  const { error } = await requireActionAuth(['SUPER_ADMIN']);
+  if (error) return { success: false, error };
   try {
     await sql`
       DELETE FROM "FundingRound" WHERE id = ${id}

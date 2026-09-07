@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Save, X, Eye, EyeOff, Newspaper } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, Eye, EyeOff, Newspaper, Sparkles } from 'lucide-react';
+import { ConfirmModal } from '@/components/ConfirmModal';
+import { TableEmptyState } from '@/components/EmptyState';
 
 interface Highlight {
   id: number;
@@ -27,6 +29,7 @@ export default function NewsletterHighlightsClient() {
     is_active: true,
     display_order: 0,
   });
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
   useEffect(() => {
     fetchHighlights();
@@ -88,8 +91,6 @@ export default function NewsletterHighlightsClient() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this highlight?')) return;
-
     try {
       const res = await fetch(`/api/admin/newsletter-highlights?id=${id}`, {
         method: 'DELETE',
@@ -303,11 +304,7 @@ export default function NewsletterHighlightsClient() {
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {highlights.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                    No highlights yet. Click "Add Highlight" to create one.
-                  </td>
-                </tr>
+                <TableEmptyState colSpan={5} icon={Sparkles} title="No highlights yet" description="Click 'Add Highlight' to create your first one" />
               ) : (
                 highlights.map((highlight) => (
                   <tr key={highlight.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50">
@@ -360,7 +357,7 @@ export default function NewsletterHighlightsClient() {
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(highlight.id)}
+                          onClick={() => setConfirmDelete(highlight.id)}
                           className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                           title="Delete"
                         >
@@ -375,6 +372,22 @@ export default function NewsletterHighlightsClient() {
           </table>
         </div>
       </div>
+
+      <ConfirmModal
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={() => {
+          if (confirmDelete) {
+            handleDelete(confirmDelete);
+            setConfirmDelete(null);
+          }
+        }}
+        title="Delete Highlight"
+        message="Are you sure you want to delete this highlight?"
+        confirmLabel="Delete Highlight"
+        variant="danger"
+        requireTyping={true}
+      />
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   Eye, FileText, Crown, Zap, TrendingUp, ArrowUpRight,
@@ -67,7 +68,7 @@ export default async function ClientPortalPage() {
           <div key={card.label} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-4">
             <card.icon className={`w-5 h-5 mb-2 ${card.color}`} />
             <p className="font-sora font-extrabold text-lg text-navy dark:text-white">{card.value}</p>
-            <p className="text-[11px] text-gray-400 font-jakarta mt-0.5">{card.label}</p>
+            <p className="text-xs text-gray-400 font-jakarta mt-0.5">{card.label}</p>
           </div>
         ))}
       </div>
@@ -115,7 +116,7 @@ export default async function ClientPortalPage() {
                       )}
                     </div>
                   </div>
-                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold shrink-0 ${statusColors[a.status] || statusColors.DRAFT}`}>
+                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold shrink-0 ${statusColors[a.status] || statusColors.DRAFT}`}>
                     {a.status.replace(/_/g, ' ')}
                   </span>
                 </div>
@@ -142,17 +143,15 @@ export default async function ClientPortalPage() {
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center overflow-hidden shrink-0">
                       {(cr as any).imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={(cr as any).imageUrl} alt={cr.headline || 'Brand'} className="w-full h-full object-cover" />
+                        <Image src={(cr as any).imageUrl} alt={cr.headline || 'Brand'} width={32} height={32} sizes="32px" className="w-full h-full object-cover" />
                       ) : (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(companyName)}&background=random&color=fff&size=150`} alt={companyName} className="w-full h-full object-cover" />
+                        <Image src={`https://ui-avatars.com/api/?name=${encodeURIComponent(companyName)}&background=random&color=fff&size=150`} alt={companyName} width={32} height={32} unoptimized className="w-full h-full object-cover" />
                       )}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="font-sora font-bold text-sm text-navy dark:text-white">{ZONE_LABELS[cr.zone] || cr.zone}</h4>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">LIVE</span>
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full uppercase bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">LIVE</span>
                       </div>
                       <p className="text-xs text-gray-400 font-jakarta mt-0.5 line-clamp-1">{cr.headline}</p>
                     </div>
@@ -160,17 +159,17 @@ export default async function ClientPortalPage() {
                   <div className="grid grid-cols-3 gap-2">
                     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2 text-center">
                       <p className="font-sora font-bold text-sm text-navy dark:text-white">{Number(cr.impressionCount).toLocaleString()}</p>
-                      <p className="text-[9px] text-gray-400 font-jakarta">Impressions</p>
+                      <p className="text-xs text-gray-400 font-jakarta">Impressions</p>
                     </div>
                     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2 text-center">
                       <p className="font-sora font-bold text-sm text-navy dark:text-white">{Number(cr.clickCount).toLocaleString()}</p>
-                      <p className="text-[9px] text-gray-400 font-jakarta">Clicks</p>
+                      <p className="text-xs text-gray-400 font-jakarta">Clicks</p>
                     </div>
                     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2 text-center">
                       <p className="font-sora font-bold text-sm text-navy dark:text-white flex items-center justify-center gap-1">
                         <Calendar className="w-3 h-3 text-gray-400" />{fmt(cr.endDate)}
                       </p>
-                      <p className="text-[9px] text-gray-400 font-jakarta">Ends</p>
+                      <p className="text-xs text-gray-400 font-jakarta">Ends</p>
                     </div>
                   </div>
                 </div>
@@ -205,7 +204,7 @@ export default async function ClientPortalPage() {
                       <p className="text-xs text-gray-400">{c.clientName}</p>
                     </td>
                     <td className="py-3 pr-4">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusColors[c.status] || statusColors.DRAFT}`}>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${statusColors[c.status] || statusColors.DRAFT}`}>
                         {c.status.replace(/_/g, ' ')}
                       </span>
                     </td>

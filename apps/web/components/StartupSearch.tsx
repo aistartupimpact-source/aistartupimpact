@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
-import { Search, Building2, MapPin, X, Loader2, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
+import Image from 'next/image';
+import { Search, Building2, MapPin, X, Loader2, SlidersHorizontal, ChevronDown, ChevronUp, ArrowUpDown, ChevronLeft, ChevronRight, TrendingUp, Sparkles, LayoutGrid, List } from 'lucide-react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { VerifiedBadge } from './VerifiedBadge';
 
@@ -102,7 +103,15 @@ const COUNTRIES = [
   { value: 'International', label: 'International' },
 ];
 
-const ITEMS_PER_PAGE = 24;
+const SORT_OPTIONS = [
+  { value: '', label: 'Default' },
+  { value: 'newest', label: 'Newest First' },
+  { value: 'funded', label: 'Most Funded' },
+  { value: 'team', label: 'Largest Team' },
+  { value: 'az', label: 'A → Z' },
+];
+
+const ITEMS_PER_PAGE = 30;
 
 function formatUsd(usd: number) {
   if (!usd || usd === 0) return null;
@@ -113,6 +122,14 @@ function formatUsd(usd: number) {
 
 function stageLabel(s: string) {
   return STAGES.find(x => x.value === s)?.label || s?.replace(/_/g, ' ') || '';
+}
+
+function categoryShortLabel(c: string) {
+  return CATEGORIES.find(x => x.value === c)?.label || c;
+}
+
+function isNewStartup(foundedYear?: number) {
+  return foundedYear && foundedYear >= 2025;
 }
 
 interface Props {
@@ -134,43 +151,89 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
   const [city, setCity] = useState(searchParams.get('city') || '');
   const [country, setCountry] = useState(searchParams.get('country') || '');
   const [employeeRange, setEmployeeRange] = useState(searchParams.get('employeeRange') || '');
-  
+  const [sort, setSort] = useState(searchParams.get('sort') || '');
+
   const [startups, setStartups] = useState<Startup[]>(initialStartups);
   const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showTypeahead, setShowTypeahead] = useState(false);
+  const [typeaheadIdx, setTypeaheadIdx] = useState(-1);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const categoryScrollerRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const wasDragged = useRef(false);
+  const dragStartX = useRef(0);
+  const scrollStartX = useRef(0);
+
   const hasUserInteracted = useRef(false);
   const debounceRef = useRef<NodeJS.Timeout>();
 
+  const typeaheadSuggestions = useMemo(() => {
+    if (!query || query.length < 2) return [];
+    const q = query.toLowerCase();
+    return initialStartups
+      .filter(s => s.name.toLowerCase().includes(q) || s.tagline?.toLowerCase().includes(q))
+      .slice(0, 6)
+      .map(s => ({ name: s.name, slug: s.slug, category: s.category, logoUrl: s.logoUrl }));
+  }, [query, initialStartups]);
+
+  const buildSearchParams = useCallback((
+    q: string, s: string, c: string, bt: string, st: string, ci: string, co: string, er: string, so: string, page: number
+  ) => {
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (s) params.set('stage', s);
+    if (c) params.set('category', c);
+    if (bt) params.set('businessType', bt);
+    if (st) params.set('status', st);
+    if (ci) params.set('city', ci);
+    if (co) params.set('country', co);
+    if (er) params.set('employeeRange', er);
+    if (so) params.set('sort', so);
+    params.set('limit', String(ITEMS_PER_PAGE));
+    params.set('page', String(page));
+    return params;
+  }, []);
+
   const fetchStartups = useCallback(async (
-    q: string, s: string, c: string, bt: string, st: string, ci: string, co: string, er: string
+    q: string, s: string, c: string, bt: string, st: string, ci: string, co: string, er: string, so: string
   ) => {
     setLoading(true);
-    setStartups([]); // Clear immediately — shows skeleton
+    setStartups([]);
+    setCurrentPage(1);
     try {
-      const params = new URLSearchParams();
-      if (q) params.set('q', q);
-      if (s) params.set('stage', s);
-      if (c) params.set('category', c);
-      if (bt) params.set('businessType', bt);
-      if (st) params.set('status', st);
-      if (ci) params.set('city', ci);
-      if (co) params.set('country', co);
-      if (er) params.set('employeeRange', er);
-      params.set('limit', '100');
+      const params = buildSearchParams(q, s, c, bt, st, ci, co, er, so, 1);
       const res = await fetch(`/api/startups/search?${params}`);
       const data = await res.json();
       setStartups(data.startups || []);
       setTotal(data.total || 0);
-      setVisibleCount(ITEMS_PER_PAGE);
     } catch {
       // keep empty on error
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [buildSearchParams]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore) return;
+    const nextPage = currentPage + 1;
+    setLoadingMore(true);
+    try {
+      const params = buildSearchParams(query, stage, category, businessType, status, city, country, employeeRange, sort, nextPage);
+      const res = await fetch(`/api/startups/search?${params}`);
+      const data = await res.json();
+      setStartups(prev => [...prev, ...(data.startups || [])]);
+      setCurrentPage(nextPage);
+    } catch {
+      // keep existing on error
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, currentPage, query, stage, category, businessType, status, city, country, employeeRange, sort, buildSearchParams]);
 
   // Fast debounced search — instant for filters, 150ms for typing
   useEffect(() => {
@@ -178,7 +241,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
     clearTimeout(debounceRef.current);
     const isTyping = query !== (searchParams.get('q') || '');
     debounceRef.current = setTimeout(() => {
-      fetchStartups(query, stage, category, businessType, status, city, country, employeeRange);
+      fetchStartups(query, stage, category, businessType, status, city, country, employeeRange, sort);
       const params = new URLSearchParams();
       if (query) params.set('q', query);
       if (stage) params.set('stage', stage);
@@ -188,27 +251,28 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
       if (city) params.set('city', city);
       if (country) params.set('country', country);
       if (employeeRange) params.set('employeeRange', employeeRange);
+      if (sort) params.set('sort', sort);
       const newUrl = params.toString() ? `${pathname}?${params}` : pathname;
       router.replace(newUrl, { scroll: false });
     }, isTyping ? 150 : 0);
     return () => clearTimeout(debounceRef.current);
-  }, [query, stage, category, businessType, status, city, country, employeeRange, fetchStartups, pathname, router, searchParams]);
+  }, [query, stage, category, businessType, status, city, country, employeeRange, sort, fetchStartups, pathname, router, searchParams]);
 
   const handleCategoryChange = (value: string) => {
     hasUserInteracted.current = true;
     setCategory(value);
-    setVisibleCount(ITEMS_PER_PAGE);
+    setCurrentPage(1);
   };
 
   const clearSearch = () => {
     hasUserInteracted.current = true;
     setQuery(''); setStage(''); setCategory(''); setBusinessType('');
     setStatus(''); setCity(''); setCountry(''); setEmployeeRange('');
-    setVisibleCount(ITEMS_PER_PAGE);
+    setSort('');
+    setCurrentPage(1);
   };
 
-  const visibleStartups = startups.slice(0, visibleCount);
-  const hasMore = visibleCount < startups.length;
+  const hasMore = startups.length < total;
 
   const activeFiltersCount = [
     stage,
@@ -240,37 +304,61 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
     if (key === 'city') setCity('');
     if (key === 'country') setCountry('');
     if (key === 'employeeRange') setEmployeeRange('');
-    setVisibleCount(ITEMS_PER_PAGE);
+    setCurrentPage(1);
   };
 
   return (
     <div className="space-y-5">
       {/* ── Sticky Category Pills ── */}
-      <div className="sticky top-0 z-30 bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-2.5 sm:py-3 border-b border-gray-100 dark:border-gray-800">
-        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide pb-1">
-          <button
-            onClick={() => handleCategoryChange('')}
-            className={`shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold font-jakarta transition-all ${
-              category === ''
-                ? 'bg-brand text-white shadow-sm'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
-            }`}
+      <div className="sticky top-0 z-10 bg-gray-50/90 dark:bg-gray-950/80 backdrop-blur-md -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-2.5 sm:py-3">
+        <div className="relative">
+          <div
+            ref={categoryScrollerRef}
+            className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide pb-1 cursor-grab active:cursor-grabbing select-none"
+            onMouseDown={(e) => {
+              isDragging.current = true;
+              wasDragged.current = false;
+              dragStartX.current = e.pageX;
+              scrollStartX.current = categoryScrollerRef.current?.scrollLeft ?? 0;
+            }}
+            onMouseMove={(e) => {
+              if (!isDragging.current || !categoryScrollerRef.current) return;
+              e.preventDefault();
+              const dx = e.pageX - dragStartX.current;
+              if (Math.abs(dx) > 3) wasDragged.current = true;
+              categoryScrollerRef.current.scrollLeft = scrollStartX.current - dx;
+            }}
+            onMouseUp={() => { isDragging.current = false; }}
+            onMouseLeave={() => { isDragging.current = false; }}
+            onClickCapture={(e) => {
+              if (wasDragged.current) { e.stopPropagation(); e.preventDefault(); }
+            }}
           >
-            All Sectors
-          </button>
-          {CATEGORIES.filter(c => c.value !== '').map(cat => (
             <button
-              key={cat.value}
-              onClick={() => handleCategoryChange(cat.value)}
-              className={`shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold font-jakarta transition-all ${
-                category === cat.value
+              onClick={() => handleCategoryChange('')}
+              className={`shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-xs font-bold font-jakarta transition-all ${
+                category === ''
                   ? 'bg-brand text-white shadow-sm'
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
             >
-              {cat.label}
+              All Sectors
             </button>
-          ))}
+            {CATEGORIES.filter(c => c.value !== '').map(cat => (
+              <button
+                key={cat.value}
+                onClick={() => handleCategoryChange(cat.value)}
+                className={`shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-xs font-bold font-jakarta transition-all ${
+                  category === cat.value
+                    ? 'bg-brand text-white shadow-sm'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+          <div className="absolute right-0 top-0 bottom-1 w-6 bg-gradient-to-l from-gray-50 dark:from-gray-950 to-transparent pointer-events-none" />
         </div>
       </div>
 
@@ -278,22 +366,67 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
       <div className="space-y-3">
         {/* Main Search Row */}
         <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
             <input
+              ref={searchInputRef}
               type="text"
               value={query}
-              onChange={e => { hasUserInteracted.current = true; setQuery(e.target.value); }}
-              placeholder="Search startups by name, tagline, founder or category..."
+              onChange={e => { hasUserInteracted.current = true; setQuery(e.target.value); setShowTypeahead(true); setTypeaheadIdx(-1); }}
+              onFocus={() => { if (query.length >= 2) setShowTypeahead(true); }}
+              onBlur={() => { setTimeout(() => setShowTypeahead(false), 150); }}
+              onKeyDown={e => {
+                if (!showTypeahead || typeaheadSuggestions.length === 0) return;
+                if (e.key === 'ArrowDown') { e.preventDefault(); setTypeaheadIdx(i => Math.min(i + 1, typeaheadSuggestions.length - 1)); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); setTypeaheadIdx(i => Math.max(i - 1, -1)); }
+                else if (e.key === 'Enter' && typeaheadIdx >= 0) { e.preventDefault(); router.push(`/startups/${typeaheadSuggestions[typeaheadIdx].slug}`); setShowTypeahead(false); }
+                else if (e.key === 'Escape') { setShowTypeahead(false); }
+              }}
+              inputMode="search" enterKeyHint="search" placeholder="Search startups by name, tagline, founder or category..."
               className="w-full pl-10 sm:pl-12 pr-10 py-2 sm:py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent text-sm font-jakarta"
+              role="combobox" aria-expanded={showTypeahead && typeaheadSuggestions.length > 0} aria-autocomplete="list"
             />
             {query && (
-              <button onClick={() => { hasUserInteracted.current = true; setQuery(''); }} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
+              <button onClick={() => { hasUserInteracted.current = true; setQuery(''); setShowTypeahead(false); }} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full z-10" aria-label="Clear search">
                 <X className="w-3.5 h-3.5 text-gray-400" />
               </button>
             )}
+
+            {/* Typeahead dropdown */}
+            {showTypeahead && typeaheadSuggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden" role="listbox">
+                {typeaheadSuggestions.map((s, i) => (
+                  <Link
+                    key={s.slug}
+                    href={`/startups/${s.slug}`}
+                    onClick={() => setShowTypeahead(false)}
+                    className={`flex items-center gap-3 px-4 py-2.5 text-sm font-jakarta transition-colors ${
+                      i === typeaheadIdx
+                        ? 'bg-brand/10 dark:bg-brand/20'
+                        : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                    }`}
+                    role="option" aria-selected={i === typeaheadIdx}
+                  >
+                    {s.logoUrl ? (
+                      <Image src={s.logoUrl} alt="" width={24} height={24} className="w-6 h-6 rounded-md object-contain bg-white dark:bg-gray-900" />
+                    ) : (
+                      <div className="w-6 h-6 rounded-md bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                        <Building2 className="w-3.5 h-3.5 text-gray-400" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <span className="text-gray-900 dark:text-white font-semibold truncate block">{s.name}</span>
+                    </div>
+                    {s.category && (
+                      <span className="text-[10px] text-gray-400 font-medium shrink-0">{categoryShortLabel(s.category)}</span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
 
+          <div className="flex gap-2 sm:gap-3 shrink-0">
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
             className={`flex items-center justify-center gap-2 px-4 py-2 sm:py-2.5 rounded-xl border font-jakarta text-sm font-semibold transition-all select-none min-h-[44px] sm:min-h-0 ${
@@ -305,12 +438,30 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
             <SlidersHorizontal className="w-4 h-4" />
             <span>Filters</span>
             {activeFiltersCount > 0 && (
-              <span className="w-5 h-5 flex items-center justify-center bg-brand text-white text-[11px] font-bold rounded-full animate-scale-in">
+              <span className="w-5 h-5 flex items-center justify-center bg-brand text-white text-xs font-bold rounded-full animate-scale-in">
                 {activeFiltersCount}
               </span>
             )}
             {showAdvanced ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
+
+          {/* Sort Dropdown */}
+          <div className="relative">
+            <select
+              value={sort}
+              onChange={e => { hasUserInteracted.current = true; setSort(e.target.value); setCurrentPage(1); }}
+              className={`appearance-none flex items-center gap-2 pl-9 pr-8 py-2 sm:py-2.5 rounded-xl border font-jakarta text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer min-h-[44px] sm:min-h-0 ${
+                sort
+                  ? 'border-brand bg-brand/5 text-brand shadow-sm'
+                  : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+              }`}
+            >
+              {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+            <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+          </div>
+          </div>
         </div>
 
         {/* Collapsible Advanced Filters Grid */}
@@ -318,10 +469,10 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
           <div className="bg-gray-50/50 dark:bg-gray-900/30 border border-gray-200/60 dark:border-gray-800 rounded-2xl p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-scale-in">
             {/* Stage Filter */}
             <div className="flex flex-col">
-              <label className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Funding Stage</label>
+              <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Funding Stage</label>
               <select
                 value={stage}
-                onChange={e => { hasUserInteracted.current = true; setStage(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
+                onChange={e => { hasUserInteracted.current = true; setStage(e.target.value); setCurrentPage(1); }}
                 className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
               >
                 {STAGES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
@@ -331,10 +482,10 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
 
             {/* Business Model Filter */}
             <div className="flex flex-col">
-              <label className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Business Model</label>
+              <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Business Model</label>
               <select
                 value={businessType}
-                onChange={e => { hasUserInteracted.current = true; setBusinessType(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
+                onChange={e => { hasUserInteracted.current = true; setBusinessType(e.target.value); setCurrentPage(1); }}
                 className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
               >
                 {BUSINESS_TYPES.map(bt => <option key={bt.value} value={bt.value}>{bt.label}</option>)}
@@ -343,10 +494,10 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
 
             {/* Company Status Filter */}
             <div className="flex flex-col">
-              <label className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Company Status</label>
+              <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Company Status</label>
               <select
                 value={status}
-                onChange={e => { hasUserInteracted.current = true; setStatus(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
+                onChange={e => { hasUserInteracted.current = true; setStatus(e.target.value); setCurrentPage(1); }}
                 className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
               >
                 {STATUSES.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
@@ -355,10 +506,10 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
 
             {/* Employee Size Filter */}
             <div className="flex flex-col">
-              <label className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Team Size</label>
+              <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Team Size</label>
               <select
                 value={employeeRange}
-                onChange={e => { hasUserInteracted.current = true; setEmployeeRange(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
+                onChange={e => { hasUserInteracted.current = true; setEmployeeRange(e.target.value); setCurrentPage(1); }}
                 className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
               >
                 {EMPLOYEE_RANGES.map(er => <option key={er.value} value={er.value}>{er.label}</option>)}
@@ -367,10 +518,10 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
 
             {/* Country Filter */}
             <div className="flex flex-col">
-              <label className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Country</label>
+              <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Country</label>
               <select
                 value={country}
-                onChange={e => { hasUserInteracted.current = true; setCountry(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
+                onChange={e => { hasUserInteracted.current = true; setCountry(e.target.value); setCurrentPage(1); }}
                 className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
               >
                 {COUNTRIES.map(co => <option key={co.value} value={co.value}>{co.label}</option>)}
@@ -379,10 +530,10 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
 
             {/* City Filter */}
             <div className="flex flex-col">
-              <label className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Headquarters City</label>
+              <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 font-jakarta">Headquarters City</label>
               <select
                 value={city}
-                onChange={e => { hasUserInteracted.current = true; setCity(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
+                onChange={e => { hasUserInteracted.current = true; setCity(e.target.value); setCurrentPage(1); }}
                 className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-jakarta text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
               >
                 <option value="">All Cities</option>
@@ -407,7 +558,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
           {/* Active Filter Tags */}
           {activeFiltersCount > 0 && (
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1">
-              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mr-1 font-jakarta select-none">Active Filters:</span>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wide mr-1 font-jakarta select-none">Active Filters:</span>
               {stage && (
                 <button onClick={() => removeFilter('stage')} className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand/5 border border-brand/20 text-brand hover:bg-brand/10 transition-colors font-jakarta">
                   <span>{getFilterLabel('stage', stage)}</span>
@@ -456,13 +607,29 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
             </div>
           )}
 
-          {/* Results Count & Loader status */}
+          {/* Results Count & View Toggle */}
           <div className="flex items-center justify-between text-xs text-gray-400 font-jakarta">
             {loading ? (
               <span className="flex items-center gap-1.5"><Loader2 className="w-3 h-3 animate-spin" /> Finding startups...</span>
             ) : (
               <span>Found <span className="font-bold text-navy dark:text-white">{total}</span> startups</span>
             )}
+            <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-1.5 transition-colors ${viewMode === 'grid' ? 'bg-brand/10 text-brand' : 'bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                aria-label="Grid view"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-1.5 transition-colors ${viewMode === 'list' ? 'bg-brand/10 text-brand' : 'bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                aria-label="List view"
+              >
+                <List className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -470,9 +637,9 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
       {/* ── Grid ── */}
       {loading && startups.length === 0 ? (
         /* Skeleton loading — matches card layout exactly */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
           {[1, 2, 3, 4, 5, 6].map(i => (
-            <div key={i} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-5 animate-pulse">
+            <div key={i} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-5 animate-pulse">
               {/* Header: logo + name */}
               <div className="flex items-start gap-2.5 sm:gap-3 mb-3 sm:mb-4">
                 <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl bg-gray-100 dark:bg-gray-800 shrink-0" />
@@ -499,127 +666,175 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
           ))}
         </div>
       ) : startups.length === 0 && !loading ? (
-        <div className="text-center py-16">
+        <div className="text-center py-12 sm:py-16">
           <Building2 className="w-12 h-12 text-gray-200 dark:text-gray-700 mx-auto mb-3" />
-          <p className="text-gray-400 font-jakarta text-sm mb-2">No startups found matching your criteria.</p>
-          <button onClick={clearSearch} className="text-sm text-brand font-semibold hover:underline">Clear all filters</button>
+          <p className="text-gray-900 dark:text-white font-sora font-bold text-base mb-1">No startups found</p>
+          <p className="text-gray-400 font-jakarta text-sm mb-5 max-w-md mx-auto">
+            {query
+              ? `No results for "${query}"${activeFiltersCount > 0 ? ' with the active filters' : ''}. Try a different search term or adjust your filters.`
+              : 'No startups match your current filters. Try broadening your search.'}
+          </p>
+          <button onClick={clearSearch} className="inline-flex items-center gap-1.5 text-sm text-brand font-semibold hover:underline font-jakarta mb-6">
+            <X className="w-3.5 h-3.5" /> Clear all filters
+          </button>
+
+          {/* Suggested categories */}
+          <div className="border-t border-gray-100 dark:border-gray-800 pt-5 mt-2">
+            <p className="text-xs text-gray-400 font-jakarta font-semibold uppercase tracking-wide mb-3 flex items-center justify-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" /> Popular categories
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {['FinTech', 'HealthTech & BioTech', 'AI Infrastructure & MLOps', 'Enterprise Software & SaaS', 'Developer Tools & DevOps', 'EdTech'].map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => { hasUserInteracted.current = true; setQuery(''); setCategory(cat); setShowAdvanced(false); setCurrentPage(1); }}
+                  className="px-3 py-1.5 rounded-full text-xs font-semibold font-jakarta bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-brand/10 hover:text-brand transition-colors"
+                >
+                  {categoryShortLabel(cat)}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       ) : (
-        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 transition-opacity duration-150 ${loading ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
-          {visibleStartups.map(s => (
-            <Link key={s.slug} href={`/startups/${s.slug}`} className="group">
-              <div className="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:border-brand/30 dark:hover:border-brand/30 transition-all duration-300 h-full">
-                {/* Header Section */}
-                <div className="flex items-start gap-2.5 sm:gap-3 mb-3 sm:mb-4">
-                  {/* Logo */}
-                  <div className="relative w-11 h-11 sm:w-14 sm:h-14 rounded-xl bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
+        <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3' : 'flex flex-col gap-1.5 sm:gap-2'} transition-opacity duration-150 ${loading ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
+          {startups.map(s => viewMode === 'list' ? (
+            /* ── List View Card ── */
+            <Link key={s.slug} href={`/startups/${s.slug}`} prefetch={false} className="group">
+              <div className="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 hover:shadow-md hover:border-brand/30 dark:hover:border-brand/30 transition-all duration-200 flex items-center gap-3">
+                {/* Logo */}
+                <div className="relative shrink-0">
+                  <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 overflow-hidden">
                     {s.logoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={s.logoUrl} alt={s.name} className="w-8 h-8 sm:w-11 sm:h-11 object-contain" />
+                      <Image src={s.logoUrl} alt={s.name} className="w-full h-full object-cover" width={40} height={40} sizes="40px" />
                     ) : (
-                      <Building2 className="w-5 h-5 sm:w-7 sm:h-7 text-brand" />
+                      <div className="flex items-center justify-center w-full h-full"><Building2 className="w-5 h-5 text-brand" /></div>
                     )}
+                  </div>
+                  {s.isVerified && <VerifiedBadge onLogo size="sm" />}
+                </div>
+
+                {/* Name & Tagline — takes remaining space */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <h3 className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand transition-colors truncate">{s.name}</h3>
+                    {s.isVerified && <VerifiedBadge size="sm" showText={false} />}
+                    {isNewStartup(s.foundedYear) && (
+                      <span className="shrink-0 text-[9px] font-bold font-jakarta bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded uppercase tracking-wide leading-none">New</span>
+                    )}
+                    {s.isFeatured && (
+                      <span className="shrink-0 text-[8px] font-bold font-jakarta bg-gradient-to-r from-red-500 to-rose-600 text-white px-1.5 py-px rounded uppercase tracking-wide leading-none">Featured</span>
+                    )}
+                  </div>
+                  <p className="text-gray-500 dark:text-gray-400 text-xs font-jakarta line-clamp-1 mt-0.5">{s.tagline}</p>
+                </div>
+
+                {/* Right-side columns — pushed to the end */}
+                <div className="hidden sm:flex items-center gap-2 shrink-0 ml-auto">
+                  {/* Category */}
+                  <div className="w-[120px] flex justify-start">
+                    {s.category ? (
+                      <span className="text-[10px] font-semibold bg-brand/10 dark:bg-brand/20 text-brand px-1.5 py-0.5 rounded-full truncate max-w-full">{categoryShortLabel(s.category)}</span>
+                    ) : <span className="text-[10px] text-gray-300">—</span>}
+                  </div>
+
+                  {/* Stage */}
+                  <div className="w-[80px] flex justify-start">
+                    <span className="text-[10px] font-semibold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded-full">{stageLabel(s.stage)}</span>
+                  </div>
+
+                  {/* Location */}
+                  <div className="hidden md:flex w-[100px] justify-start text-xs font-jakarta">
+                    {s.headquartersCity ? (
+                      <span className="flex items-center gap-0.5 text-gray-400 truncate"><MapPin className="w-3 h-3 shrink-0" />{s.headquartersCity}</span>
+                    ) : <span className="text-gray-300">—</span>}
+                  </div>
+
+                  {/* Funding */}
+                  <div className="hidden md:flex w-[65px] justify-end">
+                    <span className={`font-sora font-bold text-xs ${formatUsd(Number(s.totalUsd)) ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'}`}>
+                      {formatUsd(Number(s.totalUsd)) || '—'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Arrow */}
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <svg className="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            </Link>
+          ) : (
+            /* ── Grid View Card ── */
+            <Link key={s.slug} href={`/startups/${s.slug}`} prefetch={false} className="group">
+              <div className="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-5 hover:shadow-xl hover:border-brand/30 dark:hover:border-brand/30 transition-all duration-300 h-full flex flex-col">
+                {/* Featured ribbon */}
+                {s.isFeatured && (
+                  <div className="absolute -top-px -right-px bg-gradient-to-r from-red-500 to-rose-600 text-white text-[9px] font-bold font-jakarta uppercase tracking-wider px-2 py-px rounded-bl-md rounded-tr-xl">
+                    Featured
+                  </div>
+                )}
+
+                {/* Header Section */}
+                <div className="flex items-start gap-2.5 sm:gap-3 mb-2.5 sm:mb-3">
+                  <div className="relative shrink-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+                      {s.logoUrl ? (
+                        <Image src={s.logoUrl} alt={s.name} className="w-full h-full object-cover" width={48} height={48} sizes="48px" />
+                      ) : (
+                        <div className="flex items-center justify-center w-full h-full"><Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-brand" /></div>
+                      )}
+                    </div>
                     {s.isVerified && <VerifiedBadge onLogo size="sm" />}
                   </div>
 
-                  {/* Title & Meta */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
-                      <h3 className="font-sora font-extrabold text-base sm:text-lg text-navy dark:text-white group-hover:text-brand transition-colors truncate">
-                        {s.name}
-                      </h3>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <h3 className="font-sora font-extrabold text-sm sm:text-base text-navy dark:text-white group-hover:text-brand transition-colors truncate">{s.name}</h3>
                       {s.isVerified && <VerifiedBadge size="sm" showText={false} />}
+                      {isNewStartup(s.foundedYear) && (
+                        <span className="shrink-0 text-[9px] font-bold font-jakarta bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded uppercase tracking-wide leading-none">New</span>
+                      )}
                     </div>
-
-                    {/* Location & Founded */}
-                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 font-jakarta flex-wrap">
+                    <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 font-jakarta">
                       {s.headquartersCity && (
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          <span>{s.headquartersCity}</span>
-                        </div>
+                        <span className="flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5" />{s.headquartersCity}</span>
                       )}
-                      {s.foundedYear && (
-                        <div className="flex items-center gap-1">
-                          <span>•</span>
-                          <span>Est. {s.foundedYear}</span>
-                        </div>
-                      )}
+                      {s.headquartersCity && s.foundedYear && <span className="text-gray-300 dark:text-gray-600">·</span>}
+                      {s.foundedYear && <span>Est. {s.foundedYear}</span>}
                     </div>
-
-                    {/* Founders */}
-                    {(() => {
-                      const foundersArray = Array.isArray(s.founders) ? s.founders : (s.founders ? [s.founders] : []);
-                      return foundersArray.length > 0 && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-1">
-                          Founded by {foundersArray.slice(0, 2).join(' & ')}
-                          {foundersArray.length > 2 && ` +${foundersArray.length - 2}`}
-                        </div>
-                      );
-                    })()}
                   </div>
                 </div>
 
-                {/* Description */}
-                <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm font-jakarta leading-relaxed mb-3 sm:mb-4 line-clamp-2">
-                  {s.tagline}
-                </p>
+                <p className="text-gray-600 dark:text-gray-300 text-xs font-jakarta leading-relaxed mb-3 line-clamp-2 flex-1">{s.tagline}</p>
 
-                {/* Tags Row */}
-                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-3 sm:mb-4">
+                <div className="flex items-center gap-1.5 mb-3">
                   {s.category && (
-                    <span className="text-xs font-semibold bg-brand/10 dark:bg-brand/20 text-brand px-2.5 py-1 rounded-full">
-                      {s.category}
-                    </span>
+                    <span className="text-[11px] font-semibold bg-brand/10 dark:bg-brand/20 text-brand px-2 py-0.5 rounded-full truncate max-w-[120px]">{categoryShortLabel(s.category)}</span>
                   )}
-                  {s.businessType && (
-                    <span className="text-xs font-semibold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2.5 py-1 rounded-full">
-                      {s.businessType}
-                    </span>
-                  )}
-                  <span className="text-xs font-semibold bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 px-2.5 py-1 rounded-full">
-                    {stageLabel(s.stage)}
-                  </span>
+                  <span className="text-[11px] font-semibold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full">{stageLabel(s.stage)}</span>
                   {s.status && s.status !== 'ACTIVE' && (
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${
-                      s.status === 'PUBLIC'
-                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-900/30'
-                        : s.status === 'ACQUIRED'
-                        ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-purple-100 dark:border-purple-900/30'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
-                    }`}>
-                      {s.status}
+                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${s.status === 'ACQUIRED' ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>
+                      {s.status === 'PUBLIC' ? 'IPO' : s.status}
                     </span>
                   )}
                 </div>
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 gap-3">
-                  {/* Team Size */}
-                  <div className="bg-gray-900/5 dark:bg-gray-950/50 rounded-xl p-2.5 pl-5 border border-gray-200/50 dark:border-gray-700/50">
-                    <div className="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400 font-jakarta font-semibold mb-0.5">
-                      Team
-                    </div>
-                    <div className="font-sora font-bold text-sm text-navy dark:text-white">
-                      {s.employeeCount ? `${s.employeeCount}+` : '1-10'}
-                    </div>
+                <div className="flex items-center justify-between pt-2.5 border-t border-gray-100 dark:border-gray-800 text-xs font-jakarta">
+                  <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                    <span className="font-semibold text-navy dark:text-gray-200">{s.employeeCount ? `${s.employeeCount}+` : '1-10'}</span>
+                    <span>team</span>
                   </div>
-
-                  {/* Funding Raised */}
-                  <div className="bg-gray-900/5 dark:bg-gray-950/50 rounded-xl p-2.5 pl-5 border border-gray-200/50 dark:border-gray-700/50">
-                    <div className="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400 font-jakarta font-semibold mb-0.5">
-                      Raised
-                    </div>
-                    <div className="font-sora font-bold text-sm text-emerald-600 dark:text-emerald-400">
-                      {formatUsd(Number(s.totalUsd)) || 'Undisclosed'}
-                    </div>
+                  <div className={`font-sora font-bold ${formatUsd(Number(s.totalUsd)) ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                    {formatUsd(Number(s.totalUsd)) || '—'}
                   </div>
                 </div>
 
-                {/* Hover Arrow Indicator */}
                 <div className="absolute top-5 right-5 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="w-7 h-7 rounded-full bg-brand/10 dark:bg-brand/20 flex items-center justify-center">
-                    <svg className="w-3.5 h-3.5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="w-6 h-6 rounded-full bg-brand/10 dark:bg-brand/20 flex items-center justify-center">
+                    <svg className="w-3 h-3 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
@@ -631,8 +846,13 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
       )}
 
       {/* ── Infinite Scroll Sentinel ── */}
-      {hasMore && !loading && (
-        <InfiniteScrollTrigger onIntersect={() => setVisibleCount(prev => prev + ITEMS_PER_PAGE)} />
+      {hasMore && !loading && !loadingMore && (
+        <InfiniteScrollTrigger onIntersect={loadMore} />
+      )}
+      {loadingMore && (
+        <div className="flex items-center justify-center py-6">
+          <Loader2 className="w-5 h-5 text-brand animate-spin" />
+        </div>
       )}
     </div>
   );

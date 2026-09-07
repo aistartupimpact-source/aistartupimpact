@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@aistartupimpact/database';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
+import { authRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
+import { isDisposableEmail } from '@aistartupimpact/utils';
+
+export const dynamic = 'force-dynamic';
 
 function generateId(): string {
   return randomBytes(16).toString('hex');
@@ -18,6 +22,12 @@ function generateSlug(name: string): string {
 
 export async function POST(request: NextRequest) {
   try {
+    const identifier = getClientIdentifier(request);
+    const { success: allowed } = await checkRateLimit(authRateLimit, identifier);
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+    }
+
     const { email, password, name, subscribeNewsletter } = await request.json();
 
     if (!email || !password || !name) {
@@ -28,20 +38,31 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (typeof email !== 'string' || email.length > 255 || !email.includes('@') || !email.split('@')[1]?.includes('.')) {
       return NextResponse.json(
         { error: 'Invalid email format' },
         { status: 400 }
       );
     }
 
-    // Validate password strength
-    if (password.length < 8) {
+    if (isDisposableEmail(email)) {
       return NextResponse.json(
-        { error: 'Password must be at least 8 characters long' },
+        { error: 'Disposable email addresses are not allowed. Please use a permanent email.' },
         { status: 400 }
       );
+    }
+
+    if (password.length < 8) {
+      return NextResponse.json({ error: 'Password must be at least 8 characters long' }, { status: 400 });
+    }
+    if (!/[A-Z]/.test(password)) {
+      return NextResponse.json({ error: 'Password must contain an uppercase letter' }, { status: 400 });
+    }
+    if (!/[a-z]/.test(password)) {
+      return NextResponse.json({ error: 'Password must contain a lowercase letter' }, { status: 400 });
+    }
+    if (!/[0-9]/.test(password)) {
+      return NextResponse.json({ error: 'Password must contain a number' }, { status: 400 });
     }
 
     // Check if founder already exists

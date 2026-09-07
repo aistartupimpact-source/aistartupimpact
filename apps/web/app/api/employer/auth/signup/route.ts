@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { setEmployerSession } from '@/lib/employer-auth';
+import { authRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
+import { isDisposableEmail } from '@aistartupimpact/utils';
 
-const sql = neon(process.env.DATABASE_URL!);
-
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
+    const identifier = getClientIdentifier(request);
+    const { success: allowed } = await checkRateLimit(authRateLimit, identifier);
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+    }
+
     const body = await request.json();
     const { companyName, email, password, websiteUrl, industry, companySize } = body;
 
@@ -16,6 +23,9 @@ export async function POST(request: NextRequest) {
     }
     if (!email?.trim() || !email.includes('@')) {
       return NextResponse.json({ error: 'Valid email is required' }, { status: 400 });
+    }
+    if (isDisposableEmail(email)) {
+      return NextResponse.json({ error: 'Disposable email addresses are not allowed. Please use a permanent email.' }, { status: 400 });
     }
     if (!password || password.length < 8) {
       return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
@@ -83,6 +93,7 @@ export async function POST(request: NextRequest) {
       companyName: employer.companyName,
       slug: employer.slug,
       plan: employer.plan,
+      onboardingCompleted: false,
     });
 
     return NextResponse.json({

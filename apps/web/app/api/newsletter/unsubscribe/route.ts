@@ -1,17 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@aistartupimpact/database";
+import { jwtVerify } from "jose";
+import crypto from "crypto";
+
+function hashIp(ip: string): string {
+  return crypto.createHash('sha256').update(ip).digest('hex').substring(0, 16);
+}
+
+export const dynamic = 'force-dynamic';
+
+const UNSUBSCRIBE_SECRET = new TextEncoder().encode(
+  process.env.NEXTAUTH_SECRET!
+);
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, campaignId, reason, feedback } = body;
+    const { email: rawEmail, token, campaignId, reason, feedback } = body;
 
-    if (!email) {
-      return NextResponse.json({ success: false, error: "Email is required" }, { status: 400 });
+    let decodedEmail: string | null = null;
+
+    // Prefer signed token over raw email
+    if (token) {
+      try {
+        const { payload } = await jwtVerify(token, UNSUBSCRIBE_SECRET);
+        decodedEmail = (payload as any).email;
+      } catch {
+        return NextResponse.json({ success: false, error: "Invalid or expired unsubscribe link" }, { status: 401 });
+      }
+    } else if (rawEmail) {
+      decodedEmail = decodeURIComponent(rawEmail);
     }
 
-    const decodedEmail = decodeURIComponent(email);
-    const ipAddress = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+    if (!decodedEmail) {
+      return NextResponse.json({ success: false, error: "Email is required" }, { status: 400 });
+    }
+    const rawIp = request.headers.get("x-forwarded-for")?.split(',')[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
+    const ipAddress = hashIp(rawIp);
 
     // Check if subscriber exists
     const subscriber = await prisma.$queryRaw<any[]>`
@@ -53,6 +78,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, message: "Successfully unsubscribed" });
   } catch (error: any) {
     console.error("Unsubscribe error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to unsubscribe' }, { status: 500 });
   }
 }

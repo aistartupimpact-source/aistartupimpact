@@ -2,6 +2,7 @@ import { requireFounderAuth } from '@/lib/founder-auth';
 import { prisma } from '@aistartupimpact/database';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft, Eye, MousePointerClick, Bookmark, Star, TrendingUp, ArrowUpRight } from 'lucide-react';
 
 export default async function ToolAnalyticsPage({ params }: { params: { slug: string } }) {
@@ -116,7 +117,7 @@ export default async function ToolAnalyticsPage({ params }: { params: { slug: st
         </Link>
         <div className="flex items-center gap-3">
           {tool.logoUrl && (
-            <img src={tool.logoUrl} alt="" className="w-10 h-10 rounded-xl object-contain border border-gray-200 dark:border-gray-700 bg-white p-1" />
+            <Image src={tool.logoUrl} alt="" width={40} height={40} sizes="40px" className="w-10 h-10 rounded-xl object-contain border border-gray-200 dark:border-gray-700 bg-white p-1" />
           )}
           <div>
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">{tool.name} Analytics</h1>
@@ -221,7 +222,7 @@ function StatCard({ label, value, sublabel, change, icon: Icon, isText }: {
       <div className="flex items-center justify-between mb-2">
         <Icon className="w-4 h-4 text-gray-400" />
         {change !== undefined && change !== 0 && (
-          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+          <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
             change > 0
               ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
               : 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400'
@@ -234,7 +235,7 @@ function StatCard({ label, value, sublabel, change, icon: Icon, isText }: {
         {typeof value === 'number' ? value.toLocaleString() : value}
       </p>
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{label}</p>
-      {sublabel && <p className="text-[10px] text-gray-400 mt-0.5">{sublabel}</p>}
+      {sublabel && <p className="text-xs text-gray-400 mt-0.5">{sublabel}</p>}
     </div>
   );
 }

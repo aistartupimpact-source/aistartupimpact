@@ -122,6 +122,8 @@ model AiTool {
   id                  String                   @id
   name                String
   slug                String                   @unique
+  slugChangedAt       DateTime?
+  previousSlugs       String[]                 @default([])
   tagline             String
   description         String
   websiteUrl          String
@@ -192,9 +194,12 @@ model AiTool {
   @@index([ownerId])
   @@index([pricingModel])
   @@index([searchVector], type: Gin)
-  @@index([slug])
   @@index([status])
   @@index([status, listingTier])
+  @@index([deletedAt])
+  @@index([createdAt])
+
+  siteAnnouncements SiteAnnouncement[]
 }
 
 model Article {
@@ -233,15 +238,36 @@ model Article {
   startupId                                     String?
   toolId                                        String?
   likeCount                                     Int                      @default(0)
+  keyTakeaways                                  Json?
+  agreeCount                                    Int                      @default(0)
+  disagreeCount                                 Int                      @default(0)
+  primaryTagId                                  String?
   searchVector                                  Unsupported("tsvector")?
+
+  // Founder content fields
+  submittedById                                 String?
+  founderAuthorId                               String?
+  moderationStatus                              ModerationStatus         @default(NONE)
+  moderationNote                                String?
+  moderatedBy                                   String?
+  moderatedAt                                   DateTime?
+  lastSavedAt                                   DateTime?
+  autoSaved                                     Boolean                  @default(false)
+
   User                                          User                     @relation(fields: [authorId], references: [id])
   Category                                      Category?                @relation(fields: [categoryId], references: [id])
   Startup                                       Startup?                 @relation(fields: [startupId], references: [id])
   AiTool                                        AiTool?                  @relation(fields: [toolId], references: [id])
+  PrimaryTag                                    Tag?                     @relation("ArticlePrimaryTag", fields: [primaryTagId], references: [id], onDelete: SetNull)
+  SubmittedByFounder                            FounderUser?             @relation("ArticleSubmittedBy", fields: [submittedById], references: [id], onDelete: SetNull)
+  FounderAuthor                                 FounderUser?             @relation("ArticleFounderAuthor", fields: [founderAuthorId], references: [id], onDelete: SetNull)
   ArticleCoAuthor                               ArticleCoAuthor[]
   ArticleTag                                    ArticleTag[]
   ArticleVersion                                ArticleVersion[]
   Comment                                       Comment[]
+  ContentActivityLog                            ContentActivityLog[]
+  ContentMedia                                  ContentMedia[]
+  FounderContentReport                           FounderContentReport[]
   RelatedArticle_RelatedArticle_fromIdToArticle RelatedArticle[]         @relation("RelatedArticle_fromIdToArticle")
   RelatedArticle_RelatedArticle_toIdToArticle   RelatedArticle[]         @relation("RelatedArticle_toIdToArticle")
 
@@ -249,9 +275,14 @@ model Article {
   @@index([categoryId])
   @@index([isFeatured, status])
   @@index([searchVector], type: Gin)
-  @@index([slug])
   @@index([status, publishedAt])
   @@index([type, status])
+  @@index([deletedAt])
+  @@index([submittedById])
+  @@index([founderAuthorId])
+  @@index([moderationStatus])
+  @@index([type, moderationStatus, status])
+  @@index([primaryTagId])
 }
 
 model ArticleCoAuthor {
@@ -273,14 +304,20 @@ model ArticleTag {
 }
 
 model ArticleVersion {
-  id        String   @id
-  articleId String
-  content   Json
-  title     String
-  createdAt DateTime @default(now())
-  Article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  id            String   @id
+  articleId     String
+  versionNumber Int      @default(1)
+  content       Json
+  title         String
+  excerpt       String?
+  coverImage    String?
+  createdBy     String?
+  changeNote    String?
+  createdAt     DateTime @default(now())
+  Article       Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   @@index([articleId, createdAt])
+  @@index([articleId, versionNumber])
 }
 
 model AuditLog {
@@ -326,7 +363,6 @@ model Category {
   other_Category Category[] @relation("CategoryToCategory")
 
   @@index([parentId])
-  @@index([slug])
 }
 
 model CityDeepDive {
@@ -374,6 +410,7 @@ model Comment {
 
   @@index([articleId, status])
   @@index([parentId])
+  @@index([userId])
 }
 
 model FeaturedFounder {
@@ -449,7 +486,6 @@ model FounderSession {
   FounderUser FounderUser @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([expiresAt])
-  @@index([token])
   @@index([userId])
 }
 
@@ -477,12 +513,26 @@ model FounderUser {
   lastLoginAt                            DateTime?
   authProvider                           String                   @default("email")
   companyDomain                          String?
+  companyEmail                           String?
+  companyEmailVerified                   Boolean                  @default(false)
+  companyEmailVerifiedAt                 DateTime?
   googleId                               String?                  @unique
   onboardingCompleted                    Boolean                  @default(false)
   onboardingStep                         Int                      @default(0)
   twoFactorEnabled                       Boolean                  @default(false)
   twoFactorSecret                        String?
   twoFactorBackupCodes                   String[]
+  failedLoginAttempts                    Int                      @default(0)
+  lockedUntil                            DateTime?
+
+  // Email change
+  pendingEmail                           String?
+  emailChangeToken                       String?                  @unique
+  emailChangeTokenExpiry                 DateTime?
+
+  // Account lifecycle
+  deactivatedAt                          DateTime?
+  deletedAt                              DateTime?
 
   // Unified identity link
   unifiedUserId                          String?                  @unique
@@ -497,14 +547,17 @@ model FounderUser {
   StartupVerificationLog                 StartupVerificationLog[]
   ToolReviewResponse                     ToolReviewResponse[]
   founder_settings                       founder_settings?
+  teamMembers                            FounderTeamMember[]
+  submittedArticles                      Article[]                @relation("ArticleSubmittedBy")
+  authoredArticles                       Article[]                @relation("ArticleFounderAuthor")
+  milestones                             FounderMilestone[]
+  contentActivityLogs                    ContentActivityLog[]
+  advPackages                            AdvPackage[]
+  advPayments                            AdvPayment[]
 
   @@index([companyDomain])
-  @@index([email])
-  @@index([googleId])
-  @@index([resetToken])
   @@index([status])
-  @@index([unifiedUserId])
-  @@index([verifyToken])
+  @@index([deactivatedAt])
 }
 
 model FundingDigest {
@@ -539,6 +592,8 @@ model FundingRound {
   @@index([announcedAt])
   @@index([roundType])
   @@index([startupId, announcedAt])
+
+  siteAnnouncements SiteAnnouncement[]
 }
 
 model GlossaryTerm {
@@ -550,7 +605,6 @@ model GlossaryTerm {
   createdAt    DateTime @default(now())
   updatedAt    DateTime
 
-  @@index([slug])
 }
 
 model GovernmentScheme {
@@ -694,7 +748,6 @@ model IndianAITool {
   @@index([displayOrder])
   @@index([isActive])
   @@index([isFeatured])
-  @@index([slug])
 }
 
 model Investor {
@@ -711,7 +764,6 @@ model Investor {
   createdAt          DateTime     @default(now())
   updatedAt          DateTime
 
-  @@index([slug])
   @@index([type])
 }
 
@@ -841,18 +893,23 @@ model NewsletterOpen {
 }
 
 model NewsletterSubscriber {
-  id             String    @id
-  email          String    @unique
-  name           String?
-  subscribedAt   DateTime  @default(now())
-  source         String?
-  isActive       Boolean   @default(true)
-  tags           String[]
-  lastOpenedAt   DateTime?
-  lastClickedAt  DateTime?
-  unsubscribedAt DateTime?
+  id                String    @id
+  email             String    @unique
+  name              String?
+  subscribedAt      DateTime  @default(now())
+  source            String?
+  isActive          Boolean   @default(true)
+  emailVerified     Boolean   @default(false)
+  verificationToken String?
+  tags              String[]
+  lastOpenedAt      DateTime?
+  lastClickedAt     DateTime?
+  unsubscribedAt    DateTime?
+  consentAt         DateTime?
+  consentText       String?
+  consentVersion    Int?
+  consentSource     String?
 
-  @@index([email])
   @@index([isActive])
 }
 
@@ -923,7 +980,6 @@ model Redirect {
   permanent Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  @@index([fromPath])
 }
 
 model RelatedArticle {
@@ -953,6 +1009,58 @@ model ResearchHub {
   isActive        Boolean?  @default(true)
   createdAt       DateTime? @default(now()) @db.Timestamp(6)
   updatedAt       DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model AIResearchInstitution {
+  id            String   @id
+  name          String
+  city          String
+  state         String
+  tag           String
+  category      String
+  aiCentre      String?
+  dept          String?
+  faculty       String?
+  students      String?
+  programs      String?
+  fundedBy      String?
+  bharatGen     String?
+  appliedAI     String?
+  researchAreas String[]
+  labs          Json     @default("[]")
+  link          String
+  linkLabel     String
+  displayOrder  Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([category])
+}
+
+model AITalentStats {
+  id           String   @id
+  label        String
+  value        String
+  section      String
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([section])
+}
+
+model AITalentProgramme {
+  id           String   @id
+  description  String
+  note         String?
+  link         String?
+  linkLabel    String?
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model SearchQuery {
@@ -1001,6 +1109,8 @@ model Startup {
   id                                         String                   @id
   name                                       String
   slug                                       String                   @unique
+  slugChangedAt                              DateTime?
+  previousSlugs                              String[]                 @default([])
   tagline                                    String
   description                                String
   logoUrl                                    String?
@@ -1053,6 +1163,9 @@ model Startup {
   FeaturedCampaign                           FeaturedCampaign[]
   JobBoardEmployer                           JobBoardEmployer?
   JobBoardListings                           JobBoardListing[]
+  FounderMilestone                           FounderMilestone[]
+  ContentActivityLog                         ContentActivityLog[]
+  ContentMedia                               ContentMedia[]
 
   @@index([category])
   @@index([cityId])
@@ -1065,8 +1178,15 @@ model Startup {
   @@index([isVerified])
   @@index([ownerId])
   @@index([searchVector], type: Gin)
-  @@index([slug])
   @@index([stage])
+  @@index([deletedAt, isApproved, createdAt(sort: Desc)])
+  @@index([headquartersCity])
+  @@index([status])
+  @@index([businessType])
+  @@index([employeeCount])
+  @@index([createdAt])
+
+  siteAnnouncements SiteAnnouncement[]
 }
 
 model StartupFAQ {
@@ -1129,10 +1249,10 @@ model Tag {
   id         String       @id
   name       String       @unique
   slug       String       @unique
-  createdAt  DateTime     @default(now())
-  ArticleTag ArticleTag[]
+  createdAt       DateTime     @default(now())
+  ArticleTag      ArticleTag[]
+  PrimaryArticles Article[]    @relation("ArticlePrimaryTag")
 
-  @@index([slug])
 }
 
 model TalentStats {
@@ -1173,7 +1293,6 @@ model ToolCategory {
   AiTool      AiTool[]
 
   @@index([parentId])
-  @@index([slug])
   @@index([level, sortOrder])
 }
 
@@ -1182,6 +1301,8 @@ model ToolCon {
   toolId String
   text   String
   AiTool AiTool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@index([toolId])
 }
 
 model ToolPro {
@@ -1189,6 +1310,8 @@ model ToolPro {
   toolId String
   text   String
   AiTool AiTool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@index([toolId])
 }
 
 model ToolReview {
@@ -1245,6 +1368,8 @@ model ToolUseCase {
   toolId String
   text   String
   AiTool AiTool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@index([toolId])
 }
 
 model User {
@@ -1258,25 +1383,28 @@ model User {
   avatar          String?
   twitter         String?
   linkedin        String?
-  isActive        Boolean           @default(true)
-  canDeleteUntil  DateTime?         // Temporary delete permission granted by SUPER_ADMIN
-  deleteGrantedBy String?           // Who granted delete access
-  deleteGrantedAt DateTime?         // When delete access was granted
-  lastLoginAt     DateTime?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  deletedAt       DateTime?
-  Article         Article[]
-  ArticleCoAuthor ArticleCoAuthor[]
-  AuditLog        AuditLog[]
-  Comment         Comment[]
-  MediaAsset      MediaAsset[]
-  UserSession     UserSession[]
+  isActive             Boolean           @default(true)
+  canDeleteUntil       DateTime?
+  deleteGrantedBy      String?
+  deleteGrantedAt      DateTime?
+  lastLoginAt          DateTime?
+  twoFactorEnabled     Boolean           @default(false)
+  twoFactorSecret      String?
+  twoFactorBackupCodes String[]
+  failedLoginAttempts  Int               @default(0)
+  lockedUntil          DateTime?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  deletedAt            DateTime?
+  Article              Article[]
+  ArticleCoAuthor      ArticleCoAuthor[]
+  AuditLog             AuditLog[]
+  Comment              Comment[]
+  MediaAsset           MediaAsset[]
+  UserSession          UserSession[]
 
   @@index([canDeleteUntil])
-  @@index([email])
   @@index([role])
-  @@index([slug])
 }
 
 model WebUser {
@@ -1294,9 +1422,27 @@ model WebUser {
   github          String?
   isActive        Boolean          @default(true)
   termsAcceptedAt DateTime?        @db.Timestamptz
+  termsVersion    String?
   lastLoginAt     DateTime?        @db.Timestamptz
   createdAt       DateTime         @default(now()) @db.Timestamptz
   updatedAt       DateTime         @updatedAt @db.Timestamptz
+
+  // 2FA
+  twoFactorEnabled   Boolean       @default(false)
+  twoFactorSecret    String?
+  twoFactorBackupCodes String[]
+  failedLoginAttempts Int          @default(0)
+  lockedUntil         DateTime?
+
+  // Email change
+  pendingEmail           String?
+  emailChangeToken       String?   @unique
+  emailChangeTokenExpiry DateTime?
+
+  // Account lifecycle
+  deactivatedAt          DateTime?
+  deletedAt              DateTime?
+
   StartupReview   StartupReview[]
   ToolReview      ToolReview[]
   WebUserSession  WebUserSession[]
@@ -1304,8 +1450,7 @@ model WebUser {
   SavedStartup    SavedStartup[]
   JobBoardSaved   JobBoardSaved[]
 
-  @@index([email])
-  @@index([slug])
+  @@index([deactivatedAt])
 }
 
 model SavedTool {
@@ -1346,8 +1491,8 @@ model WebUserSession {
   createdAt    DateTime @default(now()) @db.Timestamptz
   WebUser      WebUser  @relation(fields: [webUserId], references: [id], onDelete: Cascade)
 
-  @@index([refreshToken])
   @@index([webUserId])
+  @@index([expiresAt])
 }
 
 model UserSession {
@@ -1360,8 +1505,8 @@ model UserSession {
   createdAt    DateTime @default(now())
   User         User     @relation(fields: [userId], references: [id])
 
-  @@index([refreshToken])
   @@index([userId])
+  @@index([expiresAt])
 }
 
 model consent_logs {
@@ -1436,7 +1581,6 @@ model City {
   updatedAt DateTime @updatedAt
   Startup   Startup[]
 
-  @@index([slug])
   @@index([country, state])
   @@index([name])
 }
@@ -1519,6 +1663,67 @@ enum ArticleType {
   COMPARISON
   REPORT
   SPONSORED
+  FOUNDER_STORY
+  STARTUP_UPDATE
+}
+
+enum ModerationStatus {
+  NONE
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  REVISION_REQUESTED
+}
+
+enum MilestoneType {
+  FUNDING
+  LAUNCH
+  PARTNERSHIP
+  ACQUISITION
+  AWARD
+  HIRING
+  REVENUE
+  USER_MILESTONE
+}
+
+enum MilestoneSource {
+  FOUNDER_SUBMITTED
+  ADMIN_CREATED
+  IMPORTED
+}
+
+enum VerificationStatus {
+  FOUNDER_REPORTED
+  PLATFORM_VERIFIED
+  DISPUTED
+}
+
+enum ContentAction {
+  CREATED
+  EDITED
+  SUBMITTED_FOR_REVIEW
+  REVISION_REQUESTED
+  RESUBMITTED
+  APPROVED
+  REJECTED
+  PUBLISHED
+  UNPUBLISHED
+  DELETED
+  RESTORED
+  AUTHOR_CHANGED
+  MILESTONE_VERIFIED
+  MILESTONE_UNVERIFIED
+  MERGED_DUPLICATE
+  REPORTED
+  REPORT_REVIEWED
+}
+
+enum ReportReason {
+  SPAM
+  MISLEADING
+  INAPPROPRIATE
+  COPYRIGHT
+  OTHER
 }
 
 enum CampaignStatus {
@@ -1674,6 +1879,89 @@ model ContentReport {
   @@index([createdAt])
 }
 
+// ============================================================
+// SUPPORT TICKET SYSTEM
+// ============================================================
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  AWAITING_USER
+  RESOLVED
+  CLOSED
+}
+
+enum SupportTicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum SupportTicketCategory {
+  ACCOUNT
+  BILLING
+  BUG_REPORT
+  FEATURE_REQUEST
+  LISTING
+  EVENT
+  JOB_BOARD
+  OTHER
+}
+
+enum SupportTicketPortal {
+  FOUNDER
+  ORGANIZER
+  EMPLOYER
+  PUBLIC
+}
+
+model SupportTicket {
+  id             String                @id @default(dbgenerated("gen_random_uuid()"))
+  ticketNumber   String                @unique
+  subject        String
+  description    String
+  category       SupportTicketCategory @default(OTHER)
+  priority       SupportTicketPriority @default(MEDIUM)
+  status         SupportTicketStatus   @default(OPEN)
+  portal         SupportTicketPortal
+  submitterType  String
+  submitterId    String
+  submitterEmail String
+  submitterName  String
+  assignedTo     String?
+  resolvedAt     DateTime?
+  resolvedBy     String?
+  closedAt       DateTime?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  messages       SupportTicketMessage[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([portal])
+  @@index([submitterType, submitterId])
+  @@index([assignedTo])
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@index([portal, createdAt])
+  @@index([priority, createdAt])
+  @@index([submitterType, submitterId, createdAt])
+}
+
+model SupportTicketMessage {
+  id         String        @id @default(dbgenerated("gen_random_uuid()"))
+  ticketId   String
+  senderType String
+  senderId   String
+  senderName String
+  body       String
+  isInternal Boolean       @default(false)
+  createdAt  DateTime      @default(now())
+  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+}
 
 // ============================================================
 // EMAIL OTP VERIFICATION
@@ -1731,8 +2019,6 @@ model UnifiedUser {
   founderProfile       FounderUser?   @relation("FounderToUnified")
   organizerProfile     EventOrganizer? @relation("OrganizerToUnified")
 
-  @@index([email])
-  @@index([googleId])
 }
 
 model UnifiedSession {
@@ -1747,7 +2033,6 @@ model UnifiedSession {
 
   user      UnifiedUser @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([token])
   @@index([userId])
   @@index([expiresAt])
 }
@@ -1808,6 +2093,13 @@ enum TeamMemberStatus {
   REVOKED
 }
 
+enum FounderTeamRole {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
 model EventOrganizer {
   id               String               @id @default(dbgenerated("gen_random_uuid()"))
   email            String               @unique
@@ -1822,10 +2114,34 @@ model EventOrganizer {
   linkedin         String?
   emailVerified    Boolean              @default(false)
   verifyToken      String?              @unique
+  companyDomain           String?
+  companyEmail            String?
+  companyEmailVerified    Boolean        @default(false)
+  companyEmailVerifiedAt  DateTime?
   status           EventOrganizerStatus @default(PENDING_VERIFICATION)
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
   lastLoginAt      DateTime?
+
+  // 2FA
+  twoFactorEnabled   Boolean            @default(false)
+  twoFactorSecret    String?
+  twoFactorBackupCodes String[]
+  failedLoginAttempts Int               @default(0)
+  lockedUntil         DateTime?
+
+  // Email change
+  pendingEmail           String?
+  emailChangeToken       String?        @unique
+  emailChangeTokenExpiry DateTime?
+
+  // Onboarding
+  onboardingCompleted Boolean            @default(false)
+  onboardingStep      Int                @default(0)
+
+  // Account lifecycle
+  deactivatedAt    DateTime?
+  deletedAt        DateTime?
 
   // Unified identity link
   unifiedUserId    String?              @unique
@@ -1836,10 +2152,8 @@ model EventOrganizer {
   sessions         EventOrganizerSession[]
   teamMembers      EventTeamMember[]
 
-  @@index([email])
-  @@index([googleId])
   @@index([status])
-  @@index([unifiedUserId])
+  @@index([deactivatedAt])
 }
 
 model EventOrganizerSession {
@@ -1852,7 +2166,6 @@ model EventOrganizerSession {
   createdAt   DateTime       @default(now())
   organizer   EventOrganizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
 
-  @@index([token])
   @@index([organizerId])
   @@index([expiresAt])
 }
@@ -1912,6 +2225,131 @@ model TeamActivityLog {
   @@index([teamMemberId, createdAt])
   @@index([organizerId, createdAt])
   @@index([eventId, createdAt])
+}
+
+model FounderTeamMember {
+  id            String           @id @default(cuid())
+  founderId     String
+  email         String
+  name          String?
+  role          FounderTeamRole  @default(VIEWER)
+  status        TeamMemberStatus @default(PENDING)
+  inviteToken   String?          @unique
+  expiresAt     DateTime?
+  passwordHash  String?
+  acceptedAt    DateTime?
+  lastActiveAt  DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  founder       FounderUser      @relation(fields: [founderId], references: [id], onDelete: Cascade)
+
+  @@unique([founderId, email])
+  @@index([email])
+  @@index([inviteToken])
+  @@index([founderId])
+}
+
+model FounderMilestone {
+  id                 String             @id @default(cuid())
+  founderId          String
+  startupId          String
+  type               MilestoneType
+  title              String
+  description        String?
+  amount             Decimal?
+  currency           String?            @default("INR")
+  date               DateTime
+  source             MilestoneSource    @default(FOUNDER_SUBMITTED)
+  verificationStatus VerificationStatus @default(FOUNDER_REPORTED)
+  verifiedBy         String?
+  verifiedAt         DateTime?
+  verificationNote   String?
+  isPublic           Boolean            @default(true)
+  status             String             @default("ACTIVE")
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  founder            FounderUser        @relation(fields: [founderId], references: [id], onDelete: Cascade)
+  startup            Startup            @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  activityLogs       ContentActivityLog[]
+  media              ContentMedia[]
+  reports            FounderContentReport[]
+
+  @@index([startupId, type])
+  @@index([startupId, date])
+  @@index([founderId])
+  @@index([verificationStatus])
+  @@index([status, isPublic])
+}
+
+model ContentActivityLog {
+  id            String        @id @default(cuid())
+  contentId     String?
+  milestoneId   String?
+  startupId     String
+  actorId       String
+  actorType     String        @default("FOUNDER")
+  action        ContentAction
+  metadata      Json?
+  createdAt     DateTime      @default(now())
+
+  article       Article?           @relation(fields: [contentId], references: [id], onDelete: SetNull)
+  milestone     FounderMilestone?  @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  startup       Startup            @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  actor         FounderUser        @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([contentId, createdAt])
+  @@index([milestoneId, createdAt])
+  @@index([startupId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+model ContentMedia {
+  id            String            @id @default(cuid())
+  contentId     String?
+  milestoneId   String?
+  startupId     String
+  uploadedBy    String
+  type          String            @default("IMAGE")
+  url           String
+  thumbnailUrl  String?
+  fileName      String
+  fileSize      Int               @default(0)
+  mimeType      String
+  alt           String?
+  caption       String?
+  sortOrder     Int               @default(0)
+  createdAt     DateTime          @default(now())
+
+  article       Article?          @relation(fields: [contentId], references: [id], onDelete: SetNull)
+  milestone     FounderMilestone? @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  startup       Startup           @relation(fields: [startupId], references: [id], onDelete: Cascade)
+
+  @@index([contentId])
+  @@index([milestoneId])
+  @@index([startupId])
+}
+
+model FounderContentReport {
+  id            String            @id @default(cuid())
+  contentId     String?
+  milestoneId   String?
+  reporterType  String            @default("ANONYMOUS")
+  reporterId    String?
+  reason        ReportReason
+  description   String?
+  status        ReportStatus      @default(PENDING)
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  createdAt     DateTime          @default(now())
+
+  article       Article?          @relation(fields: [contentId], references: [id], onDelete: SetNull)
+  milestone     FounderMilestone? @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+
+  @@index([contentId])
+  @@index([milestoneId])
+  @@index([status])
 }
 
 // ============================================================
@@ -2032,8 +2470,6 @@ model Event {
   slugHistory              EventSlugHistory[]
   teamAssignments          EventTeamAssignment[]
 
-  @@index([slug])
-  @@index([shortCode])
   @@index([status, visibility])
   @@index([startAt])
   @@index([organizerId])
@@ -2041,6 +2477,8 @@ model Event {
   @@index([format])
   @@index([latitude, longitude])
   @@index([deletedAt])
+
+  siteAnnouncements SiteAnnouncement[]
 }
 
 model EventSlugHistory {
@@ -2053,7 +2491,6 @@ model EventSlugHistory {
 
   event      Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
-  @@index([oldSlug])
   @@index([eventId])
 }
 
@@ -2239,7 +2676,6 @@ model EventSubscriber {
   interests           EventSubscriberInterest[]
   campaignRecipients  EventCampaignRecipient[]
 
-  @@index([email])
   @@index([subscribed])
   @@index([locationLat, locationLng])
   @@index([locationCountryCode])
@@ -2351,7 +2787,6 @@ model ToolReviewResponse {
   review   ToolReview  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
   founder  FounderUser @relation(fields: [founderId], references: [id], onDelete: Cascade)
 
-  @@index([reviewId])
   @@index([founderId])
 }
 
@@ -2372,7 +2807,6 @@ model ToolTagGroup {
   tags ToolSystemTag[]
 
   @@index([sortOrder])
-  @@index([slug])
 }
 
 model ToolSystemTag {
@@ -2392,7 +2826,6 @@ model ToolSystemTag {
 
   @@unique([groupId, slug])
   @@index([groupId, sortOrder])
-  @@index([slug])
   @@index([tagCount(sort: Desc)])
 }
 
@@ -2408,7 +2841,6 @@ model ToolSystemTagMapping {
 
   @@unique([toolId, tagId])
   @@index([tagId, toolId])
-  @@index([toolId, tagId])
 }
 
 // ============================================================
@@ -2501,14 +2933,31 @@ model JobBoardEmployer {
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 
+  // 2FA
+  twoFactorEnabled   Boolean        @default(false)
+  twoFactorSecret    String?
+  twoFactorBackupCodes String[]
+
+  // Email change
+  pendingEmail           String?
+  emailChangeToken       String?    @unique
+  emailChangeTokenExpiry DateTime?
+
+  // Onboarding
+  onboardingCompleted    Boolean        @default(false)
+  onboardingStep         Int            @default(0)
+
+  // Account lifecycle
+  deactivatedAt          DateTime?
+  deletedAt              DateTime?
+
   Listings        JobBoardListing[]
   Startup         Startup?          @relation(fields: [startupId], references: [id], onDelete: SetNull)
 
-  @@index([slug])
   @@index([startupId])
   @@index([isActive])
   @@index([plan])
-  @@index([email])
+  @@index([deactivatedAt])
 }
 
 model JobBoardListing {
@@ -2563,10 +3012,12 @@ model JobBoardListing {
   @@index([isActive, listingTier])
   @@index([employerId])
   @@index([startupId])
-  @@index([slug])
   @@index([publishedAt])
   @@index([expiresAt])
   @@index([searchVector], type: Gin)
+  @@index([deletedAt])
+
+  siteAnnouncements SiteAnnouncement[]
 }
 
 model JobBoardApplication {
@@ -2608,4 +3059,232 @@ model JobBoardSaved {
   @@unique([listingId, userId])
   @@index([userId])
   @@index([listingId])
+}
+
+model EmailLog {
+  id        String   @id @default(uuid())
+  type      String
+  to        String
+  subject   String
+  status    String   @default("sent")
+  resendId  String?
+  error     String?
+  sentAt    DateTime @default(now())
+
+  @@index([to])
+  @@index([type, sentAt])
+  @@index([sentAt])
+}
+
+// ─── Announcement Bar ───────────────────────────────
+
+enum AnnouncementType {
+  CUSTOM
+  STARTUP
+  FUNDING
+  EVENT
+  JOB
+  TOOL
+}
+
+model SiteAnnouncement {
+  id             String           @id @default(cuid())
+  type           AnnouncementType @default(CUSTOM)
+  text           String
+  mobileText     String?
+  emoji          String           @default("📢")
+  link           String
+
+  startupId      String?
+  fundingRoundId String?
+  eventId        String?
+  jobListingId   String?
+  toolId         String?
+
+  isActive       Boolean          @default(true)
+  sortOrder      Int              @default(0)
+  startsAt       DateTime?
+  endsAt         DateTime?
+
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  startup        Startup?         @relation(fields: [startupId], references: [id], onDelete: SetNull)
+  fundingRound   FundingRound?    @relation(fields: [fundingRoundId], references: [id], onDelete: SetNull)
+  event          Event?           @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  jobListing     JobBoardListing? @relation(fields: [jobListingId], references: [id], onDelete: SetNull)
+  tool           AiTool?          @relation(fields: [toolId], references: [id], onDelete: SetNull)
+
+  @@index([isActive, sortOrder])
+}
+
+// ──────────────────────────────────────────────────────────
+// Advertise System — Launch Year Packages & Placement Zones
+// ──────────────────────────────────────────────────────────
+
+enum AdvPackageTier {
+  FREE
+  STARTER
+  GROWTH
+  PREMIUM
+}
+
+enum AdvPackageStatus {
+  ACTIVE
+  EXPIRED
+  UPGRADED
+  CANCELLED
+}
+
+enum AdvZoneTier {
+  TIER_1
+  TIER_2
+  TIER_3
+}
+
+enum AdvZoneSlot {
+  // Tier 1 — Premium Only
+  PROMO_BADGE_HEADER
+  HOMEPAGE_HERO
+  POWERED_BY_SECTION
+  // Tier 2 — Growth & Premium
+  FOUNDER_SPOTLIGHT
+  FEATURED_PARTNER
+  WEBSITE_NEWSLETTER_FEATURED
+  LINKEDIN_NEWSLETTER_FEATURED
+  // Tier 3 — Starter, Growth & Premium
+  LATEST_STORIES_CARD_1
+  AI_TOOL_PICKS
+  STORIES_PAGE_FEATURED
+  AI_TOOLS_PAGE_FEATURED
+  STARTUP_DIRECTORY_FEATURED
+}
+
+enum AdvActivationStatus {
+  SCHEDULED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum AdvSocialPostType {
+  LINKEDIN
+  INSTAGRAM
+  BUNDLE
+}
+
+enum AdvSocialPostStatus {
+  PENDING_PAYMENT
+  PAID
+  SCHEDULED
+  PUBLISHED
+  CANCELLED
+}
+
+enum AdvPaymentPurpose {
+  PACKAGE_PURCHASE
+  PACKAGE_UPGRADE
+  ZONE_EXTENSION
+  SOCIAL_POST
+}
+
+model AdvPackage {
+  id              String           @id @default(dbgenerated("gen_random_uuid()"))
+  founderId       String
+  tier            AdvPackageTier
+  status          AdvPackageStatus @default(ACTIVE)
+  purchasedAt     DateTime         @default(now())
+  expiresAt       DateTime
+  upgradedFromId  String?          @unique
+  upgradedToId    String?
+  cancelledAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  founder         FounderUser      @relation(fields: [founderId], references: [id], onDelete: Cascade)
+  upgradedFrom    AdvPackage?      @relation("PackageUpgrade", fields: [upgradedFromId], references: [id], onDelete: SetNull)
+  upgradedTo      AdvPackage?      @relation("PackageUpgrade")
+
+  zoneActivations AdvZoneActivation[]
+  socialPosts     AdvSocialPostOrder[]
+  payments        AdvPayment[]
+
+  @@index([founderId, status])
+  @@index([expiresAt])
+  @@index([tier, status])
+}
+
+model AdvZoneActivation {
+  id              String              @id @default(dbgenerated("gen_random_uuid()"))
+  packageId       String
+  zone            AdvZoneSlot
+  zoneTier        AdvZoneTier
+  status          AdvActivationStatus @default(SCHEDULED)
+  startsAt        DateTime
+  endsAt          DateTime
+  freeDaysUsed    Int                 @default(3)
+  extensionDays   Int                 @default(0)
+  extensionRate   Int                 @default(0)
+  extensionTotal  Int                 @default(0)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  package         AdvPackage          @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  payments        AdvPayment[]
+
+  @@unique([packageId, zone])
+  @@index([zone, status, startsAt, endsAt])
+  @@index([status, endsAt])
+}
+
+model AdvSocialPostOrder {
+  id              String              @id @default(dbgenerated("gen_random_uuid()"))
+  packageId       String
+  postType        AdvSocialPostType
+  status          AdvSocialPostStatus @default(PENDING_PAYMENT)
+  contentBrief    String?
+  publishedUrl    String?
+  publishedAt     DateTime?
+  amountPaise     Int
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  package         AdvPackage          @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  payments        AdvPayment[]
+
+  @@index([packageId, status])
+  @@index([postType, status])
+}
+
+model AdvPayment {
+  id                  String            @id @default(dbgenerated("gen_random_uuid()"))
+  founderId           String
+  packageId           String?
+  zoneActivationId    String?
+  socialPostOrderId   String?
+  purpose             AdvPaymentPurpose
+  amountPaise         Int
+  gstPaise            Int
+  totalPaise          Int
+  currency            String            @default("INR")
+  razorpayOrderId     String?           @unique
+  razorpayPaymentId   String?           @unique
+  razorpaySignature   String?
+  status              PaymentStatus     @default(PENDING)
+  paidAt              DateTime?
+  failedAt            DateTime?
+  refundedAt          DateTime?
+  refundAmountPaise   Int?
+  metadata            Json?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  founder             FounderUser       @relation(fields: [founderId], references: [id], onDelete: Cascade)
+  package             AdvPackage?       @relation(fields: [packageId], references: [id], onDelete: SetNull)
+  zoneActivation      AdvZoneActivation? @relation(fields: [zoneActivationId], references: [id], onDelete: SetNull)
+  socialPostOrder     AdvSocialPostOrder? @relation(fields: [socialPostOrderId], references: [id], onDelete: SetNull)
+
+  @@index([founderId, status])
+  @@index([razorpayOrderId])
+  @@index([status, createdAt])
 }

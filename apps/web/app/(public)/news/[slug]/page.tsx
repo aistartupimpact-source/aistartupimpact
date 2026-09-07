@@ -2,8 +2,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { Clock, Calendar, Bookmark, ChevronRight } from 'lucide-react';
-import { getArticleBySlugDirect, getArticlesDirect } from '@/lib/db';
+import { Clock, Calendar, ChevronRight } from 'lucide-react';
+import StorySaveButton from '@/components/StorySaveButton';
+import { sql, getArticleBySlugDirect, getArticlesDirect } from '@/lib/db';
 import { defaultHeroArticle, defaultLatestStories, defaultIndiaAI } from '@/lib/fallbacks';
 import { buildArticleMetadata, generateArticleSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import { sanitizeHtml } from '@/lib/sanitize';
@@ -17,6 +18,20 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const article = await getArticleBySlugDirect(params.slug);
   if (!article) return { title: 'Article Not Found' };
   return buildArticleMetadata(article);
+}
+
+export async function generateStaticParams() {
+  try {
+    const rows = await sql`
+      SELECT slug FROM "Article"
+      WHERE type = 'NEWS' AND status = 'PUBLISHED' AND "deletedAt" IS NULL
+      ORDER BY "publishedAt" DESC NULLS LAST
+      LIMIT 50
+    `;
+    return rows.map((r: any) => ({ slug: r.slug }));
+  } catch {
+    return [];
+  }
 }
 
 export default async function ArticlePage({ params }: { params: { slug: string } }) {
@@ -64,7 +79,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
   ]);
 
   return (
-    <div className="max-w-7xl mx-auto px-0 sm:px-2 lg:px-4 py-6 sm:py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
@@ -83,7 +98,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
 
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
         <article className="flex-1 min-w-0 max-w-3xl mx-auto lg:mx-0 w-full">
-          <span className="badge-brand text-[10px] mb-4 inline-block">{article.category?.name || 'News'}</span>
+          <span className="badge-brand text-xs mb-4 inline-block">{article.category?.name || 'News'}</span>
 
           <h1 className="font-sora font-extrabold text-[22px] leading-[1.2] sm:text-3xl md:text-[36px] md:leading-[1.2] text-navy dark:text-white">
             {article.title}
@@ -114,13 +129,13 @@ export default async function ArticlePage({ params }: { params: { slug: string }
             </div>
             <div className="flex items-center gap-2">
               <ShareButton title={article.title} />
-              <button className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Bookmark className="w-4 h-4 text-gray-400" /></button>
+              <StorySaveButton slug={article.slug} />
             </div>
           </div>
 
           {article.coverImage ? (
             <div className="relative aspect-[16/9] rounded-xl overflow-hidden my-6 sm:my-8">
-              <Image src={article.coverImage} alt={article.title} fill className="object-cover" />
+              <Image src={article.coverImage} alt={article.title} fill sizes="100vw" className="object-cover" />
             </div>
           ) : (
             <div className="aspect-[16/9] bg-gradient-to-br from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl my-6 sm:my-8" />
@@ -142,7 +157,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
                 {relatedArticles.map((rela: any) => (
                   <Link key={rela.slug} href={`/news/${rela.slug}`} className="group">
                     <div className="card p-4 h-full">
-                      <span className="badge-category text-[10px] mb-2 inline-block">{rela.category?.name || 'News'}</span>
+                      <span className="badge-category text-xs mb-2 inline-block">{rela.category?.name || 'News'}</span>
                       <h3 className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand transition-colors leading-snug line-clamp-3">{rela.title}</h3>
                       <span className="text-xs text-gray-400 font-jakarta mt-2 block">{rela.readTimeMinutes} min</span>
                     </div>
@@ -156,11 +171,11 @@ export default async function ArticlePage({ params }: { params: { slug: string }
         <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-6">
           {article.linkedTool && (
             <div className="card p-5 border-brand-200 dark:border-brand-900/50 bg-gradient-to-br from-brand-50 to-white dark:from-brand-900/20 dark:to-gray-900">
-              <span className="badge-brand text-[9px] mb-2 inline-block">Featured Tool</span>
+              <span className="badge-brand text-xs mb-2 inline-block">Featured Tool</span>
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-800 flex flex-shrink-0 items-center justify-center shadow-sm">
                   {article.linkedTool.logoUrl ? (
-                    <img src={article.linkedTool.logoUrl} alt={article.linkedTool.name} className="w-6 h-6 object-contain" />
+                    <Image src={article.linkedTool.logoUrl} alt={article.linkedTool.name} width={24} height={24} sizes="24px" className="w-6 h-6 object-contain" />
                   ) : (
                     <span className="font-sora font-bold text-brand">{article.linkedTool.name.charAt(0)}</span>
                   )}
@@ -168,8 +183,8 @@ export default async function ArticlePage({ params }: { params: { slug: string }
                 <div>
                   <h4 className="font-sora font-bold text-sm text-navy dark:text-white">{article.linkedTool.name}</h4>
                   <div className="flex items-center gap-1 mt-0.5">
-                    <span className="text-[10px] bg-yellow-50 text-yellow-700 px-1.5 py-0.5 rounded-sm font-bold block whitespace-nowrap">★ {article.linkedTool.avgRating}</span>
-                    <span className="text-[10px] text-gray-500">{article.linkedTool.pricingModel}</span>
+                    <span className="text-xs bg-yellow-50 text-yellow-700 px-1.5 py-0.5 rounded-sm font-bold block whitespace-nowrap">★ {article.linkedTool.avgRating}</span>
+                    <span className="text-xs text-gray-500">{article.linkedTool.pricingModel}</span>
                   </div>
                 </div>
               </div>

@@ -70,7 +70,7 @@ export default function WriteReviewClient({ toolSlug, toolName }: WriteReviewCli
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm overflow-y-auto">
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm overflow-y-auto">
           <div className="bg-white dark:bg-gray-900 w-full max-w-lg rounded-2xl shadow-xl relative animate-in fade-in zoom-in-95 duration-200">
             <button
               onClick={() => setIsOpen(false)}

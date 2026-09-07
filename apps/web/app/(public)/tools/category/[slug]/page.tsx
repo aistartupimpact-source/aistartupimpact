@@ -1,22 +1,20 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Star, ChevronRight } from 'lucide-react';
 import { getDirectoryToolsDirect } from '@/lib/db';
-import { neon } from '@neondatabase/serverless';
-
-const sql = neon(process.env.DATABASE_URL!);
-
+import { sql } from '@/lib/db';
 export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const categories = await sql`
-    SELECT name, "metaTitle", "metaDescription", description FROM "ToolCategory" WHERE slug = ${params.slug} AND "isActive" = true LIMIT 1
+    SELECT name, description FROM "ToolCategory" WHERE slug = ${params.slug} AND "isActive" = true LIMIT 1
   `;
   if (categories.length === 0) return { title: 'Category Not Found' };
   const cat = categories[0] as any;
-  const title = cat.metaTitle || `Best ${cat.name} AI Tools — Reviewed & Rated`;
-  const description = cat.metaDescription || `Discover the best ${cat.name} AI tools. Compare features, pricing, and reviews.`;
+  const title = `Best ${cat.name} AI Tools — Reviewed & Rated`;
+  const description = cat.description || `Discover the best ${cat.name} AI tools. Compare features, pricing, and reviews.`;
   return {
     title,
     description,
@@ -28,7 +26,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function CategoryPage({ params }: { params: { slug: string } }) {
   // Get category info
   const categories = await sql`
-    SELECT id, name, slug, description, "introText", "metaTitle", level, "parentId"
+    SELECT id, name, slug, description, level, "parentId"
     FROM "ToolCategory"
     WHERE slug = ${params.slug} AND "isActive" = true
     LIMIT 1
@@ -66,10 +64,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
         <h1 className="font-sora font-extrabold text-2xl md:text-3xl text-navy dark:text-white">
           {category.name} AI Tools
         </h1>
-        {category.introText && (
-          <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm mt-2 max-w-3xl">{category.introText}</p>
-        )}
-        {!category.introText && category.description && (
+        {category.description && (
           <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm mt-2 max-w-3xl">{category.description}</p>
         )}
       </div>
@@ -101,14 +96,14 @@ export default async function CategoryPage({ params }: { params: { slug: string 
               <div className="flex items-start gap-3 mb-2">
                 <div className="w-9 h-9 rounded-lg bg-gray-50 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700">
                   {tool.logoUrl ? (
-                    <img src={tool.logoUrl} alt={tool.name} className="w-7 h-7 object-contain" />
+                    <Image src={tool.logoUrl} alt={tool.name} width={28} height={28} sizes="28px" className="w-7 h-7 object-contain" />
                   ) : (
                     <span className="text-xs font-bold text-brand">{tool.name.charAt(0)}</span>
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand transition-colors truncate">{tool.name}</h3>
-                  <p className="text-[10px] text-gray-400 font-jakarta">{tool.category}</p>
+                  <p className="text-xs text-gray-400 font-jakarta">{tool.category}</p>
                 </div>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta line-clamp-2 mb-3">{tool.tagline}</p>
@@ -117,7 +112,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
                   <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
                   <span className="text-xs font-bold text-gray-600">{tool.rating}</span>
                 </div>
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 uppercase">{tool.pricing}</span>
+                <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 uppercase">{tool.pricing}</span>
               </div>
             </Link>
           ))}

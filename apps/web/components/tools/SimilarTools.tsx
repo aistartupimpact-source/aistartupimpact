@@ -33,7 +33,7 @@ export default function SimilarTools({ tools, categoryName, categorySlug }: Simi
         {categorySlug && (
           <Link
             href={`/tools?category=${categorySlug}`}
-            className="text-[11px] font-semibold text-brand hover:underline font-jakarta"
+            className="text-xs font-semibold text-brand hover:underline font-jakarta"
           >
             View all
           </Link>
@@ -72,13 +72,13 @@ export default function SimilarTools({ tools, categoryName, categorySlug }: Simi
                   {rating && rating > 0 && (
                     <span className="flex items-center gap-0.5 shrink-0">
                       <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                      <span className="text-[11px] font-bold text-gray-600 dark:text-gray-400">
+                      <span className="text-xs font-bold text-gray-600 dark:text-gray-400">
                         {rating.toFixed(1)}
                       </span>
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 font-jakarta truncate mt-0.5">
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta truncate mt-0.5">
                   {tool.tagline}
                 </p>
               </div>

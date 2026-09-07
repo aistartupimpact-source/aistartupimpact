@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import { requireFounderAuth } from '@/lib/founder-auth';
 import { verifyTOTPToken, decryptSecret } from '@/lib/two-factor';
 
-const sql = neon(process.env.DATABASE_URL!);
-
+export const dynamic = 'force-dynamic';
 /**
  * POST /api/founder/2fa-disable
  * Disable 2FA (requires current 2FA code for security)

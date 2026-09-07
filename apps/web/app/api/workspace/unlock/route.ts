@@ -9,7 +9,7 @@ import { checkRateLimit, getClientIdentifier, authRateLimit } from "@/lib/rate-l
 export const dynamic = "force-dynamic";
 
 const USER_JWT_SECRET = new TextEncoder().encode(
-  process.env.USER_JWT_SECRET || "user-secret-change-in-production"
+  process.env.USER_JWT_SECRET!
 );
 
 /**
@@ -63,16 +63,21 @@ export async function POST(request: NextRequest) {
 
   const ipAddress = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
 
-  const result = await unlockWorkspace(unifiedUserId, workspace, ipAddress);
+  try {
+    const result = await unlockWorkspace(unifiedUserId, workspace, ipAddress);
 
-  if (result.status === "error") {
-    return NextResponse.json({ success: false, error: result.message }, { status: 400 });
+    if (result.status === "error") {
+      return NextResponse.json({ success: false, error: result.message }, { status: 400 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      status: result.status,
+      message: result.message,
+      redirectTo: result.redirectTo,
+    });
+  } catch (err) {
+    console.error("[workspace/unlock]", err);
+    return NextResponse.json({ success: false, error: "Something went wrong. Please try again later." }, { status: 500 });
   }
-
-  return NextResponse.json({
-    success: true,
-    status: result.status,
-    message: result.message,
-    redirectTo: result.redirectTo,
-  });
 }

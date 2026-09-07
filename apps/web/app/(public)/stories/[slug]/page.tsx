@@ -2,8 +2,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { Clock, Calendar, Bookmark, ChevronRight, Users } from 'lucide-react';
-import { getArticleBySlugDirect, getArticlesDirect } from '@/lib/db';
+import { Clock, Calendar, ChevronRight, Users } from 'lucide-react';
+import StorySaveButton from '@/components/StorySaveButton';
+import { sql, getArticleBySlugDirect, getArticlesDirect } from '@/lib/db';
 import { defaultFounderSpotlights } from '@/lib/fallbacks';
 import { buildArticleMetadata, generateArticleSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import { sanitizeHtml } from '@/lib/sanitize';
@@ -17,6 +18,20 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const story = await getArticleBySlugDirect(params.slug);
   if (!story) return { title: 'Story Not Found' };
   return buildArticleMetadata({ ...story, type: 'STORY' });
+}
+
+export async function generateStaticParams() {
+  try {
+    const rows = await sql`
+      SELECT slug FROM "Article"
+      WHERE type = 'STORY' AND status = 'PUBLISHED' AND "deletedAt" IS NULL
+      ORDER BY "publishedAt" DESC NULLS LAST
+      LIMIT 50
+    `;
+    return rows.map((r: any) => ({ slug: r.slug }));
+  } catch {
+    return [];
+  }
 }
 
 export default async function StoryDetailPage({ params }: { params: { slug: string } }) {
@@ -69,7 +84,7 @@ export default async function StoryDetailPage({ params }: { params: { slug: stri
   ]);
 
   return (
-    <div className="max-w-7xl mx-auto px-0 sm:px-2 lg:px-4 py-6 sm:py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
@@ -84,7 +99,7 @@ export default async function StoryDetailPage({ params }: { params: { slug: stri
       <div className="flex flex-col lg:flex-row gap-10">
         {/* ── Main Article ── */}
         <article className="flex-1 min-w-0">
-          <span className="badge-brand text-[10px] mb-4 inline-block">Founder Story</span>
+          <span className="badge-brand text-xs mb-4 inline-block">Founder Story</span>
 
           <h1 className="font-sora font-extrabold text-[22px] leading-[1.2] sm:text-3xl md:text-[36px] md:leading-[1.2] text-navy dark:text-white">
             {story.title}
@@ -115,13 +130,13 @@ export default async function StoryDetailPage({ params }: { params: { slug: stri
             </div>
             <div className="flex items-center gap-2">
               <ShareButton title={story.title} />
-              <button className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Bookmark className="w-4 h-4 text-gray-400" /></button>
+              <StorySaveButton slug={story.slug} />
             </div>
           </div>
 
           {story.coverImage ? (
             <div className="relative aspect-[16/9] rounded-xl overflow-hidden my-6 sm:my-8">
-              <Image src={story.coverImage} alt={story.title} fill className="object-cover" />
+              <Image src={story.coverImage} alt={story.title} fill sizes="100vw" className="object-cover" />
             </div>
           ) : (
             <div className="aspect-[16/9] bg-gradient-to-br from-brand-50 to-gray-50 dark:from-brand-900/20 dark:to-gray-900 rounded-xl my-6 sm:my-8 flex items-center justify-center">
@@ -145,7 +160,7 @@ export default async function StoryDetailPage({ params }: { params: { slug: stri
                 {relatedStories.map((s: any) => (
                   <Link key={s.slug} href={`/stories/${s.slug}`} className="group">
                     <div className="card p-4 h-full">
-                      <span className="badge-category text-[10px] mb-2 inline-block">Founder Story</span>
+                      <span className="badge-category text-xs mb-2 inline-block">Founder Story</span>
                       <h3 className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand transition-colors leading-snug line-clamp-3">{s.title}</h3>
                       <span className="text-xs text-gray-400 font-jakarta mt-2 block">{s.readTimeMinutes} min</span>
                     </div>

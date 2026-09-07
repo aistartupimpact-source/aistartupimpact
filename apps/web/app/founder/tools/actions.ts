@@ -1,6 +1,7 @@
 'use server';
 
 import { requireFounderAuth } from '@/lib/founder-auth';
+import { sendSubmissionReceivedEmail } from '@/lib/founder-email';
 import { prisma } from '@aistartupimpact/database';
 import { revalidatePath } from 'next/cache';
 
@@ -34,6 +35,7 @@ interface ToolSubmission {
 export async function submitToolAction(data: ToolSubmission) {
   try {
     const session = await requireFounderAuth();
+    if (data.tagline) data.tagline = data.tagline.trim().slice(0, 100);
 
     // Generate slug from name
     const slug = data.name
@@ -188,7 +190,15 @@ export async function submitToolAction(data: ToolSubmission) {
     }
 
     // TODO: Send notification to admin
-    // TODO: Send confirmation email to founder
+
+    // Send confirmation email to founder (fire-and-forget)
+    const founderInfo = await prisma.$queryRaw<any[]>`
+      SELECT email, name FROM "FounderUser" WHERE id = ${session.userId} LIMIT 1
+    `;
+    if (founderInfo.length > 0) {
+      sendSubmissionReceivedEmail(founderInfo[0].email, founderInfo[0].name, 'tool', data.name)
+        .catch(err => console.error('Submission email error:', err));
+    }
 
     revalidatePath('/founder/tools');
     revalidatePath('/founder/dashboard');

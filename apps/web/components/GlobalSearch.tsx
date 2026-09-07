@@ -178,7 +178,7 @@ export default function GlobalSearch() {
 
       {/* Search Modal */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] px-4">
+        <div className="fixed inset-0 z-modal flex items-start justify-center pt-[10vh] px-4">
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
 
@@ -196,7 +196,7 @@ export default function GlobalSearch() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Search articles, tools, startups..."
+                inputMode="search" enterKeyHint="search" placeholder="Search articles, tools, startups..."
                 className="w-full pl-12 pr-12 py-4 bg-transparent text-navy dark:text-white placeholder-gray-400 focus:outline-none text-base"
                 autoComplete="off"
               />
@@ -246,6 +246,7 @@ export default function GlobalSearch() {
                               src={result.logoUrl || result.coverImage || ''}
                               alt={result.title}
                               fill
+                              sizes="40px"
                               className="object-cover"
                             />
                           </div>

@@ -1,11 +1,9 @@
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Building2, MapPin, Globe, Briefcase, DollarSign, Clock } from 'lucide-react';
-
-const sql = neon(process.env.DATABASE_URL!);
-
 interface PageProps {
   params: { slug: string };
 }
@@ -49,7 +47,7 @@ export default async function CompanyJobsPage({ params }: PageProps) {
       <div className="card p-5 sm:p-6 flex flex-col sm:flex-row items-start gap-4 mb-8">
         <div className="w-16 h-16 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
           {company.logoUrl ? (
-            <img src={company.logoUrl} alt={company.companyName} className="w-full h-full object-cover" />
+            <Image src={company.logoUrl} alt={company.companyName} width={64} height={64} sizes="64px" className="w-full h-full object-cover" />
           ) : (
             <Building2 className="w-7 h-7 text-gray-400" />
           )}
@@ -89,7 +87,7 @@ export default async function CompanyJobsPage({ params }: PageProps) {
             <Link key={job.id} href={`/jobs/${job.slug}`} className="card p-4 sm:p-5 flex items-center justify-between hover:border-brand/30 transition-colors group">
               <div>
                 <h3 className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand">{job.title}</h3>
-                <div className="flex items-center gap-2 text-[11px] text-gray-400 font-jakarta mt-0.5">
+                <div className="flex items-center gap-2 text-xs text-gray-400 font-jakarta mt-0.5">
                   <span>{job.category?.replace(/_/g, ' ')}</span>
                   <span>•</span>
                   <span>{job.workType}</span>

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
-import { authRateLimit, getClientIdentifier } from '@/lib/rate-limit';
+import { authRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { signupSchema, validateInput } from '@/lib/validation';
+import { isDisposableEmail } from '@aistartupimpact/utils';
 
-const sql = neon(process.env.DATABASE_URL!);
-
+export const dynamic = 'force-dynamic';
 function generateId(): string {
   return randomBytes(16).toString('hex');
 }
@@ -22,25 +22,13 @@ function generateSlug(name: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting - prevent spam signups (with fallback)
     const identifier = getClientIdentifier(request);
-    let remaining = 999;
-    
-    if (authRateLimit) {
-      try {
-        const { success: rateLimitSuccess, remaining: rem } = await authRateLimit.limit(identifier);
-        remaining = rem;
-        
-        if (!rateLimitSuccess) {
-          return NextResponse.json(
-            { error: 'Too many signup attempts. Please try again in 15 minutes.' },
-            { status: 429, headers: { 'X-RateLimit-Remaining': '0' } }
-          );
-        }
-      } catch (rateLimitError) {
-        console.error('Rate limit check failed:', rateLimitError);
-        // Continue without rate limiting if it fails
-      }
+    const { success: rateLimitSuccess, remaining } = await checkRateLimit(authRateLimit, identifier);
+    if (!rateLimitSuccess) {
+      return NextResponse.json(
+        { error: 'Too many signup attempts. Please try again in 15 minutes.' },
+        { status: 429, headers: { 'X-RateLimit-Remaining': '0' } }
+      );
     }
 
     // Input validation
@@ -65,12 +53,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate password strength
-    if (password.length < 8) {
+    if (isDisposableEmail(email)) {
       return NextResponse.json(
-        { error: 'Password must be at least 8 characters long' },
+        { error: 'Disposable email addresses are not allowed. Please use a permanent email.' },
         { status: 400 }
       );
+    }
+
+    if (password.length < 8) {
+      return NextResponse.json({ error: 'Password must be at least 8 characters long' }, { status: 400 });
+    }
+    if (!/[A-Z]/.test(password)) {
+      return NextResponse.json({ error: 'Password must contain an uppercase letter' }, { status: 400 });
+    }
+    if (!/[a-z]/.test(password)) {
+      return NextResponse.json({ error: 'Password must contain a lowercase letter' }, { status: 400 });
+    }
+    if (!/[0-9]/.test(password)) {
+      return NextResponse.json({ error: 'Password must contain a number' }, { status: 400 });
     }
 
     // Check if user already exists

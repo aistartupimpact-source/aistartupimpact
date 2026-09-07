@@ -4,6 +4,7 @@ import { createOrganizerSession, hashPassword, generateToken } from "@/lib/organ
 import { sendOrganizerVerificationEmail } from "@/lib/organizer-auth/emails";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { authRateLimit } from "@/lib/rate-limit";
+import { isDisposableEmail } from "@aistartupimpact/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -24,9 +25,22 @@ export async function POST(request: NextRequest) {
     if (password.length < 8) {
       return NextResponse.json({ success: false, error: "Password must be at least 8 characters." }, { status: 400 });
     }
+    if (!/[A-Z]/.test(password)) {
+      return NextResponse.json({ success: false, error: "Password must contain an uppercase letter." }, { status: 400 });
+    }
+    if (!/[a-z]/.test(password)) {
+      return NextResponse.json({ success: false, error: "Password must contain a lowercase letter." }, { status: 400 });
+    }
+    if (!/[0-9]/.test(password)) {
+      return NextResponse.json({ success: false, error: "Password must contain a number." }, { status: 400 });
+    }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (typeof email !== 'string' || email.length > 255 || !email.includes('@') || !email.split('@')[1]?.includes('.')) {
       return NextResponse.json({ success: false, error: "Invalid email address." }, { status: 400 });
+    }
+
+    if (isDisposableEmail(email)) {
+      return NextResponse.json({ success: false, error: "Disposable email addresses are not allowed. Please use a permanent email." }, { status: 400 });
     }
 
     // Check existing

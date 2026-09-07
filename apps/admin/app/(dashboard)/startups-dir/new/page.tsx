@@ -122,8 +122,19 @@ export default function NewStartupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.tagline) {
-      alert('Name and tagline are required');
+    const missingFields = [];
+    if (!formData.name) missingFields.push('Name');
+    if (!formData.tagline) missingFields.push('Tagline');
+    if (!formData.description) missingFields.push('Description');
+    if (!formData.websiteUrl) missingFields.push('Website URL');
+    if (!formData.logoUrl) missingFields.push('Logo');
+    if (!formData.category) missingFields.push('Category');
+    if (!formData.businessType) missingFields.push('Business Type');
+    if (!formData.foundedYear) missingFields.push('Founded Year');
+    if (!formData.employeeCount) missingFields.push('Employee Count');
+    if (!foundersDetails.some(f => f.name.trim())) missingFields.push('At least 1 Founder');
+    if (missingFields.length > 0) {
+      alert('Required fields missing: ' + missingFields.join(', '));
       return;
     }
     
@@ -264,12 +275,13 @@ export default function NewStartupPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
-                Category
+                Category *
               </label>
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
+                required
                 className="input-field text-sm"
               >
                 <option value="">Select category</option>
@@ -281,12 +293,13 @@ export default function NewStartupPage() {
 
             <div>
               <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
-                Business Type
+                Business Type *
               </label>
               <select
                 name="businessType"
                 value={formData.businessType}
                 onChange={handleChange}
+                required
                 className="input-field text-sm"
               >
                 <option value="">Select business type</option>
@@ -299,7 +312,7 @@ export default function NewStartupPage() {
 
           <div>
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta flex justify-between items-center">
-              <span>Description</span>
+              <span>Description *</span>
               <span className="text-[10px] lowercase font-normal text-gray-400 font-jakarta">
                 {formData.description.length}/1000 characters
               </span>
@@ -322,7 +335,7 @@ export default function NewStartupPage() {
           
           <div>
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
-              Logo
+              Logo *
             </label>
             <div className="flex gap-2 items-start">
               <input
@@ -366,13 +379,14 @@ export default function NewStartupPage() {
 
           <div>
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
-              Website URL
+              Website URL *
             </label>
             <input
               type="url"
               name="websiteUrl"
               value={formData.websiteUrl}
               onChange={handleChange}
+              required
               className="input-field text-sm"
               placeholder="https://..."
             />
@@ -419,26 +433,28 @@ export default function NewStartupPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
-                Founded Year
+                Founded Year *
               </label>
               <input
                 type="number"
                 name="foundedYear"
                 value={formData.foundedYear ?? ''}
                 onChange={handleChange}
+                required
                 className="input-field text-sm"
                 placeholder="2023"
               />
             </div>
             <div>
               <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
-                Employees
+                Employees *
               </label>
               <input
                 type="number"
                 name="employeeCount"
                 value={formData.employeeCount ?? ''}
                 onChange={handleChange}
+                required
                 className="input-field text-sm"
                 placeholder="50"
               />
@@ -486,7 +502,7 @@ export default function NewStartupPage() {
           </button>
           <button
             type="submit"
-            disabled={saving || !formData.name || !formData.tagline}
+            disabled={saving || !formData.name || !formData.tagline || !formData.description || !formData.websiteUrl || !formData.logoUrl || !formData.category || !formData.businessType}
             className="btn-brand text-sm flex items-center gap-2 disabled:opacity-50 px-6 py-2.5"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}

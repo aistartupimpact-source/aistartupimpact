@@ -1,12 +1,9 @@
 import { requireFounderAuth } from '@/lib/founder-auth';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import { Rocket, Wrench, Eye, MousePointerClick, Plus, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import StatCard from '@/components/founder/StatCard';
 import ListingCard from '@/components/founder/ListingCard';
-
-const sql = neon(process.env.DATABASE_URL!);
-
 // Revalidate every 10 seconds to show fresh data
 export const revalidate = 10;
 
@@ -240,7 +237,7 @@ export default async function DashboardPage() {
           </div>
           <div>
             <p className="text-xs font-semibold text-navy dark:text-white font-jakarta group-hover:text-brand transition-colors">Hiring? Post a job</p>
-            <p className="text-[10px] text-gray-400 font-jakarta">Reach 45K+ AI professionals</p>
+            <p className="text-xs text-gray-400 font-jakarta">Reach 45K+ AI professionals</p>
           </div>
         </a>
         <a
@@ -252,7 +249,7 @@ export default async function DashboardPage() {
           </div>
           <div>
             <p className="text-xs font-semibold text-navy dark:text-white font-jakarta group-hover:text-brand transition-colors">Hosting an event? Create one</p>
-            <p className="text-[10px] text-gray-400 font-jakarta">List your AI event for free</p>
+            <p className="text-xs text-gray-400 font-jakarta">List your AI event for free</p>
           </div>
         </a>
       </div>

@@ -162,7 +162,7 @@ export default function FundingRoundsManager({ rounds, onChange, maxRounds = 10 
           <div className="grid grid-cols-2 gap-3">
             {/* Round Type */}
             <div>
-              <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Round Type</label>
+              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Round Type</label>
               <select
                 value={round.roundType}
                 onChange={(e) => updateRound(index, 'roundType', e.target.value)}
@@ -174,7 +174,7 @@ export default function FundingRoundsManager({ rounds, onChange, maxRounds = 10 
 
             {/* Date */}
             <div>
-              <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Announced Date</label>
+              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Announced Date</label>
               <input
                 type="date"
                 value={round.announcedAt}
@@ -186,7 +186,7 @@ export default function FundingRoundsManager({ rounds, onChange, maxRounds = 10 
 
           {/* Amount with unit selector */}
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Amount</label>
+            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Amount</label>
             <div className="flex gap-2">
               <input
                 type="number"
@@ -213,7 +213,7 @@ export default function FundingRoundsManager({ rounds, onChange, maxRounds = 10 
 
           {/* Investors */}
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Lead Investors <span className="font-normal">(comma-separated)</span></label>
+            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Lead Investors <span className="font-normal">(comma-separated)</span></label>
             <input
               type="text"
               value={round.leadInvestors}
@@ -224,7 +224,7 @@ export default function FundingRoundsManager({ rounds, onChange, maxRounds = 10 
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">All Investors <span className="font-normal">(optional, comma-separated)</span></label>
+            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">All Investors <span className="font-normal">(optional, comma-separated)</span></label>
             <input
               type="text"
               value={round.allInvestors}

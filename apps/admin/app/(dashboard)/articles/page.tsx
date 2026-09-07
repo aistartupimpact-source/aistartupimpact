@@ -4,15 +4,19 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Plus, Search, Filter, Edit3, Clock, CheckCircle, AlertCircle,
-  Archive, Eye, Trash2, X, Send, MoreHorizontal, ArrowUp, ArrowDown,
+  Archive, Eye, Trash2, X, Send, MoreHorizontal, ArrowUp, ArrowDown, FileText,
 } from 'lucide-react';
 
-import { getArticlesAction, updateArticleStatusAction, deleteArticleAction } from './actions';
+import { getArticlesAction, updateArticleStatusAction, deleteArticleAction, duplicateArticleAction } from './actions';
+import { Pagination } from '@/components/Pagination';
+import { TableEmptyState } from '@/components/EmptyState';
 
 interface Article {
   id: string; title: string; slug: string; status: string; type: string;
   author: string; category: string; publishedAt: string | null; views: number;
 }
+
+const PAGE_SIZE = 20;
 
 const statusConfig: Record<string, { color: string; icon: typeof CheckCircle }> = {
   DRAFT: { color: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400', icon: Edit3 },
@@ -38,6 +42,7 @@ export default function ArticlesPage() {
   const [actionMenu, setActionMenu] = useState<string | null>(null);
   const [sortField, setSortField] = useState<'views' | 'publishedAt' | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -84,6 +89,11 @@ export default function ArticlesPage() {
 
   // Sort
   if (sortField === 'views') filtered = [...filtered].sort((a, b) => sortDir === 'desc' ? b.views - a.views : a.views - b.views);
+
+  // Paginate
+  const totalFiltered = filtered.length;
+  const totalPages = Math.ceil(totalFiltered / PAGE_SIZE);
+  const paginatedArticles = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   // Tab counts
   const counts: Record<string, number> = { all: articles.length };
@@ -141,11 +151,12 @@ export default function ArticlesPage() {
     else { setSortField(field); setSortDir('desc'); }
   };
 
-  const duplicate = (article: Article) => {
-    // Basic frontend mockup for duplicate
-    const dup: Article = { ...article, id: Date.now().toString(), title: article.title + ' (Copy)', slug: article.slug + '-copy', status: 'DRAFT', views: 0, publishedAt: null };
-    setArticles([dup, ...articles]);
+  const duplicate = async (article: Article) => {
     setActionMenu(null);
+    const res = await duplicateArticleAction(article.id);
+    if (res.success && res.data) {
+      setArticles([res.data as Article, ...articles]);
+    }
   };
 
   return (
@@ -162,7 +173,7 @@ export default function ArticlesPage() {
       {/* Status Tabs */}
       <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 overflow-x-auto">
         {statusTabs.map((tab) => (
-          <button key={tab.value} onClick={() => setActiveTab(tab.value)} className={`px-4 py-2 rounded-md text-sm font-jakarta font-medium whitespace-nowrap transition-all ${tab.value === activeTab ? 'bg-white dark:bg-gray-700 text-navy dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-navy dark:hover:text-white'}`}>
+          <button key={tab.value} onClick={() => { setActiveTab(tab.value); setPage(1); }} className={`px-4 py-2 rounded-md text-sm font-jakarta font-medium whitespace-nowrap transition-all ${tab.value === activeTab ? 'bg-white dark:bg-gray-700 text-navy dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-navy dark:hover:text-white'}`}>
             {tab.label}<span className="ml-1.5 text-xs text-gray-400 dark:text-gray-500">{counts[tab.value] || 0}</span>
           </button>
         ))}
@@ -171,7 +182,7 @@ export default function ArticlesPage() {
       {/* Type Filter — News vs Founder Stories vs Opinion etc. */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         {typeTabs.map(tab => (
-          <button key={tab.value} onClick={() => setTypeFilter(tab.value)}
+          <button key={tab.value} onClick={() => { setTypeFilter(tab.value); setPage(1); }}
             className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all font-jakarta ${
               typeFilter === tab.value
                 ? tab.value === 'STORY' ? 'bg-brand text-white'
@@ -190,7 +201,7 @@ export default function ArticlesPage() {
       <div className="flex gap-3">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
-          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search articles by title or author..." className="input-field pl-10" />
+          <input type="text" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Search articles by title or author..." className="input-field pl-10" />
         </div>
       </div>
 
@@ -215,13 +226,13 @@ export default function ArticlesPage() {
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 && (
-              <tr><td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-400 font-jakarta">No articles found.</td></tr>
+            {paginatedArticles.length === 0 && (
+              <TableEmptyState colSpan={6} icon={FileText} title="No articles found" description="Try adjusting your search or filters" />
             )}
-            {filtered.map((article, idx) => {
+            {paginatedArticles.map((article, idx) => {
               const config = statusConfig[article.status];
               const StatusIcon = config?.icon || Edit3;
-              const isNearBottom = idx >= filtered.length - 3;
+              const isNearBottom = idx >= paginatedArticles.length - 3;
               return (
                 <tr key={article.id} className="border-t border-gray-50 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
                   <td className="px-6 py-4">
@@ -279,8 +290,14 @@ export default function ArticlesPage() {
         </table>
       </div>
 
-      {/* Pagination info */}
-      <div className="text-xs text-gray-400 font-jakarta text-center">Showing {filtered.length} of {articles.length} articles</div>
+      {/* Pagination */}
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        total={totalFiltered}
+        pageSize={PAGE_SIZE}
+        onPageChange={setPage}
+      />
 
       {/* Delete Modal */}
       {deleteConfirm && (

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getEmployerSession } from '@/lib/employer-auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const session = await getEmployerSession();

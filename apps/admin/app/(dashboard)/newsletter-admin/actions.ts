@@ -188,7 +188,7 @@ export async function sendCampaignAction(id: string) {
 
     // Fetch active subscribers
     const subscribers = await prisma.$queryRaw<any[]>`
-      SELECT email, name FROM "NewsletterSubscriber" WHERE "isActive" = true
+      SELECT email, name FROM "NewsletterSubscriber" WHERE "isActive" = true AND "emailVerified" = true
     `;
 
     if (subscribers.length === 0) {
@@ -245,6 +245,10 @@ export async function sendCampaignAction(id: string) {
         to: [sub.email],
         subject: campaign.subject,
         html: buildHtml(sub.email, id),
+        headers: {
+          'List-Unsubscribe': `<${SITE_URL}/api/newsletter/unsubscribe?email=${encodeURIComponent(sub.email)}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
       }));
       await resend.batch.send(batch);
       totalSent += chunk.length;
@@ -298,6 +302,10 @@ export async function sendTestEmailAction(id: string, testEmail: string) {
       to: [testEmail],
       subject: `[TEST] ${campaign.subject}`,
       html: fullHtml,
+      headers: {
+        'List-Unsubscribe': `<${SITE_URL}/api/newsletter/unsubscribe?email=${encodeURIComponent(testEmail)}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
     });
 
     return { success: true };

@@ -80,7 +80,7 @@ export default function EditEventPage({ params }: { params: { eventId: string } 
           <Link href="/organizer/events" className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><ArrowLeft className="w-4 h-4 text-gray-500" /></Link>
           <div>
             <h1 className="font-sora font-bold text-lg text-navy dark:text-white">Edit Event</h1>
-            <p className="text-[10px] text-gray-400 font-jakarta">/{event?.slug}</p>
+            <p className="text-xs text-gray-400 font-jakarta">/{event?.slug}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">

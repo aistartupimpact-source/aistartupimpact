@@ -1,6 +1,7 @@
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Briefcase, MapPin, DollarSign, Clock, Building2 } from 'lucide-react';
 import JobFilters from '@/components/jobs/JobFilters';
 
@@ -9,9 +10,6 @@ export const metadata: Metadata = {
   description: 'Browse 100+ AI jobs — ML Engineer, LLM Engineer, AI Product Manager, Data Scientist, and more. Remote, hybrid, and on-site roles at top AI companies.',
   alternates: { canonical: '/jobs' },
 };
-
-const sql = neon(process.env.DATABASE_URL!);
-
 interface PageProps {
   searchParams: {
     category?: string;
@@ -140,12 +138,13 @@ export default async function JobsPage({ searchParams }: PageProps) {
             <Link
               key={job.id}
               href={`/jobs/${job.slug}`}
+              prefetch={false}
               className="card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 hover:border-brand/30 transition-colors group"
             >
               {/* Company Logo */}
               <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden">
                 {job.logoUrl ? (
-                  <img src={job.logoUrl} alt={job.companyName} className="w-full h-full object-cover" />
+                  <Image src={job.logoUrl} alt={job.companyName} width={48} height={48} sizes="48px" className="w-full h-full object-cover" />
                 ) : (
                   <Building2 className="w-5 h-5 text-gray-400" />
                 )}
@@ -158,7 +157,7 @@ export default async function JobsPage({ searchParams }: PageProps) {
                     {job.title}
                   </h2>
                   {job.isFeatured && (
-                    <span className="text-[9px] font-bold uppercase bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded shrink-0">
+                    <span className="text-xs font-bold uppercase bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded shrink-0">
                       Featured
                     </span>
                   )}
@@ -173,7 +172,7 @@ export default async function JobsPage({ searchParams }: PageProps) {
                 {job.skills?.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-2">
                     {job.skills.slice(0, 4).map((skill: string) => (
-                      <span key={skill} className="text-[10px] font-jakarta bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">
+                      <span key={skill} className="text-xs font-jakarta bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">
                         {skill}
                       </span>
                     ))}
@@ -182,7 +181,7 @@ export default async function JobsPage({ searchParams }: PageProps) {
               </div>
 
               {/* Meta */}
-              <div className="flex sm:flex-col items-center sm:items-end gap-2 sm:gap-1 text-[11px] text-gray-400 font-jakarta shrink-0">
+              <div className="flex sm:flex-col items-center sm:items-end gap-2 sm:gap-1 text-xs text-gray-400 font-jakarta shrink-0">
                 <span className="flex items-center gap-1">
                   <MapPin className="w-3 h-3" />
                   {job.workType === 'REMOTE' ? 'Remote' : job.city || job.country || job.workType}
@@ -223,7 +222,7 @@ export default async function JobsPage({ searchParams }: PageProps) {
           <Briefcase className="w-4 h-4" />
           Post a Job — Free
         </Link>
-        <p className="text-[11px] text-gray-400 font-jakarta mt-3">
+        <p className="text-xs text-gray-400 font-jakarta mt-3">
           Already have an employer account? <Link href="/employer/login" className="text-brand font-semibold hover:underline">Employer Login →</Link>
         </p>
       </div>

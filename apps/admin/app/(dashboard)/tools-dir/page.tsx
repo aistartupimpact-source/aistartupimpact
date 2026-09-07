@@ -1,10 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Plus, Search, Wrench, Edit3, Trash2, Crown, CheckCircle, XCircle, Calendar, X,
 } from 'lucide-react';
+import { ConfirmModal } from '@/components/ConfirmModal';
+import { Pagination } from '@/components/Pagination';
+import { TableEmptyState } from '@/components/EmptyState';
 import {
   getToolsAction,
   getCategoriesAction,
@@ -54,11 +57,14 @@ interface Category {
 
 const listingTiers = ['STANDARD', 'PRIORITY', 'FEATURED'];
 
+const PAGE_SIZE = 20;
+
 export default function ToolsDirPage() {
   const router = useRouter();
   const [tools, setTools] = useState<Tool[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deleteTyped, setDeleteTyped] = useState('');
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
@@ -74,6 +80,7 @@ export default function ToolsDirPage() {
   const [featurePrice, setFeaturePrice] = useState('');
   const [featureError, setFeatureError] = useState('');
   const [featureSubmitting, setFeatureSubmitting] = useState(false);
+  const [bulkAction, setBulkAction] = useState<'approve' | 'archive' | null>(null);
 
   useEffect(() => {
     loadData();
@@ -100,6 +107,10 @@ export default function ToolsDirPage() {
     (t.tagline || '').toLowerCase().includes(search.toLowerCase()) ||
     (t.categoryName || '').toLowerCase().includes(search.toLowerCase())
   );
+
+  const totalFiltered = filtered.length;
+  const totalPages = Math.ceil(totalFiltered / PAGE_SIZE);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const pendingCount = tools.filter(t => t.status === 'PENDING').length;
   const featuredCount = tools.filter(t => t.listingTier === 'FEATURED').length;
@@ -236,7 +247,7 @@ export default function ToolsDirPage() {
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input type="text" placeholder="Search tools..." value={search} onChange={(e) => setSearch(e.target.value)} className="input-field pl-10" />
+        <input type="text" placeholder="Search tools..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="input-field pl-10" />
       </div>
 
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
@@ -263,7 +274,7 @@ export default function ToolsDirPage() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((tool) => (
+            {paginated.map((tool) => (
               <tr key={tool.id} className="border-t border-gray-50 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
                 <td className="px-3 py-4">
                   <input
@@ -362,12 +373,14 @@ export default function ToolsDirPage() {
                 </td>
               </tr>
             ))}
-            {filtered.length === 0 && (
-              <tr><td colSpan={7} className="px-6 py-12 text-center text-gray-400 font-jakarta text-sm">No tools found</td></tr>
+            {paginated.length === 0 && (
+              <TableEmptyState colSpan={7} icon={Wrench} title="No tools found" description="Try adjusting your search or filters" />
             )}
           </tbody>
         </table>
       </div>
+
+      <Pagination page={page} totalPages={totalPages} total={totalFiltered} pageSize={PAGE_SIZE} onPageChange={setPage} />
 
       {/* Bulk Action Bar */}
       {selectedIds.size > 0 && (
@@ -375,23 +388,13 @@ export default function ToolsDirPage() {
           <span className="text-sm font-semibold font-jakarta">{selectedIds.size} selected</span>
           <div className="w-px h-6 bg-gray-700" />
           <button
-            onClick={async () => {
-              if (!confirm(`Approve ${selectedIds.size} tools?`)) return;
-              await bulkApproveToolsAction([...selectedIds]);
-              setSelectedIds(new Set());
-              await loadData();
-            }}
+            onClick={() => setBulkAction('approve')}
             className="px-3 py-1.5 text-xs font-semibold bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
           >
             Approve All
           </button>
           <button
-            onClick={async () => {
-              if (!confirm(`Archive ${selectedIds.size} tools?`)) return;
-              await bulkArchiveToolsAction([...selectedIds]);
-              setSelectedIds(new Set());
-              await loadData();
-            }}
+            onClick={() => setBulkAction('archive')}
             className="px-3 py-1.5 text-xs font-semibold bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors"
           >
             Archive All
@@ -488,6 +491,36 @@ export default function ToolsDirPage() {
           </div>
         </div>
       )}
+
+      {/* Bulk Approve/Archive Confirm Modal */}
+      <ConfirmModal
+        open={bulkAction === 'approve'}
+        onClose={() => setBulkAction(null)}
+        onConfirm={async () => {
+          setBulkAction(null);
+          await bulkApproveToolsAction([...selectedIds]);
+          setSelectedIds(new Set());
+          await loadData();
+        }}
+        title="Approve Tools"
+        message={`Approve ${selectedIds.size} tools?`}
+        confirmLabel="Approve"
+        variant="warning"
+      />
+      <ConfirmModal
+        open={bulkAction === 'archive'}
+        onClose={() => setBulkAction(null)}
+        onConfirm={async () => {
+          setBulkAction(null);
+          await bulkArchiveToolsAction([...selectedIds]);
+          setSelectedIds(new Set());
+          await loadData();
+        }}
+        title="Archive Tools"
+        message={`Archive ${selectedIds.size} tools?`}
+        confirmLabel="Archive"
+        variant="warning"
+      />
 
       {/* Tool Featured Campaign Scheduling Modal */}
       {featureModal && (

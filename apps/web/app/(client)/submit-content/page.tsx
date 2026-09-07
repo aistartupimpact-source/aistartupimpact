@@ -106,13 +106,13 @@ export default function SubmitContentPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-sora font-bold text-sm text-navy dark:text-white">{s.title}</h3>
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusColors[s.status]}`}>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${statusColors[s.status]}`}>
                       <StatusIcon className="w-3 h-3" />{s.status.replace(/_/g, ' ')}
                     </span>
                   </div>
                   {s.subtitle && <p className="text-xs text-gray-400 font-jakarta mt-1">{s.subtitle}</p>}
                   <div className="flex items-center gap-3 mt-2">
-                    <span className="badge-category text-[10px]">{s.category}</span>
+                    <span className="badge-category text-xs">{s.category}</span>
                     <span className="text-xs text-gray-400 font-jakarta">{s.submittedAt}</span>
                     <span className="text-xs text-gray-400 font-jakarta">→ {s.targetPlacement}</span>
                     {s.views > 0 && <span className="text-xs text-green-600 dark:text-green-400 font-semibold flex items-center gap-1"><Eye className="w-3 h-3" /> {s.views.toLocaleString()} views</span>}
@@ -130,7 +130,7 @@ export default function SubmitContentPage() {
 
       {/* Create/Edit Modal */}
       {modalOpen && editing && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-modal bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-2xl shadow-2xl border border-gray-200 dark:border-gray-800">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
               <h2 className="font-sora font-bold text-lg text-navy dark:text-white">{submissions.find(s => s.id === editing.id) ? 'Edit Submission' : 'New Content Submission'}</h2>
@@ -177,7 +177,7 @@ export default function SubmitContentPage() {
       )}
 
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-modal bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl border border-gray-200 dark:border-gray-800 p-6 text-center">
             <Trash2 className="w-10 h-10 text-red-500 mx-auto mb-3" />
             <h3 className="font-sora font-bold text-lg text-navy dark:text-white">Delete Submission?</h3>

@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next';
-import { neon } from '@neondatabase/serverless';
+import { sql } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600;
@@ -15,7 +15,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   };
 
   try {
-    const sql = neon(process.env.DATABASE_URL!);
 
     const cities = await sql`
       SELECT slug, "updatedAt"
@@ -31,7 +30,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }));
 
-    return [listingPage, ...cityRoutes];
+    const schemePages: MetadataRoute.Sitemap = [
+      { url: `${SITE_URL}/india-ai/schemes`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.6 },
+      { url: `${SITE_URL}/india-ai/schemes/indiaai-mission`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.6 },
+      { url: `${SITE_URL}/india-ai/schemes/meity-grants`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.6 },
+      { url: `${SITE_URL}/india-ai/schemes/startup-india-seed-fund`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.6 },
+    ];
+
+    return [listingPage, ...schemePages, ...cityRoutes];
   } catch (error) {
     console.error('Error generating india-ai sitemap:', error);
     return [listingPage];

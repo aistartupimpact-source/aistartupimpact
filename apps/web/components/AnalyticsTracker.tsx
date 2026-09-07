@@ -5,15 +5,10 @@ import { useEffect } from 'react';
 interface AnalyticsTrackerProps {
   entityType: 'TOOL' | 'STARTUP';
   entityId: string;
-  ownerId: string | null;
 }
 
-export default function AnalyticsTracker({ entityType, entityId, ownerId }: AnalyticsTrackerProps) {
+export default function AnalyticsTracker({ entityType, entityId }: AnalyticsTrackerProps) {
   useEffect(() => {
-    // Only track if there's an owner
-    if (!ownerId) return;
-
-    // Track view on mount
     const trackView = async () => {
       try {
         await fetch('/api/track', {
@@ -23,7 +18,6 @@ export default function AnalyticsTracker({ entityType, entityId, ownerId }: Anal
             entityType,
             entityId,
             eventType: 'VIEW',
-            ownerId,
           }),
         });
       } catch (error) {
@@ -32,21 +26,15 @@ export default function AnalyticsTracker({ entityType, entityId, ownerId }: Anal
     };
 
     trackView();
-  }, [entityType, entityId, ownerId]);
+  }, [entityType, entityId]);
 
-  return null; // This component doesn't render anything
+  return null;
 }
 
-/**
- * Track click events
- */
 export async function trackClick(
   entityType: 'TOOL' | 'STARTUP',
-  entityId: string,
-  ownerId: string | null
+  entityId: string
 ) {
-  if (!ownerId) return;
-
   try {
     await fetch('/api/track', {
       method: 'POST',
@@ -55,7 +43,6 @@ export async function trackClick(
         entityType,
         entityId,
         eventType: 'CLICK',
-        ownerId,
       }),
     });
   } catch (error) {

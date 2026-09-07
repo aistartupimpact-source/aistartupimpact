@@ -1,0 +1,31 @@
+import { MetadataRoute } from 'next';
+import { sql } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
+
+const SITE_URL = 'https://aistartupimpact.com';
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  try {
+    const pairs = await sql`
+      SELECT a.slug as slug_a, b.slug as slug_b, GREATEST(a."updatedAt", b."updatedAt") as "lastModified"
+      FROM "AiTool" a
+      JOIN "AiTool" b ON a."categoryId" = b."categoryId" AND a.id < b.id
+      WHERE (a.status = 'APPROVED' OR a.status = 'FEATURED') AND a."deletedAt" IS NULL
+        AND (b.status = 'APPROVED' OR b.status = 'FEATURED') AND b."deletedAt" IS NULL
+      ORDER BY "lastModified" DESC
+      LIMIT 2000
+    `;
+
+    return (pairs as any[]).map((p) => ({
+      url: `${SITE_URL}/tools/compare/${p.slug_a}-vs-${p.slug_b}`,
+      lastModified: new Date(p.lastModified),
+      changeFrequency: 'weekly' as const,
+      priority: 0.5,
+    }));
+  } catch (error) {
+    console.error('Error generating compare sitemap:', error);
+    return [];
+  }
+}

@@ -36,11 +36,18 @@ export async function getSettingsAction() {
       socialLinkedin: 'https://linkedin.com/company/aistartupimpact',
       socialInstagram: 'https://instagram.com/aistartupimpact',
       socialFacebook: 'https://facebook.com/aistartupimpact',
-      metaTitle: "AIStartupImpact — India's AI Startup Ecosystem",
-      metaDescription: "Breaking news, founder stories, funding digests, and AI tool reviews from India's fastest-growing AI startup ecosystem.",
-      ogImage: '',
+      metaTitle: "AI Startup Impact – AI Startup India News & Funding",
+      metaDescription: "AI Startup Impact is the premier platform for Indian AI news. Discover top artificial intelligence startups, funding, tools, and founder stories.",
       autoSitemap: true,
+      seo_twitterHandle: '@aikitstartup',
+      seo_gaId: '',
+      seo_gscVerification: '',
+      canonicalDomain: 'https://aistartupimpact.com',
+      seo_noindex: false,
+      socialYoutube: 'https://www.youtube.com/@aistartupimpact',
       brandColor: '#FF3131',
+      brandSecondary: '#1B3A5C',
+      brandTertiary: '#F59E0B',
       darkDefault: false,
       notifArticle: true,
       notifPublish: true,
@@ -65,8 +72,8 @@ export async function saveSettingsAction(settings: Record<string, any>) {
     return { success: false, error: "Unauthorized" };
 
   try {
-    // Upsert each setting using Prisma ORM
     for (const [key, value] of Object.entries(settings)) {
+      if (key === 'require2FA' && session.user.role !== 'SUPER_ADMIN') continue;
       await prisma.siteSetting.upsert({
         where: { key },
         update: { 

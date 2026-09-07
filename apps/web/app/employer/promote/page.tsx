@@ -44,7 +44,7 @@ export default async function EmployerPromotePage() {
         {plans.map((plan) => (
           <div key={plan.name} className={`card p-5 sm:p-6 ${plan.name === 'Featured' ? 'border-brand ring-1 ring-brand/20' : ''}`}>
             {plan.name === 'Featured' && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase text-brand mb-3">
+              <span className="inline-flex items-center gap-1 text-xs font-bold uppercase text-brand mb-3">
                 <Sparkles className="w-3 h-3" /> Most Popular
               </span>
             )}

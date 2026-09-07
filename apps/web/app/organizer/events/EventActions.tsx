@@ -73,8 +73,8 @@ export default function EventActions({ eventId, eventSlug, eventTitle, shortCode
       {/* Dropdown */}
       {open && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 py-1 overflow-hidden">
+          <div className="fixed inset-0 z-overlay" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-dropdown py-1 overflow-hidden">
             <a href={`/events/${eventSlug}`} target="_blank" rel="noopener" className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 font-jakarta transition-colors">
               <ExternalLink className="w-3.5 h-3.5 text-gray-400" /> View Public Page
             </a>
@@ -103,7 +103,7 @@ export default function EventActions({ eventId, eventSlug, eventTitle, shortCode
 
       {/* Share Modal */}
       {showShare && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowShare(false)}>
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowShare(false)}>
           <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-sm w-full space-y-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-sora font-bold text-lg text-navy dark:text-white">Share Event</h3>
             <p className="text-xs text-gray-500 font-jakarta">{eventTitle}</p>
@@ -112,7 +112,7 @@ export default function EventActions({ eventId, eventSlug, eventTitle, shortCode
             <div className="space-y-2">
               {shortCode && (
                 <div>
-                  <p className="text-[9px] font-bold text-gray-400 uppercase mb-1">Short Link (for sharing)</p>
+                  <p className="text-xs font-bold text-gray-400 uppercase mb-1">Short Link (for sharing)</p>
                   <div className="flex items-center gap-2">
                     <input type="text" readOnly value={shortUrl} className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-gray-600 dark:text-gray-300 font-jakarta font-mono" />
                     <button onClick={handleCopy} className="px-3 py-2 bg-brand text-white rounded-lg text-xs font-bold flex items-center gap-1">
@@ -122,7 +122,7 @@ export default function EventActions({ eventId, eventSlug, eventTitle, shortCode
                 </div>
               )}
               <div>
-                <p className="text-[9px] font-bold text-gray-400 uppercase mb-1">{shortCode ? "Full URL" : "Event Link"}</p>
+                <p className="text-xs font-bold text-gray-400 uppercase mb-1">{shortCode ? "Full URL" : "Event Link"}</p>
                 <div className="flex items-center gap-2">
                   <input type="text" readOnly value={publicUrl} className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-gray-600 dark:text-gray-300 font-jakarta" />
                   {!shortCode && <button onClick={handleCopy} className="px-3 py-2 bg-brand text-white rounded-lg text-xs font-bold flex items-center gap-1">{copied ? <><Check className="w-3.5 h-3.5" /> Copied</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}</button>}
@@ -144,7 +144,7 @@ export default function EventActions({ eventId, eventSlug, eventTitle, shortCode
 
       {/* Delete Confirmation */}
       {showDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowDelete(false)}>
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowDelete(false)}>
           <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-sm w-full space-y-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-sora font-bold text-lg text-navy dark:text-white">Delete Event</h3>
             <p className="text-sm text-gray-500 font-jakarta">

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const q = searchParams.get('q')?.trim() || '';
@@ -11,9 +13,16 @@ export async function GET(req: NextRequest) {
   const city = searchParams.get('city') || '';
   const country = searchParams.get('country') || '';
   const employeeRange = searchParams.get('employeeRange') || '';
+  const sort = searchParams.get('sort') || '';
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
   const limit = Math.min(500, Math.max(1, parseInt(searchParams.get('limit') || '12')));
   const offset = (page - 1) * limit;
+
+  const sortClause = sort === 'newest' ? sql`s."createdAt" DESC`
+    : sort === 'funded' ? sql`COALESCE(SUM(fr."amountUsd"), 0) DESC`
+    : sort === 'team' ? sql`s."employeeCount" DESC NULLS LAST`
+    : sort === 'az' ? sql`s.name ASC`
+    : null;
 
   try {
     let rows: any[];
@@ -64,8 +73,9 @@ export async function GET(req: NextRequest) {
           ${employeeFilter}
         GROUP BY s.id
         ORDER BY
+          ${sortClause ? sortClause : sql`
           CASE WHEN s.name ILIKE ${q + '%'} THEN 0 WHEN s.name ILIKE ${likePattern} THEN 1 ELSE 2 END ASC,
-          s."isFeatured" DESC, s."createdAt" DESC
+          s."isFeatured" DESC, s."createdAt" DESC`}
         LIMIT ${limit} OFFSET ${offset}
       `;
       countRows = await sql`
@@ -105,12 +115,13 @@ export async function GET(req: NextRequest) {
           ${employeeFilter}
         GROUP BY s.id, fc.id, fc.tier
         ORDER BY
+          ${sortClause ? sortClause : sql`
           CASE WHEN fc.tier = 'PREMIUM' THEN 1
                WHEN fc.tier = 'STANDARD' THEN 2
                WHEN fc.tier = 'BASIC' THEN 3
                WHEN s."isFeatured" = true THEN 3
                ELSE 4 END ASC,
-          s."createdAt" DESC
+          s."createdAt" DESC`}
         LIMIT ${limit} OFFSET ${offset}
       `;
       countRows = await sql`

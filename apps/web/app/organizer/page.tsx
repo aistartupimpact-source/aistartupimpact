@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getOrganizerSession } from "@/lib/organizer-auth";
 import { prisma } from "@aistartupimpact/database";
 import Link from "next/link";
@@ -8,6 +9,10 @@ export const dynamic = "force-dynamic";
 export default async function OrganizerDashboard() {
   const session = await getOrganizerSession();
   if (!session) return null;
+
+  if (!session.onboardingCompleted) {
+    redirect('/organizer/onboarding');
+  }
 
   const [events, recentRegs] = await Promise.all([
     prisma.event.findMany({ where: { organizerId: session.id, deletedAt: null }, orderBy: { createdAt: "desc" }, select: { id: true, title: true, slug: true, status: true, startAt: true, registrationCount: true }, take: 5 }),
@@ -40,14 +45,14 @@ export default async function OrganizerDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ListCard title="Recent Events" linkHref="/organizer/events" linkText="View all" items={events} renderItem={(e: any) => (
           <Link key={e.id} href={`/organizer/events/${e.id}`} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/30">
-            <div><p className="text-sm font-medium text-gray-700 dark:text-gray-200 font-jakarta">{e.title}</p><p className="text-[10px] text-gray-400">{new Date(e.startAt).toLocaleDateString("en-GB",{day:"numeric",month:"short"})}</p></div>
+            <div><p className="text-sm font-medium text-gray-700 dark:text-gray-200 font-jakarta">{e.title}</p><p className="text-xs text-gray-400">{new Date(e.startAt).toLocaleDateString("en-GB",{day:"numeric",month:"short"})}</p></div>
             <p className="text-xs font-semibold text-navy dark:text-white">{e.registrationCount}</p>
           </Link>
         )} />
         <ListCard title="Recent Registrations" linkHref="/organizer/attendees" linkText="View all" items={recentRegs} renderItem={(r: any) => (
           <div key={r.id} className="px-5 py-3 flex items-center justify-between">
-            <div><p className="text-sm font-medium text-gray-700 dark:text-gray-200 font-jakarta">{r.guestName}</p><p className="text-[10px] text-gray-400">{r.guestEmail}</p></div>
-            <div className="text-right"><p className="text-[10px] text-gray-500 font-jakarta">{r.event.title}</p></div>
+            <div><p className="text-sm font-medium text-gray-700 dark:text-gray-200 font-jakarta">{r.guestName}</p><p className="text-xs text-gray-400">{r.guestEmail}</p></div>
+            <div className="text-right"><p className="text-xs text-gray-500 font-jakarta">{r.event.title}</p></div>
           </div>
         )} />
       </div>
@@ -70,7 +75,7 @@ function ListCard({ title, linkHref, linkText, items, renderItem }: any) {
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl">
       <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
         <h2 className="text-sm font-sora font-semibold text-navy dark:text-white">{title}</h2>
-        <Link href={linkHref} className="text-[10px] text-brand font-semibold font-jakarta hover:underline flex items-center gap-0.5">{linkText}<ArrowRight className="w-3 h-3" /></Link>
+        <Link href={linkHref} className="text-xs text-brand font-semibold font-jakarta hover:underline flex items-center gap-0.5">{linkText}<ArrowRight className="w-3 h-3" /></Link>
       </div>
       <div className="divide-y divide-gray-100 dark:divide-gray-800">
         {items.length === 0 ? <p className="p-6 text-sm text-gray-400 font-jakarta text-center">Nothing yet</p> : items.map(renderItem)}

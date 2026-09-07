@@ -73,12 +73,12 @@ export default function AuthorPage({ params }: { params: { slug: string } }) {
           <div className="flex items-center justify-center sm:justify-start gap-4 mt-4">
             <div className="text-center">
               <div className="font-sora font-extrabold text-lg text-navy dark:text-white">{author.articles}</div>
-              <div className="text-[10px] text-gray-400 font-jakarta">Articles</div>
+              <div className="text-xs text-gray-400 font-jakarta">Articles</div>
             </div>
             <div className="w-px h-8 bg-gray-200 dark:bg-gray-700" />
             <div className="text-center">
               <div className="font-sora font-extrabold text-lg text-navy dark:text-white">{author.followers}</div>
-              <div className="text-[10px] text-gray-400 font-jakarta">Followers</div>
+              <div className="text-xs text-gray-400 font-jakarta">Followers</div>
             </div>
             <div className="w-px h-8 bg-gray-200 dark:bg-gray-700" />
             <div className="flex items-center gap-2">
@@ -99,7 +99,7 @@ export default function AuthorPage({ params }: { params: { slug: string } }) {
           <Link key={a.slug} href={`/news/${a.slug}`} className="group block">
             <div className="card p-4 sm:p-5">
               <div className="flex items-center gap-2 mb-2">
-                <span className="badge-category text-[10px]">{a.category}</span>
+                <span className="badge-category text-xs">{a.category}</span>
               </div>
               <h3 className="font-sora font-bold text-[15px] sm:text-base text-navy dark:text-white group-hover:text-brand transition-colors leading-snug">{a.title}</h3>
               <div className="flex items-center gap-2 mt-2 text-xs text-gray-400 dark:text-gray-500 font-jakarta">

@@ -29,7 +29,7 @@ export default function ForgotPasswordPage() {
 
   if (sent) {
     return (
-      <div className="min-h-screen bg-[#F9FAFB] dark:bg-gray-950 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-page dark:bg-page-dark flex items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
           <CheckCircle2 className="w-14 h-14 text-green-500 mx-auto mb-4" />
           <h1 className="font-sora font-extrabold text-2xl text-navy dark:text-white mb-2">Check Your Email</h1>
@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] dark:bg-gray-950 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-page dark:bg-page-dark flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="font-sora font-extrabold text-2xl text-navy dark:text-white">Reset Password</h1>

@@ -1,25 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@aistartupimpact/database';
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const { email } = await req.json();
+    const { email, subscribeNewsletter } = await req.json();
 
-    if (!email || !EMAIL_REGEX.test(email)) {
+    if (!email || typeof email !== 'string' || email.length > 255 || !email.includes('@') || !email.split('@')[1]?.includes('.')) {
       return NextResponse.json({ success: false, error: 'Valid email required' }, { status: 400 });
     }
 
     const emailLower = email.toLowerCase();
 
-    // Store email in newsletter subscribers with funding_report source
-    await prisma.$executeRaw`
-      INSERT INTO "NewsletterSubscriber" (id, email, "subscribedAt", source, "isActive")
-      VALUES (gen_random_uuid(), ${emailLower}, NOW(), 'funding_report', true)
-      ON CONFLICT (email) 
-      DO UPDATE SET "isActive" = true, "subscribedAt" = NOW()
-    `;
+    if (subscribeNewsletter) {
+      const consentText = 'I agree to receive the AI Startup Impact newsletter along with the funding report.';
+      await prisma.$executeRaw`
+        INSERT INTO "NewsletterSubscriber" (id, email, "subscribedAt", source, "isActive", "consentAt", "consentText", "consentVersion", "consentSource")
+        VALUES (gen_random_uuid(), ${emailLower}, NOW(), 'funding_report', true, NOW(), ${consentText}, '1.0', 'funding_report_download')
+        ON CONFLICT (email)
+        DO UPDATE SET "isActive" = true, "subscribedAt" = NOW(), "consentAt" = NOW(), "consentText" = ${consentText}, "consentVersion" = '1.0', "consentSource" = 'funding_report_download'
+      `;
+    }
 
     // TODO: Integrate with your email service to send the PDF
     // For now, return success and let the frontend handle the download

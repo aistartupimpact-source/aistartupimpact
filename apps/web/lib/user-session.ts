@@ -1,11 +1,9 @@
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
-import { neon } from '@neondatabase/serverless';
-
-const sql = neon(process.env.DATABASE_URL!);
+import { sql } from '@/lib/db';
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.USER_JWT_SECRET || 'user-secret-change-in-production'
+  process.env.USER_JWT_SECRET!
 );
 
 export interface UserSession {
@@ -39,16 +37,25 @@ export async function getUserSession(): Promise<UserSession | null> {
 
     // Get user from database using raw SQL to avoid Prisma caching issues
     const users = await sql`
-      SELECT 
-        id, email, name, avatar, slug, bio, twitter, linkedin, 
-        "isActive", "termsAcceptedAt"::text as "termsAcceptedAt"
+      SELECT
+        id, email, name, avatar, slug, bio, twitter, linkedin,
+        "isActive", "deactivatedAt", "termsAcceptedAt"::text as "termsAcceptedAt"
       FROM "WebUser"
       WHERE id = ${payload.userId}
       LIMIT 1
     `;
 
-    if (users.length === 0 || !users[0].isActive) {
+    if (users.length === 0 || !users[0].isActive || users[0].deactivatedAt) {
       return null;
+    }
+
+    if (payload.sessionId) {
+      const sessions = await sql`
+        SELECT id FROM "WebUserSession"
+        WHERE id = ${payload.sessionId} AND "expiresAt" > NOW()
+        LIMIT 1
+      `;
+      if (sessions.length === 0) return null;
     }
 
     const user = users[0];

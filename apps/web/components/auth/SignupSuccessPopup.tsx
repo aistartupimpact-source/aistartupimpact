@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { CheckCircle2, X } from 'lucide-react';
 import Link from 'next/link';
+import { maskEmail } from '@/lib/mask';
 
 export default function SignupSuccessPopup() {
   const [isVisible, setIsVisible] = useState(false);
@@ -24,7 +25,7 @@ export default function SignupSuccessPopup() {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-toast flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
       <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 text-center relative animate-scale-in">
         {/* Close button */}
         <button
@@ -48,7 +49,7 @@ export default function SignupSuccessPopup() {
         {/* Message */}
         <p className="text-gray-600 dark:text-gray-400 mb-6">
           We've sent a verification link to{' '}
-          <span className="font-semibold text-gray-900 dark:text-white">{email}</span>
+          <span className="font-semibold text-gray-900 dark:text-white">{maskEmail(email)}</span>
         </p>
 
         {/* Info box */}

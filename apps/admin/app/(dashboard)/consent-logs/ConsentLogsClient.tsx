@@ -9,8 +9,10 @@ import {
   Calendar,
   Filter,
   Download,
-  RefreshCw
+  RefreshCw,
+  Shield,
 } from 'lucide-react';
+import { TableEmptyState } from '@/components/EmptyState';
 
 interface ConsentLog {
   id: number;
@@ -417,11 +419,7 @@ export default function ConsentLogsClient() {
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                    No consent logs found
-                  </td>
-                </tr>
+                <TableEmptyState colSpan={6} icon={Shield} title="No consent logs found" description="Consent logs will appear as users interact with cookie preferences" />
               ) : (
                 logs.map((log) => (
                   <tr key={log.id} className="hover:bg-gray-50">

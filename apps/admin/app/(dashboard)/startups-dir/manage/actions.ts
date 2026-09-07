@@ -2,12 +2,15 @@
 
 import { neon } from '@neondatabase/serverless';
 import { revalidatePath } from 'next/cache';
+import { requireActionAuth } from '@/lib/api-auth';
 
 const sql = neon(process.env.DATABASE_URL!);
 
 // ─── Business Categories ────────────────────────────────────────────────────
 
 export async function getBusinessCategoriesAction() {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const rows = await sql`
       SELECT category, COUNT(*)::int AS count
@@ -24,6 +27,8 @@ export async function getBusinessCategoriesAction() {
 }
 
 export async function addBusinessCategoryAction(name: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   // Business categories are freeform strings on the Startup model.
   // "Adding" a category means it becomes available in the dropdown.
   // We store the canonical list in a dedicated lightweight table.
@@ -56,6 +61,8 @@ export async function addBusinessCategoryAction(name: string) {
 }
 
 export async function updateBusinessCategoryAction(oldName: string, newName: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     if (!newName.trim()) return { success: false, error: 'Name is required' };
 
@@ -78,6 +85,8 @@ export async function updateBusinessCategoryAction(oldName: string, newName: str
 }
 
 export async function deleteBusinessCategoryAction(name: string) {
+  const { error } = await requireActionAuth(['SUPER_ADMIN']);
+  if (error) return { success: false, error };
   try {
     // Check if startups use it
     const count = await sql`
@@ -98,6 +107,8 @@ export async function deleteBusinessCategoryAction(name: string) {
 }
 
 export async function toggleBusinessCategoryAction(name: string, isActive: boolean) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`UPDATE "StartupBusinessCategory" SET "isActive" = ${isActive} WHERE name = ${name}`;
     revalidatePath('/startups-dir/manage');
@@ -110,6 +121,8 @@ export async function toggleBusinessCategoryAction(name: string, isActive: boole
 // ─── Business Types ─────────────────────────────────────────────────────────
 
 export async function getBusinessTypesAction() {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const rows = await sql`
       SELECT "businessType", COUNT(*)::int AS count
@@ -126,6 +139,8 @@ export async function getBusinessTypesAction() {
 }
 
 export async function addBusinessTypeAction(name: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     if (!name.trim()) return { success: false, error: 'Name is required' };
 
@@ -154,6 +169,8 @@ export async function addBusinessTypeAction(name: string) {
 }
 
 export async function updateBusinessTypeAction(oldName: string, newName: string) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     if (!newName.trim()) return { success: false, error: 'Name is required' };
 
@@ -174,6 +191,8 @@ export async function updateBusinessTypeAction(oldName: string, newName: string)
 }
 
 export async function deleteBusinessTypeAction(name: string) {
+  const { error } = await requireActionAuth(['SUPER_ADMIN']);
+  if (error) return { success: false, error };
   try {
     const count = await sql`
       SELECT COUNT(*)::int AS count FROM "Startup" WHERE "businessType" = ${name} AND "deletedAt" IS NULL
@@ -193,6 +212,8 @@ export async function deleteBusinessTypeAction(name: string) {
 }
 
 export async function toggleBusinessTypeAction(name: string, isActive: boolean) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     await sql`UPDATE "StartupBusinessType" SET "isActive" = ${isActive} WHERE name = ${name}`;
     revalidatePath('/startups-dir/manage');
@@ -205,6 +226,8 @@ export async function toggleBusinessTypeAction(name: string, isActive: boolean) 
 // ─── Get canonical lists (for dropdowns) ────────────────────────────────────
 
 export async function getCanonicalCategoriesAction() {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const rows = await sql`
       SELECT name, "sortOrder", "isActive" FROM "StartupBusinessCategory" ORDER BY "sortOrder" ASC, name ASC
@@ -217,6 +240,8 @@ export async function getCanonicalCategoriesAction() {
 }
 
 export async function getCanonicalTypesAction() {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
   try {
     const rows = await sql`
       SELECT name, "sortOrder", "isActive" FROM "StartupBusinessType" ORDER BY "sortOrder" ASC, name ASC

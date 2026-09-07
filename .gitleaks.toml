@@ -1,0 +1,24 @@
+title = "Gitleaks config"
+
+[allowlist]
+description = "Allow CI placeholder values and test secrets"
+
+paths = [
+  '''\.github/workflows/ci\.yml''',
+  '''apps/web/__tests__/''',
+  '''apps/web/vitest\.config\.mts''',
+]
+
+regexTarget = "match"
+regexes = [
+  '''ci-secret''',
+  '''ci-jwt-secret''',
+  '''ci-founder-secret''',
+  '''ci-user-secret''',
+  '''ci-ip-hash-salt-placeholder-value''',
+  '''re_placeholder''',
+  '''placeholder''',
+  '''test-.*-secret''',
+  '''test-encryption-key''',
+  '''test-otp-secret''',
+]

@@ -1,5 +1,6 @@
 import { getOrganizerSession } from "@/lib/organizer-auth";
 import { prisma } from "@aistartupimpact/database";
+import Image from "next/image";
 import Link from "next/link";
 import { Plus, Calendar, Users, MapPin } from "lucide-react";
 import EventActions from "./EventActions";
@@ -45,7 +46,7 @@ export default async function OrganizerEventsPage() {
                 {/* Thumbnail */}
                 <div className="w-20 h-12 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 shrink-0" style={{ aspectRatio: "16/9" }}>
                   {event.coverImageUrl ? (
-                    <img src={event.coverImageUrl} alt="" className="w-full h-full object-cover" />
+                    <Image src={event.coverImageUrl} alt="" width={80} height={48} sizes="80px" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center"><Calendar className="w-4 h-4 text-gray-300" /></div>
                   )}
@@ -55,11 +56,11 @@ export default async function OrganizerEventsPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <h3 className="font-sora font-bold text-sm text-navy dark:text-white truncate">{event.title}</h3>
-                    <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded ${event.status === "PUBLISHED" ? "bg-green-100 text-green-700" : event.status === "CANCELLED" ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-600"}`}>
+                    <span className={`text-xs font-bold uppercase px-1.5 py-0.5 rounded ${event.status === "PUBLISHED" ? "bg-green-100 text-green-700" : event.status === "CANCELLED" ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-600"}`}>
                       {event.status}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 text-[11px] text-gray-500 font-jakarta">
+                  <div className="flex items-center gap-3 text-xs text-gray-500 font-jakarta">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
                       {new Date(event.startAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}

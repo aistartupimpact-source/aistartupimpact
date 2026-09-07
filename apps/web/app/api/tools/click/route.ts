@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@aistartupimpact/database';
 import { createHash } from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 function hashValue(value: string): string {
   return createHash('sha256').update(value).digest('hex').substring(0, 16);
 }
@@ -115,7 +117,7 @@ export async function GET(request: NextRequest) {
   } catch (err: any) {
     console.error('[click-api] Error:', err);
     return NextResponse.json(
-      { error: 'Server error', details: err.message },
+      { error: 'Server error' },
       { status: 500 }
     );
   }
