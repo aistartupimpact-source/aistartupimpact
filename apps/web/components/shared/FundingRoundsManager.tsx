@@ -6,8 +6,10 @@ import { Plus, Trash2 } from 'lucide-react';
 const USD_INR_RATE = 95.4;
 
 const ROUND_TYPES = [
-  'Pre-Seed', 'Angle', 'Seed', 'Pre-Series A', 'Series A', 'Series B', 'Series C',
-  'Series D', 'Growth', 'Debt', 'Grant', 'Internal Funding',
+  'Pre-Seed', 'Angle', 'Seed', 'Pre-Series A', 'Series A',
+  'Pre-Series B', 'Series B', 'Pre-Series C', 'Series C', 'Pre-Series D', 'Series D',
+  'Series E', 'Series F', 'Series G', 'Series I', 'Series J',
+  'Growth', 'Bridge', 'Debt', 'Grant', 'Internal Funding',
   'IPO', 'Public',
 ];
 

@@ -33,7 +33,7 @@ interface Startup {
   name: string;
 }
 
-const roundTypes = ['Pre-Seed', 'Angle', 'Seed', 'Pre-Series A', 'Series A', 'Series B', 'Series C', 'Series D', 'Growth', 'Bridge'];
+const roundTypes = ['Pre-Seed', 'Angle', 'Seed', 'Pre-Series A', 'Series A', 'Pre-Series B', 'Series B', 'Pre-Series C', 'Series C', 'Pre-Series D', 'Series D', 'Series E', 'Series F', 'Series G', 'Series I', 'Series J', 'Growth', 'Bridge', 'Debt', 'Grant', 'Internal Funding', 'IPO', 'Public'];
 
 export default function FundingRoundsPage() {
   const [fundingRounds, setFundingRounds] = useState<FundingRound[]>([]);
