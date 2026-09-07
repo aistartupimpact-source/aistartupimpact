@@ -513,6 +513,9 @@ model FounderUser {
   lastLoginAt                            DateTime?
   authProvider                           String                   @default("email")
   companyDomain                          String?
+  companyEmail                           String?
+  companyEmailVerified                   Boolean                  @default(false)
+  companyEmailVerifiedAt                 DateTime?
   googleId                               String?                  @unique
   onboardingCompleted                    Boolean                  @default(false)
   onboardingStep                         Int                      @default(0)
@@ -549,6 +552,8 @@ model FounderUser {
   authoredArticles                       Article[]                @relation("ArticleFounderAuthor")
   milestones                             FounderMilestone[]
   contentActivityLogs                    ContentActivityLog[]
+  advPackages                            AdvPackage[]
+  advPayments                            AdvPayment[]
 
   @@index([companyDomain])
   @@index([status])
@@ -2109,6 +2114,10 @@ model EventOrganizer {
   linkedin         String?
   emailVerified    Boolean              @default(false)
   verifyToken      String?              @unique
+  companyDomain           String?
+  companyEmail            String?
+  companyEmailVerified    Boolean        @default(false)
+  companyEmailVerifiedAt  DateTime?
   status           EventOrganizerStatus @default(PENDING_VERIFICATION)
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
@@ -3107,4 +3116,175 @@ model SiteAnnouncement {
   tool           AiTool?          @relation(fields: [toolId], references: [id], onDelete: SetNull)
 
   @@index([isActive, sortOrder])
+}
+
+// ──────────────────────────────────────────────────────────
+// Advertise System — Launch Year Packages & Placement Zones
+// ──────────────────────────────────────────────────────────
+
+enum AdvPackageTier {
+  FREE
+  STARTER
+  GROWTH
+  PREMIUM
+}
+
+enum AdvPackageStatus {
+  ACTIVE
+  EXPIRED
+  UPGRADED
+  CANCELLED
+}
+
+enum AdvZoneTier {
+  TIER_1
+  TIER_2
+  TIER_3
+}
+
+enum AdvZoneSlot {
+  // Tier 1 — Premium Only
+  PROMO_BADGE_HEADER
+  HOMEPAGE_HERO
+  POWERED_BY_SECTION
+  // Tier 2 — Growth & Premium
+  FOUNDER_SPOTLIGHT
+  FEATURED_PARTNER
+  WEBSITE_NEWSLETTER_FEATURED
+  LINKEDIN_NEWSLETTER_FEATURED
+  // Tier 3 — Starter, Growth & Premium
+  LATEST_STORIES_CARD_1
+  AI_TOOL_PICKS
+  STORIES_PAGE_FEATURED
+  AI_TOOLS_PAGE_FEATURED
+  STARTUP_DIRECTORY_FEATURED
+}
+
+enum AdvActivationStatus {
+  SCHEDULED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum AdvSocialPostType {
+  LINKEDIN
+  INSTAGRAM
+  BUNDLE
+}
+
+enum AdvSocialPostStatus {
+  PENDING_PAYMENT
+  PAID
+  SCHEDULED
+  PUBLISHED
+  CANCELLED
+}
+
+enum AdvPaymentPurpose {
+  PACKAGE_PURCHASE
+  PACKAGE_UPGRADE
+  ZONE_EXTENSION
+  SOCIAL_POST
+}
+
+model AdvPackage {
+  id              String           @id @default(dbgenerated("gen_random_uuid()"))
+  founderId       String
+  tier            AdvPackageTier
+  status          AdvPackageStatus @default(ACTIVE)
+  purchasedAt     DateTime         @default(now())
+  expiresAt       DateTime
+  upgradedFromId  String?          @unique
+  upgradedToId    String?
+  cancelledAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  founder         FounderUser      @relation(fields: [founderId], references: [id], onDelete: Cascade)
+  upgradedFrom    AdvPackage?      @relation("PackageUpgrade", fields: [upgradedFromId], references: [id], onDelete: SetNull)
+  upgradedTo      AdvPackage?      @relation("PackageUpgrade")
+
+  zoneActivations AdvZoneActivation[]
+  socialPosts     AdvSocialPostOrder[]
+  payments        AdvPayment[]
+
+  @@index([founderId, status])
+  @@index([expiresAt])
+  @@index([tier, status])
+}
+
+model AdvZoneActivation {
+  id              String              @id @default(dbgenerated("gen_random_uuid()"))
+  packageId       String
+  zone            AdvZoneSlot
+  zoneTier        AdvZoneTier
+  status          AdvActivationStatus @default(SCHEDULED)
+  startsAt        DateTime
+  endsAt          DateTime
+  freeDaysUsed    Int                 @default(3)
+  extensionDays   Int                 @default(0)
+  extensionRate   Int                 @default(0)
+  extensionTotal  Int                 @default(0)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  package         AdvPackage          @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  payments        AdvPayment[]
+
+  @@unique([packageId, zone])
+  @@index([zone, status, startsAt, endsAt])
+  @@index([status, endsAt])
+}
+
+model AdvSocialPostOrder {
+  id              String              @id @default(dbgenerated("gen_random_uuid()"))
+  packageId       String
+  postType        AdvSocialPostType
+  status          AdvSocialPostStatus @default(PENDING_PAYMENT)
+  contentBrief    String?
+  publishedUrl    String?
+  publishedAt     DateTime?
+  amountPaise     Int
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  package         AdvPackage          @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  payments        AdvPayment[]
+
+  @@index([packageId, status])
+  @@index([postType, status])
+}
+
+model AdvPayment {
+  id                  String            @id @default(dbgenerated("gen_random_uuid()"))
+  founderId           String
+  packageId           String?
+  zoneActivationId    String?
+  socialPostOrderId   String?
+  purpose             AdvPaymentPurpose
+  amountPaise         Int
+  gstPaise            Int
+  totalPaise          Int
+  currency            String            @default("INR")
+  razorpayOrderId     String?           @unique
+  razorpayPaymentId   String?           @unique
+  razorpaySignature   String?
+  status              PaymentStatus     @default(PENDING)
+  paidAt              DateTime?
+  failedAt            DateTime?
+  refundedAt          DateTime?
+  refundAmountPaise   Int?
+  metadata            Json?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  founder             FounderUser       @relation(fields: [founderId], references: [id], onDelete: Cascade)
+  package             AdvPackage?       @relation(fields: [packageId], references: [id], onDelete: SetNull)
+  zoneActivation      AdvZoneActivation? @relation(fields: [zoneActivationId], references: [id], onDelete: SetNull)
+  socialPostOrder     AdvSocialPostOrder? @relation(fields: [socialPostOrderId], references: [id], onDelete: SetNull)
+
+  @@index([founderId, status])
+  @@index([razorpayOrderId])
+  @@index([status, createdAt])
 }

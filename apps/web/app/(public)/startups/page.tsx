@@ -46,7 +46,7 @@ async function getInitialStartups(
   employeeRange?: string
 ) {
   try {
-    const limit = 500;
+    const limit = 30;
     let rows: any[];
     let countRows: any[];
 
@@ -194,7 +194,7 @@ export default async function StartupsPage({
   ]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 pb-24 sm:pb-10">
       <div className="mb-5 sm:mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="font-sora font-extrabold text-xl sm:text-3xl md:text-4xl text-navy dark:text-white leading-tight tracking-tight">
@@ -207,7 +207,7 @@ export default async function StartupsPage({
         </div>
         <FounderActionButton
           href="/founder/startups/new"
-          className="bg-brand text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold font-jakarta text-xs sm:text-sm hover:scale-105 transition-transform shadow-lg shadow-brand/20 whitespace-nowrap text-center shrink-0"
+          className="border border-brand text-brand bg-brand/5 hover:bg-brand/10 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold font-jakarta text-xs sm:text-sm transition-colors whitespace-nowrap text-center shrink-0"
         >
           + Add Startup
         </FounderActionButton>

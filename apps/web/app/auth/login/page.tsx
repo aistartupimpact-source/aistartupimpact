@@ -22,8 +22,8 @@ function LoginContent() {
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center py-8 px-4">
       <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700/60 bg-white dark:bg-gray-900 shadow-xl shadow-gray-200/50 dark:shadow-black/30">
 
-        {/* Left — Benefits panel */}
-        <div className="relative bg-gradient-to-br from-brand via-red-600 to-rose-700 p-5 sm:p-6 lg:p-12 flex flex-col justify-between overflow-hidden">
+        {/* Left — Benefits panel (desktop only) */}
+        <div className="hidden lg:flex relative bg-gradient-to-br from-brand via-red-600 to-rose-700 lg:p-12 flex-col justify-between overflow-hidden">
           <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 0h40v40H0z\' fill=\'none\'/%3E%3Cpath d=\'M20 0v40M0 20h40\' stroke=\'%23fff\' stroke-width=\'.5\'/%3E%3C/svg%3E")', backgroundSize: '40px 40px' }} />
 
           <div className="relative z-10">
@@ -41,18 +41,7 @@ function LoginContent() {
               Sign in to manage your startup profile, access funding data, and connect with the AI community.
             </p>
 
-            {/* Mobile: compact chips */}
-            <div className="flex flex-wrap gap-2 lg:hidden">
-              {benefits.slice(0, 3).map((b) => (
-                <div key={b.title} className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm rounded-full px-3 py-1.5">
-                  <b.icon className="w-3.5 h-3.5 text-white" />
-                  <span className="text-white text-xs font-semibold font-jakarta">{b.title}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Desktop: full grid */}
-            <div className="hidden lg:grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               {benefits.map((b) => (
                 <div key={b.title} className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-white/15 backdrop-blur-sm flex items-center justify-center shrink-0 mt-0.5">

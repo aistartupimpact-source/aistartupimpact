@@ -53,17 +53,17 @@ export default function FoundersSection({ founders, startupName, isSignedIn = fa
             <div
               key={founder.name}
               onClick={() => handleFounderClick(founder)}
-              className="flex items-center gap-3 p-3 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-all cursor-pointer text-left group"
+              className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-all cursor-pointer text-left group"
             >
-              <div className="w-14 h-14 rounded-2xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center text-brand font-bold font-sora text-xl shrink-0 overflow-hidden group-hover:scale-105 transition-transform">
+              <div className="w-12 h-12 rounded-lg bg-brand/10 dark:bg-brand/20 flex items-center justify-center text-brand font-bold font-sora text-lg shrink-0 overflow-hidden group-hover:scale-105 transition-transform">
                 {founder.avatar ? (
                   <Image
                     src={founder.avatar}
                     alt={founder.name}
                     className="w-full h-full object-cover"
-                    width={56}
-                    height={56}
-                    sizes="56px"
+                    width={48}
+                    height={48}
+                    sizes="48px"
                   />
                 ) : (
                   <span>{founder.name.charAt(0).toUpperCase()}</span>
@@ -71,7 +71,7 @@ export default function FoundersSection({ founders, startupName, isSignedIn = fa
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-sora font-extrabold text-sm sm:text-base text-navy dark:text-white block group-hover:text-brand transition-colors truncate">
+                  <span className="font-sora font-bold text-xs sm:text-sm text-navy dark:text-white block group-hover:text-brand transition-colors truncate">
                     {founder.name}
                   </span>
                   {founder.linkedin && (

@@ -48,7 +48,7 @@ export default function NewToolPage() {
     if (draft) {
       try {
         const { formData: dForm, faqs: dFaqs, screenshots: dScreenshots } = JSON.parse(draft);
-        if (dForm) setFormData(dForm);
+        if (dForm) setFormData(prev => ({ ...prev, ...dForm }));
         if (dFaqs) setFaqs(dFaqs);
         if (dScreenshots) setScreenshots(dScreenshots);
       } catch (e) {
@@ -190,17 +190,17 @@ export default function NewToolPage() {
     setSaving(true);
 
     try {
-      const founderNamesArray = formData.founderNames
+      const founderNamesArray = (formData.founderNames || '')
         .split(',')
         .map(f => f.trim())
         .filter(Boolean);
 
-      const featuresArray = formData.features
+      const featuresArray = (formData.features || '')
         .split('\n')
         .map(f => f.replace(/^[•\-*]\s*/, '').trim())
         .filter(Boolean);
 
-      const useCasesArray = formData.useCases
+      const useCasesArray = (formData.useCases || '')
         .split('\n')
         .map(u => u.replace(/^[•\-*]\s*/, '').trim())
         .filter(Boolean);

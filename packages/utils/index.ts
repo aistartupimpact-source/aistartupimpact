@@ -2,6 +2,7 @@ export { generateSlug, generateUniqueSlug } from './slug';
 export { calculateReadTime, countWords } from './readTime';
 export { formatINR, rupeesToPaise, paiseToRupees, formatINRCompact } from './currency';
 export { truncateSeoTitle, truncateSeoDescription, generateCanonicalUrl } from './seo';
+export { isDisposableEmail, isFreeEmailProvider, extractEmailDomain } from './src/verification/disposable-emails';
 export { CITY_DATABASE, searchCities, standardizeCityName } from './src/cities';
 export type { CityEntry } from './src/cities';
 export {
@@ -25,6 +26,7 @@ export {
   eventNewsletterWelcomeHtml,
   eventCancellationHtml,
   otpEmailHtml,
+  companyEmailOtpHtml,
   employerPasswordResetHtml,
   securityAlertHtml,
   eventPromotionHtml,

@@ -9,12 +9,12 @@ export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const categories = await sql`
-    SELECT name, "metaTitle", "metaDescription", description FROM "ToolCategory" WHERE slug = ${params.slug} AND "isActive" = true LIMIT 1
+    SELECT name, description FROM "ToolCategory" WHERE slug = ${params.slug} AND "isActive" = true LIMIT 1
   `;
   if (categories.length === 0) return { title: 'Category Not Found' };
   const cat = categories[0] as any;
-  const title = cat.metaTitle || `Best ${cat.name} AI Tools — Reviewed & Rated`;
-  const description = cat.metaDescription || `Discover the best ${cat.name} AI tools. Compare features, pricing, and reviews.`;
+  const title = `Best ${cat.name} AI Tools — Reviewed & Rated`;
+  const description = cat.description || `Discover the best ${cat.name} AI tools. Compare features, pricing, and reviews.`;
   return {
     title,
     description,
@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function CategoryPage({ params }: { params: { slug: string } }) {
   // Get category info
   const categories = await sql`
-    SELECT id, name, slug, description, "introText", "metaTitle", level, "parentId"
+    SELECT id, name, slug, description, level, "parentId"
     FROM "ToolCategory"
     WHERE slug = ${params.slug} AND "isActive" = true
     LIMIT 1
@@ -64,10 +64,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
         <h1 className="font-sora font-extrabold text-2xl md:text-3xl text-navy dark:text-white">
           {category.name} AI Tools
         </h1>
-        {category.introText && (
-          <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm mt-2 max-w-3xl">{category.introText}</p>
-        )}
-        {!category.introText && category.description && (
+        {category.description && (
           <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm mt-2 max-w-3xl">{category.description}</p>
         )}
       </div>

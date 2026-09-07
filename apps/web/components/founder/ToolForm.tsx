@@ -44,7 +44,7 @@ export default function ToolForm() {
     if (draft) {
       try {
         const { formData: dForm, faqs: dFaqs, screenshots: dScreenshots } = JSON.parse(draft);
-        if (dForm) setFormData(dForm);
+        if (dForm) setFormData(prev => ({ ...prev, ...dForm }));
         if (dFaqs) setFaqs(dFaqs);
         if (dScreenshots) setScreenshots(dScreenshots);
       } catch (e) {
@@ -235,12 +235,12 @@ export default function ToolForm() {
       }
 
       // Parse features and use cases
-      const featuresArray = formData.features
+      const featuresArray = (formData.features || '')
         .split('\n')
         .map(f => f.trim())
         .filter(Boolean);
 
-      const useCasesArray = formData.useCases
+      const useCasesArray = (formData.useCases || '')
         .split('\n')
         .map(u => u.trim())
         .filter(Boolean);

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Loader2, Save, CreditCard, Globe, Download, Shield } from "lucide-react";
 import TwoFactorSetup from '@/components/TwoFactorSetup';
 import EmailChangeModal from '@/components/EmailChangeModal';
+import CompanyEmailSection from '@/components/CompanyEmailSection';
 
 type Tab = "organization" | "preferences" | "payment" | "privacy";
 
@@ -129,6 +130,7 @@ export default function OrganizerSettingsPage() {
       {/* Organization */}
       {tab === "organization" && (
         <div className="space-y-6">
+          <CompanyEmailSection apiBasePath="/api/organizer" />
           <div className="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden">
             <div className="px-4 py-3 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
               <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Organization details</h2>

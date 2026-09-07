@@ -471,10 +471,10 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="font-sora font-extrabold text-xl sm:text-3xl text-navy dark:text-white leading-tight">{startup.name}</h1>
+                  <h1 className="font-sora font-bold text-base sm:text-xl text-navy dark:text-white leading-tight">{startup.name}</h1>
                   {startup.isVerified && <VerifiedBadge size="md" showText />}
                 </div>
-                <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm sm:text-base mt-1 line-clamp-2">{startup.tagline}</p>
+                <p className="text-gray-500 dark:text-gray-400 font-jakarta text-xs sm:text-sm mt-1 line-clamp-2">{startup.tagline}</p>
               </div>
               {/* Impact Score — top right, parallel to logo */}
               {startup.impactScore > 0 && (() => {
@@ -500,20 +500,20 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
           {/* Left Side: Tags */}
           <div className="flex flex-wrap items-center gap-2">
             {industryTag && (
-              <span className="flex items-center gap-1 text-xs font-bold bg-brand/10 dark:bg-brand/20 text-brand px-2.5 py-1 rounded-full uppercase">
+              <span className="flex items-center gap-1 text-[11px] font-semibold bg-brand/10 dark:bg-brand/20 text-brand px-2 py-0.5 rounded-full">
                 <Tag className="w-3 h-3" />{industryTag}
               </span>
             )}
             {startup.businessType && (
-              <span className="flex items-center gap-1 text-xs font-bold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2.5 py-1 rounded-full uppercase">
+              <span className="flex items-center gap-1 text-[11px] font-semibold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2 py-0.5 rounded-full">
                 {startup.businessType}
               </span>
             )}
-            <span className="text-xs font-bold bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-2.5 py-1 rounded-full uppercase">
+            <span className="text-[11px] font-semibold bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded-full">
               {stageLabel(startup.stage)}
             </span>
             {startup.status && (
-              <span className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full uppercase border ${
+              <span className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border ${
                 startup.status === 'ACTIVE'
                   ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30'
                   : startup.status === 'PUBLIC'
@@ -523,27 +523,27 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
               }`}>
                 {startup.status === 'ACTIVE' && (
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 )}
                 {startup.status}
               </span>
             )}
             {startup.headquartersCity && (
-              <span className="flex items-center gap-1 text-xs text-gray-400 font-jakarta">
+              <span className="flex items-center gap-1 text-[11px] text-gray-400 font-jakarta">
                 <MapPin className="w-3 h-3" />{startup.headquartersCity}
               </span>
             )}
             {startup.isFeatured && (
-              <span className="text-xs font-bold bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2.5 py-1 rounded-full">★ Featured</span>
+              <span className="text-[11px] font-semibold bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2 py-0.5 rounded-full">★ Featured</span>
             )}
             {totalRaised > 0 && (
-              <span className="flex items-center gap-1 text-xs font-bold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-full">
+              <span className="flex items-center gap-1 text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full">
                 {formatUsd(totalRaised)} raised
               </span>
             )}
             {relativeTime && (
-              <span className="flex items-center gap-1.5 text-xs font-bold bg-gray-100 dark:bg-gray-800/80 text-gray-500 dark:text-gray-400 px-2.5 py-1 rounded-full">
-                <Clock className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" /> {relativeTime}
+              <span className="flex items-center gap-1 text-[11px] font-medium bg-gray-100 dark:bg-gray-800/80 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">
+                <Clock className="w-3 h-3 text-gray-400 dark:text-gray-500" /> {relativeTime}
               </span>
             )}
             <ReportButton entityType="STARTUP" entityId={startup.id} entityName={startup.name} entitySlug={startup.slug} />
@@ -722,7 +722,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
             <h2 className="section-title mb-4">About</h2>
 
             {/* Description — 4 lines, 500 word limit */}
-            <p className="text-gray-600 dark:text-gray-300 font-jakarta text-sm sm:text-base leading-relaxed line-clamp-4">
+            <p className="text-gray-600 dark:text-gray-300 font-jakarta text-xs sm:text-sm leading-relaxed line-clamp-4">
               {startup.description}
             </p>
 
@@ -733,7 +733,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                   <span className="text-xs text-gray-400 font-jakarta flex items-center gap-1 mb-1">
                     <Calendar className="w-3 h-3" /> Founded
                   </span>
-                  <span className="font-sora font-bold text-sm text-navy dark:text-white">{startup.foundedYear}</span>
+                  <span className="font-sora font-bold text-xs text-navy dark:text-white">{startup.foundedYear}</span>
                 </div>
               )}
               {startup.employeeCount && (
@@ -741,7 +741,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                   <span className="text-xs text-gray-400 font-jakarta flex items-center gap-1 mb-1">
                     <Users className="w-3 h-3" /> Employees
                   </span>
-                  <span className="font-sora font-bold text-sm text-navy dark:text-white block">{startup.employeeCount}+</span>
+                  <span className="font-sora font-bold text-xs text-navy dark:text-white block">{startup.employeeCount}+</span>
                   {startup.foundedYear && (
                     <span className="text-xs text-brand font-jakarta flex items-center gap-0.5 mt-0.5">
                       <ArrowUpRight className="w-3 h-3" />
@@ -755,7 +755,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                   <span className="text-xs text-gray-400 font-jakarta flex items-center gap-1 mb-1">
                     <MapPin className="w-3 h-3" /> Location
                   </span>
-                  <span className="font-sora font-bold text-sm text-navy dark:text-white">{startup.headquartersCity}</span>
+                  <span className="font-sora font-bold text-xs text-navy dark:text-white">{startup.headquartersCity}</span>
                 </div>
               )}
               {startup.websiteUrl && (
@@ -764,7 +764,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                     <Globe className="w-3 h-3" /> Website
                   </span>
                   <a href={startup.websiteUrl} target="_blank" rel="noopener noreferrer"
-                    className="font-sora font-bold text-sm text-brand hover:underline break-all block">
+                    className="font-sora font-bold text-xs text-brand hover:underline break-all block">
                     {startup.websiteUrl.replace('https://', '').replace('http://', '').replace(/\/$/, '')}
                   </a>
                 </div>
@@ -786,7 +786,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
               <div className="space-y-3">
                 {startup.startupUpdates.map((u: any) => (
                   <Link key={u.id} href={`/news/${u.slug}`} className="block p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
-                    <h3 className="font-sora font-bold text-sm text-navy dark:text-white mb-1">{u.title}</h3>
+                    <h3 className="font-sora font-bold text-xs text-navy dark:text-white mb-1">{u.title}</h3>
                     {u.contentText && <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta line-clamp-2">{u.contentText.slice(0, 200)}</p>}
                     <span className="text-xs text-gray-400 font-jakarta mt-1 block">
                       {new Date(u.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -814,7 +814,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                           {icons[m.type] || '📌'}
                         </div>
                         <div className="pt-1.5">
-                          <h3 className="font-sora font-bold text-sm text-navy dark:text-white flex items-center gap-1.5">
+                          <h3 className="font-sora font-bold text-xs text-navy dark:text-white flex items-center gap-1.5">
                             {m.title}
                             {m.verificationStatus === 'PLATFORM_VERIFIED' && (
                               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 font-jakarta">Verified</span>
@@ -843,30 +843,30 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                 </h2>
                 <div className="relative">
                   <div className="space-y-3">
-                    {(session ? startup.fundingRounds : startup.fundingRounds.slice(0, 2)).map((r: any, i: number) => (
+                    {(session ? startup.fundingRounds : startup.fundingRounds.slice(0, Math.max(1, Math.floor(startup.fundingRounds.length / 2)))).map((r: any, i: number) => (
                       <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg bg-brand/10 flex items-center justify-center shrink-0">
                             <IndianRupee className="w-5 h-5 text-brand" />
                           </div>
                           <div>
-                            <span className="font-sora font-bold text-sm text-navy dark:text-white block">{r.roundType}</span>
-                            <span className="text-xs text-gray-400 font-jakarta">
+                            <span className="font-sora font-bold text-xs text-navy dark:text-white block">{r.roundType}</span>
+                            <span className="text-[11px] text-gray-400 font-jakarta">
                               {r.leadInvestors?.length > 0 ? r.leadInvestors.join(', ') : 'Undisclosed'}
                               {r.announcedAt && ` · ${new Date(r.announcedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`}
                             </span>
                           </div>
                         </div>
-                        <span className="font-sora font-extrabold text-brand">{formatUsd(r.amountUsd) || 'Undisclosed'}</span>
+                        <span className="font-sora font-bold text-sm text-brand">{formatUsd(r.amountUsd) || 'Undisclosed'}</span>
                       </div>
                     ))}
                   </div>
-                  {!session && startup.fundingRounds.length > 2 && (
+                  {!session && startup.fundingRounds.length > 1 && (
                     <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white dark:from-gray-900 to-transparent" />
                   )}
                 </div>
               </div>
-              {!session && startup.fundingRounds.length > 0 && (
+              {!session && startup.fundingRounds.length > 1 && (
                 <SignInGate isSignedIn={false} blurContent={false} label={`Sign in to see all ${startup.fundingRounds.length} funding rounds`} />
               )}
             </div>
@@ -891,7 +891,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5 justify-between">
-                        <h4 className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand transition-colors truncate">
+                        <h4 className="font-sora font-bold text-xs text-navy dark:text-white group-hover:text-brand transition-colors truncate">
                           {product.name}
                         </h4>
                         <span className="text-xs bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider shrink-0">
@@ -931,7 +931,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                     <div>
                       <Link 
                         href={job.slug ? `/jobs/${job.slug}` : `/jobs/${job.id}`} 
-                        className="text-[15px] font-bold text-link dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline leading-snug"
+                        className="text-sm font-bold text-link dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline leading-snug"
                       >
                         {job.title}
                       </Link>
@@ -987,7 +987,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
                     <div>
                       <Link 
                         href={`/events/${event.id}`} 
-                        className="text-[15px] font-bold text-link dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline leading-snug"
+                        className="text-sm font-bold text-link dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline leading-snug"
                       >
                         {event.title}
                       </Link>
@@ -1105,11 +1105,11 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
           {/* Founder Stories */}
           {startup.founderStories?.length > 0 && (
             <div className="card p-5">
-              <h4 className="font-sora font-bold text-sm text-navy dark:text-white mb-4">Founder Stories</h4>
+              <h4 className="font-sora font-bold text-xs text-navy dark:text-white mb-4">Founder Stories</h4>
               <div className="space-y-3">
                 {startup.founderStories.map((story: any) => (
                   <Link key={story.slug} href={`/stories/${story.slug}`} className="group block">
-                    <h5 className="text-sm font-jakarta text-link dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300 hover:underline group-hover:underline transition-colors leading-snug line-clamp-2">{story.title}</h5>
+                    <h5 className="text-xs font-jakarta text-link dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300 hover:underline group-hover:underline transition-colors leading-snug line-clamp-2">{story.title}</h5>
                     <span className="text-xs text-gray-400 font-jakarta">
                       {new Date(story.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </span>
@@ -1122,11 +1122,11 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
           {/* Related News */}
           {startup.relatedNews.length > 0 && (
             <div className="card p-5">
-              <h4 className="font-sora font-bold text-sm text-navy dark:text-white mb-4">Related News</h4>
+              <h4 className="font-sora font-bold text-xs text-navy dark:text-white mb-4">Related News</h4>
               <div className="space-y-3">
                 {startup.relatedNews.map((n: any) => (
                   <Link key={n.slug} href={`/news/${n.slug}`} className="group block">
-                    <h5 className="text-sm font-jakarta text-link dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300 hover:underline group-hover:underline transition-colors leading-snug line-clamp-2">{n.title}</h5>
+                    <h5 className="text-xs font-jakarta text-link dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300 hover:underline group-hover:underline transition-colors leading-snug line-clamp-2">{n.title}</h5>
                     <span className="text-xs text-gray-400 font-jakarta">
                       {new Date(n.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </span>
@@ -1138,7 +1138,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
 
           {/* Track startup */}
           <div className="card p-5 bg-gradient-to-br from-brand-50 to-white dark:from-brand-900/20 dark:to-gray-900">
-            <h4 className="font-sora font-bold text-sm text-navy dark:text-white mb-2">Track this startup</h4>
+            <h4 className="font-sora font-bold text-xs text-navy dark:text-white mb-2">Track this startup</h4>
             <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta mb-4">
               Get notified about funding rounds, product launches, and news.
             </p>

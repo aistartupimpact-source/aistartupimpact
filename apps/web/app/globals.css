@@ -274,7 +274,7 @@
   /* ─── Section title ────────────────────────── */
 
   .section-title {
-    @apply font-sora font-extrabold text-base sm:text-2xl text-navy dark:text-white flex items-center gap-2;
+    @apply font-sora font-bold text-sm sm:text-lg text-navy dark:text-white flex items-center gap-2;
   }
 
   /* ─── Article content ──────────────────────── */

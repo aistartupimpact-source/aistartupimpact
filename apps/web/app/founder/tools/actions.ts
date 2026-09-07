@@ -35,6 +35,7 @@ interface ToolSubmission {
 export async function submitToolAction(data: ToolSubmission) {
   try {
     const session = await requireFounderAuth();
+    if (data.tagline) data.tagline = data.tagline.trim().slice(0, 100);
 
     // Generate slug from name
     const slug = data.name

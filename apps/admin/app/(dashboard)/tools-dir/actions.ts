@@ -201,6 +201,7 @@ export async function createToolAction(data: {
 }) {
   const { error } = await requireActionAuth();
   if (error) return { success: false, error };
+  if (data.tagline) data.tagline = data.tagline.trim().slice(0, 100);
   try {
     // Check for duplicate name or slug
     const existingTool = await sql`
@@ -218,7 +219,7 @@ export async function createToolAction(data: {
         "demoVideoUrl", "categoryId", "pricingModel", "pricingUrl", "startingPrice",
         "freeTrialDays", "hasApi", "hasMobileApp", "launchYear", "founderNames",
         "headquartersCountry", "avgRating", "listingTier", status, "screenshotUrls",
-        features, "useCases", "aiSuggestedEdits",
+        "aiSuggestedEdits",
         "createdAt", "updatedAt"
       ) VALUES (
         gen_random_uuid(),
@@ -229,17 +230,35 @@ export async function createToolAction(data: {
         ${data.freeTrialDays || null}, ${data.hasApi ?? false}, ${data.hasMobileApp ?? false},
         ${data.launchYear || new Date().getFullYear()},
         ${data.founderNames || []}, ${data.headquartersCountry || null},
-        ${data.avgRating}, ${data.listingTier || 'STANDARD'}::"ListingTier",
+        ${data.avgRating}, ${data.listingTier || 'FREE'}::"ListingTier",
         ${data.status || 'APPROVED'}::"ToolApprovalStatus",
         ${data.screenshotUrls || []},
-        ${data.features || []}, ${data.useCases || []}, ARRAY[]::text[],
+        ARRAY[]::text[],
         NOW(), NOW()
       )
       RETURNING id
     `;
-    
+
     const toolId = result[0].id;
-    
+
+    // Insert features as ToolUseCase entries
+    if (data.features && data.features.length > 0) {
+      for (const text of data.features) {
+        if (text.trim()) {
+          await sql`INSERT INTO "ToolUseCase" (id, "toolId", text) VALUES (gen_random_uuid(), ${toolId}, ${text.trim()})`;
+        }
+      }
+    }
+
+    // Insert use cases as ToolUseCase entries
+    if (data.useCases && data.useCases.length > 0) {
+      for (const text of data.useCases) {
+        if (text.trim()) {
+          await sql`INSERT INTO "ToolUseCase" (id, "toolId", text) VALUES (gen_random_uuid(), ${toolId}, ${text.trim()})`;
+        }
+      }
+    }
+
     // Insert FAQs if provided
     if (data.faqs && data.faqs.length > 0) {
       for (const faq of data.faqs) {
@@ -294,6 +313,7 @@ export async function updateToolAction(id: string, data: {
 }) {
   const { error } = await requireActionAuth();
   if (error) return { success: false, error };
+  if (data.tagline) data.tagline = data.tagline.trim().slice(0, 100);
   try {
     await sql`
       UPDATE "AiTool"

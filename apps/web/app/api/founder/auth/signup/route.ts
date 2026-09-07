@@ -3,6 +3,7 @@ import { prisma } from '@aistartupimpact/database';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 import { authRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
+import { isDisposableEmail } from '@aistartupimpact/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,6 +42,13 @@ export async function POST(request: NextRequest) {
     if (!emailRegex.test(email)) {
       return NextResponse.json(
         { error: 'Invalid email format' },
+        { status: 400 }
+      );
+    }
+
+    if (isDisposableEmail(email)) {
+      return NextResponse.json(
+        { error: 'Disposable email addresses are not allowed. Please use a permanent email.' },
         { status: 400 }
       );
     }

@@ -3,6 +3,7 @@ import { sql } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { setEmployerSession } from '@/lib/employer-auth';
 import { authRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
+import { isDisposableEmail } from '@aistartupimpact/utils';
 
 export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
@@ -22,6 +23,9 @@ export async function POST(request: NextRequest) {
     }
     if (!email?.trim() || !email.includes('@')) {
       return NextResponse.json({ error: 'Valid email is required' }, { status: 400 });
+    }
+    if (isDisposableEmail(email)) {
+      return NextResponse.json({ error: 'Disposable email addresses are not allowed. Please use a permanent email.' }, { status: 400 });
     }
     if (!password || password.length < 8) {
       return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 });

@@ -467,6 +467,20 @@ export function otpEmailHtml(code: string, context: 'default' | 'employer' = 'de
   <p style="color: #9ca3af; font-size: 13px; text-align: center;">This code expires in 10 minutes. If you didn't request this, you can safely ignore this email.</p>`);
 }
 
+// ── Company Email Verification OTP ──────────────────────────────────────
+
+export function companyEmailOtpHtml(name: string, code: string): string {
+  return emailWrapper(`
+  <h2 style="color: #1f2937; font-size: 20px; margin-bottom: 8px;">Verify your company email</h2>
+  <p style="color: #6b7280; font-size: 15px; line-height: 1.5; margin-bottom: 24px;">
+    Hi ${name}, enter this code to verify your company email and earn a Verified badge on your profile:
+  </p>
+  <div style="background: #f4f4f5; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 24px;">
+    <span style="font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #1a1a2e;">${code}</span>
+  </div>
+  <p style="color: #9ca3af; font-size: 13px; text-align: center;">This code expires in 10 minutes. If you didn't request this, you can safely ignore this email.</p>`);
+}
+
 // ── Employer: Password Reset ─────────────────────────────────────────────
 
 export function employerPasswordResetHtml(companyName: string, resetUrl: string): string {

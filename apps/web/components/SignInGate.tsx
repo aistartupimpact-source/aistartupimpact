@@ -22,24 +22,21 @@ export default function SignInGate({ children, isSignedIn, label = 'Sign in to v
     return (
       <>
         <div
-          className="border-t border-gray-100 dark:border-gray-800 bg-gradient-to-b from-gray-50/80 to-white dark:from-gray-800/40 dark:to-gray-900 px-6 py-8 text-center cursor-pointer"
+          className="border-t border-gray-100 dark:border-gray-800 bg-gradient-to-b from-gray-50/80 to-white dark:from-gray-800/40 dark:to-gray-900 px-4 py-4 text-center cursor-pointer"
           onClick={() => setShowSignIn(true)}
         >
-          <div className="max-w-sm mx-auto">
-            <div className="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Crown className="w-5 h-5 text-brand" />
+          <div className="flex flex-col items-center gap-1.5">
+            <div className="flex items-center gap-1.5">
+              <Crown className="w-3.5 h-3.5 text-brand" />
+              <span className="font-sora font-bold text-xs text-navy dark:text-white">
+                {label}
+              </span>
             </div>
-            <h3 className="font-sora font-bold text-base text-navy dark:text-white mb-1.5">
-              {label}
-            </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4 font-jakarta">
-              Create a free account to unlock full details.
-            </p>
-            <button className="btn-brand px-8 py-2.5 text-sm">
+            <button className="inline-flex items-center justify-center bg-brand hover:bg-brand-600 text-white font-bold font-jakarta px-4 py-1.5 text-xs rounded-lg transition-all">
               Sign In — It&apos;s Free
             </button>
-            <p className="text-[10px] text-gray-400 dark:text-gray-500 font-jakarta mt-3">
-              No credit card required · Google sign-in · Takes 5 seconds
+            <p className="text-[10px] text-gray-400 dark:text-gray-500 font-jakarta">
+              No credit card required · Google sign-in
             </p>
           </div>
         </div>

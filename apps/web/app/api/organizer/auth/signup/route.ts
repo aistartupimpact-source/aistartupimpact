@@ -4,6 +4,7 @@ import { createOrganizerSession, hashPassword, generateToken } from "@/lib/organ
 import { sendOrganizerVerificationEmail } from "@/lib/organizer-auth/emails";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { authRateLimit } from "@/lib/rate-limit";
+import { isDisposableEmail } from "@aistartupimpact/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,10 @@ export async function POST(request: NextRequest) {
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ success: false, error: "Invalid email address." }, { status: 400 });
+    }
+
+    if (isDisposableEmail(email)) {
+      return NextResponse.json({ success: false, error: "Disposable email addresses are not allowed. Please use a permanent email." }, { status: 400 });
     }
 
     // Check existing

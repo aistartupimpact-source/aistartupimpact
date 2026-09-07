@@ -31,6 +31,8 @@ import {
   Activity,
   Briefcase,
   LifeBuoy,
+  Package,
+  CreditCard,
 } from 'lucide-react';
 
 const SidebarContext = createContext<{
@@ -104,6 +106,8 @@ const sidebarItems = [
   { label: 'Announcements', href: '/announcements', icon: Megaphone, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
   { label: 'Placements', href: '/placements', icon: Megaphone, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'AD_MANAGER'] },
   { label: 'Sponsors', href: '/sponsors', icon: Building2, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'AD_MANAGER'] },
+  { label: 'Adv Packages', href: '/advertise', icon: Package, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'AD_MANAGER'] },
+  { label: 'Adv Payments', href: '/advertise/payments', icon: CreditCard, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'AD_MANAGER'] },
 
   { type: 'divider' as const, label: 'Analytics', roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER', 'AD_MANAGER'] },
   { label: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'SENIOR_WRITER', 'AD_MANAGER'] },

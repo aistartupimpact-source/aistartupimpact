@@ -48,7 +48,11 @@ export type ResourceType =
   | 'INDIA_AI_STATS'
   | 'INDIAAI_MISSION_TRACKER'
   | 'INDIAAI_RESEARCH_HUB'
-  | 'AI_RESEARCH_INSTITUTION';
+  | 'AI_RESEARCH_INSTITUTION'
+  | 'ADV_PACKAGE'
+  | 'ADV_ZONE_ACTIVATION'
+  | 'ADV_SOCIAL_POST'
+  | 'ADV_PAYMENT';
 
 interface AuditLogEntry {
   action: AuditAction;
