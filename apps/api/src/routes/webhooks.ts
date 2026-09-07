@@ -3,11 +3,14 @@ import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
 import { paymentSuccessHtml } from '@aistartupimpact/utils';
 import { sendEmailFireAndForget } from '../lib/email-send';
+import { rateLimit } from '../middleware/rateLimit';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-router.post('/resend', async (req: Request, res: Response) => {
+const webhookRateLimit = rateLimit(100, 60000);
+
+router.post('/resend', webhookRateLimit, async (req: Request, res: Response) => {
   try {
     // Verify Resend webhook signature via Svix
     const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
@@ -62,7 +65,7 @@ router.post('/resend', async (req: Request, res: Response) => {
 });
 
 // Razorpay Idempotent Webhook
-router.post('/razorpay', async (req: Request, res: Response): Promise<any> => {
+router.post('/razorpay', webhookRateLimit, async (req: Request, res: Response): Promise<any> => {
   try {
     const signature = req.headers['x-razorpay-signature'] as string;
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;

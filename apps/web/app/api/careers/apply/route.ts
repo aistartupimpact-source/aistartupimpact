@@ -23,8 +23,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (typeof email !== 'string' || email.length > 255 || !email.includes('@') || !email.split('@')[1]?.includes('.')) {
       return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
     }
 

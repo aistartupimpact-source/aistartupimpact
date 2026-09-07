@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
         where: { razorpayOrderId: orderId, status: 'PENDING' },
       });
       if (!payment) {
-        console.warn(`[razorpay-advertise] No pending payment for order ${orderId}`);
+        console.warn('[razorpay-advertise] No pending payment for order:', String(orderId).replace(/[\n\r]/g, ''));
         return NextResponse.json({ status: 'no_matching_payment' }, { status: 200 });
       }
 

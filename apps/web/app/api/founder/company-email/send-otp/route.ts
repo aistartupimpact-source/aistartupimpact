@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     const session = await requireFounderAuth();
     const { companyEmail } = await request.json();
 
-    if (!companyEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(companyEmail)) {
+    if (!companyEmail || typeof companyEmail !== 'string' || companyEmail.length > 255 || !companyEmail.includes('@') || !companyEmail.split('@')[1]?.includes('.')) {
       return NextResponse.json({ success: false, error: 'A valid email address is required.' }, { status: 400 });
     }
 

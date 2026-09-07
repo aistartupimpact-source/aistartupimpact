@@ -131,7 +131,7 @@ export default function SlugEditor({
           <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex-1 min-w-0">
             <span className="text-[11px] text-gray-400 font-jakarta shrink-0">{baseUrl}/</span>
             <span className="text-sm font-semibold text-navy dark:text-white font-jakarta truncate">{slug}</span>
-            <a href={`${baseUrl}/${slug}`} target="_blank" rel="noopener noreferrer" className="ml-auto shrink-0">
+            <a href={`${baseUrl}/${encodeURIComponent(slug)}`} target="_blank" rel="noopener noreferrer" className="ml-auto shrink-0">
               <ExternalLink className="w-3.5 h-3.5 text-gray-400 hover:text-brand" />
             </a>
           </div>

@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   const { name, email, password } = await request.json();
   if (!name || !email || !password) return NextResponse.json({ success: false, error: "All fields required." }, { status: 400 });
   if (password.length < 8) return NextResponse.json({ success: false, error: "Password min 8 characters." }, { status: 400 });
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return NextResponse.json({ success: false, error: "Invalid email." }, { status: 400 });
+  if (typeof email !== 'string' || email.length > 255 || !email.includes('@') || !email.split('@')[1]?.includes('.')) return NextResponse.json({ success: false, error: "Invalid email." }, { status: 400 });
   if (isDisposableEmail(email)) return NextResponse.json({ success: false, error: "Disposable email addresses are not allowed. Please use a permanent email." }, { status: 400 });
 
   const existing = await prisma.unifiedUser.findUnique({ where: { email } });

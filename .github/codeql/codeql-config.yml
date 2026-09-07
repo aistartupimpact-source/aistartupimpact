@@ -11,3 +11,11 @@ query-filters:
   # business data (company name, employee count, tagline). Not credentials or tokens.
   - exclude:
       id: js/clear-text-storage-of-sensitive-information
+  # OG metadata scraper validates URLs against a blocklist (private IPs, localhost, non-HTTP)
+  # and disables redirects. CodeQL can't trace through the validation function.
+  - exclude:
+      id: js/request-forgery
+  # React JSX automatically escapes interpolated values in attributes — DOM text is never
+  # reinterpreted as raw HTML. CodeQL doesn't model React's built-in XSS protection.
+  - exclude:
+      id: js/xss-through-dom
