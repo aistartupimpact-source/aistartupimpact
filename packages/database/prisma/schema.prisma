@@ -154,6 +154,8 @@ model AiTool {
   aiQualityScore      Int?
   aiSpamFlag          Boolean                  @default(false)
   aiSuggestedEdits    String[]
+  upvoteCount         Int                      @default(0)
+  saveCount           Int                      @default(0)
   clicks              Int                      @default(0)
   isUrlVerified       Boolean                  @default(false)
   listingTier         ListingTier              @default(FREE)
@@ -186,6 +188,7 @@ model AiTool {
   ToolSystemTagMapping ToolSystemTagMapping[]
   ToolAlternatives    ToolAlternative[] @relation("ToolToAlternatives")
   ToolAlternativeOf   ToolAlternative[] @relation("AlternativeToTools")
+  ToolUpvote          ToolUpvote[]
 
   @@index([avgRating])
   @@index([categoryId])
@@ -1126,6 +1129,8 @@ model Startup {
   isIndian                                   Boolean                  @default(true)
   isFeatured                                 Boolean                  @default(false)
   featuredUntil                              DateTime?
+  statValue                                  String?
+  statLabel                                  String?
   impactScore                                Int                      @default(0)
   createdAt                                  DateTime                 @default(now())
   updatedAt                                  DateTime
@@ -1449,6 +1454,7 @@ model WebUser {
   SavedTool       SavedTool[]
   SavedStartup    SavedStartup[]
   JobBoardSaved   JobBoardSaved[]
+  ToolUpvote      ToolUpvote[]
 
   @@index([deactivatedAt])
 }
@@ -1478,6 +1484,20 @@ model SavedStartup {
   @@unique([userId, startupSlug])
   @@index([userId])
   @@index([startupSlug])
+  @@index([createdAt])
+}
+
+model ToolUpvote {
+  id        String   @id @default(cuid())
+  toolId    String
+  userId    String
+  createdAt DateTime @default(now())
+  AiTool    AiTool   @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  WebUser   WebUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([toolId, userId])
+  @@index([toolId])
+  @@index([userId])
   @@index([createdAt])
 }
 
