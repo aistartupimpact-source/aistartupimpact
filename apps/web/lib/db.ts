@@ -951,7 +951,7 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
       // Check if slug is a parent category or subcategory
       rows = await sql`
         SELECT t.id, t.name, t.slug, t.tagline, LEFT(t.description, 130) AS description, t."pricingModel", t."logoUrl", t."avgRating",
-               t."hasApi", t."hasMobileApp", t."freeTrialDays", t."upvoteCount", t."launchYear", t."headquartersCountry", t."founderNames",
+               t."hasApi", t."hasMobileApp", t."freeTrialDays", t."launchYear", t."headquartersCountry", t."founderNames",
                c.name AS "categoryName", c.slug AS "categorySlug",
                pc.name AS "parentCategoryName", pc.slug AS "parentCategorySlug",
                tfc.tier AS "campaignTier"
@@ -977,7 +977,7 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
     } else {
       rows = await sql`
         SELECT t.id, t.name, t.slug, t.tagline, LEFT(t.description, 130) AS description, t."pricingModel", t."logoUrl", t."avgRating",
-               t."hasApi", t."hasMobileApp", t."freeTrialDays", t."upvoteCount", t."launchYear", t."headquartersCountry", t."founderNames",
+               t."hasApi", t."hasMobileApp", t."freeTrialDays", t."launchYear", t."headquartersCountry", t."founderNames",
                c.name AS "categoryName", c.slug AS "categorySlug",
                pc.name AS "parentCategoryName", pc.slug AS "parentCategorySlug",
                tfc.tier AS "campaignTier"
@@ -1014,7 +1014,7 @@ export async function getDirectoryToolsDirect(categorySlug?: string) {
       hasApi: t.hasApi || false,
       hasMobileApp: t.hasMobileApp || false,
       freeTrialDays: t.freeTrialDays || null,
-      upvoteCount: parseInt(t.upvoteCount) || 0,
+      upvoteCount: 0,
       launchYear: t.launchYear || null,
       country: t.headquartersCountry || null,
       founderNames: t.founderNames || []
@@ -1210,7 +1210,7 @@ export async function getFeaturedStartupDirect() {
   return cached(CK.FEATURED_STARTUPS, { ttl: 300, staleTtl: 600 }, async () => {
     try {
       const startups = await sql`
-        SELECT id, name, tagline, description, "websiteUrl", "logoUrl", "statValue", "statLabel"
+        SELECT id, name, tagline, description, "websiteUrl", "logoUrl"
         FROM "Startup"
         WHERE "isFeatured" = true AND "deletedAt" IS NULL
         ORDER BY "createdAt" DESC
@@ -1222,8 +1222,8 @@ export async function getFeaturedStartupDirect() {
         description: s.description,
         ctaUrl: s.websiteUrl || '#',
         logoUrl: s.logoUrl,
-        statValue: s.statValue || null,
-        statLabel: s.statLabel || null,
+        statValue: null,
+        statLabel: null,
       }));
     } catch (error) {
       console.error('getFeaturedStartupDirect: Error fetching featured startups:', error);
@@ -1541,14 +1541,11 @@ export async function getMostUpvotedThisMonthDirect(limit = 12) {
     try {
       const rows = await sql`
         SELECT t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel",
-               c.name AS "categoryName", c.slug AS "categorySlug",
-               COUNT(u.id)::int AS "monthlyUpvotes"
+               c.name AS "categoryName", c.slug AS "categorySlug"
         FROM "AiTool" t
         LEFT JOIN "ToolCategory" c ON c.id = t."categoryId"
-        JOIN "ToolUpvote" u ON u."toolId" = t.id AND u."createdAt" >= NOW() - INTERVAL '30 days'
         WHERE t.status = 'APPROVED' AND t."deletedAt" IS NULL
-        GROUP BY t.id, t.name, t.slug, t.tagline, t."logoUrl", t."avgRating", t."pricingModel", c.name, c.slug
-        ORDER BY COUNT(u.id) DESC
+        ORDER BY t."avgRating" DESC, t."createdAt" DESC
         LIMIT ${limit}
       `;
       return rows;
