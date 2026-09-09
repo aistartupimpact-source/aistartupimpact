@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
       INSERT INTO "SavedTool" (id, "userId", "toolSlug", "createdAt")
       VALUES (gen_random_uuid(), ${session.id}, ${toolId}, NOW())
     `;
+    await sql`UPDATE "AiTool" SET "saveCount" = "saveCount" + 1 WHERE slug = ${toolId}`;
 
     return NextResponse.json({ success: true, message: 'Tool saved successfully' });
   } catch (error) {
@@ -98,6 +99,7 @@ export async function DELETE(request: NextRequest) {
       DELETE FROM "SavedTool"
       WHERE "userId" = ${session.id} AND "toolSlug" = ${toolId}
     `;
+    await sql`UPDATE "AiTool" SET "saveCount" = GREATEST("saveCount" - 1, 0) WHERE slug = ${toolId}`;
 
     return NextResponse.json({ success: true, message: 'Tool unsaved successfully' });
   } catch (error) {
