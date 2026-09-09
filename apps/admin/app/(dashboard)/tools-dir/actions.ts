@@ -198,6 +198,9 @@ export async function createToolAction(data: {
   faqs?: Array<{ question: string; answer: string; order: number }>;
   features?: string[];
   useCases?: string[];
+  twitterUrl?: string;
+  linkedinUrl?: string;
+  socialLinks?: Array<{ platform: string; url: string }>;
 }) {
   const { error } = await requireActionAuth();
   if (error) return { success: false, error };
@@ -213,12 +216,17 @@ export async function createToolAction(data: {
       return { success: false, error: 'A tool with this name or slug already exists' };
     }
 
+    const socialLinksJson = data.socialLinks && data.socialLinks.length > 0
+      ? JSON.stringify(data.socialLinks)
+      : null;
+
     const result = await sql`
       INSERT INTO "AiTool" (
         id, name, slug, tagline, description, "websiteUrl", "logoUrl", "affiliateUrl",
         "demoVideoUrl", "categoryId", "pricingModel", "pricingUrl", "startingPrice",
         "freeTrialDays", "hasApi", "hasMobileApp", "launchYear", "founderNames",
         "headquartersCountry", "avgRating", "listingTier", status, "screenshotUrls",
+        "twitterUrl", "linkedinUrl", "socialLinks",
         "aiSuggestedEdits",
         "createdAt", "updatedAt"
       ) VALUES (
@@ -233,6 +241,7 @@ export async function createToolAction(data: {
         ${data.avgRating}, ${data.listingTier || 'FREE'}::"ListingTier",
         ${data.status || 'APPROVED'}::"ToolApprovalStatus",
         ${data.screenshotUrls || []},
+        ${data.twitterUrl || null}, ${data.linkedinUrl || null}, ${socialLinksJson}::jsonb,
         ARRAY[]::text[],
         NOW(), NOW()
       )
@@ -310,11 +319,18 @@ export async function updateToolAction(id: string, data: {
   status: string;
   screenshotUrls?: string[];
   faqs?: Array<{ id?: string; question: string; answer: string; order: number }>;
+  twitterUrl?: string;
+  linkedinUrl?: string;
+  socialLinks?: Array<{ platform: string; url: string }>;
 }) {
   const { error } = await requireActionAuth();
   if (error) return { success: false, error };
   if (data.tagline) data.tagline = data.tagline.trim().slice(0, 100);
   try {
+    const socialLinksJson = data.socialLinks && data.socialLinks.length > 0
+      ? JSON.stringify(data.socialLinks)
+      : null;
+
     await sql`
       UPDATE "AiTool"
       SET
@@ -339,6 +355,9 @@ export async function updateToolAction(id: string, data: {
         "listingTier" = ${data.listingTier}::"ListingTier",
         status = ${data.status}::"ToolApprovalStatus",
         "screenshotUrls" = ${data.screenshotUrls || []},
+        "twitterUrl" = ${data.twitterUrl || null},
+        "linkedinUrl" = ${data.linkedinUrl || null},
+        "socialLinks" = ${socialLinksJson}::jsonb,
         "updatedAt" = NOW()
       WHERE id = ${id}
     `;

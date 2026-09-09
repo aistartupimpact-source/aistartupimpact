@@ -76,10 +76,11 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
     const draft = localStorage.getItem(draftKey);
     if (draft) {
       try {
-        const { formData: dForm, faqs: dFaqs, screenshots: dScreenshots } = JSON.parse(draft);
+        const { formData: dForm, faqs: dFaqs, screenshots: dScreenshots, socialLinks: dSocial } = JSON.parse(draft);
         if (dForm) setFormData(dForm);
         if (dFaqs) setFaqs(dFaqs);
         if (dScreenshots) setScreenshots(dScreenshots);
+        if (dSocial) setSocialLinks(dSocial);
       } catch (e) {
         console.error('Failed to restore tool draft:', e);
       }
@@ -105,7 +106,13 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
     features: existingUseCases,
     useCases: existingUseCases,
     logoUrl: tool.logoUrl || '',
+    twitterUrl: tool.twitterUrl || '',
+    linkedinUrl: tool.linkedinUrl || '',
   });
+
+  const [socialLinks, setSocialLinks] = useState<Array<{ platform: string; url: string }>>(
+    Array.isArray(tool.socialLinks) ? tool.socialLinks : []
+  );
 
   const [faqs, setFaqs] = useState<FAQ[]>(
     (tool.faqs || []).map((faq, index) => ({
@@ -120,8 +127,8 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
   useEffect(() => {
     if (!draftLoaded) return;
     const draftKey = `draft_founder_edit_tool_${tool.id}`;
-    localStorage.setItem(draftKey, JSON.stringify({ formData, faqs, screenshots }));
-  }, [formData, faqs, screenshots, draftLoaded, tool.id]);
+    localStorage.setItem(draftKey, JSON.stringify({ formData, faqs, screenshots, socialLinks }));
+  }, [formData, faqs, screenshots, socialLinks, draftLoaded, tool.id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const value = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value;
@@ -314,6 +321,9 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
         screenshotUrls: screenshots,
         faqs: faqs.length > 0 ? faqs : undefined,
         tagIds: selectedTagIds,
+        twitterUrl: formData.twitterUrl || undefined,
+        linkedinUrl: formData.linkedinUrl || undefined,
+        socialLinks: socialLinks.filter(l => l.url.trim()).length > 0 ? socialLinks.filter(l => l.url.trim()) : undefined,
       });
 
       if (!result.success) {
@@ -476,6 +486,85 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
             placeholder="https://yourtool.com?ref=..."
           />
+        </div>
+      </div>
+
+      {/* Social Links */}
+      <div className="border-t border-gray-100 dark:border-gray-800 pt-6">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Social Links</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Twitter / X</label>
+            <input
+              type="url"
+              name="twitterUrl"
+              value={formData.twitterUrl}
+              onChange={handleChange}
+              className="input-field text-sm"
+              placeholder="https://x.com/..."
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">LinkedIn</label>
+            <input
+              type="url"
+              name="linkedinUrl"
+              value={formData.linkedinUrl}
+              onChange={handleChange}
+              className="input-field text-sm"
+              placeholder="https://linkedin.com/company/..."
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Additional Social Links</label>
+          <div className="space-y-2">
+            {socialLinks.map((link, index) => (
+              <div key={index} className="flex gap-2 items-center">
+                <select
+                  value={link.platform}
+                  onChange={(e) => {
+                    const updated = [...socialLinks];
+                    updated[index] = { ...updated[index], platform: e.target.value };
+                    setSocialLinks(updated);
+                  }}
+                  className="input-field text-sm w-40"
+                >
+                  <option value="instagram">Instagram</option>
+                  <option value="github">GitHub</option>
+                  <option value="youtube">YouTube</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="producthunt">Product Hunt</option>
+                  <option value="discord">Discord</option>
+                </select>
+                <input
+                  type="url"
+                  value={link.url}
+                  onChange={(e) => {
+                    const updated = [...socialLinks];
+                    updated[index] = { ...updated[index], url: e.target.value };
+                    setSocialLinks(updated);
+                  }}
+                  className="input-field text-sm flex-1"
+                  placeholder="https://..."
+                />
+                <button
+                  type="button"
+                  onClick={() => setSocialLinks(prev => prev.filter((_, i) => i !== index))}
+                  className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setSocialLinks(prev => [...prev, { platform: 'instagram', url: '' }])}
+              className="flex items-center gap-1.5 text-xs font-semibold text-brand hover:text-brand-600 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" /> Add Social Link
+            </button>
+          </div>
         </div>
       </div>
 

@@ -30,6 +30,9 @@ interface ToolSubmission {
   tagIds?: string[];
   pros?: string[];
   cons?: string[];
+  twitterUrl?: string;
+  linkedinUrl?: string;
+  socialLinks?: Array<{ platform: string; url: string }>;
 }
 
 export async function submitToolAction(data: ToolSubmission) {
@@ -97,12 +100,17 @@ export async function submitToolAction(data: ToolSubmission) {
       ? Math.round(data.startingPrice * 100) 
       : null;
 
+    const socialLinksJson = data.socialLinks && data.socialLinks.length > 0
+      ? JSON.stringify(data.socialLinks)
+      : null;
+
     // Create tool using raw SQL to avoid date validation issues
     const tools = await prisma.$queryRaw<any[]>`
       INSERT INTO "AiTool" (
         id, name, slug, tagline, description, "websiteUrl", "affiliateUrl",
         "pricingModel", "pricingUrl", "startingPrice", "freeTrialDays", "demoVideoUrl", "hasApi", "hasMobileApp",
         "launchYear", "founderNames", "headquartersCountry", "logoUrl", "screenshotUrls",
+        "twitterUrl", "linkedinUrl", "socialLinks",
         "categoryId", "ownerId", "claimStatus", status, "submittedBy", "createdAt", "updatedAt"
       ) VALUES (
         gen_random_uuid(), ${data.name}, ${slug}, ${data.tagline}, ${data.description},
@@ -113,6 +121,7 @@ export async function submitToolAction(data: ToolSubmission) {
         ${data.hasApi}, ${data.hasMobileApp}, ${data.launchYear},
         ${data.founderNames || []}::text[], ${data.headquartersCountry || null},
         ${data.logoUrl || null}, ${data.screenshotUrls}::text[],
+        ${data.twitterUrl || null}, ${data.linkedinUrl || null}, ${socialLinksJson}::jsonb,
         ${categoryId}, ${session.userId}, 'PENDING', 'PENDING', ${session.userId},
         NOW(), NOW()
       )
@@ -266,6 +275,10 @@ export async function updateToolAction(id: string, data: ToolSubmission) {
     // Keep the current status - no need for re-approval after initial approval
     // This allows founders to edit freely once their tool is approved
 
+    const socialLinksJson = data.socialLinks && data.socialLinks.length > 0
+      ? JSON.stringify(data.socialLinks)
+      : null;
+
     // Use raw SQL to avoid date validation issues
     await prisma.$queryRaw`
       UPDATE "AiTool"
@@ -287,6 +300,9 @@ export async function updateToolAction(id: string, data: ToolSubmission) {
         "headquartersCountry" = ${data.headquartersCountry || null},
         "logoUrl" = ${data.logoUrl || null},
         "screenshotUrls" = ${data.screenshotUrls}::text[],
+        "twitterUrl" = ${data.twitterUrl || null},
+        "linkedinUrl" = ${data.linkedinUrl || null},
+        "socialLinks" = ${socialLinksJson}::jsonb,
         "updatedAt" = NOW()
       WHERE id = ${id}
     `;

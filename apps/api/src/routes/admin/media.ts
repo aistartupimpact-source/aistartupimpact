@@ -113,7 +113,7 @@ router.get('/',
       });
 
       // Map to keep frontend compatibility
-      const files = assets.map(asset => ({
+      const files = assets.map((asset: typeof assets[number]) => ({
         id: asset.id,
         name: asset.fileName,
         size: `${Math.round(asset.sizeBytes / 1024)} KB`,

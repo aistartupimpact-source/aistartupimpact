@@ -21,6 +21,7 @@ export default async function EditToolPage({ params }: PageProps) {
       "categoryId", status, "claimStatus", "ownerId",
       "hasApi", "hasMobileApp", "launchYear", "founderNames", "headquartersCountry",
       "screenshotUrls", "isUrlVerified",
+      "twitterUrl", "linkedinUrl", "socialLinks",
       "slugChangedAt"::text AS "slugChangedAt"
     FROM "AiTool"
     WHERE slug = ${params.slug}
@@ -76,6 +77,9 @@ export default async function EditToolPage({ params }: PageProps) {
     founderNames: tool.founderNames,
     headquartersCountry: tool.headquartersCountry,
     screenshotUrls: tool.screenshotUrls,
+    twitterUrl: tool.twitterUrl,
+    linkedinUrl: tool.linkedinUrl,
+    socialLinks: tool.socialLinks,
     useCases: useCases.map(uc => ({
       id: uc.id,
       text: uc.text,

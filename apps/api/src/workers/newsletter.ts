@@ -47,7 +47,7 @@ export async function sendNewsletterBatch(campaignId: string) {
     // Build the payload for Resend Batch API
     // Resend allows sending up to 100 emails per batch request
     const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://aistartupimpact.com';
-    const batchPayload = subscribers.map((sub) => ({
+    const batchPayload = subscribers.map((sub: typeof subscribers[number]) => ({
       from: FROM_EMAIL,
       to: [sub.email],
       subject: campaign.subject,

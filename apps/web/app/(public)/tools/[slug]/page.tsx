@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { cache } from 'react';
 import { Metadata } from 'next';
-import { Star, ExternalLink, ChevronRight, Check, X as XIcon, ThumbsUp, ThumbsDown, IndianRupee, ArrowRight, Sparkles, Globe, Cpu, Smartphone } from 'lucide-react';
+import { Star, ExternalLink, ChevronRight, Check, X as XIcon, ThumbsUp, ThumbsDown, IndianRupee, ArrowRight, Sparkles, Cpu, Smartphone } from 'lucide-react';
 import { generateToolSchema } from '@/lib/seo';
 import { sql } from '@/lib/db';
 import EmbedBadge from '@/components/EmbedBadge';
@@ -183,7 +183,7 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-0 sm:px-2 lg:px-4 py-6 sm:py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
       {/* JSON-LD Schema: Single @graph with WebPage + SoftwareApplication + BreadcrumbList */}
       <ToolSchema tool={tool} />
       
@@ -203,85 +203,198 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
       </nav>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 mb-8">
-        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700/50">
-          <Image
-            src={tool.logoUrl || `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${tool.websiteUrl}&size=128`}
-            alt={tool.name}
-            width={56}
-            height={56}
-            sizes="56px"
-            className="w-14 h-14 object-contain"
-          />
-        </div>
-        <div className="flex-1">
-          <h1 className="font-sora font-extrabold text-2xl sm:text-3xl text-navy dark:text-white">{tool.name}</h1>
-          <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm sm:text-base mt-1">{tool.tagline}</p>
-          <div className="flex flex-wrap items-center gap-3 mt-3">
-            {tool.avgRating && (
-              <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/30 px-2.5 py-1 rounded-full">
-                <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                <span className="font-bold text-yellow-700 dark:text-yellow-400">{tool.avgRating}</span>
-                {userReviews.length > 0 && <span className="text-xs text-gray-400 ml-1">({userReviews.length} reviews)</span>}
-              </div>
-            )}
-            {(tool.upvoteCount || 0) >= 5 && (
-              <span className="text-xs font-bold bg-brand/10 text-brand px-2.5 py-1 rounded-full">
-                {tool.upvoteCount} upvotes
-              </span>
-            )}
-            {tool.categoryName && <span className="badge-category">{tool.categoryName}</span>}
-            {tool.pricingModel && (
-              <span className="text-xs font-bold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2.5 py-1 rounded-full uppercase">
-                {pricingLabel[tool.pricingModel] || tool.pricingModel}
-              </span>
-            )}
-            {tool.hasApi && (
-              <span className="flex items-center gap-1 text-xs font-bold bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-2.5 py-1 rounded-full">
-                <Cpu className="w-3 h-3" /> API
-              </span>
-            )}
-            {tool.hasMobileApp && (
-              <span className="flex items-center gap-1 text-xs font-bold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2.5 py-1 rounded-full">
-                <Smartphone className="w-3 h-3" /> Mobile App
-              </span>
-            )}
-            {tool.freeTrialDays && tool.freeTrialDays > 0 && (
-              <span className="text-xs font-bold bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 px-2.5 py-1 rounded-full">
-                {tool.freeTrialDays}-Day Free Trial
-              </span>
-            )}
-            {tool.isUrlVerified && (
-              <span className="flex items-center gap-1 text-xs font-bold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-full">
-                <Check className="w-3 h-3" /> Verified
-              </span>
-            )}
+      <div className="mb-8">
+        <div className="flex flex-row items-center gap-3 sm:gap-6">
+          <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700/50">
+            <Image
+              src={tool.logoUrl || `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${tool.websiteUrl}&size=128`}
+              alt={tool.name}
+              width={56}
+              height={56}
+              sizes="56px"
+              className="w-10 h-10 sm:w-14 sm:h-14 object-contain"
+            />
           </div>
-          <div className="flex gap-3 mt-4">
-            <ToolCTAButton
-              toolId={tool.id}
-              toolName={tool.name}
-              source="TOOL_DETAIL"
-              variant="primary"
-              className="text-sm"
-            >
-              Visit Website
-            </ToolCTAButton>
-            {tool.pricingUrl && (
-              <a href={tool.pricingUrl} target="_blank" rel="noopener noreferrer" className="btn-outline text-sm">
-                Pricing <ExternalLink className="w-3.5 h-3.5 ml-1" />
+          <div className="flex-1 min-w-0">
+            <h1 className="font-sora font-extrabold text-xl sm:text-3xl text-navy dark:text-white">{tool.name}</h1>
+            <p className="text-gray-500 dark:text-gray-400 font-jakarta text-xs sm:text-base mt-0.5 sm:mt-1">{tool.tagline}</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-3">
+          {tool.avgRating && (
+            <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/30 px-2.5 py-1 rounded-full">
+              <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+              <span className="font-bold text-yellow-700 dark:text-yellow-400">{tool.avgRating}</span>
+              {userReviews.length > 0 && <span className="text-xs text-gray-400 ml-1">({userReviews.length} reviews)</span>}
+            </div>
+          )}
+          {(tool.upvoteCount || 0) >= 5 && (
+            <span className="text-xs font-bold bg-brand/10 text-brand px-2.5 py-1 rounded-full">
+              {tool.upvoteCount} upvotes
+            </span>
+          )}
+          {tool.categoryName && <span className="badge-category">{tool.categoryName}</span>}
+          {tool.pricingModel && (
+            <span className="text-xs font-bold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2.5 py-1 rounded-full uppercase">
+              {pricingLabel[tool.pricingModel] || tool.pricingModel}
+            </span>
+          )}
+          {tool.hasApi && (
+            <span className="flex items-center gap-1 text-xs font-bold bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-2.5 py-1 rounded-full">
+              <Cpu className="w-3 h-3" /> API
+            </span>
+          )}
+          {tool.hasMobileApp && (
+            <span className="flex items-center gap-1 text-xs font-bold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2.5 py-1 rounded-full">
+              <Smartphone className="w-3 h-3" /> Mobile App
+            </span>
+          )}
+          {tool.freeTrialDays && tool.freeTrialDays > 0 && (
+            <span className="text-xs font-bold bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 px-2.5 py-1 rounded-full">
+              {tool.freeTrialDays}-Day Free Trial
+            </span>
+          )}
+          {tool.isUrlVerified && (
+            <span className="flex items-center gap-1 text-xs font-bold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-full">
+              <Check className="w-3 h-3" /> Verified
+            </span>
+          )}
+        </div>
+        <div className="flex gap-3 mt-4">
+          <ToolCTAButton
+            toolId={tool.id}
+            toolName={tool.name}
+            source="TOOL_DETAIL"
+            variant="primary"
+            className="text-sm"
+          >
+            Visit Site
+          </ToolCTAButton>
+          {tool.pricingUrl && (
+            <a href={tool.pricingUrl} target="_blank" rel="noopener noreferrer" className="btn-outline text-sm">
+              Pricing <ExternalLink className="w-3.5 h-3.5 ml-1" />
+            </a>
+          )}
+          <BookmarkButton
+            type="tool"
+            itemId={tool.slug}
+            itemName={tool.name}
+            variant="button"
+            size="md"
+          />
+          <UpvoteButton toolSlug={tool.slug} initialCount={tool.upvoteCount || 0} size="md" />
+        </div>
+        {(tool.twitterUrl || tool.linkedinUrl || (Array.isArray(tool.socialLinks) && tool.socialLinks.length > 0)) && (
+          <div className="flex items-center gap-2 mt-3 flex-wrap">
+            <span className="text-xs text-gray-400 font-jakarta">Follow on:</span>
+            {tool.twitterUrl && (
+              <a href={tool.twitterUrl} target="_blank" rel="noopener noreferrer"
+                className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-center text-gray-900 dark:text-gray-100 hover:scale-105 hover:border-gray-900 dark:hover:border-gray-100 transition-all"
+                title="Twitter / X"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
               </a>
             )}
-            <BookmarkButton 
-              type="tool" 
-              itemId={tool.slug} 
-              itemName={tool.name} 
-              variant="button" 
-              size="md" 
-            />
-            <UpvoteButton toolSlug={tool.slug} initialCount={tool.upvoteCount || 0} size="md" />
+            {tool.linkedinUrl && (
+              <a href={tool.linkedinUrl} target="_blank" rel="noopener noreferrer"
+                className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-center text-[#0A66C2] hover:scale-105 hover:border-[#0A66C2] transition-all"
+                title="LinkedIn"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                </svg>
+              </a>
+            )}
+            {Array.isArray(tool.socialLinks) && tool.socialLinks.map((link: any, idx: number) => {
+              const platform = link.platform;
+              const url = link.url;
+              if (!url) return null;
+
+              let icon = null;
+              let hoverClass = "hover:border-brand";
+              let colorClass = "text-gray-500";
+              let label = platform;
+
+              switch (platform) {
+                case 'instagram':
+                  label = 'Instagram';
+                  colorClass = "text-[#E1306C]";
+                  hoverClass = "hover:border-[#E1306C]";
+                  icon = (
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                    </svg>
+                  );
+                  break;
+                case 'github':
+                  label = 'GitHub';
+                  colorClass = "text-gray-900 dark:text-gray-100";
+                  hoverClass = "hover:border-gray-900 dark:hover:border-gray-100";
+                  icon = (
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+                    </svg>
+                  );
+                  break;
+                case 'youtube':
+                  label = 'YouTube';
+                  colorClass = "text-[#FF0000]";
+                  hoverClass = "hover:border-[#FF0000]";
+                  icon = (
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.108C19.53 3.5 12 3.5 12 3.5s-7.53 0-9.388.555A3.002 3.002 0 0 0 .502 6.163C0 8.07 0 12 0 12s0 3.93.502 5.837a3.003 3.003 0 0 0 2.11 2.108C4.47 20.5 12 20.5 12 20.5s7.53 0 9.388-.555a3.002 3.002 0 0 0 2.11-2.108C24 15.93 24 12 24 12s0-3.93-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                  );
+                  break;
+                case 'facebook':
+                  label = 'Facebook';
+                  colorClass = "text-[#1877F2]";
+                  hoverClass = "hover:border-[#1877F2]";
+                  icon = (
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                  );
+                  break;
+                case 'producthunt':
+                  label = 'Product Hunt';
+                  colorClass = "text-[#DA552F]";
+                  hoverClass = "hover:border-[#DA552F]";
+                  icon = (
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 24c6.627 0 12-5.373 12-12S18.627 0 12 0 0 5.373 0 12s5.373 12 12 12zm-1-17h3.5c2.485 0 4.5 2.015 4.5 4.5S16.985 16 14.5 16H11v4H8V7h3zm3 6c.828 0 1.5-.672 1.5-1.5S14.828 10 14 10h-3v3h3z"/>
+                    </svg>
+                  );
+                  break;
+                case 'discord':
+                  label = 'Discord';
+                  colorClass = "text-[#5865F2]";
+                  hoverClass = "hover:border-[#5865F2]";
+                  icon = (
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.094 13.094 0 0 1-1.873-.894.077.077 0 0 1-.008-.128c.126-.093.252-.19.372-.287a.075.075 0 0 1 .077-.011c3.92 1.793 8.18 1.793 12.061 0a.073.073 0 0 1 .078.009c.12.099.246.195.373.289a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.955 2.418-2.156 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.156 2.418z"/>
+                    </svg>
+                  );
+                  break;
+                default:
+                  return null;
+              }
+
+              return (
+                <a key={idx} href={url} target="_blank" rel="noopener noreferrer"
+                  className={`w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-center ${colorClass} hover:scale-105 ${hoverClass} transition-all`}
+                  title={label}
+                >
+                  {icon}
+                </a>
+              );
+            })}
           </div>
-        </div>
+        )}
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
@@ -299,11 +412,7 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
               {tool.founderNames?.length > 0 && (
                 <div><span className="text-xs text-gray-400 font-jakarta block">Founders</span><span className="font-sora font-bold text-sm text-navy dark:text-white">{tool.founderNames.join(', ')}</span></div>
               )}
-              <div><span className="text-xs text-gray-400 font-jakarta block">Website</span>
-                <a href={tool.websiteUrl} target="_blank" rel="noopener noreferrer" className="font-sora font-bold text-sm text-brand hover:underline flex items-center gap-1">
-                  <Globe className="w-3 h-3" />{tool.websiteUrl?.replace('https://', '').replace('http://', '')}
-                </a>
-              </div>
+              {/* Website link hidden — redundant with Visit Site button above */}
               {tool.startingPrice && (
                 <div><span className="text-xs text-gray-400 font-jakarta block">Starting Price</span><span className="font-sora font-bold text-sm text-navy dark:text-white">${(tool.startingPrice / 8300).toFixed(0)}/mo</span></div>
               )}
@@ -533,7 +642,7 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
 
         {/* Sidebar */}
         <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-6">
-          <EmbedBadge urlSlug={tool.slug} type="tools" />
+          {/* <EmbedBadge urlSlug={tool.slug} type="tools" /> */}
 
           {/* Built by Startup */}
           {tool.startupId && tool.startupName && (
