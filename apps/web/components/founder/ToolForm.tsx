@@ -43,10 +43,11 @@ export default function ToolForm() {
     const draft = localStorage.getItem('draft_founder_new_tool');
     if (draft) {
       try {
-        const { formData: dForm, faqs: dFaqs, screenshots: dScreenshots } = JSON.parse(draft);
+        const { formData: dForm, faqs: dFaqs, screenshots: dScreenshots, socialLinks: dSocial } = JSON.parse(draft);
         if (dForm) setFormData(prev => ({ ...prev, ...dForm }));
         if (dFaqs) setFaqs(dFaqs);
         if (dScreenshots) setScreenshots(dScreenshots);
+        if (dSocial) setSocialLinks(dSocial);
       } catch (e) {
         console.error('Failed to restore tool draft:', e);
       }
@@ -74,13 +75,17 @@ export default function ToolForm() {
     features: '',
     useCases: '',
     logoUrl: '',
+    twitterUrl: '',
+    linkedinUrl: '',
   });
+
+  const [socialLinks, setSocialLinks] = useState<Array<{ platform: string; url: string }>>([]);
 
   // Save draft on changes
   useEffect(() => {
     if (!draftLoaded) return;
-    localStorage.setItem('draft_founder_new_tool', JSON.stringify({ formData, faqs, screenshots }));
-  }, [formData, faqs, screenshots, draftLoaded]);
+    localStorage.setItem('draft_founder_new_tool', JSON.stringify({ formData, faqs, screenshots, socialLinks }));
+  }, [formData, faqs, screenshots, socialLinks, draftLoaded]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const value = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value;
@@ -268,6 +273,9 @@ export default function ToolForm() {
         tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
         pros: pros.length > 0 ? pros : undefined,
         cons: cons.length > 0 ? cons : undefined,
+        twitterUrl: formData.twitterUrl || undefined,
+        linkedinUrl: formData.linkedinUrl || undefined,
+        socialLinks: socialLinks.filter(l => l.url.trim()).length > 0 ? socialLinks.filter(l => l.url.trim()) : undefined,
       });
 
       if (!result.success) {
@@ -477,6 +485,85 @@ export default function ToolForm() {
           placeholder="YouTube, Vimeo, or Loom link"
         />
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Add a demo or walkthrough video of your tool</p>
+      </div>
+
+      {/* Social Links */}
+      <div className="border-t border-gray-100 dark:border-gray-800 pt-6">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Social Links</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Twitter / X</label>
+            <input
+              type="url"
+              name="twitterUrl"
+              value={formData.twitterUrl}
+              onChange={handleChange}
+              className="input-field text-sm"
+              placeholder="https://x.com/..."
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">LinkedIn</label>
+            <input
+              type="url"
+              name="linkedinUrl"
+              value={formData.linkedinUrl}
+              onChange={handleChange}
+              className="input-field text-sm"
+              placeholder="https://linkedin.com/company/..."
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Additional Social Links</label>
+          <div className="space-y-2">
+            {socialLinks.map((link, index) => (
+              <div key={index} className="flex gap-2 items-center">
+                <select
+                  value={link.platform}
+                  onChange={(e) => {
+                    const updated = [...socialLinks];
+                    updated[index] = { ...updated[index], platform: e.target.value };
+                    setSocialLinks(updated);
+                  }}
+                  className="input-field text-sm w-40"
+                >
+                  <option value="instagram">Instagram</option>
+                  <option value="github">GitHub</option>
+                  <option value="youtube">YouTube</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="producthunt">Product Hunt</option>
+                  <option value="discord">Discord</option>
+                </select>
+                <input
+                  type="url"
+                  value={link.url}
+                  onChange={(e) => {
+                    const updated = [...socialLinks];
+                    updated[index] = { ...updated[index], url: e.target.value };
+                    setSocialLinks(updated);
+                  }}
+                  className="input-field text-sm flex-1"
+                  placeholder="https://..."
+                />
+                <button
+                  type="button"
+                  onClick={() => setSocialLinks(prev => prev.filter((_, i) => i !== index))}
+                  className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setSocialLinks(prev => [...prev, { platform: 'instagram', url: '' }])}
+              className="flex items-center gap-1.5 text-xs font-semibold text-brand hover:text-brand-600 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" /> Add Social Link
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Pricing */}

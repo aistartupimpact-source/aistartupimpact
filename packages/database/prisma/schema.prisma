@@ -128,6 +128,9 @@ model AiTool {
   description         String
   websiteUrl          String
   affiliateUrl        String?
+  twitterUrl          String?
+  linkedinUrl         String?
+  socialLinks         Json?
   logoUrl             String?
   screenshotUrls      String[]
   demoVideoUrl        String?

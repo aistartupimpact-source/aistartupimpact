@@ -64,7 +64,7 @@ export default function WriteReviewClient({ toolSlug, toolName }: WriteReviewCli
     <>
       <button
         onClick={handleOpenClick}
-        className="btn-brand text-sm shadow-md"
+        className="btn-brand !px-4 !py-2 sm:!px-5 sm:!py-2.5 text-xs sm:text-sm shadow-md"
       >
         Write a Review
       </button>

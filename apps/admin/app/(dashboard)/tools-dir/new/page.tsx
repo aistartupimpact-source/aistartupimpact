@@ -47,10 +47,11 @@ export default function NewToolPage() {
     const draft = localStorage.getItem('draft_admin_new_tool');
     if (draft) {
       try {
-        const { formData: dForm, faqs: dFaqs, screenshots: dScreenshots } = JSON.parse(draft);
+        const { formData: dForm, faqs: dFaqs, screenshots: dScreenshots, socialLinks: dSocial } = JSON.parse(draft);
         if (dForm) setFormData(prev => ({ ...prev, ...dForm }));
         if (dFaqs) setFaqs(dFaqs);
         if (dScreenshots) setScreenshots(dScreenshots);
+        if (dSocial) setSocialLinks(dSocial);
       } catch (e) {
         console.error('Failed to restore tool draft:', e);
       }
@@ -80,13 +81,17 @@ export default function NewToolPage() {
     avgRating: 0,
     features: '',
     useCases: '',
+    twitterUrl: '',
+    linkedinUrl: '',
   });
+
+  const [socialLinks, setSocialLinks] = useState<Array<{ platform: string; url: string }>>([]);
 
   // Save draft to localStorage on changes
   useEffect(() => {
     if (!draftLoaded) return;
-    localStorage.setItem('draft_admin_new_tool', JSON.stringify({ formData, faqs, screenshots }));
-  }, [formData, faqs, screenshots, draftLoaded]);
+    localStorage.setItem('draft_admin_new_tool', JSON.stringify({ formData, faqs, screenshots, socialLinks }));
+  }, [formData, faqs, screenshots, socialLinks, draftLoaded]);
 
   useEffect(() => {
     loadCategories();
@@ -229,6 +234,9 @@ export default function NewToolPage() {
         faqs: faqs.length > 0 ? faqs : undefined,
         features: featuresArray.length > 0 ? featuresArray : undefined,
         useCases: useCasesArray.length > 0 ? useCasesArray : undefined,
+        twitterUrl: formData.twitterUrl || undefined,
+        linkedinUrl: formData.linkedinUrl || undefined,
+        socialLinks: socialLinks.filter(l => l.url.trim()).length > 0 ? socialLinks.filter(l => l.url.trim()) : undefined,
       });
 
       if (result.success) {
@@ -464,6 +472,91 @@ export default function NewToolPage() {
               className="input-field text-sm"
               placeholder="https://youtube.com/watch?v=... or https://loom.com/..."
             />
+          </div>
+        </div>
+
+        {/* Social Links */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6 space-y-6">
+          <h2 className="font-sora font-bold text-lg text-navy dark:text-white">Social Links</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
+                Twitter / X URL
+              </label>
+              <input
+                type="url"
+                name="twitterUrl"
+                value={formData.twitterUrl}
+                onChange={handleChange}
+                className="input-field text-sm"
+                placeholder="https://x.com/..."
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
+                LinkedIn URL
+              </label>
+              <input
+                type="url"
+                name="linkedinUrl"
+                value={formData.linkedinUrl}
+                onChange={handleChange}
+                className="input-field text-sm"
+                placeholder="https://linkedin.com/company/..."
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
+              Additional Social Links
+            </label>
+            <div className="space-y-2">
+              {socialLinks.map((link, index) => (
+                <div key={index} className="flex gap-2 items-center">
+                  <select
+                    value={link.platform}
+                    onChange={(e) => {
+                      const updated = [...socialLinks];
+                      updated[index] = { ...updated[index], platform: e.target.value };
+                      setSocialLinks(updated);
+                    }}
+                    className="input-field text-sm w-40"
+                  >
+                    <option value="instagram">Instagram</option>
+                    <option value="github">GitHub</option>
+                    <option value="youtube">YouTube</option>
+                    <option value="facebook">Facebook</option>
+                    <option value="producthunt">Product Hunt</option>
+                    <option value="discord">Discord</option>
+                  </select>
+                  <input
+                    type="url"
+                    value={link.url}
+                    onChange={(e) => {
+                      const updated = [...socialLinks];
+                      updated[index] = { ...updated[index], url: e.target.value };
+                      setSocialLinks(updated);
+                    }}
+                    className="input-field text-sm flex-1"
+                    placeholder="https://..."
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setSocialLinks(prev => prev.filter((_, i) => i !== index))}
+                    className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setSocialLinks(prev => [...prev, { platform: 'instagram', url: '' }])}
+                className="flex items-center gap-1.5 text-xs font-semibold text-brand hover:text-brand-600 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add Social Link
+              </button>
+            </div>
           </div>
         </div>
 
