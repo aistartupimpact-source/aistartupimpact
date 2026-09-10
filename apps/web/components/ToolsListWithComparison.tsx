@@ -626,7 +626,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
 
       {/* ── GRID VIEW ── */}
       {viewMode === 'grid' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-5 -mx-1 sm:mx-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 -mx-1 sm:mx-0">
           {visibleTools.map((tool, i) => {
             const isSelected = !!selectedTools.find((t) => t.slug === tool.slug);
             const iconUrl = tool.logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(tool.name)}&background=random&color=fff&size=150`;
