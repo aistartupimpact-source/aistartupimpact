@@ -134,14 +134,17 @@ export default async function ToolsPage({ searchParams }: { searchParams: { cate
     'security-it': { icon: Shield, color: 'text-gray-600 dark:text-gray-400', bg: 'bg-gray-200 dark:bg-gray-700/40' },
   };
   const defaultMeta = { icon: Folder, color: 'text-gray-600 dark:text-gray-400', bg: 'bg-gray-100 dark:bg-gray-800/40' };
+  // Count tools per parent category from actual picks data (matches filter pill counts)
+  const realCounts = new Map<string, number>();
+  for (const p of picks) {
+    const slug = (p as any).parentCategorySlug || (p as any).categorySlug;
+    if (slug) realCounts.set(slug, (realCounts.get(slug) || 0) + 1);
+  }
   const parentCategoriesForGrid = (categoryTree as any[])
-    .map((c: any) => {
-      const subCount = (c.subcategories || []).reduce((s: number, sub: any) => s + (sub.toolCount || 0), 0);
-      return { ...c, totalToolCount: (c.toolCount || 0) + subCount };
-    })
+    .map((c: any) => ({ ...c, totalToolCount: realCounts.get(c.slug) || 0 }))
     .filter((c: any) => c.totalToolCount > 0)
     .sort((a: any, b: any) => b.totalToolCount - a.totalToolCount);
-  const totalTools = parentCategoriesForGrid.reduce((sum: number, c: any) => sum + c.totalToolCount, 0);
+  const totalTools = picks.length;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 pb-24 sm:pb-10">
