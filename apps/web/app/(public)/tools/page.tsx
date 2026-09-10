@@ -161,20 +161,20 @@ export default async function ToolsPage({ searchParams }: { searchParams: { cate
         mostUpvoted={mostUpvoted as any[]}
       />
 
-      {/* Browse by Category Grid */}
+      {/* Browse by Category */}
       {parentCategoriesForGrid.length > 0 && (
         <div className="mb-6 sm:mb-8">
           <h2 className="font-sora font-bold text-sm sm:text-lg text-navy dark:text-white mb-3 sm:mb-4">Browse by Category</h2>
-          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1.5 sm:gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-2.5">
             {parentCategoriesForGrid.map((cat: any) => (
               <Link
                 key={cat.slug}
                 href={`/tools/category/${cat.slug}`}
-                className="p-2 sm:p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-brand/30 hover:shadow-sm transition-all group text-center active:scale-95"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-gray-50 dark:bg-gray-800/60 hover:bg-brand/10 dark:hover:bg-brand/15 transition-colors group"
               >
-                {cat.icon && <span className="text-base sm:text-lg block mb-0.5 sm:mb-1">{cat.icon}</span>}
-                <p className="font-sora font-semibold text-[10px] sm:text-xs text-navy dark:text-white group-hover:text-brand transition-colors leading-tight">{cat.name}</p>
-                <p className="text-[10px] sm:text-xs text-gray-400 font-jakarta mt-0.5">{cat.toolCount} {cat.toolCount === 1 ? 'tool' : 'tools'}</p>
+                {cat.icon && <span className="text-sm">{cat.icon}</span>}
+                <span className="font-sora font-medium text-xs sm:text-sm text-navy dark:text-gray-200 group-hover:text-brand transition-colors">{cat.name}</span>
+                <span className="text-[10px] sm:text-xs text-gray-400 font-jakarta">{cat.toolCount}</span>
               </Link>
             ))}
           </div>
