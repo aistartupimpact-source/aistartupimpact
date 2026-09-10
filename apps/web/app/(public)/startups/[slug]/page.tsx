@@ -457,7 +457,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
         {/* Row 1: Logo + Name/Tagline + Impact Score */}
         <div className="flex items-start gap-4 mb-4">
           {/* Logo */}
-          <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center shrink-0 shadow-sm border border-brand/10">
+          <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center shrink-0 shadow-md ring-2 ring-white dark:ring-gray-700 border border-brand/10 overflow-hidden">
             {startup.logoUrl ? (
               <Image src={startup.logoUrl} alt={startup.name} width={80} height={80} sizes="80px" className="w-full h-full object-cover rounded-xl sm:rounded-2xl" />
             ) : (

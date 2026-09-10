@@ -205,7 +205,7 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
       {/* Header */}
       <div className="mb-8">
         <div className="flex flex-row items-center gap-3 sm:gap-6">
-          <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-white dark:bg-gray-800 shrink-0 overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700/50">
+          <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-white dark:bg-gray-800 shrink-0 overflow-hidden shadow-md ring-2 ring-white dark:ring-gray-700 border border-gray-100 dark:border-gray-700/50">
             <Image
               src={tool.logoUrl || `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${tool.websiteUrl}&size=128`}
               alt={tool.name}
