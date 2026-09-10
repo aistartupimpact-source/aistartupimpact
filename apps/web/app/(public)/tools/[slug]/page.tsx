@@ -651,16 +651,18 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200 dark:border-gray-700">
                   {tool.startupLogoUrl ? (
-                    <Image src={tool.startupLogoUrl} alt={tool.startupName} width={32} height={32} sizes="32px" className="w-8 h-8 object-contain" />
+                    <Image src={tool.startupLogoUrl} alt={tool.startupName} width={40} height={40} sizes="40px" className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-sm font-bold text-brand">{tool.startupName.charAt(0)}</span>
                   )}
                 </div>
                 <div>
                   <p className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand transition-colors">{tool.startupName}</p>
-                  {tool.totalFundingInr && Number(tool.totalFundingInr) > 0 && (
-                    <p className="text-xs text-gray-400 font-jakarta">₹{(Number(tool.totalFundingInr) / 10000000).toFixed(1)}Cr raised</p>
-                  )}
+                  {tool.totalFundingInr && Number(tool.totalFundingInr) > 0 && (() => {
+                    const usd = Number(tool.totalFundingInr) / 83;
+                    const display = usd >= 1e9 ? `$${(usd / 1e9).toFixed(1)}B` : usd >= 1e6 ? `$${(usd / 1e6).toFixed(1)}M` : usd >= 1e3 ? `$${(usd / 1e3).toFixed(0)}K` : `$${Math.round(usd)}`;
+                    return <p className="text-xs text-gray-400 font-jakarta">{display} raised</p>;
+                  })()}
                 </div>
               </div>
             </Link>
