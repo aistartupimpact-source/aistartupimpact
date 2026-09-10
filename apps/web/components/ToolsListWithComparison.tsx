@@ -581,9 +581,9 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                 key={tool.slug}
                 href={`/tools/${tool.slug}`}
                 prefetch={false}
-                className={`group block rounded-2xl transition-all h-full active:scale-[0.98] ${isSelected ? 'ring-2 ring-brand ring-offset-2 dark:ring-offset-gray-950' : 'hover:shadow-lg hover:shadow-brand/5'}`}
+                className={`group block rounded-xl transition-all h-full active:scale-[0.98] ${isSelected ? 'ring-2 ring-brand ring-offset-2 dark:ring-offset-gray-950' : 'hover:shadow-lg hover:shadow-brand/5'}`}
               >
-                <div className="p-4 sm:p-5 flex flex-col gap-2.5 relative h-full bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl">
+                <div className="p-4 sm:p-5 flex flex-col gap-2.5 relative h-full bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl">
 
                   {/* Top Actions */}
                   <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
@@ -673,7 +673,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                 key={tool.slug}
                 href={`/tools/${tool.slug}`}
                 prefetch={false}
-                className={`group flex items-center gap-3 p-3 sm:p-3 rounded-xl transition-all bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-brand/30 hover:shadow-sm active:scale-[0.99] ${isSelected ? 'ring-2 ring-brand' : ''}`}
+                className={`group flex items-center gap-3 p-3 sm:p-3 rounded-lg transition-all bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-brand/30 hover:shadow-sm active:scale-[0.99] ${isSelected ? 'ring-2 ring-brand' : ''}`}
               >
                 {/* Logo */}
                 <div className="w-10 h-10 sm:w-9 sm:h-9 rounded-lg bg-white dark:bg-gray-800 shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700/50">
