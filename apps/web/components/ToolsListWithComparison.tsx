@@ -315,7 +315,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
       )}
 
       {/* ── Sticky Category Pills (Parent Categories) ── */}
-      <div className="sticky top-0 z-sticky bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-2 sm:py-3 border-b border-gray-100 dark:border-gray-800">
+      <div className="sticky top-0 z-sticky bg-transparent -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-2 sm:py-3">
         {/* Parent category pills */}
         <div className="relative">
         <div ref={parentPillsRef} className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1 pr-8 -webkit-overflow-scrolling-touch" style={{ WebkitOverflowScrolling: 'touch' }}>
@@ -343,7 +343,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
             </button>
           ))}
         </div>
-        <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-white dark:from-gray-950 pointer-events-none sm:hidden" />
+        <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-gray-50 dark:from-gray-950 pointer-events-none sm:hidden" />
         </div>
 
         {/* Subcategory pills (shown when a parent is selected) */}
