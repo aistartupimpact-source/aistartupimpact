@@ -73,8 +73,16 @@ function Section({ title, badge, badgeColor, children }: { title: string; badge:
     const el = scrollRef.current;
     if (el) el.addEventListener('scroll', checkScroll, { passive: true });
     window.addEventListener('resize', checkScroll);
+    const wheelHandler = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        el!.scrollLeft += e.deltaY;
+        e.preventDefault();
+      }
+    };
+    if (el) el.addEventListener('wheel', wheelHandler, { passive: false });
     return () => {
       el?.removeEventListener('scroll', checkScroll);
+      el?.removeEventListener('wheel', wheelHandler);
       window.removeEventListener('resize', checkScroll);
     };
   }, [checkScroll]);

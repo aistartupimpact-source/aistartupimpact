@@ -86,6 +86,26 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
   const [showAllInGroup, setShowAllInGroup] = useState<Set<string>>(new Set());
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const parentPillsRef = useRef<HTMLDivElement>(null);
+  const subPillsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        (e.currentTarget as HTMLDivElement).scrollLeft += e.deltaY;
+        e.preventDefault();
+      }
+    };
+    const opts = { passive: false } as AddEventListenerOptions;
+    const el1 = parentPillsRef.current;
+    const el2 = subPillsRef.current;
+    el1?.addEventListener('wheel', handler, opts);
+    el2?.addEventListener('wheel', handler, opts);
+    return () => {
+      el1?.removeEventListener('wheel', handler);
+      el2?.removeEventListener('wheel', handler);
+    };
+  });
 
   // Get parent categories with counts
   const parentCategories = useMemo(() => {
@@ -255,7 +275,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
       <div className="sticky top-0 z-sticky bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-2 sm:py-3 border-b border-gray-100 dark:border-gray-800">
         {/* Parent category pills */}
         <div className="relative">
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1 pr-8 -webkit-overflow-scrolling-touch" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div ref={parentPillsRef} className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1 pr-8 -webkit-overflow-scrolling-touch" style={{ WebkitOverflowScrolling: 'touch' }}>
           <button
             onClick={() => handleCategoryChange('all')}
             className={`shrink-0 px-3.5 py-2 sm:px-4 sm:py-1.5 rounded-full text-xs font-bold font-jakarta transition-all active:scale-95 ${
@@ -285,7 +305,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
 
         {/* Subcategory pills (shown when a parent is selected) */}
         {selectedCategory !== 'all' && subcategories.length > 1 && (
-          <div className="flex items-center gap-2 mt-2 overflow-x-auto scrollbar-hide pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div ref={subPillsRef} className="flex items-center gap-2 mt-2 overflow-x-auto scrollbar-hide pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
             <button
               onClick={() => handleSubcategoryChange('all')}
               className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold font-jakarta transition-all active:scale-95 ${
