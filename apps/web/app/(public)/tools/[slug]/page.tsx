@@ -210,10 +210,10 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-3">
-          {tool.avgRating && (
+          {tool.avgRating != null && (
             <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/30 px-2.5 py-1 rounded-full">
               <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-              <span className="font-bold text-yellow-700 dark:text-yellow-400">{tool.avgRating}</span>
+              <span className="font-bold text-yellow-700 dark:text-yellow-400">{Number(tool.avgRating).toFixed(1)}</span>
               {userReviews.length > 0 && <span className="text-xs text-gray-400 ml-1">({userReviews.length} reviews)</span>}
             </div>
           )}
