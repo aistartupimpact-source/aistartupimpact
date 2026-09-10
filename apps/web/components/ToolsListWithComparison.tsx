@@ -86,6 +86,69 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
   const [showAllInGroup, setShowAllInGroup] = useState<Set<string>>(new Set());
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const parentPillsRef = useRef<HTMLDivElement>(null);
+  const subPillsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const wheelHandler = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        (e.currentTarget as HTMLDivElement).scrollLeft += e.deltaY;
+        e.preventDefault();
+      }
+    };
+
+    function addDragScroll(el: HTMLDivElement) {
+      let isDown = false;
+      let startX = 0;
+      let scrollStart = 0;
+
+      const onDown = (e: MouseEvent) => {
+        isDown = true;
+        startX = e.pageX;
+        scrollStart = el.scrollLeft;
+        el.style.cursor = 'grabbing';
+        el.style.userSelect = 'none';
+      };
+      const onMove = (e: MouseEvent) => {
+        if (!isDown) return;
+        e.preventDefault();
+        el.scrollLeft = scrollStart - (e.pageX - startX);
+      };
+      const onUp = () => {
+        if (!isDown) return;
+        isDown = false;
+        el.style.cursor = 'grab';
+        el.style.removeProperty('user-select');
+      };
+
+      el.style.cursor = 'grab';
+      el.addEventListener('mousedown', onDown);
+      el.addEventListener('mousemove', onMove);
+      el.addEventListener('mouseup', onUp);
+      el.addEventListener('mouseleave', onUp);
+      return () => {
+        el.style.removeProperty('cursor');
+        el.removeEventListener('mousedown', onDown);
+        el.removeEventListener('mousemove', onMove);
+        el.removeEventListener('mouseup', onUp);
+        el.removeEventListener('mouseleave', onUp);
+      };
+    }
+
+    const opts = { passive: false } as AddEventListenerOptions;
+    const el1 = parentPillsRef.current;
+    const el2 = subPillsRef.current;
+    el1?.addEventListener('wheel', wheelHandler, opts);
+    el2?.addEventListener('wheel', wheelHandler, opts);
+    const cleanDrag1 = el1 ? addDragScroll(el1) : undefined;
+    const cleanDrag2 = el2 ? addDragScroll(el2) : undefined;
+    return () => {
+      el1?.removeEventListener('wheel', wheelHandler);
+      el2?.removeEventListener('wheel', wheelHandler);
+      cleanDrag1?.();
+      cleanDrag2?.();
+    };
+  });
 
   // Get parent categories with counts
   const parentCategories = useMemo(() => {
@@ -252,10 +315,10 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
       )}
 
       {/* ── Sticky Category Pills (Parent Categories) ── */}
-      <div className="sticky top-0 z-sticky bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-2 sm:py-3 border-b border-gray-100 dark:border-gray-800">
+      <div className="sticky top-0 z-sticky bg-transparent -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-2 sm:py-3">
         {/* Parent category pills */}
         <div className="relative">
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1 pr-8 -webkit-overflow-scrolling-touch" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div ref={parentPillsRef} className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1 pr-8 -webkit-overflow-scrolling-touch" style={{ WebkitOverflowScrolling: 'touch' }}>
           <button
             onClick={() => handleCategoryChange('all')}
             className={`shrink-0 px-3.5 py-2 sm:px-4 sm:py-1.5 rounded-full text-xs font-bold font-jakarta transition-all active:scale-95 ${
@@ -280,12 +343,12 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
             </button>
           ))}
         </div>
-        <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-white dark:from-gray-950 pointer-events-none sm:hidden" />
+        <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-gray-50 dark:from-gray-950 pointer-events-none sm:hidden" />
         </div>
 
         {/* Subcategory pills (shown when a parent is selected) */}
         {selectedCategory !== 'all' && subcategories.length > 1 && (
-          <div className="flex items-center gap-2 mt-2 overflow-x-auto scrollbar-hide pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div ref={subPillsRef} className="flex items-center gap-2 mt-2 overflow-x-auto scrollbar-hide pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
             <button
               onClick={() => handleSubcategoryChange('all')}
               className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold font-jakarta transition-all active:scale-95 ${
@@ -563,7 +626,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
 
       {/* ── GRID VIEW ── */}
       {viewMode === 'grid' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-5 -mx-1 sm:mx-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 -mx-1 sm:mx-0">
           {visibleTools.map((tool, i) => {
             const isSelected = !!selectedTools.find((t) => t.slug === tool.slug);
             const iconUrl = tool.logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(tool.name)}&background=random&color=fff&size=150`;
@@ -581,26 +644,33 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                 key={tool.slug}
                 href={`/tools/${tool.slug}`}
                 prefetch={false}
-                className={`group block rounded-2xl transition-all h-full active:scale-[0.98] ${isSelected ? 'ring-2 ring-brand ring-offset-2 dark:ring-offset-gray-950' : 'hover:shadow-lg hover:shadow-brand/5'}`}
+                className={`group block rounded-xl transition-all h-full active:scale-[0.98] ${isSelected ? 'ring-2 ring-brand ring-offset-2 dark:ring-offset-gray-950' : 'hover:shadow-lg hover:shadow-brand/5'}`}
               >
-                <div className="p-4 sm:p-5 flex flex-col gap-2.5 relative h-full bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl">
+                <div className="p-4 sm:p-5 flex flex-col gap-2.5 relative h-full bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl">
 
                   {/* Top Actions */}
                   <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
                     <BookmarkButton type="tool" itemId={tool.slug} itemName={tool.name} size="sm" />
-                    <button
-                      onClick={(e) => toggleTool(tool, e)}
-                      className={`p-1 transition-colors ${isSelected ? 'text-brand font-semibold' : 'text-gray-300 hover:text-brand'}`}
-                      title="Select to compare"
-                    >
-                      {isSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
-                    </button>
+                    <div className="relative group/compare">
+                      <button
+                        onClick={(e) => toggleTool(tool, e)}
+                        className={`p-1 transition-colors ${isSelected ? 'text-brand font-semibold' : 'text-gray-300 hover:text-brand'}`}
+                      >
+                        {isSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                      </button>
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover/compare:flex flex-col items-center z-dropdown">
+                        <div className="w-2.5 h-2.5 bg-black dark:bg-gray-800 rotate-45 -mb-1.5" />
+                        <div className="bg-black dark:bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg font-jakarta">
+                          {isSelected ? 'Selected' : 'Compare'}
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Logo & Title */}
                   <div className="flex items-center gap-3 pr-20">
-                    <div className="w-11 h-11 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700/50">
-                      <Image src={iconUrl} alt={tool.name} className="w-8 h-8 object-contain" width={32} height={32} unoptimized />
+                    <div className="w-11 h-11 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-gray-800 shrink-0 overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700/50">
+                      <Image src={iconUrl} alt={tool.name} className="w-full h-full object-cover" width={44} height={44} unoptimized />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h2 className="font-sora font-bold text-[15px] sm:text-sm text-navy dark:text-white group-hover:text-brand transition-colors line-clamp-1">
@@ -673,11 +743,11 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                 key={tool.slug}
                 href={`/tools/${tool.slug}`}
                 prefetch={false}
-                className={`group flex items-center gap-3 p-3 sm:p-3 rounded-xl transition-all bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-brand/30 hover:shadow-sm active:scale-[0.99] ${isSelected ? 'ring-2 ring-brand' : ''}`}
+                className={`group flex items-center gap-3 p-3 sm:p-3 rounded-lg transition-all bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-brand/30 hover:shadow-sm active:scale-[0.99] ${isSelected ? 'ring-2 ring-brand' : ''}`}
               >
                 {/* Logo */}
-                <div className="w-10 h-10 sm:w-9 sm:h-9 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700/50">
-                  <Image src={iconUrl} alt={tool.name} className="w-7 h-7 object-contain" width={28} height={28} unoptimized />
+                <div className="w-10 h-10 sm:w-9 sm:h-9 rounded-lg bg-white dark:bg-gray-800 shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700/50">
+                  <Image src={iconUrl} alt={tool.name} className="w-full h-full object-cover" width={40} height={40} unoptimized />
                 </div>
 
                 {/* Info */}

@@ -73,8 +73,36 @@ function Section({ title, badge, badgeColor, children }: { title: string; badge:
     const el = scrollRef.current;
     if (el) el.addEventListener('scroll', checkScroll, { passive: true });
     window.addEventListener('resize', checkScroll);
+    const wheelHandler = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        el!.scrollLeft += e.deltaY;
+        e.preventDefault();
+      }
+    };
+    if (el) el.addEventListener('wheel', wheelHandler, { passive: false });
+
+    let isDown = false;
+    let startX = 0;
+    let scrollStart = 0;
+    const onDown = (e: MouseEvent) => { isDown = true; startX = e.pageX; scrollStart = el!.scrollLeft; el!.style.cursor = 'grabbing'; el!.style.userSelect = 'none'; };
+    const onMove = (e: MouseEvent) => { if (!isDown) return; e.preventDefault(); el!.scrollLeft = scrollStart - (e.pageX - startX); };
+    const onUp = () => { if (!isDown) return; isDown = false; el!.style.cursor = 'grab'; el!.style.removeProperty('user-select'); };
+    if (el) {
+      el.style.cursor = 'grab';
+      el.addEventListener('mousedown', onDown);
+      el.addEventListener('mousemove', onMove);
+      el.addEventListener('mouseup', onUp);
+      el.addEventListener('mouseleave', onUp);
+    }
+
     return () => {
       el?.removeEventListener('scroll', checkScroll);
+      el?.removeEventListener('wheel', wheelHandler);
+      el?.removeEventListener('mousedown', onDown);
+      el?.removeEventListener('mousemove', onMove);
+      el?.removeEventListener('mouseup', onUp);
+      el?.removeEventListener('mouseleave', onUp);
+      el?.style.removeProperty('cursor');
       window.removeEventListener('resize', checkScroll);
     };
   }, [checkScroll]);
@@ -125,9 +153,9 @@ function Section({ title, badge, badgeColor, children }: { title: string; badge:
 
 function ToolLogo({ tool, size = 24 }: { tool: ToolCard; size?: number }) {
   return (
-    <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700">
+    <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-800 shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700">
       {tool.logoUrl ? (
-        <Image src={tool.logoUrl} alt={tool.name} className="w-6 h-6 object-contain" width={size} height={size} sizes={`${size}px`} />
+        <Image src={tool.logoUrl} alt={tool.name} className="w-full h-full object-cover" width={32} height={32} sizes="32px" />
       ) : (
         <span className="text-xs font-bold text-brand">{tool.name.charAt(0)}</span>
       )}
@@ -159,7 +187,7 @@ function TrendingCard({ tool, rank }: { tool: ToolCard; rank: number }) {
       prefetch={false}
       className="shrink-0 w-44 sm:w-56 p-2.5 sm:p-3 rounded-xl active:scale-[0.97] border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-orange-300 dark:hover:border-orange-700 hover:shadow-sm transition-all group relative"
     >
-      <div className="absolute -top-2 -left-1 bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-md shadow-sm">#{rank}</div>
+      <div className="absolute -top-1.5 -left-1 bg-orange-500 text-white text-[10px] font-bold px-1 py-px rounded shadow-sm leading-tight">#{rank}</div>
       <div className="flex items-center gap-2.5 mb-2">
         <ToolLogo tool={tool} />
         <div className="min-w-0">
@@ -214,7 +242,7 @@ function NewCard({ tool }: { tool: ToolCard }) {
       prefetch={false}
       className="shrink-0 w-44 sm:w-56 p-2.5 sm:p-3 rounded-xl active:scale-[0.97] border border-emerald-100 dark:border-emerald-900/30 bg-white dark:bg-gray-900 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-sm transition-all group relative"
     >
-      <div className="absolute -top-2 right-2 bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded-md shadow-sm">NEW</div>
+      <div className="absolute -top-1.5 right-2 bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-px rounded shadow-sm leading-tight">NEW</div>
       <div className="flex items-center gap-2.5 mb-2">
         <ToolLogo tool={tool} />
         <div className="min-w-0">

@@ -54,12 +54,12 @@ export default function SimilarTools({ tools, categoryName, categorySlug }: Simi
               className="flex items-center gap-3 group p-2 -mx-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
             >
               {/* Logo */}
-              <div className="w-9 h-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
+              <div className="w-9 h-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shrink-0 overflow-hidden shadow-sm">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={logo}
                   alt={tool.name}
-                  className="w-7 h-7 object-contain"
+                  className="w-full h-full object-cover"
                 />
               </div>
 

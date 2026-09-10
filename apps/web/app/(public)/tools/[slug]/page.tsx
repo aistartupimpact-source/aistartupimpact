@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { cache } from 'react';
 import { Metadata } from 'next';
-import { Star, ExternalLink, ChevronRight, Check, X as XIcon, ThumbsUp, ThumbsDown, IndianRupee, ArrowRight, Sparkles, Cpu, Smartphone } from 'lucide-react';
+import { Star, ExternalLink, ChevronRight, Check, X as XIcon, ThumbsUp, ThumbsDown, ArrowRight, Sparkles, Cpu, Smartphone } from 'lucide-react';
 import { generateToolSchema } from '@/lib/seo';
 import { sql } from '@/lib/db';
 import EmbedBadge from '@/components/EmbedBadge';
@@ -139,7 +139,6 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
   }
 
   const stories = tool.stories || [];
-  const fundingRounds = tool.fundingRounds || [];
   const userReviews = tool.userReviews || [];
 
   // Fetch all supplementary data in parallel
@@ -153,19 +152,9 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
 
   const toolPros = (prosConsData.pros as any[]) || [];
   const toolCons = (prosConsData.cons as any[]) || [];
-  
+
   // Generate FAQs with tool-specific data
   const faqs = generateToolFAQs(tool);
-
-  const formatAmount = (usd: number | null, inr: number | null) => {
-    if (usd && Number(usd) > 0) {
-      const u = Number(usd) / 100;
-      if (u >= 1e9) return `$${(u / 1e9).toFixed(1)}B`;
-      if (u >= 1e6) return `$${(u / 1e6).toFixed(0)}M`;
-    }
-    if (inr && Number(inr) > 0) return `₹${(Number(inr) / 10000000).toFixed(1)}Cr`;
-    return 'Undisclosed';
-  };
 
   const jsonLd = generateToolSchema({
     name: tool.name,
@@ -205,14 +194,14 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
       {/* Header */}
       <div className="mb-8">
         <div className="flex flex-row items-center gap-3 sm:gap-6">
-          <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700/50">
+          <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-white dark:bg-gray-800 shrink-0 overflow-hidden shadow-md ring-2 ring-white dark:ring-gray-700 border border-gray-100 dark:border-gray-700/50">
             <Image
               src={tool.logoUrl || `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${tool.websiteUrl}&size=128`}
               alt={tool.name}
-              width={56}
-              height={56}
-              sizes="56px"
-              className="w-10 h-10 sm:w-14 sm:h-14 object-contain"
+              width={80}
+              height={80}
+              sizes="80px"
+              className="w-full h-full object-cover"
             />
           </div>
           <div className="flex-1 min-w-0">
@@ -221,10 +210,10 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-3">
-          {tool.avgRating && (
+          {tool.avgRating != null && (
             <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/30 px-2.5 py-1 rounded-full">
               <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-              <span className="font-bold text-yellow-700 dark:text-yellow-400">{tool.avgRating}</span>
+              <span className="font-bold text-yellow-700 dark:text-yellow-400">{Number(tool.avgRating).toFixed(1)}</span>
               {userReviews.length > 0 && <span className="text-xs text-gray-400 ml-1">({userReviews.length} reviews)</span>}
             </div>
           )}
@@ -563,9 +552,9 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
                     href={`/tools/${alt.slug}`}
                     className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 dark:border-gray-800 hover:border-brand/30 hover:bg-brand/5 transition-colors group"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700">
+                    <div className="w-9 h-9 rounded-lg bg-white dark:bg-gray-800 shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700">
                       {alt.logoUrl ? (
-                        <Image src={alt.logoUrl} alt={alt.name} width={28} height={28} sizes="28px" className="w-7 h-7 object-contain" />
+                        <Image src={alt.logoUrl} alt={alt.name} width={36} height={36} sizes="36px" className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-xs font-bold text-brand">{alt.name.charAt(0)}</span>
                       )}
@@ -651,16 +640,18 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200 dark:border-gray-700">
                   {tool.startupLogoUrl ? (
-                    <Image src={tool.startupLogoUrl} alt={tool.startupName} width={32} height={32} sizes="32px" className="w-8 h-8 object-contain" />
+                    <Image src={tool.startupLogoUrl} alt={tool.startupName} width={40} height={40} sizes="40px" className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-sm font-bold text-brand">{tool.startupName.charAt(0)}</span>
                   )}
                 </div>
                 <div>
                   <p className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand transition-colors">{tool.startupName}</p>
-                  {tool.totalFundingInr && Number(tool.totalFundingInr) > 0 && (
-                    <p className="text-xs text-gray-400 font-jakarta">₹{(Number(tool.totalFundingInr) / 10000000).toFixed(1)}Cr raised</p>
-                  )}
+                  {tool.totalFundingInr && Number(tool.totalFundingInr) > 0 && (() => {
+                    const usd = Number(tool.totalFundingInr) / 83;
+                    const display = usd >= 1e9 ? `$${(usd / 1e9).toFixed(1)}B` : usd >= 1e6 ? `$${(usd / 1e6).toFixed(1)}M` : usd >= 1e3 ? `$${(usd / 1e3).toFixed(0)}K` : `$${Math.round(usd)}`;
+                    return <p className="text-xs text-gray-400 font-jakarta">{display} raised</p>;
+                  })()}
                 </div>
               </div>
             </Link>
@@ -693,28 +684,6 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
             </div>
           )}
 
-          {/* Funding History */}
-          {fundingRounds.length > 0 && (
-            <div className="card p-5">
-              <h4 className="font-sora font-bold text-sm text-green-600 dark:text-green-400 mb-4 flex items-center gap-2">
-                <IndianRupee className="w-4 h-4" /> Funding History
-              </h4>
-              <div className="space-y-3">
-                {fundingRounds.map((round: any, idx: number) => (
-                  <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
-                    <div>
-                      <span className="font-sora font-bold text-sm text-navy dark:text-white block">{round.roundType}</span>
-                      <span className="text-xs text-gray-400 font-jakarta">{new Date(round.announcedAt).toLocaleDateString()}</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="font-sora font-extrabold text-sm text-green-600 dark:text-green-400 block">{formatAmount(round.amountUsd, round.amountInr)}</span>
-                      {round.leadInvestors?.[0] && <span className="text-xs text-gray-400 font-jakarta">{round.leadInvestors[0]}</span>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </aside>
       </div>
 

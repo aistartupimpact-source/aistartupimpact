@@ -622,7 +622,7 @@ export async function getAiToolBySlugDirect(slug: string) {
         `,
         tool.startupId
           ? sql`
-              SELECT "roundType", "amountInr", "amountUsd", "announcedAt"::text AS "announcedAt", "leadInvestors", sourceUrl
+              SELECT "roundType", "amountInr", "amountUsd", "announcedAt"::text AS "announcedAt", "leadInvestors", "sourceUrl"
               FROM "FundingRound"
               WHERE "startupId" = ${tool.startupId}
               ORDER BY "announcedAt" DESC
