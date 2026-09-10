@@ -113,7 +113,18 @@ export default async function ToolsPage({ searchParams }: { searchParams: { cate
   ]);
 
   // Get category tree for browse grid
-  const parentCategoriesForGrid = (categoryTree as any[]).filter((c: any) => c.toolCount > 0);
+  const categoryIcons: Record<string, string> = {
+    'code-development': '💻', 'customer-experience': '💬', 'education-research': '🎓',
+    'video': '🎬', 'audio-music': '🎵', 'productivity-workspace': '⚡',
+    'writing-content': '✍️', 'design-creative': '🎨', 'marketing-advertising': '📢',
+    'sales-crm': '📊', 'data-analytics': '📈', 'finance-accounting': '💰',
+    'image-generation-editing': '🖼️', 'ai-agents-infrastructure': '🤖',
+    'e-commerce': '🛒', 'legal-compliance': '⚖️', 'security-it': '🔒',
+  };
+  const parentCategoriesForGrid = (categoryTree as any[])
+    .filter((c: any) => c.toolCount > 0)
+    .sort((a: any, b: any) => b.toolCount - a.toolCount)
+    .map((c: any) => ({ ...c, icon: c.icon || categoryIcons[c.slug] || '📁' }));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 pb-24 sm:pb-10">
@@ -165,16 +176,18 @@ export default async function ToolsPage({ searchParams }: { searchParams: { cate
       {parentCategoriesForGrid.length > 0 && (
         <div className="mb-6 sm:mb-8">
           <h2 className="font-sora font-bold text-sm sm:text-lg text-navy dark:text-white mb-3 sm:mb-4">Browse by Category</h2>
-          <div className="flex flex-wrap gap-2 sm:gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
             {parentCategoriesForGrid.map((cat: any) => (
               <Link
                 key={cat.slug}
                 href={`/tools/category/${cat.slug}`}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-gray-50 dark:bg-gray-800/60 hover:bg-brand/10 dark:hover:bg-brand/15 transition-colors group"
+                className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 hover:bg-brand/5 dark:hover:bg-brand/10 transition-all group"
               >
-                {cat.icon && <span className="text-sm">{cat.icon}</span>}
-                <span className="font-sora font-medium text-xs sm:text-sm text-navy dark:text-gray-200 group-hover:text-brand transition-colors">{cat.name}</span>
-                <span className="text-[10px] sm:text-xs text-gray-400 font-jakarta">{cat.toolCount}</span>
+                {cat.icon && <span className="text-xl sm:text-2xl shrink-0">{cat.icon}</span>}
+                <div className="min-w-0">
+                  <p className="font-sora font-semibold text-[11px] sm:text-sm text-navy dark:text-white group-hover:text-brand transition-colors leading-tight">{cat.name}</p>
+                  <p className="text-[10px] sm:text-xs text-gray-400 font-jakarta">{cat.toolCount} {cat.toolCount === 1 ? 'tool' : 'tools'}</p>
+                </div>
               </Link>
             ))}
           </div>
