@@ -315,7 +315,7 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
       )}
 
       {/* ── Sticky Category Pills (Parent Categories) ── */}
-      <div className="sticky top-0 z-sticky bg-transparent -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-2 sm:py-3">
+      <div className="sticky top-[96px] z-[100] bg-gray-50/95 dark:bg-gray-950/95 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-2 sm:py-3">
         {/* Parent category pills */}
         <div className="relative">
         <div ref={parentPillsRef} className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1 pr-8 -webkit-overflow-scrolling-touch" style={{ WebkitOverflowScrolling: 'touch' }}>
