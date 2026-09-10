@@ -135,9 +135,13 @@ export default async function ToolsPage({ searchParams }: { searchParams: { cate
   };
   const defaultMeta = { icon: Folder, color: 'text-gray-600 dark:text-gray-400', bg: 'bg-gray-100 dark:bg-gray-800/40' };
   const parentCategoriesForGrid = (categoryTree as any[])
-    .filter((c: any) => c.toolCount > 0)
-    .sort((a: any, b: any) => b.toolCount - a.toolCount);
-  const totalTools = parentCategoriesForGrid.reduce((sum: number, c: any) => sum + c.toolCount, 0);
+    .map((c: any) => {
+      const subCount = (c.subcategories || []).reduce((s: number, sub: any) => s + (sub.toolCount || 0), 0);
+      return { ...c, totalToolCount: (c.toolCount || 0) + subCount };
+    })
+    .filter((c: any) => c.totalToolCount > 0)
+    .sort((a: any, b: any) => b.totalToolCount - a.totalToolCount);
+  const totalTools = parentCategoriesForGrid.reduce((sum: number, c: any) => sum + c.totalToolCount, 0);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 pb-24 sm:pb-10">
@@ -207,7 +211,7 @@ export default async function ToolsPage({ searchParams }: { searchParams: { cate
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-sora font-semibold text-xs sm:text-sm text-navy dark:text-white group-hover:text-brand transition-colors">{cat.name}</p>
-                    <p className="text-[10px] sm:text-xs text-gray-400 font-jakarta">{cat.toolCount} {cat.toolCount === 1 ? 'tool' : 'tools'}</p>
+                    <p className="text-[10px] sm:text-xs text-gray-400 font-jakarta">{cat.totalToolCount} {cat.totalToolCount === 1 ? 'tool' : 'tools'}</p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-brand transition-colors shrink-0" />
                 </Link>
