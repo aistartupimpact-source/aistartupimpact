@@ -205,14 +205,14 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
       {/* Header */}
       <div className="mb-8">
         <div className="flex flex-row items-center gap-3 sm:gap-6">
-          <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700/50">
+          <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-white dark:bg-gray-800 shrink-0 overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700/50">
             <Image
               src={tool.logoUrl || `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${tool.websiteUrl}&size=128`}
               alt={tool.name}
-              width={56}
-              height={56}
-              sizes="56px"
-              className="w-10 h-10 sm:w-14 sm:h-14 object-contain"
+              width={80}
+              height={80}
+              sizes="80px"
+              className="w-full h-full object-cover"
             />
           </div>
           <div className="flex-1 min-w-0">
@@ -563,9 +563,9 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
                     href={`/tools/${alt.slug}`}
                     className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 dark:border-gray-800 hover:border-brand/30 hover:bg-brand/5 transition-colors group"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700">
+                    <div className="w-9 h-9 rounded-lg bg-white dark:bg-gray-800 shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700">
                       {alt.logoUrl ? (
-                        <Image src={alt.logoUrl} alt={alt.name} width={28} height={28} sizes="28px" className="w-7 h-7 object-contain" />
+                        <Image src={alt.logoUrl} alt={alt.name} width={36} height={36} sizes="36px" className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-xs font-bold text-brand">{alt.name.charAt(0)}</span>
                       )}
