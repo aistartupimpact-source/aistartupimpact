@@ -90,20 +90,63 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
   const subPillsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handler = (e: WheelEvent) => {
+    const wheelHandler = (e: WheelEvent) => {
       if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
         (e.currentTarget as HTMLDivElement).scrollLeft += e.deltaY;
         e.preventDefault();
       }
     };
+
+    function addDragScroll(el: HTMLDivElement) {
+      let isDown = false;
+      let startX = 0;
+      let scrollStart = 0;
+
+      const onDown = (e: MouseEvent) => {
+        isDown = true;
+        startX = e.pageX;
+        scrollStart = el.scrollLeft;
+        el.style.cursor = 'grabbing';
+        el.style.userSelect = 'none';
+      };
+      const onMove = (e: MouseEvent) => {
+        if (!isDown) return;
+        e.preventDefault();
+        el.scrollLeft = scrollStart - (e.pageX - startX);
+      };
+      const onUp = () => {
+        if (!isDown) return;
+        isDown = false;
+        el.style.cursor = 'grab';
+        el.style.removeProperty('user-select');
+      };
+
+      el.style.cursor = 'grab';
+      el.addEventListener('mousedown', onDown);
+      el.addEventListener('mousemove', onMove);
+      el.addEventListener('mouseup', onUp);
+      el.addEventListener('mouseleave', onUp);
+      return () => {
+        el.style.removeProperty('cursor');
+        el.removeEventListener('mousedown', onDown);
+        el.removeEventListener('mousemove', onMove);
+        el.removeEventListener('mouseup', onUp);
+        el.removeEventListener('mouseleave', onUp);
+      };
+    }
+
     const opts = { passive: false } as AddEventListenerOptions;
     const el1 = parentPillsRef.current;
     const el2 = subPillsRef.current;
-    el1?.addEventListener('wheel', handler, opts);
-    el2?.addEventListener('wheel', handler, opts);
+    el1?.addEventListener('wheel', wheelHandler, opts);
+    el2?.addEventListener('wheel', wheelHandler, opts);
+    const cleanDrag1 = el1 ? addDragScroll(el1) : undefined;
+    const cleanDrag2 = el2 ? addDragScroll(el2) : undefined;
     return () => {
-      el1?.removeEventListener('wheel', handler);
-      el2?.removeEventListener('wheel', handler);
+      el1?.removeEventListener('wheel', wheelHandler);
+      el2?.removeEventListener('wheel', wheelHandler);
+      cleanDrag1?.();
+      cleanDrag2?.();
     };
   });
 

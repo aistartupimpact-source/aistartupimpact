@@ -80,9 +80,29 @@ function Section({ title, badge, badgeColor, children }: { title: string; badge:
       }
     };
     if (el) el.addEventListener('wheel', wheelHandler, { passive: false });
+
+    let isDown = false;
+    let startX = 0;
+    let scrollStart = 0;
+    const onDown = (e: MouseEvent) => { isDown = true; startX = e.pageX; scrollStart = el!.scrollLeft; el!.style.cursor = 'grabbing'; el!.style.userSelect = 'none'; };
+    const onMove = (e: MouseEvent) => { if (!isDown) return; e.preventDefault(); el!.scrollLeft = scrollStart - (e.pageX - startX); };
+    const onUp = () => { if (!isDown) return; isDown = false; el!.style.cursor = 'grab'; el!.style.removeProperty('user-select'); };
+    if (el) {
+      el.style.cursor = 'grab';
+      el.addEventListener('mousedown', onDown);
+      el.addEventListener('mousemove', onMove);
+      el.addEventListener('mouseup', onUp);
+      el.addEventListener('mouseleave', onUp);
+    }
+
     return () => {
       el?.removeEventListener('scroll', checkScroll);
       el?.removeEventListener('wheel', wheelHandler);
+      el?.removeEventListener('mousedown', onDown);
+      el?.removeEventListener('mousemove', onMove);
+      el?.removeEventListener('mouseup', onUp);
+      el?.removeEventListener('mouseleave', onUp);
+      el?.style.removeProperty('cursor');
       window.removeEventListener('resize', checkScroll);
     };
   }, [checkScroll]);
