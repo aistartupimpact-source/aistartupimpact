@@ -599,8 +599,8 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
 
                   {/* Logo & Title */}
                   <div className="flex items-center gap-3 pr-20">
-                    <div className="w-11 h-11 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700/50">
-                      <Image src={iconUrl} alt={tool.name} className="w-8 h-8 object-contain" width={32} height={32} unoptimized />
+                    <div className="w-11 h-11 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-gray-800 shrink-0 overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700/50">
+                      <Image src={iconUrl} alt={tool.name} className="w-full h-full object-cover" width={44} height={44} unoptimized />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h2 className="font-sora font-bold text-[15px] sm:text-sm text-navy dark:text-white group-hover:text-brand transition-colors line-clamp-1">
@@ -676,8 +676,8 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                 className={`group flex items-center gap-3 p-3 sm:p-3 rounded-xl transition-all bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-brand/30 hover:shadow-sm active:scale-[0.99] ${isSelected ? 'ring-2 ring-brand' : ''}`}
               >
                 {/* Logo */}
-                <div className="w-10 h-10 sm:w-9 sm:h-9 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700/50">
-                  <Image src={iconUrl} alt={tool.name} className="w-7 h-7 object-contain" width={28} height={28} unoptimized />
+                <div className="w-10 h-10 sm:w-9 sm:h-9 rounded-lg bg-white dark:bg-gray-800 shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700/50">
+                  <Image src={iconUrl} alt={tool.name} className="w-full h-full object-cover" width={40} height={40} unoptimized />
                 </div>
 
                 {/* Info */}

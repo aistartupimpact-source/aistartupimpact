@@ -125,9 +125,9 @@ function Section({ title, badge, badgeColor, children }: { title: string; badge:
 
 function ToolLogo({ tool, size = 24 }: { tool: ToolCard; size?: number }) {
   return (
-    <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700">
+    <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-800 shrink-0 overflow-hidden border border-gray-100 dark:border-gray-700">
       {tool.logoUrl ? (
-        <Image src={tool.logoUrl} alt={tool.name} className="w-6 h-6 object-contain" width={size} height={size} sizes={`${size}px`} />
+        <Image src={tool.logoUrl} alt={tool.name} className="w-full h-full object-cover" width={32} height={32} sizes="32px" />
       ) : (
         <span className="text-xs font-bold text-brand">{tool.name.charAt(0)}</span>
       )}
