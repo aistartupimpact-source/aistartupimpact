@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { cache } from 'react';
 import { Metadata } from 'next';
-import { Star, ExternalLink, ChevronRight, Check, X as XIcon, ThumbsUp, ThumbsDown, IndianRupee, ArrowRight, Sparkles, Cpu, Smartphone } from 'lucide-react';
+import { Star, ExternalLink, ChevronRight, Check, X as XIcon, ThumbsUp, ThumbsDown, ArrowRight, Sparkles, Cpu, Smartphone } from 'lucide-react';
 import { generateToolSchema } from '@/lib/seo';
 import { sql } from '@/lib/db';
 import EmbedBadge from '@/components/EmbedBadge';
@@ -139,7 +139,6 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
   }
 
   const stories = tool.stories || [];
-  const fundingRounds = tool.fundingRounds || [];
   const userReviews = tool.userReviews || [];
 
   // Fetch all supplementary data in parallel
@@ -153,19 +152,9 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
 
   const toolPros = (prosConsData.pros as any[]) || [];
   const toolCons = (prosConsData.cons as any[]) || [];
-  
+
   // Generate FAQs with tool-specific data
   const faqs = generateToolFAQs(tool);
-
-  const formatAmount = (usd: number | null, inr: number | null) => {
-    if (usd && Number(usd) > 0) {
-      const u = Number(usd) / 100;
-      if (u >= 1e9) return `$${(u / 1e9).toFixed(1)}B`;
-      if (u >= 1e6) return `$${(u / 1e6).toFixed(0)}M`;
-    }
-    if (inr && Number(inr) > 0) return `₹${(Number(inr) / 10000000).toFixed(1)}Cr`;
-    return 'Undisclosed';
-  };
 
   const jsonLd = generateToolSchema({
     name: tool.name,
@@ -695,28 +684,6 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
             </div>
           )}
 
-          {/* Funding History */}
-          {fundingRounds.length > 0 && (
-            <div className="card p-5">
-              <h4 className="font-sora font-bold text-sm text-green-600 dark:text-green-400 mb-4 flex items-center gap-2">
-                <IndianRupee className="w-4 h-4" /> Funding History
-              </h4>
-              <div className="space-y-3">
-                {fundingRounds.map((round: any, idx: number) => (
-                  <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
-                    <div>
-                      <span className="font-sora font-bold text-sm text-navy dark:text-white block">{round.roundType}</span>
-                      <span className="text-xs text-gray-400 font-jakarta">{new Date(round.announcedAt).toLocaleDateString()}</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="font-sora font-extrabold text-sm text-green-600 dark:text-green-400 block">{formatAmount(round.amountUsd, round.amountInr)}</span>
-                      {round.leadInvestors?.[0] && <span className="text-xs text-gray-400 font-jakarta">{round.leadInvestors[0]}</span>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </aside>
       </div>
 
