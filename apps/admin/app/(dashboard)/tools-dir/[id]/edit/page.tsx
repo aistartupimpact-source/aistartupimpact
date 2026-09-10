@@ -105,7 +105,10 @@ export default function EditToolPage() {
         return;
       }
       
-      setFormData(tool as Tool);
+      setFormData({
+        ...tool,
+        startingPrice: tool.startingPrice ? tool.startingPrice / 100 : null,
+      } as Tool);
       setCategories(cats as Category[]);
       setScreenshots(tool.screenshotUrls || []);
       setSocialLinks(Array.isArray(tool.socialLinks) ? tool.socialLinks : []);
