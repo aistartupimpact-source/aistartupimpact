@@ -172,10 +172,10 @@ export default async function ToolsPage({ searchParams }: { searchParams: { cate
               <Link
                 key={cat.slug}
                 href={`/tools/category/${cat.slug}`}
-                className="flex items-center justify-between p-3 sm:p-3.5 rounded-md bg-gray-900/[0.03] dark:bg-white/[0.04] hover:bg-gray-900/[0.06] dark:hover:bg-white/[0.08] transition-colors group"
+                className="flex items-center justify-between p-3 sm:p-3.5 rounded-md bg-brand/[0.06] dark:bg-brand/[0.08] border border-brand/10 dark:border-brand/15 hover:bg-brand/[0.12] dark:hover:bg-brand/[0.16] hover:border-brand/25 transition-all group"
               >
-                <span className="font-sora font-medium text-[11px] sm:text-[13px] text-navy dark:text-gray-200 group-hover:text-brand transition-colors leading-tight">{cat.name}</span>
-                <span className="text-[10px] sm:text-xs text-gray-400 font-jakarta tabular-nums ml-2 shrink-0">{cat.toolCount}</span>
+                <span className="font-sora font-medium text-[11px] sm:text-[13px] text-navy dark:text-gray-100 group-hover:text-brand transition-colors leading-tight">{cat.name}</span>
+                <span className="text-[10px] sm:text-xs text-brand/60 dark:text-brand/50 font-sora font-bold tabular-nums ml-2 shrink-0">{cat.toolCount}</span>
               </Link>
             ))}
           </div>
