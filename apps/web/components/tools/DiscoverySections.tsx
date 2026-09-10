@@ -159,7 +159,7 @@ function TrendingCard({ tool, rank }: { tool: ToolCard; rank: number }) {
       prefetch={false}
       className="shrink-0 w-44 sm:w-56 p-2.5 sm:p-3 rounded-xl active:scale-[0.97] border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-orange-300 dark:hover:border-orange-700 hover:shadow-sm transition-all group relative"
     >
-      <div className="absolute -top-2 -left-1 bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-md shadow-sm">#{rank}</div>
+      <div className="absolute -top-1.5 -left-1 bg-orange-500 text-white text-[10px] font-bold px-1 py-px rounded shadow-sm leading-tight">#{rank}</div>
       <div className="flex items-center gap-2.5 mb-2">
         <ToolLogo tool={tool} />
         <div className="min-w-0">
@@ -214,7 +214,7 @@ function NewCard({ tool }: { tool: ToolCard }) {
       prefetch={false}
       className="shrink-0 w-44 sm:w-56 p-2.5 sm:p-3 rounded-xl active:scale-[0.97] border border-emerald-100 dark:border-emerald-900/30 bg-white dark:bg-gray-900 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-sm transition-all group relative"
     >
-      <div className="absolute -top-2 right-2 bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded-md shadow-sm">NEW</div>
+      <div className="absolute -top-1.5 right-2 bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-px rounded shadow-sm leading-tight">NEW</div>
       <div className="flex items-center gap-2.5 mb-2">
         <ToolLogo tool={tool} />
         <div className="min-w-0">
