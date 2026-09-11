@@ -7,7 +7,7 @@ on:
     branches: [main, develop]
 
 env:
-  NODE_VERSION: "20"
+  NODE_VERSION: "22"
   # Dummy values for build (Prisma generate needs DATABASE_URL syntax but won't connect)
   DATABASE_URL: "postgresql://user:pass@localhost:5432/db"
   DIRECT_URL: "postgresql://user:pass@localhost:5432/db"
@@ -99,29 +99,7 @@ jobs:
         run: npm ci
 
       - name: Audit dependencies
-        run: |
-          # Run audit and exclude known Next.js 14 vulnerabilities (cannot upgrade without breaking changes)
-          AUDIT_OUTPUT=$(npm audit --json 2>/dev/null || true)
-          # Filter out vulnerabilities that are only from 'next' package
-          NON_NEXT_CRITICAL=$(echo "$AUDIT_OUTPUT" | node -e "
-            const data = require('fs').readFileSync('/dev/stdin', 'utf8');
-            try {
-              const audit = JSON.parse(data);
-              const vulns = audit.vulnerabilities || {};
-              const issues = Object.entries(vulns).filter(([name, v]) =>
-                name !== 'next' && v.severity === 'critical'
-              );
-              if (issues.length > 0) {
-                console.error('Critical vulnerabilities found:');
-                issues.forEach(([name, v]) => console.error('  -', name, ':', v.severity));
-                process.exit(1);
-              }
-              console.log('No critical vulnerabilities (excluding known Next.js 14 issues)');
-            } catch(e) {
-              console.error('Audit parse error:', e.message);
-              process.exit(1);
-            }
-          ")
+        run: npm audit --omit=dev --audit-level=high
 
   sast:
     name: SAST (Semgrep)
