@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic';
 import { Metadata } from 'next';
 import { generateItemListSchema, generateCollectionPageSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import FounderActionButton from '@/components/auth/FounderActionButton';
+import { Code, MessageSquare, GraduationCap, Video, Music, Zap, PenTool, Palette, Megaphone, BarChart3, DollarSign, Image, Bot, ShoppingCart, Scale, Shield, ChevronRight, Folder } from 'lucide-react';
 
 const ToolsListWithComparison = dynamic(() => import('@/components/ToolsListWithComparison'), {
   loading: () => (
@@ -113,7 +114,37 @@ export default async function ToolsPage({ searchParams }: { searchParams: { cate
   ]);
 
   // Get category tree for browse grid
-  const parentCategoriesForGrid = (categoryTree as any[]).filter((c: any) => c.toolCount > 0);
+  const categoryMeta: Record<string, { icon: any; color: string; bg: string }> = {
+    'code-development': { icon: Code, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-100 dark:bg-indigo-900/40' },
+    'customer-experience': { icon: MessageSquare, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/40' },
+    'education-research': { icon: GraduationCap, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-100 dark:bg-green-900/40' },
+    'video': { icon: Video, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/40' },
+    'audio-music': { icon: Music, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/40' },
+    'productivity-workspace': { icon: Zap, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/40' },
+    'writing-content': { icon: PenTool, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-100 dark:bg-orange-900/40' },
+    'design-creative': { icon: Palette, color: 'text-pink-600 dark:text-pink-400', bg: 'bg-pink-100 dark:bg-pink-900/40' },
+    'marketing-advertising': { icon: Megaphone, color: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-100 dark:bg-teal-900/40' },
+    'sales-crm': { icon: BarChart3, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-100 dark:bg-cyan-900/40' },
+    'data-analytics': { icon: BarChart3, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/40' },
+    'finance-accounting': { icon: DollarSign, color: 'text-lime-600 dark:text-lime-400', bg: 'bg-lime-100 dark:bg-lime-900/40' },
+    'image-generation-editing': { icon: Image, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-100 dark:bg-violet-900/40' },
+    'ai-agents-infrastructure': { icon: Bot, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-100 dark:bg-sky-900/40' },
+    'e-commerce': { icon: ShoppingCart, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-100 dark:bg-rose-900/40' },
+    'legal-compliance': { icon: Scale, color: 'text-slate-600 dark:text-slate-400', bg: 'bg-slate-200 dark:bg-slate-800/40' },
+    'security-it': { icon: Shield, color: 'text-gray-600 dark:text-gray-400', bg: 'bg-gray-200 dark:bg-gray-700/40' },
+  };
+  const defaultMeta = { icon: Folder, color: 'text-gray-600 dark:text-gray-400', bg: 'bg-gray-100 dark:bg-gray-800/40' };
+  // Count tools per parent category from actual picks data (matches filter pill counts)
+  const realCounts = new Map<string, number>();
+  for (const p of picks) {
+    const slug = (p as any).parentCategorySlug || (p as any).categorySlug;
+    if (slug) realCounts.set(slug, (realCounts.get(slug) || 0) + 1);
+  }
+  const parentCategoriesForGrid = (categoryTree as any[])
+    .map((c: any) => ({ ...c, totalToolCount: realCounts.get(c.slug) || 0 }))
+    .filter((c: any) => c.totalToolCount > 0)
+    .sort((a: any, b: any) => b.totalToolCount - a.totalToolCount);
+  const totalTools = picks.length;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 pb-24 sm:pb-10">
@@ -161,22 +192,34 @@ export default async function ToolsPage({ searchParams }: { searchParams: { cate
         mostUpvoted={mostUpvoted as any[]}
       />
 
-      {/* Browse by Category Grid */}
+      {/* Browse by Category */}
       {parentCategoriesForGrid.length > 0 && (
         <div className="mb-6 sm:mb-8">
-          <h2 className="font-sora font-bold text-sm sm:text-lg text-navy dark:text-white mb-3 sm:mb-4">Browse by Category</h2>
-          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1.5 sm:gap-3">
-            {parentCategoriesForGrid.map((cat: any) => (
-              <Link
-                key={cat.slug}
-                href={`/tools/category/${cat.slug}`}
-                className="p-2 sm:p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-brand/30 hover:shadow-sm transition-all group text-center active:scale-95"
-              >
-                {cat.icon && <span className="text-base sm:text-lg block mb-0.5 sm:mb-1">{cat.icon}</span>}
-                <p className="font-sora font-semibold text-[10px] sm:text-xs text-navy dark:text-white group-hover:text-brand transition-colors leading-tight">{cat.name}</p>
-                <p className="text-[10px] sm:text-xs text-gray-400 font-jakarta mt-0.5">{cat.toolCount} {cat.toolCount === 1 ? 'tool' : 'tools'}</p>
-              </Link>
-            ))}
+          <div className="flex items-baseline justify-between mb-3 sm:mb-4">
+            <h2 className="font-sora font-bold text-sm sm:text-lg text-navy dark:text-white">Browse by category</h2>
+            <span className="text-xs sm:text-sm text-gray-400 font-jakarta">{totalTools} tools</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3">
+            {parentCategoriesForGrid.map((cat: any) => {
+              const meta = categoryMeta[cat.slug] || defaultMeta;
+              const IconComp = meta.icon;
+              return (
+                <Link
+                  key={cat.slug}
+                  href={`/tools/category/${cat.slug}`}
+                  className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700 hover:shadow-sm transition-all group"
+                >
+                  <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg ${meta.bg} flex items-center justify-center shrink-0`}>
+                    <IconComp className={`w-4 h-4 sm:w-5 sm:h-5 ${meta.color}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-sora font-semibold text-xs sm:text-sm text-navy dark:text-white group-hover:text-brand transition-colors">{cat.name}</p>
+                    <p className="text-[10px] sm:text-xs text-gray-400 font-jakarta">{cat.totalToolCount} {cat.totalToolCount === 1 ? 'tool' : 'tools'}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-brand transition-colors shrink-0" />
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}
