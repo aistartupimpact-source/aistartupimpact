@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { headers, type UnsafeUnwrappedHeaders } from 'next/headers';
+import { headers } from 'next/headers';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -64,9 +64,9 @@ interface AuditLogEntry {
   ipAddress?: string | null;
 }
 
-function getClientIp(): string | null {
+async function getClientIp(): Promise<string | null> {
   try {
-    const hdrs = (headers() as unknown as UnsafeUnwrappedHeaders);
+    const hdrs = await headers();
     return hdrs.get('x-forwarded-for')?.split(',')[0]?.trim()
       || hdrs.get('x-real-ip')
       || null;
@@ -87,7 +87,7 @@ export async function logAuditEvent(entry: AuditLogEntry): Promise<void> {
 
     const beforeJson = entry.before ? JSON.stringify(entry.before) : null;
     const afterJson = entry.after ? JSON.stringify(entry.after) : null;
-    const ip = entry.ipAddress || getClientIp();
+    const ip = entry.ipAddress || await getClientIp();
 
     await sql`
       INSERT INTO "AuditLog" (id, "userId", action, "resourceType", "resourceId", before, after, "ipAddress", "createdAt")

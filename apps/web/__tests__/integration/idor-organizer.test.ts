@@ -43,13 +43,15 @@ vi.mock('@neondatabase/serverless', () => ({
 }));
 
 function makeRequest(url: string, method = 'GET', body?: any) {
-  const init: RequestInit = { method };
+  const init: any = { method };
   if (body) {
     init.body = JSON.stringify(body);
     init.headers = { 'Content-Type': 'application/json' };
   }
   return new NextRequest(new URL(url, 'http://localhost:3000'), init);
 }
+
+const call = (handler: any, ...args: any[]) => handler(...args) as Promise<Response>;
 
 const ORGANIZER_A = { id: 'org-a', email: 'orgA@example.com', name: 'Organizer A' };
 const ORGANIZER_B = { id: 'org-b', email: 'orgB@example.com', name: 'Organizer B' };
@@ -63,7 +65,7 @@ describe('IDOR — Organizer A cannot access Organizer B resources', () => {
     it('returns 401 without session', async () => {
       mockGetOrganizerSession.mockResolvedValue(null);
       const { GET } = await import('@/app/api/organizer/events/route');
-      const res = await GET(makeRequest('/api/organizer/events'));
+      const res = await call(GET, makeRequest('/api/organizer/events'));
       expect(res.status).toBe(401);
     });
 
@@ -71,7 +73,7 @@ describe('IDOR — Organizer A cannot access Organizer B resources', () => {
       mockGetOrganizerSession.mockResolvedValue(ORGANIZER_A);
       mockSql.mockResolvedValueOnce([{ id: 'event-1', title: 'Event A' }]);
       const { GET } = await import('@/app/api/organizer/events/route');
-      const res = await GET(makeRequest('/api/organizer/events'));
+      const res = await call(GET, makeRequest('/api/organizer/events'));
       expect(res.status).toBe(200);
     });
   });
@@ -80,7 +82,7 @@ describe('IDOR — Organizer A cannot access Organizer B resources', () => {
     it('returns 401 without session', async () => {
       mockGetOrganizerSession.mockResolvedValue(null);
       const { GET } = await import('@/app/api/organizer/profile/route');
-      const res = await GET(makeRequest('/api/organizer/profile'));
+      const res = await call(GET, makeRequest('/api/organizer/profile'));
       expect(res.status).toBe(401);
     });
 
@@ -93,7 +95,7 @@ describe('IDOR — Organizer A cannot access Organizer B resources', () => {
         company: 'Events Inc',
       }]);
       const { GET } = await import('@/app/api/organizer/profile/route');
-      const res = await GET(makeRequest('/api/organizer/profile'));
+      const res = await call(GET, makeRequest('/api/organizer/profile'));
       expect(res.status).toBe(200);
     });
   });
@@ -102,7 +104,7 @@ describe('IDOR — Organizer A cannot access Organizer B resources', () => {
     it('returns 401 without session', async () => {
       mockGetOrganizerSession.mockResolvedValue(null);
       const { GET } = await import('@/app/api/organizer/attendees/route');
-      const res = await GET(makeRequest('/api/organizer/attendees'));
+      const res = await call(GET, makeRequest('/api/organizer/attendees'));
       expect(res.status).toBe(401);
     });
   });
@@ -111,7 +113,7 @@ describe('IDOR — Organizer A cannot access Organizer B resources', () => {
     it('returns 401 without session', async () => {
       mockGetOrganizerSession.mockResolvedValue(null);
       const { GET } = await import('@/app/api/organizer/export-data/route');
-      const res = await GET(makeRequest('/api/organizer/export-data'));
+      const res = await call(GET, makeRequest('/api/organizer/export-data'));
       expect(res.status).toBe(401);
     });
   });

@@ -78,13 +78,15 @@ vi.mock('@/lib/founder-content-auth', () => ({
 }));
 
 function makeRequest(url: string, method = 'GET', body?: any) {
-  const init: RequestInit = { method };
+  const init: any = { method };
   if (body) {
     init.body = JSON.stringify(body);
     init.headers = { 'Content-Type': 'application/json' };
   }
   return new NextRequest(new URL(url, 'http://localhost:3000'), init);
 }
+
+const call = (handler: any, ...args: any[]) => handler(...args) as Promise<Response>;
 
 describe('privilege escalation — cross-role access denied', () => {
   beforeEach(() => {
@@ -101,21 +103,21 @@ describe('privilege escalation — cross-role access denied', () => {
     it('user gets rejected on founder settings (requireFounderAuth)', async () => {
       mockGetFounderSession.mockResolvedValue(null);
       const { GET } = await import('@/app/api/founder/settings/route');
-      const res = await GET(makeRequest('/api/founder/settings'));
+      const res = await call(GET, makeRequest('/api/founder/settings'));
       expect(res.status).toBeGreaterThanOrEqual(400);
     });
 
     it('user gets 401 on founder content (getFounderSession + null check)', async () => {
       mockGetFounderSession.mockResolvedValue(null);
       const { POST } = await import('@/app/api/founder/content/route');
-      const res = await POST(makeRequest('/api/founder/content', 'POST', { title: 'test' }));
+      const res = await call(POST, makeRequest('/api/founder/content', 'POST', { title: 'test' }));
       expect(res.status).toBe(401);
     });
 
     it('user gets rejected on founder export-data (requireFounderAuth)', async () => {
       mockGetFounderSession.mockResolvedValue(null);
       const { GET } = await import('@/app/api/founder/export-data/route');
-      const res = await GET(makeRequest('/api/founder/export-data'));
+      const res = await call(GET, makeRequest('/api/founder/export-data'));
       expect(res.status).toBeGreaterThanOrEqual(400);
     });
   });
@@ -131,14 +133,14 @@ describe('privilege escalation — cross-role access denied', () => {
     it('user gets 401 on employer company', async () => {
       mockGetEmployerSession.mockResolvedValue(null);
       const { GET } = await import('@/app/api/employer/company/route');
-      const res = await GET(makeRequest('/api/employer/company'));
+      const res = await call(GET, makeRequest('/api/employer/company'));
       expect(res.status).toBe(401);
     });
 
     it('user gets 401 on employer analytics', async () => {
       mockGetEmployerSession.mockResolvedValue(null);
       const { GET } = await import('@/app/api/employer/analytics/route');
-      const res = await GET(makeRequest('/api/employer/analytics'));
+      const res = await call(GET, makeRequest('/api/employer/analytics'));
       expect(res.status).toBe(401);
     });
   });
@@ -147,21 +149,21 @@ describe('privilege escalation — cross-role access denied', () => {
     it('user gets 401 on organizer events', async () => {
       mockGetOrganizerSession.mockResolvedValue(null);
       const { GET } = await import('@/app/api/organizer/events/route');
-      const res = await GET(makeRequest('/api/organizer/events'));
+      const res = await call(GET, makeRequest('/api/organizer/events'));
       expect(res.status).toBe(401);
     });
 
     it('user gets 401 on organizer profile', async () => {
       mockGetOrganizerSession.mockResolvedValue(null);
       const { GET } = await import('@/app/api/organizer/profile/route');
-      const res = await GET(makeRequest('/api/organizer/profile'));
+      const res = await call(GET, makeRequest('/api/organizer/profile'));
       expect(res.status).toBe(401);
     });
 
     it('user gets 401 on organizer attendees', async () => {
       mockGetOrganizerSession.mockResolvedValue(null);
       const { GET } = await import('@/app/api/organizer/attendees/route');
-      const res = await GET(makeRequest('/api/organizer/attendees'));
+      const res = await call(GET, makeRequest('/api/organizer/attendees'));
       expect(res.status).toBe(401);
     });
   });
@@ -185,7 +187,7 @@ describe('privilege escalation — cross-role access denied', () => {
       });
       mockGetFounderSession.mockResolvedValue(null);
       const { GET } = await import('@/app/api/founder/settings/route');
-      const res = await GET(makeRequest('/api/founder/settings'));
+      const res = await call(GET, makeRequest('/api/founder/settings'));
       expect(res.status).toBeGreaterThanOrEqual(400);
     });
   });
@@ -197,7 +199,7 @@ describe('privilege escalation — cross-role access denied', () => {
       });
       mockGetOrganizerSession.mockResolvedValue(null);
       const { GET } = await import('@/app/api/organizer/events/route');
-      const res = await GET(makeRequest('/api/organizer/events'));
+      const res = await call(GET, makeRequest('/api/organizer/events'));
       expect(res.status).toBe(401);
     });
   });
@@ -209,7 +211,7 @@ describe('privilege escalation — cross-role access denied', () => {
       });
       mockGetFounderSession.mockResolvedValue(null);
       const { GET } = await import('@/app/api/founder/settings/route');
-      const res = await GET(makeRequest('/api/founder/settings'));
+      const res = await call(GET, makeRequest('/api/founder/settings'));
       expect(res.status).toBeGreaterThanOrEqual(400);
     });
   });

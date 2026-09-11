@@ -58,13 +58,15 @@ vi.mock('@aistartupimpact/database', () => ({
 }));
 
 function makeRequest(url: string, method = 'GET', body?: any) {
-  const init: RequestInit = { method };
+  const init: any = { method };
   if (body) {
     init.body = JSON.stringify(body);
     init.headers = { 'Content-Type': 'application/json' };
   }
   return new NextRequest(new URL(url, 'http://localhost:3000'), init);
 }
+
+const call = (handler: any, ...args: any[]) => handler(...args) as Promise<Response>;
 
 describe('auth enforcement — routes return 401 without session', () => {
   beforeEach(() => {
@@ -165,13 +167,13 @@ describe('auth enforcement — routes return 401 without session', () => {
 
     it('GET /api/employer/analytics returns 401', async () => {
       const { GET } = await import('@/app/api/employer/analytics/route');
-      const res = await GET(makeRequest('/api/employer/analytics'));
+      const res = await call(GET, makeRequest('/api/employer/analytics'));
       expect(res.status).toBe(401);
     });
 
     it('GET /api/employer/company returns 401', async () => {
       const { GET } = await import('@/app/api/employer/company/route');
-      const res = await GET(makeRequest('/api/employer/company'));
+      const res = await call(GET, makeRequest('/api/employer/company'));
       expect(res.status).toBe(401);
     });
   });
@@ -179,13 +181,13 @@ describe('auth enforcement — routes return 401 without session', () => {
   describe('organizer routes', () => {
     it('GET /api/organizer/events returns 401', async () => {
       const { GET } = await import('@/app/api/organizer/events/route');
-      const res = await GET(makeRequest('/api/organizer/events'));
+      const res = await call(GET, makeRequest('/api/organizer/events'));
       expect(res.status).toBe(401);
     });
 
     it('GET /api/organizer/profile returns 401', async () => {
       const { GET } = await import('@/app/api/organizer/profile/route');
-      const res = await GET(makeRequest('/api/organizer/profile'));
+      const res = await call(GET, makeRequest('/api/organizer/profile'));
       expect(res.status).toBe(401);
     });
 
@@ -203,7 +205,7 @@ describe('auth enforcement — routes return 401 without session', () => {
 
     it('GET /api/organizer/attendees returns 401', async () => {
       const { GET } = await import('@/app/api/organizer/attendees/route');
-      const res = await GET(makeRequest('/api/organizer/attendees'));
+      const res = await call(GET, makeRequest('/api/organizer/attendees'));
       expect(res.status).toBe(401);
     });
   });

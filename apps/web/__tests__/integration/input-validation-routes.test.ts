@@ -55,7 +55,7 @@ vi.mock('@neondatabase/serverless', () => ({
 }));
 
 function makeRequest(url: string, method = 'POST', body?: any) {
-  const init: RequestInit = { method };
+  const init: any = { method };
   if (body) {
     init.body = JSON.stringify(body);
     init.headers = { 'Content-Type': 'application/json' };
