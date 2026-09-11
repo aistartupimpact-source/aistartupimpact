@@ -154,6 +154,14 @@ export default async function RootLayout({
             __html: `(function(){try{var t=localStorage.getItem('asi-theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
           }}
         />
+        {/* GA Consent Mode v2 defaults — must run before GA library loads */}
+        {gaId && gaId !== 'G-XXXXXXXXXX' && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag('consent','default',{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});gtag('js',new Date());`,
+            }}
+          />
+        )}
       </head>
       <body className="font-jakarta antialiased bg-page dark:bg-page-dark text-charcoal dark:text-gray-100">
         {/* Site-level structured data */}
