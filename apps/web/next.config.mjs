@@ -1,4 +1,4 @@
-const { withSentryConfig } = require("@sentry/nextjs");
+import { withSentryConfig } from "@sentry/nextjs";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -15,7 +15,6 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
   async rewrites() {
-    // Use private API_URL (server-only) — never expose internal API URL via NEXT_PUBLIC_
     const apiBase = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
     return [
       {
@@ -67,17 +66,9 @@ const nextConfig = {
   },
 };
 
-module.exports = withSentryConfig(nextConfig, {
-  // Suppress source map upload warnings in CI when no auth token is set
+export default withSentryConfig(nextConfig, {
   silent: !process.env.SENTRY_AUTH_TOKEN,
-  
-  // Upload source maps for better stack traces in production
   widenClientFileUpload: true,
-  
-  // Hide source maps from users
   hideSourceMaps: true,
-  
-  // Disable Sentry SDK auto-instrumentation for server components
-  // (we instrument manually where needed)
   disableLogger: true,
 });
