@@ -3,11 +3,12 @@ import { getOrganizerSession } from '@/lib/organizer-auth';
 import { prisma } from '@aistartupimpact/database';
 import OnboardingClient from './OnboardingClient';
 
-export default async function OrganizerOnboardingPage({
-  searchParams,
-}: {
-  searchParams: { returnTo?: string };
-}) {
+export default async function OrganizerOnboardingPage(
+  props: {
+    searchParams: Promise<{ returnTo?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const session = await getOrganizerSession();
 
   if (!session) {

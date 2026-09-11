@@ -5,9 +5,7 @@ const nextConfig = {
   reactStrictMode: true,
   compress: true,
   poweredByHeader: false,
-  experimental: {
-    optimizePackageImports: ['lucide-react', 'recharts', 'date-fns', 'react-simple-maps'],
-  },
+  optimizePackageImports: ['lucide-react', 'recharts', 'date-fns', 'react-simple-maps'],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**' },

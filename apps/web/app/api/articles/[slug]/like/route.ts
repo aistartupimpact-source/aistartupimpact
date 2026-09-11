@@ -4,7 +4,8 @@ import { apiRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-li
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(_req: NextRequest, { params }: { params: { slug: string } }) {
+export async function POST(_req: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   try {
     const identifier = getClientIdentifier(_req);
     const { success: allowed } = await checkRateLimit(apiRateLimit, identifier);

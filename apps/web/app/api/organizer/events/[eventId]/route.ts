@@ -9,7 +9,8 @@ export const dynamic = "force-dynamic";
 /**
  * DELETE /api/organizer/events/[eventId] — Soft-delete an event
  */
-export async function DELETE(request: NextRequest, { params }: { params: { eventId: string } }) {
+export async function DELETE(request: NextRequest, props: { params: Promise<{ eventId: string }> }) {
+  const params = await props.params;
   const session = await getOrganizerSession();
   if (!session) return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
 
@@ -54,7 +55,8 @@ export async function DELETE(request: NextRequest, { params }: { params: { event
 /**
  * PUT /api/organizer/events/[eventId] — Update an event
  */
-export async function PUT(request: NextRequest, { params }: { params: { eventId: string } }) {
+export async function PUT(request: NextRequest, props: { params: Promise<{ eventId: string }> }) {
+  const params = await props.params;
   const session = await getOrganizerSession();
   if (!session) return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
 
@@ -91,7 +93,8 @@ export async function PUT(request: NextRequest, { params }: { params: { eventId:
 /**
  * GET /api/organizer/events/[eventId] — Get event details
  */
-export async function GET(request: NextRequest, { params }: { params: { eventId: string } }) {
+export async function GET(request: NextRequest, props: { params: Promise<{ eventId: string }> }) {
+  const params = await props.params;
   const session = await getOrganizerSession();
   if (!session) return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
 

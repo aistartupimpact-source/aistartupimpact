@@ -304,14 +304,15 @@ function getIndustryTag(startup: any): string | null {
   return detectCategory(combined);
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const params = await props.params;
   const s = await getStartup(params.slug) as any;
   if (!s) return { title: 'Startup Not Found' };
-  
+
   const title = `${s.name} - ${s.tagline || 'AI Startup'} | AI Startup Impact`;
   const description = (s.description || s.tagline || '').slice(0, 155);
   const url = `https://aistartupimpact.com/startups/${s.slug}`;
-  
+
   // Use dynamic OG image (auto-generated from opengraph-image.tsx)
   const image = `${url}/opengraph-image`;
 
@@ -371,7 +372,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function StartupDetailPage({ params }: { params: { slug: string } }) {
+export default async function StartupDetailPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const [startup, session] = await Promise.all([
     getStartup(params.slug) as Promise<any>,
     getUserSession(),
@@ -406,7 +408,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
   const totalRaised = startup.fundingRounds.reduce((sum: number, r: any) => sum + Number(r.amountUsd || 0), 0);
   const industryTag = getIndustryTag(startup);
   const relativeTime = getRelativeTime(startup.updatedAt);
-  
+
   // Load FAQs from database first
   let faqs: any[] = [];
   try {
@@ -437,7 +439,7 @@ export default async function StartupDetailPage({ params }: { params: { slug: st
     <div className="max-w-6xl mx-auto px-4 sm:px-2 lg:px-4 py-6 sm:py-10">
       {/* JSON-LD Schema: Single @graph with WebPage + Organization + BreadcrumbList */}
       <StartupSchema startup={startup} />
-      
+
       {/* FAQ Schema (separate) */}
       <FAQSchema faqs={faqs} />
 

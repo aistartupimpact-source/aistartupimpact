@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   ArrowLeft, Mail, Building2, Phone, Calendar, CheckCircle, XCircle, 
@@ -53,13 +53,14 @@ interface FounderDetail {
   }>;
 }
 
-export default function FounderDetailPage({ params }: { params: { id: string } }) {
+export default function FounderDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const router = useRouter();
   const { data: session } = useSession();
   const [founder, setFounder] = useState<FounderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Viewing details modal state
   const [viewingStartup, setViewingStartup] = useState<any | null>(null);
   const [isRejecting, setIsRejecting] = useState(false);
@@ -91,7 +92,7 @@ export default function FounderDetailPage({ params }: { params: { id: string } }
     }
     setLoading(false);
   };
-  
+
   const handleDelete = () => {
     setConfirmAction({
       title: `Delete ${founder?.name}`,
@@ -111,7 +112,7 @@ export default function FounderDetailPage({ params }: { params: { id: string } }
       },
     });
   };
-  
+
   const handleStatusChange = (newStatus: string) => {
     const statusNames: Record<string, string> = {
       'ACTIVE': 'activate',

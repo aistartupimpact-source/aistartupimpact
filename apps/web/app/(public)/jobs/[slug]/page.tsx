@@ -5,10 +5,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { MapPin, DollarSign, Clock, Building2, Globe, Linkedin, ExternalLink, Briefcase, Users, CheckCircle2 } from 'lucide-react';
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata(props: PageProps): Promise<Metadata> {
+  const params = await props.params;
   const jobs = await sql`
     SELECT jl.title, jl."shortDescription", e."companyName"
     FROM "JobBoardListing" jl
@@ -25,7 +26,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function JobDetailPage({ params }: PageProps) {
+export default async function JobDetailPage(props: PageProps) {
+  const params = await props.params;
   const jobs = await sql`
     SELECT jl.*, e."companyName", e.slug AS "companySlug", e."logoUrl",
            e."websiteUrl", e.description AS "companyDescription",

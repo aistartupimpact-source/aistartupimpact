@@ -85,7 +85,7 @@ export async function trackPageView(pathname: string, request?: NextRequest) {
     } else {
       // Called from server component - use headers() function
       const { headers } = await import('next/headers');
-      const headersList = headers();
+      const headersList = await headers();
       userAgent = headersList.get('user-agent') || '';
       referrer = headersList.get('referer') || headersList.get('referrer') || null;
       ip = headersList.get('x-forwarded-for')?.split(',')[0] || 

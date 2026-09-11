@@ -11,7 +11,11 @@ export const revalidate = 60;
 const SITE_URL = 'https://aistartupimpact.com';
 const PER_PAGE = 12;
 
-export async function generateMetadata({ params, searchParams }: { params: { slug: string }; searchParams: { page?: string } }): Promise<Metadata> {
+export async function generateMetadata(
+  props: { params: Promise<{ slug: string }>; searchParams: Promise<{ page?: string }> }
+): Promise<Metadata> {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const tagSlug = params.slug;
   const page = parseInt(searchParams.page || '1', 10);
 
@@ -60,7 +64,11 @@ export async function generateStaticParams() {
   }
 }
 
-export default async function TopicPage({ params, searchParams }: { params: { slug: string }; searchParams: { page?: string } }) {
+export default async function TopicPage(
+  props: { params: Promise<{ slug: string }>; searchParams: Promise<{ page?: string }> }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const tagSlug = params.slug;
   const page = Math.max(1, parseInt(searchParams.page || '1', 10));
   const offset = (page - 1) * PER_PAGE;

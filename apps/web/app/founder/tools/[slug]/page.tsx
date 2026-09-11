@@ -5,12 +5,13 @@ import ToolEditForm from '@/components/founder/ToolEditForm';
 import SlugEditor from '@/components/shared/SlugEditor';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
-export default async function EditToolPage({ params }: PageProps) {
+export default async function EditToolPage(props: PageProps) {
+  const params = await props.params;
   const session = await requireFounderAuth();
 
   // Fetch tool using raw query to avoid serialization issues

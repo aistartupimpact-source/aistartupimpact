@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireApiAuth } from "@/lib/api-auth";
 import { prisma } from "@aistartupimpact/database";
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { error } = await requireApiAuth(["SUPER_ADMIN", "EDITOR_IN_CHIEF"]);
   if (error) return error;
 
@@ -17,7 +18,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   return NextResponse.json({ success: true, ticket });
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { session, error } = await requireApiAuth(["SUPER_ADMIN", "EDITOR_IN_CHIEF"]);
   if (error) return error;
 

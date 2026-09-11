@@ -3,10 +3,8 @@ import { prisma } from '@aistartupimpact/database';
 import { requireApiAuth } from '@/lib/api-auth';
 import { logAuditEvent } from '@/lib/audit-log';
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { error } = await requireApiAuth(['SUPER_ADMIN']);
   if (error) return error;
   try {

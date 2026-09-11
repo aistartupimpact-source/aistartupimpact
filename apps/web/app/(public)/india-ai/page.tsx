@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import nextDynamic from 'next/dynamic';
 import {
   Flag,
   MapPin,
@@ -18,7 +17,7 @@ import GovernmentSchemes from '@/components/india-ai/GovernmentSchemes';
 import PolicyLiveFeed from '@/components/india-ai/PolicyLiveFeed';
 import AITalentResearchHubsDB from '@/components/india-ai/AITalentResearchHubsDB';
 
-const RealIndiaMap = nextDynamic(() => import('@/components/india-ai/RealIndiaMap'), { ssr: false });
+import { RealIndiaMap } from '@/components/ClientOnly';
 
 export const revalidate = 300;
 

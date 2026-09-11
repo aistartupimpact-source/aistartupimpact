@@ -4,12 +4,13 @@ import { notFound, redirect } from 'next/navigation';
 import ClaimStartupClient from '@/components/founder/ClaimStartupClient';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default async function ClaimStartupPage({ params }: PageProps) {
+export default async function ClaimStartupPage(props: PageProps) {
+  const params = await props.params;
   // Require authentication
   const session = await requireFounderAuth();
 

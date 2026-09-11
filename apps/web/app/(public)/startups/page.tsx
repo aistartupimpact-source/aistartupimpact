@@ -165,20 +165,21 @@ async function getInitialStartups(
   }
 }
 
-export default async function StartupsPage({
-  searchParams,
-}: {
-  searchParams: {
-    q?: string;
-    stage?: string;
-    category?: string;
-    businessType?: string;
-    status?: string;
-    city?: string;
-    country?: string;
-    employeeRange?: string;
-  };
-}) {
+export default async function StartupsPage(
+  props: {
+    searchParams: Promise<{
+      q?: string;
+      stage?: string;
+      category?: string;
+      businessType?: string;
+      status?: string;
+      city?: string;
+      country?: string;
+      employeeRange?: string;
+    }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const [cities, { startups, total }] = await Promise.all([
     getUniqueCities(),
     getInitialStartups(

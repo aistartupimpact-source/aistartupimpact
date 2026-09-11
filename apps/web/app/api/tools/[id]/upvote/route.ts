@@ -25,10 +25,8 @@ async function getUserFromRequest(request: NextRequest): Promise<{ id: string; c
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const toolSlug = params.id;
     const user = await getUserFromRequest(request);
@@ -74,10 +72,8 @@ export async function POST(
   }
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const toolSlug = params.id;
     const tools = await sql`SELECT id, "upvoteCount" FROM "AiTool" WHERE slug = ${toolSlug} AND "deletedAt" IS NULL LIMIT 1`;

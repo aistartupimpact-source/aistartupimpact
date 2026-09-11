@@ -4,16 +4,17 @@ import { prisma } from '@aistartupimpact/database';
 import StatForm from '../../StatForm';
 
 interface EditStatPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export const metadata: Metadata = {
   title: 'Edit Live Stat | Admin',
 };
 
-export default async function EditStatPage({ params }: EditStatPageProps) {
+export default async function EditStatPage(props: EditStatPageProps) {
+  const params = await props.params;
   const stat = await prisma.indiaAIStats.findUnique({
     where: { id: params.id },
   });

@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import dynamic from 'next/dynamic';
 import {
   ArrowRight, TrendingUp, Star, Users, ChevronRight,
   Sparkles, IndianRupee, Zap, Clock,
@@ -49,12 +48,7 @@ import {
 } from '@/lib/fallbacks';
 
 // Dynamic imports for heavy client components — reduces initial JS bundle
-const FeaturedPartnerRotator = dynamic(() => import('@/components/FeaturedPartnerRotator'), { ssr: false });
-const HeroCarousel = dynamic(() => import('@/components/HeroCarousel'), {
-  ssr: false,
-  loading: () => <div className="bg-navy-800 min-h-[340px] sm:min-h-[420px] md:min-h-[500px] animate-pulse" />,
-});
-const SponsorStrip = dynamic(() => import('@/components/SponsorStrip'), { ssr: false });
+import { FeaturedPartnerRotator, SponsorStrip, HeroCarousel } from '@/components/ClientOnly';
 
 const formatDate = (isoString: string) =>
   new Date(isoString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });

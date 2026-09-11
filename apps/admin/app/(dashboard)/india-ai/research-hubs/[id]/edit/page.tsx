@@ -7,7 +7,8 @@ export const metadata: Metadata = {
   title: 'Edit Research Institution | Admin',
 };
 
-export default async function EditResearchHubPage({ params }: { params: { id: string } }) {
+export default async function EditResearchHubPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const institution = await prisma.aIResearchInstitution.findUnique({
     where: { id: params.id },
   });

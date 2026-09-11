@@ -10,10 +10,8 @@ function generateToken(): string {
   return crypto.randomBytes(16).toString('hex');
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     // Authenticate founder
     let session;

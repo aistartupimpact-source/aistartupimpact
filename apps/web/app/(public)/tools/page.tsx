@@ -61,7 +61,10 @@ export const metadata: Metadata = {
 
 import { getDirectoryToolsDirect, getToolCategoryTreeDirect, getToolTagGroupsForFilterDirect, getToolTagMappingsDirect, getTrendingToolsDirect, getRecentlyAddedToolsDirect, getEditorPicksDirect, getMostUpvotedThisMonthDirect } from '@/lib/db';
 
-export default async function ToolsPage({ searchParams }: { searchParams: { category?: string; tag?: string; pricing?: string } }) {
+export default async function ToolsPage(
+  props: { searchParams: Promise<{ category?: string; tag?: string; pricing?: string }> }
+) {
+  const searchParams = await props.searchParams;
   const [picks, categoryTree, tagGroups, toolTagMap, trending, recentlyAdded, editorPicks, mostUpvoted] = await Promise.all([
     getDirectoryToolsDirect(),
     getToolCategoryTreeDirect(),

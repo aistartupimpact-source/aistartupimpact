@@ -21,7 +21,7 @@ async function getAuthenticatedUnifiedUserId(): Promise<string | null> {
   if (session) return session.id;
 
   // 2. Fallback: read legacy user-token → find the user's email → find UnifiedUser
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const userToken = cookieStore.get("user-token")?.value;
   if (!userToken) return null;
 

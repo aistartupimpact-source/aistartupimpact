@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { headers } from 'next/headers';
+import { headers, type UnsafeUnwrappedHeaders } from 'next/headers';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -66,7 +66,7 @@ interface AuditLogEntry {
 
 function getClientIp(): string | null {
   try {
-    const hdrs = headers();
+    const hdrs = (headers() as unknown as UnsafeUnwrappedHeaders);
     return hdrs.get('x-forwarded-for')?.split(',')[0]?.trim()
       || hdrs.get('x-real-ip')
       || null;

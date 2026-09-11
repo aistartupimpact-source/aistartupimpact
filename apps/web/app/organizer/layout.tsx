@@ -40,7 +40,7 @@ export default async function OrganizerWorkspaceLayout({
   // 3. Fallback: user-token → find organizer by email
   if (!session) {
     try {
-      const cookieStore = cookies();
+      const cookieStore = await cookies();
       const userToken = cookieStore.get("user-token")?.value;
       if (userToken) {
         const { payload } = await jwtVerify(userToken, USER_JWT_SECRET);

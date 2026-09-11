@@ -3,10 +3,8 @@ import { sql } from '@/lib/db';
 import { apiRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function POST(request: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   try {
     const identifier = getClientIdentifier(request);
     const { success: allowed } = await checkRateLimit(apiRateLimit, identifier);
