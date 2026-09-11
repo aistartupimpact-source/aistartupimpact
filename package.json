@@ -31,5 +31,8 @@
     "next": {
       "postcss": "8.5.26"
     }
+  },
+  "dependencies": {
+    "@prisma/driver-adapter-utils": "^7.10.0"
   }
 }

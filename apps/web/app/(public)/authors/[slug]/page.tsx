@@ -10,7 +10,8 @@ export const revalidate = 120;
 
 const SITE_URL = 'https://aistartupimpact.com';
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const params = await props.params;
   const author = await getAuthorBySlugDirect(params.slug);
   if (!author) return { title: 'Author Not Found' };
 
@@ -39,7 +40,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 const formatDate = (d: string) =>
   d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
 
-export default async function AuthorPage({ params }: { params: { slug: string } }) {
+export default async function AuthorPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const author = await getAuthorBySlugDirect(params.slug);
   if (!author) notFound();
 

@@ -5,10 +5,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Building2, MapPin, Globe, Briefcase, DollarSign, Clock } from 'lucide-react';
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata(props: PageProps): Promise<Metadata> {
+  const params = await props.params;
   const employers = await sql`
     SELECT "companyName" FROM "JobBoardEmployer" WHERE slug = ${params.slug} LIMIT 1
   `;
@@ -20,7 +21,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function CompanyJobsPage({ params }: PageProps) {
+export default async function CompanyJobsPage(props: PageProps) {
+  const params = await props.params;
   const employers = await sql`
     SELECT id, "companyName", slug, "logoUrl", "websiteUrl", description, industry, "companySize", location
     FROM "JobBoardEmployer"

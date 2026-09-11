@@ -26,7 +26,7 @@ export default function CitySelect({ value, onChange, placeholder = "Search your
   const [results, setResults] = useState<City[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Fetch cities on query change

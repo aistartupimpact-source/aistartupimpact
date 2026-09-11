@@ -105,11 +105,12 @@ async function getEventTags() {
   }
 }
 
-export default async function EventsPage({
-  searchParams,
-}: {
-  searchParams: { q?: string; category?: string; format?: string; timeframe?: string };
-}) {
+export default async function EventsPage(
+  props: {
+    searchParams: Promise<{ q?: string; category?: string; format?: string; timeframe?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const [events, tags] = await Promise.all([
     getEvents(searchParams),
     getEventTags(),

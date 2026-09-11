@@ -32,7 +32,7 @@ describe('CSRF protection middleware', () => {
     process.env.NEXT_PUBLIC_ADMIN_URL = 'http://localhost:4000';
     process.env.DATABASE_URL = 'postgresql://test@localhost/test';
     process.env.FOUNDER_JWT_SECRET = 'test-secret';
-    process.env.NODE_ENV = 'test';
+    (process.env as any).NODE_ENV = 'test';
     const mod = await import('@/middleware');
     middleware = mod.middleware;
   });

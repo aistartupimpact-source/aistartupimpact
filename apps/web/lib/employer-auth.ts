@@ -42,7 +42,7 @@ export async function setEmployerSession(employer: {
     .setExpirationTime(`${SESSION_EXPIRY_DAYS}d`)
     .sign(JWT_SECRET);
 
-  cookies().set(COOKIE_NAME, jwt, {
+  (await cookies()).set(COOKIE_NAME, jwt, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -57,7 +57,7 @@ export async function setEmployerSession(employer: {
  */
 export async function getEmployerSession(): Promise<EmployerSession | null> {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const cookie = cookieStore.get(COOKIE_NAME);
     if (!cookie?.value) return null;
 
@@ -98,5 +98,5 @@ export async function requireEmployerAuth(): Promise<EmployerSession> {
  * Clear employer session cookie.
  */
 export async function clearEmployerSession(): Promise<void> {
-  cookies().delete(COOKIE_NAME);
+  (await cookies()).delete(COOKIE_NAME);
 }

@@ -49,7 +49,7 @@ export async function DELETE(request: NextRequest) {
       await tx.webUser.delete({ where: { id: user.id } });
     });
 
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     (await cookieStore).delete('user-token');
     (await cookieStore).delete('unified_session');
 

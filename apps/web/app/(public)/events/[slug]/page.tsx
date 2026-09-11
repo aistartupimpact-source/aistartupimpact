@@ -152,11 +152,12 @@ async function getSimilarEvents(eventId: string, category: string) {
   }
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string };
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ slug: string }>;
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const event = await getEvent(params.slug);
   if (!event) return { title: "Event Not Found" };
 
@@ -200,11 +201,12 @@ export async function generateStaticParams() {
   }
 }
 
-export default async function EventDetailPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
+export default async function EventDetailPage(
+  props: {
+    params: Promise<{ slug: string }>;
+  }
+) {
+  const params = await props.params;
   const event = await getEvent(params.slug);
 
   // Handle redirect (old slug → current slug, no chains)

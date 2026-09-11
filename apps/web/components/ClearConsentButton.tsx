@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function ClearConsentButton() {
   const [show, setShow] = useState(false);
@@ -58,19 +59,19 @@ export default function ClearConsentButton() {
               Reset Newsletter Popup
             </button>
 
-            <a
+            <Link
               href="/?test-cookie-banner=true"
               className="block w-full px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium text-center transition-colors"
             >
               Force Show Banner
-            </a>
+            </Link>
 
-            <a
+            <Link
               href="/test-cookies"
               className="block w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium text-center transition-colors"
             >
               Test Page
-            </a>
+            </Link>
 
             <button
               onClick={() => setShow(false)}

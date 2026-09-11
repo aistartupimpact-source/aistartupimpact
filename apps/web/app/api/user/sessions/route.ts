@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 const JWT_SECRET = new TextEncoder().encode(process.env.USER_JWT_SECRET!);
 
 async function getSessionUserId(request: NextRequest): Promise<{ userId: string; sessionId: string } | null> {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get('user-token')?.value;
   if (!token) return null;
   try {

@@ -11,17 +11,18 @@ export const metadata: Metadata = {
   alternates: { canonical: '/jobs' },
 };
 interface PageProps {
-  searchParams: {
+  searchParams: Promise<{
     category?: string;
     workType?: string;
     experience?: string;
     country?: string;
     visa?: string;
     sort?: string;
-  };
+  }>;
 }
 
-export default async function JobsPage({ searchParams }: PageProps) {
+export default async function JobsPage(props: PageProps) {
+  const searchParams = await props.searchParams;
   const { category, workType, experience, country, visa, sort } = searchParams;
 
   let jobs: any[] = [];

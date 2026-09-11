@@ -5,10 +5,8 @@ import { logAuditEvent } from '@/lib/audit-log';
 
 const sql = neon(process.env.DATABASE_URL!);
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { error } = await requireApiAuth();
   if (error) return error;
 
@@ -36,10 +34,8 @@ export async function PUT(
 }
 
 // DELETE: Soft-delete job
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { error } = await requireApiAuth(['SUPER_ADMIN']);
   if (error) return error;
 

@@ -1,18 +1,20 @@
 import dynamic from 'next/dynamic';
 import { cookies } from 'next/headers';
 import { AuthContext } from '@/components/AuthContext';
+import { AnnouncementBar } from '@/components/ClientOnly';
 
 // Navbar is above-fold — keep SSR. Footer is below-fold — lazy load.
 import Navbar from '@/components/layout/Navbar';
-const AnnouncementBar = dynamic(() => import('@/components/layout/AnnouncementBar'), { ssr: false });
 const Footer = dynamic(() => import('@/components/layout/Footer'));
 
-export default function PublicLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const cookieStore = cookies();
+export default async function PublicLayout(
+  {
+    children,
+  }: {
+    children: React.ReactNode;
+  }
+) {
+  const cookieStore = await cookies();
   const hasSession = !!(cookieStore.get('user-token')?.value || cookieStore.get('founder-token')?.value);
 
   return (

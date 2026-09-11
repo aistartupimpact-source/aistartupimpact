@@ -24,7 +24,8 @@ const articles = [
   { slug: 'nasscom-ai-summit', title: 'NASSCOM AI Summit 2025: Key Takeaways for Indian Startups', category: 'Events', date: 'Feb 10, 2025', readTime: '7 min' },
 ];
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const params = await props.params;
   return {
     title: `${author.name} — ${author.role}`,
     description: author.bio,
@@ -45,7 +46,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default function AuthorPage({ params }: { params: { slug: string } }) {
+export default async function AuthorPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const jsonLd = generatePersonSchema({
     name: author.name,
     slug: params.slug,

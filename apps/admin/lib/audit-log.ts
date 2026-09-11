@@ -64,9 +64,9 @@ interface AuditLogEntry {
   ipAddress?: string | null;
 }
 
-function getClientIp(): string | null {
+async function getClientIp(): Promise<string | null> {
   try {
-    const hdrs = headers();
+    const hdrs = await headers();
     return hdrs.get('x-forwarded-for')?.split(',')[0]?.trim()
       || hdrs.get('x-real-ip')
       || null;
@@ -87,7 +87,7 @@ export async function logAuditEvent(entry: AuditLogEntry): Promise<void> {
 
     const beforeJson = entry.before ? JSON.stringify(entry.before) : null;
     const afterJson = entry.after ? JSON.stringify(entry.after) : null;
-    const ip = entry.ipAddress || getClientIp();
+    const ip = entry.ipAddress || await getClientIp();
 
     await sql`
       INSERT INTO "AuditLog" (id, "userId", action, "resourceType", "resourceId", before, after, "ipAddress", "createdAt")

@@ -5,12 +5,13 @@ import StartupEditForm from '@/components/founder/StartupEditForm';
 import SlugEditor from '@/components/shared/SlugEditor';
 import { sql } from '@/lib/db';
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
-export default async function EditStartupPage({ params }: PageProps) {
+export default async function EditStartupPage(props: PageProps) {
+  const params = await props.params;
   const session = await requireFounderAuth();
 
   // Fetch startup with all fields including foundersData

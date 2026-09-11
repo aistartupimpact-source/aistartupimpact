@@ -7,7 +7,8 @@ import { getAiToolBySlugDirect, getToolAlternativesDirect } from '@/lib/db';
 
 export const revalidate = 60;
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const params = await props.params;
   const tool = await getAiToolBySlugDirect(params.slug) as any;
   if (!tool) return { title: 'Not Found' };
   const title = `10 Best ${tool.name} Alternatives in ${new Date().getFullYear()}`;
@@ -20,7 +21,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function AlternativesPage({ params }: { params: { slug: string } }) {
+export default async function AlternativesPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const tool = await getAiToolBySlugDirect(params.slug) as any;
   if (!tool) notFound();
 

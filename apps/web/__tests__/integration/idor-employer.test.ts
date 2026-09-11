@@ -42,13 +42,15 @@ vi.mock('@aistartupimpact/database', () => ({
 }));
 
 function makeRequest(url: string, method = 'GET', body?: any) {
-  const init: RequestInit = { method };
+  const init: any = { method };
   if (body) {
     init.body = JSON.stringify(body);
     init.headers = { 'Content-Type': 'application/json' };
   }
   return new NextRequest(new URL(url, 'http://localhost:3000'), init);
 }
+
+const call = (handler: any, ...args: any[]) => handler(...args) as Promise<Response>;
 
 const EMPLOYER_A = {
   id: 'employer-a',
@@ -157,7 +159,7 @@ describe('IDOR — Employer A cannot access Employer B resources', () => {
     it('returns 401 without session', async () => {
       mockGetEmployerSession.mockResolvedValue(null);
       const { GET } = await import('@/app/api/employer/company/route');
-      const res = await GET(makeRequest('/api/employer/company'));
+      const res = await call(GET, makeRequest('/api/employer/company'));
       expect(res.status).toBe(401);
     });
   });
@@ -166,7 +168,7 @@ describe('IDOR — Employer A cannot access Employer B resources', () => {
     it('returns 401 without session', async () => {
       mockGetEmployerSession.mockResolvedValue(null);
       const { GET } = await import('@/app/api/employer/analytics/route');
-      const res = await GET(makeRequest('/api/employer/analytics'));
+      const res = await call(GET, makeRequest('/api/employer/analytics'));
       expect(res.status).toBe(401);
     });
   });

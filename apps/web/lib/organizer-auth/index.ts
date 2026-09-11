@@ -43,7 +43,7 @@ export async function createOrganizerSession(organizerId: string): Promise<strin
     .setExpirationTime(`${SESSION_EXPIRY_DAYS}d`)
     .sign(JWT_SECRET);
 
-  cookies().set(COOKIE_NAME, jwt, {
+  (await cookies()).set(COOKIE_NAME, jwt, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -62,7 +62,7 @@ export async function createOrganizerSession(organizerId: string): Promise<strin
 export async function getOrganizerSession(): Promise<OrganizerSession | null> {
   // 1. Try organizer_session cookie
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const cookie = cookieStore.get(COOKIE_NAME);
     if (cookie?.value) {
       const { payload } = await jwtVerify(cookie.value, JWT_SECRET);
@@ -92,7 +92,7 @@ export async function getOrganizerSession(): Promise<OrganizerSession | null> {
 
   // 2. Fallback: user-token cookie → find organizer by email
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const userToken = cookieStore.get("user-token")?.value;
     if (userToken) {
       const { payload } = await jwtVerify(userToken, USER_JWT_SECRET);
@@ -124,7 +124,7 @@ export async function getOrganizerSession(): Promise<OrganizerSession | null> {
  */
 export async function getOrganizerSessionFromUserToken(): Promise<OrganizerSession | null> {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const userToken = cookieStore.get("user-token")?.value;
     if (!userToken) return null;
 
@@ -156,7 +156,7 @@ export async function getOrganizerSessionFromUserToken(): Promise<OrganizerSessi
  */
 export async function destroyOrganizerSession(): Promise<void> {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const cookie = cookieStore.get(COOKIE_NAME);
     if (cookie?.value) {
       const { payload } = await jwtVerify(cookie.value, JWT_SECRET);
@@ -170,7 +170,7 @@ export async function destroyOrganizerSession(): Promise<void> {
   } catch {
     // ignore
   }
-  cookies().delete(COOKIE_NAME);
+  (await cookies()).delete(COOKIE_NAME);
 }
 
 /**

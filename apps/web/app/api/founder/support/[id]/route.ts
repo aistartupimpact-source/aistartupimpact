@@ -4,7 +4,8 @@ import { getTicketDetail } from '@/lib/support-tickets';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireFounderAuth();
     const ticket = await getTicketDetail(params.id, 'FOUNDER', session.userId);

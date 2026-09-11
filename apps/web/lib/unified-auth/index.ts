@@ -42,7 +42,7 @@ export async function createUnifiedSession(userId: string, source: string = "dir
     .setExpirationTime(`${SESSION_EXPIRY_DAYS}d`)
     .sign(JWT_SECRET);
 
-  cookies().set(COOKIE_NAME, jwt, {
+  (await cookies()).set(COOKIE_NAME, jwt, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -60,7 +60,7 @@ export async function createUnifiedSession(userId: string, source: string = "dir
 export async function getUnifiedSession(): Promise<UnifiedUserSession | null> {
   try {
     // 1. Try unified cookie (primary path)
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const cookie = cookieStore.get(COOKIE_NAME);
 
     if (cookie?.value) {
@@ -193,7 +193,7 @@ async function migrateOldSession(cookieValue: string, source: "organizer" | "fou
  */
 export async function destroyUnifiedSession(): Promise<void> {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const cookie = cookieStore.get(COOKIE_NAME);
     if (cookie?.value) {
       const { payload } = await jwtVerify(cookie.value, JWT_SECRET);
@@ -203,10 +203,10 @@ export async function destroyUnifiedSession(): Promise<void> {
       }
     }
   } catch {}
-  cookies().delete(COOKIE_NAME);
+  (await cookies()).delete(COOKIE_NAME);
   // Also clear old cookies during transition
-  cookies().delete("organizer_session");
-  cookies().delete("founder_session");
+  (await cookies()).delete("organizer_session");
+  (await cookies()).delete("founder_session");
 }
 
 /**

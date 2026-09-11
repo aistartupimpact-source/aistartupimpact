@@ -42,7 +42,7 @@ export async function verifyFounderToken(token: string): Promise<FounderSession 
 
 // Get current founder session
 export async function getFounderSession(): Promise<FounderSession | null> {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   
   // 1. Try founder-token cookie (legacy)
   const token = cookieStore.get('founder-token')?.value;
@@ -87,7 +87,7 @@ export async function getFounderSession(): Promise<FounderSession | null> {
 // Set founder session cookie
 export async function setFounderSession(userId: string, email: string, name: string, onboardingCompleted: boolean) {
   const token = await createFounderToken(userId, email, name, onboardingCompleted);
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   
   cookieStore.set('founder-token', token, {
     httpOnly: true,
@@ -100,7 +100,7 @@ export async function setFounderSession(userId: string, email: string, name: str
 
 // Clear founder session
 export async function clearFounderSession() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   cookieStore.delete('founder-token');
 }
 

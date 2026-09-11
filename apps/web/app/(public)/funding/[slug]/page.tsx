@@ -8,13 +8,14 @@ import SignInGate from '@/components/SignInGate';
 
 export const revalidate = 86400; // Regenerate daily
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const params = await props.params;
   const round = await getFundingRoundBySlugDirect(params.slug);
   if (!round) return { title: 'Funding Round Not Found' };
-  
+
   const title = `${round.startupName} Raises $${(round.amountUsd / 1000000).toFixed(1)}M in ${round.roundType}`;
   const description = `${round.startupName} announced ${round.roundType} funding of $${(round.amountUsd / 1000000).toFixed(1)} million${round.leadInvestors?.[0] ? ` led by ${round.leadInvestors[0]}` : ''} on ${new Date(round.announcedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.`;
-  
+
   return {
     title,
     description,
@@ -42,16 +43,17 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function FundingRoundPage({ params }: { params: { slug: string } }) {
+export default async function FundingRoundPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const [round, session] = await Promise.all([
     getFundingRoundBySlugDirect(params.slug),
     getUserSession(),
   ]);
   if (!round) notFound();
   const isSignedIn = !!session;
-  
+
   const pageUrl = `https://aistartupimpact.com/funding/${params.slug}`;
-  
+
   // MonetaryGrant schema for individual round
   const schema = {
     "@context": "https://schema.org",
@@ -125,7 +127,7 @@ export default async function FundingRoundPage({ params }: { params: { slug: str
       }
     ]
   };
-  
+
   return (
     <div className="max-w-5xl mx-auto px-0 sm:px-2 lg:px-4 py-6 sm:py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />

@@ -78,7 +78,7 @@ function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   const isHoriz = useRef<boolean | null>(null);
   const didDrag = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   const startTimer = useCallback(() => {
     clearInterval(timerRef.current);

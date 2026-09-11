@@ -7,7 +7,8 @@ export const metadata: Metadata = {
   title: 'Edit Mission Pillar | Admin',
 };
 
-export default async function EditMissionPillarPage({ params }: { params: { id: string } }) {
+export default async function EditMissionPillarPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const pillar = await prisma.indiaAIMissionTracker.findUnique({
     where: { id: params.id },
   });

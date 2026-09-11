@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Loader2, Save, Trash2 } from "lucide-react";
 
-export default function EditEventPage({ params }: { params: { eventId: string } }) {
+export default function EditEventPage(props: { params: Promise<{ eventId: string }> }) {
+  const params = use(props.params);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
