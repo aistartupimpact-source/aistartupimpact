@@ -69,7 +69,7 @@ export default function EventSearch({ initialEvents }: Props) {
   const [loading, setLoading] = useState(false);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const hasInteracted = useRef(false);
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout>(undefined);
 
   const fetchEvents = useCallback(async (q: string, cat: string, fmt: string, tf: string) => {
     setLoading(true);
