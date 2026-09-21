@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createOtp } from "@/lib/otp";
 import { checkRateLimit, getClientIdentifier, authRateLimit } from "@/lib/rate-limit";
-import { otpEmailHtml } from "@aistartupimpact/utils";
+import { otpEmailHtml } from "@udyaibase/utils";
 import { sendEmail } from "@/lib/email/send";
 
 export const dynamic = "force-dynamic";

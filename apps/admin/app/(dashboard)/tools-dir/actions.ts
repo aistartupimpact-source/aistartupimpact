@@ -4,7 +4,7 @@ import { neon } from '@neondatabase/serverless';
 import { revalidatePath } from 'next/cache';
 import { logAuditEvent, canDelete } from '@/lib/audit-log';
 import { invalidateToolCache, invalidateTaxonomyCache } from '@/lib/cache-invalidate';
-import { toolApprovalHtml } from '@aistartupimpact/utils';
+import { toolApprovalHtml } from '@udyaibase/utils';
 import { sendEmailFireAndForget } from '@/lib/email-send';
 import { requireActionAuth } from '@/lib/api-auth';
 
@@ -76,7 +76,7 @@ export async function approveToolAction(id: string) {
     if (tool.founderEmail) {
       sendEmailFireAndForget({
         to: tool.founderEmail,
-        subject: `Your tool "${tool.name}" is now live on AI Startup Impact`,
+        subject: `Your tool "${tool.name}" is now live on Udyaibase`,
         html: toolApprovalHtml(tool.name, tool.founderName || 'there', tool.slug),
         type: 'approval',
       });

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { getOrganizerSession } from "@/lib/organizer-auth";
-import { eventCancellationHtml } from "@aistartupimpact/utils";
+import { eventCancellationHtml } from "@udyaibase/utils";
 import { sendEmailFireAndForget } from "@/lib/email/send";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +9,8 @@ export const dynamic = "force-dynamic";
 /**
  * DELETE /api/organizer/events/[eventId] — Soft-delete an event
  */
-export async function DELETE(request: NextRequest, { params }: { params: { eventId: string } }) {
+export async function DELETE(request: NextRequest, props: { params: Promise<{ eventId: string }> }) {
+  const params = await props.params;
   const session = await getOrganizerSession();
   if (!session) return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
 
@@ -30,7 +31,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { event
 
   // Notify attendees about cancellation
   if (attendees.length > 0) {
-    const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "no-reply@aistartupimpact.com";
+    const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "no-reply@udyaibase.com";
     const tz = event.timezone || "Asia/Kolkata";
     const dateStr = event.startAt
       ? new Date(event.startAt).toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: tz })
@@ -40,7 +41,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { event
       if (!attendee.guestEmail) continue;
       sendEmailFireAndForget({
         to: attendee.guestEmail,
-        from: `AI Startup Impact Events <${FROM_EMAIL}>`,
+        from: `Udyaibase Events <${FROM_EMAIL}>`,
         subject: `Event Cancelled: ${event.title}`,
         html: eventCancellationHtml(attendee.guestName || "there", event.title, dateStr),
         type: "event_cancellation",
@@ -54,7 +55,8 @@ export async function DELETE(request: NextRequest, { params }: { params: { event
 /**
  * PUT /api/organizer/events/[eventId] — Update an event
  */
-export async function PUT(request: NextRequest, { params }: { params: { eventId: string } }) {
+export async function PUT(request: NextRequest, props: { params: Promise<{ eventId: string }> }) {
+  const params = await props.params;
   const session = await getOrganizerSession();
   if (!session) return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
 
@@ -91,7 +93,8 @@ export async function PUT(request: NextRequest, { params }: { params: { eventId:
 /**
  * GET /api/organizer/events/[eventId] — Get event details
  */
-export async function GET(request: NextRequest, { params }: { params: { eventId: string } }) {
+export async function GET(request: NextRequest, props: { params: Promise<{ eventId: string }> }) {
+  const params = await props.params;
   const session = await getOrganizerSession();
   if (!session) return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
 

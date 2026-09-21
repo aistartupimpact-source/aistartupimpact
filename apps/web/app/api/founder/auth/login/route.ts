@@ -3,7 +3,7 @@ import { sql } from '@/lib/db';
 import { verifyPassword, setFounderSession } from '@/lib/founder-auth';
 import { authRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { loginSchema, validateInput } from '@/lib/validation';
-import { securityAlertHtml } from '@aistartupimpact/utils';
+import { securityAlertHtml } from '@udyaibase/utils';
 import { sendEmailFireAndForget } from '@/lib/email/send';
 
 export const dynamic = 'force-dynamic';
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         const lockUntil = new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000);
         await sql`UPDATE "FounderUser" SET "failedLoginAttempts" = ${newAttempts}, "lockedUntil" = ${lockUntil.toISOString()}::timestamp WHERE id = ${user.id}`;
 
-        const resetUrl = `${process.env.NEXT_PUBLIC_WEB_URL || 'https://aistartupimpact.com'}/auth/forgot-password`;
+        const resetUrl = `${process.env.NEXT_PUBLIC_WEB_URL || 'https://udyaibase.com'}/auth/forgot-password`;
         sendEmailFireAndForget({
           to: user.email,
           subject: 'Security Alert — Failed Login Attempts',

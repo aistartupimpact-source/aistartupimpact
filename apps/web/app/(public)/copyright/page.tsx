@@ -1,8 +1,8 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Copyright & Takedown Policy — AI Startup Impact",
-  description: "Learn how to report copyright infringement on AI Startup Impact and our process for handling takedown requests.",
+  title: "Copyright & Takedown Policy — Udyaibase",
+  description: "Learn how to report copyright infringement on Udyaibase and our process for handling takedown requests.",
 };
 
 export default function CopyrightPolicyPage() {
@@ -15,11 +15,11 @@ export default function CopyrightPolicyPage() {
         <p className="text-sm text-gray-500 mb-8"><strong>Last updated:</strong> July 2026</p>
 
         <p>
-          AI Startup Impact respects intellectual property rights and expects users of our platform to do the same. This policy outlines how to report copyright infringement and our process for handling takedown requests in compliance with the Indian Information Technology Act, 2000 and the Copyright Act, 1957.
+          Udyaibase respects intellectual property rights and expects users of our platform to do the same. This policy outlines how to report copyright infringement and our process for handling takedown requests in compliance with the Indian Information Technology Act, 2000 and the Copyright Act, 1957.
         </p>
 
         <h2>1. Reporting Copyright Infringement</h2>
-        <p>If you believe content on AI Startup Impact infringes your copyright, you may submit a takedown request. Your notice must include:</p>
+        <p>If you believe content on Udyaibase infringes your copyright, you may submit a takedown request. Your notice must include:</p>
         <ol>
           <li>Your full legal name and contact information (email, phone, address)</li>
           <li>Identification of the copyrighted work you claim is infringed</li>
@@ -32,7 +32,7 @@ export default function CopyrightPolicyPage() {
         <h2>2. How to Submit a Takedown Request</h2>
         <p>Send your complete notice to:</p>
         <ul>
-          <li><strong>Email:</strong> <a href="mailto:legal@aistartupimpact.com">legal@aistartupimpact.com</a></li>
+          <li><strong>Email:</strong> <a href="mailto:legal@udyaibase.com">legal@udyaibase.com</a></li>
           <li><strong>Subject:</strong> Copyright Takedown Request — [Your Company Name]</li>
         </ul>
         <p>Alternatively, use the <strong>"Report"</strong> button on any startup, tool, or event page and select "Copyright concern."</p>
@@ -63,7 +63,7 @@ export default function CopyrightPolicyPage() {
         <p>Filing a false takedown request may result in liability. Please ensure your claim is genuine before submitting.</p>
 
         <h2>7. Contact</h2>
-        <p>For copyright-related inquiries: <a href="mailto:legal@aistartupimpact.com">legal@aistartupimpact.com</a></p>
+        <p>For copyright-related inquiries: <a href="mailto:legal@udyaibase.com">legal@udyaibase.com</a></p>
       </div>
     </div>
   );

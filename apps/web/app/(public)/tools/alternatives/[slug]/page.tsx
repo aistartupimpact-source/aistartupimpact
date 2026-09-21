@@ -7,7 +7,8 @@ import { getAiToolBySlugDirect, getToolAlternativesDirect } from '@/lib/db';
 
 export const revalidate = 60;
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const params = await props.params;
   const tool = await getAiToolBySlugDirect(params.slug) as any;
   if (!tool) return { title: 'Not Found' };
   const title = `10 Best ${tool.name} Alternatives in ${new Date().getFullYear()}`;
@@ -15,12 +16,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   return {
     title,
     description,
-    alternates: { canonical: `https://aistartupimpact.com/tools/alternatives/${params.slug}` },
+    alternates: { canonical: `https://udyaibase.com/tools/alternatives/${params.slug}` },
     openGraph: { title, description, type: 'website' },
   };
 }
 
-export default async function AlternativesPage({ params }: { params: { slug: string } }) {
+export default async function AlternativesPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const tool = await getAiToolBySlugDirect(params.slug) as any;
   if (!tool) notFound();
 
@@ -110,7 +112,7 @@ export default async function AlternativesPage({ params }: { params: { slug: str
         itemListElement: alternatives.map((alt: any, i: number) => ({
           '@type': 'ListItem',
           position: i + 1,
-          item: { '@type': 'SoftwareApplication', name: alt.name, url: `https://aistartupimpact.com/tools/${alt.slug}` },
+          item: { '@type': 'SoftwareApplication', name: alt.name, url: `https://udyaibase.com/tools/${alt.slug}` },
         })),
       }) }} />
     </div>

@@ -20,10 +20,8 @@ async function getUserId(request: NextRequest): Promise<string | null> {
 }
 
 // POST: Toggle save/unsave a job
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function POST(request: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   try {
     const userId = await getUserId(request);
     if (!userId) return NextResponse.json({ error: 'Login required' }, { status: 401 });

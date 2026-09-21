@@ -312,7 +312,7 @@ function SecurityTab() {
                   const blob = await res.blob();
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a'); a.href = url;
-                  a.download = `aistartupimpact-user-data-${new Date().toISOString().split('T')[0]}.json`;
+                  a.download = `udyaibase-user-data-${new Date().toISOString().split('T')[0]}.json`;
                   a.click(); URL.revokeObjectURL(url);
                   setSuccess('Data exported successfully'); setTimeout(() => setSuccess(''), 3000);
                 } catch { setError('Failed to export data'); } finally { setExporting(false); }

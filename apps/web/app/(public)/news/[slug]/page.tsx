@@ -14,7 +14,8 @@ import SubscribeForm from '@/components/SubscribeForm';
 
 export const revalidate = 60;
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const params = await props.params;
   const article = await getArticleBySlugDirect(params.slug);
   if (!article) return { title: 'Article Not Found' };
   return buildArticleMetadata(article);
@@ -34,7 +35,8 @@ export async function generateStaticParams() {
   }
 }
 
-export default async function ArticlePage({ params }: { params: { slug: string } }) {
+export default async function ArticlePage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   let article = await getArticleBySlugDirect(params.slug);
   const related = await getArticlesDirect({ limit: 4 });
 
@@ -57,7 +59,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
 
   const relatedArticles = (related || []).filter((a: any) => a.slug !== params.slug).slice(0, 3);
 
-  const siteUrl = 'https://aistartupimpact.com';
+  const siteUrl = 'https://udyaibase.com';
   const articleUrl = `${siteUrl}/news/${article.slug}`;
 
   const articleSchema = generateArticleSchema({

@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { MapPin, Check, ChevronsUpDown } from 'lucide-react';
-import { CITY_DATABASE } from '@aistartupimpact/utils/src/cities';
-import type { CityEntry } from '@aistartupimpact/utils/src/cities';
+import { CITY_DATABASE } from '@udyaibase/utils/src/cities';
+import type { CityEntry } from '@udyaibase/utils/src/cities';
 
 interface CityComboboxProps {
   value: string;

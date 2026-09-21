@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { registrationRateLimit } from "@/lib/event-rate-limit";
 import { generateQrToken } from "@/lib/events/qr-token";
@@ -263,7 +263,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (eventForEmail) {
-      const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://aistartupimpact.com";
+      const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://udyaibase.com";
       const eventUrl = `${SITE_URL}/events/${eventForEmail.slug}`;
 
       const eventDate = eventForEmail.startAt.toLocaleDateString("en-IN", {
@@ -286,7 +286,7 @@ export async function POST(request: NextRequest) {
 
       const googleCalUrl = generateGoogleCalendarUrl({
         title: eventForEmail.title,
-        description: `Registered via AI Startup Impact`,
+        description: `Registered via Udyaibase`,
         startAt: eventForEmail.startAt.toISOString(),
         endAt: eventForEmail.endAt.toISOString(),
         timezone: eventForEmail.timezone,

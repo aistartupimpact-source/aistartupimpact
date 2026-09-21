@@ -1,13 +1,11 @@
-const { withSentryConfig } = require("@sentry/nextjs");
+import { withSentryConfig } from "@sentry/nextjs";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   compress: true,
   poweredByHeader: false,
-  experimental: {
-    optimizePackageImports: ['lucide-react', 'recharts', 'date-fns', 'react-simple-maps'],
-  },
+  optimizePackageImports: ['lucide-react', 'recharts', 'date-fns', 'react-simple-maps'],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**' },
@@ -15,7 +13,6 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
   async rewrites() {
-    // Use private API_URL (server-only) — never expose internal API URL via NEXT_PUBLIC_
     const apiBase = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
     return [
       {
@@ -39,7 +36,7 @@ const nextConfig = {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https:",
-      "connect-src 'self' https://aistartupimpact.com https://www.google-analytics.com https://vitals.vercel-insights.com https://va.vercel-scripts.com",
+      "connect-src 'self' https://udyaibase.com https://www.google-analytics.com https://vitals.vercel-insights.com https://va.vercel-scripts.com",
       "frame-ancestors 'none'",
       "frame-src 'none'",
       "base-uri 'self'",
@@ -67,17 +64,9 @@ const nextConfig = {
   },
 };
 
-module.exports = withSentryConfig(nextConfig, {
-  // Suppress source map upload warnings in CI when no auth token is set
+export default withSentryConfig(nextConfig, {
   silent: !process.env.SENTRY_AUTH_TOKEN,
-  
-  // Upload source maps for better stack traces in production
   widenClientFileUpload: true,
-  
-  // Hide source maps from users
   hideSourceMaps: true,
-  
-  // Disable Sentry SDK auto-instrumentation for server components
-  // (we instrument manually where needed)
   disableLogger: true,
 });

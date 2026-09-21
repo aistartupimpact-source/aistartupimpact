@@ -3,7 +3,7 @@ import { sql } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { setEmployerSession } from '@/lib/employer-auth';
 import { authRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
-import { isDisposableEmail } from '@aistartupimpact/utils';
+import { isDisposableEmail } from '@udyaibase/utils';
 
 export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {

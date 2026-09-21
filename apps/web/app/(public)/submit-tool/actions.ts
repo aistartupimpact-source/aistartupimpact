@@ -1,6 +1,6 @@
 'use server';
 
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 
 export async function submitFreeToolAction(draft: any) {
   try {

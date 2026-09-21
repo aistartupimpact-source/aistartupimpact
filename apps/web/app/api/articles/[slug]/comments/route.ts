@@ -7,7 +7,8 @@ const COMMENT_MAX_LENGTH = 500;
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(_req: NextRequest, { params }: { params: { slug: string } }) {
+export async function GET(_req: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   try {
     const rows = await sql`
       SELECT c.id, c.name, c.body, c."createdAt"::text AS "createdAt",
@@ -25,7 +26,8 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { slug: string } }) {
+export async function POST(req: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   try {
     const session = await getUserSession();
     if (!session) {

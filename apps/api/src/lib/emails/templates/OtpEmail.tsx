@@ -20,13 +20,13 @@ export const OtpEmail = ({ otp, name }: OtpEmailProps) => {
   return (
     <Html>
       <Head />
-      <Preview>Your AIStartupImpact verification code: {otp}</Preview>
+      <Preview>Your Udyaibase verification code: {otp}</Preview>
       <Body style={main}>
         <Container style={container}>
           <Img
-            src="https://aistartupimpact.com/logo.png"
+            src="https://udyaibase.com/logo.png"
             width="150"
-            alt="AIStartupImpact Logo"
+            alt="Udyaibase Logo"
             style={logo}
           />
           <Heading style={h1}>Verify your email address</Heading>

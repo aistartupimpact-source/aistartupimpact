@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import crypto from 'crypto';
 
 // Parse user agent to detect device type
@@ -49,7 +49,8 @@ function getTrafficSource(referrer: string | null): string {
   }
   
   // Social media
-  if (ref.includes('facebook.') || ref.includes('twitter.') || ref.includes('x.com') ||
+  if (ref.includes('facebook.') || ref.includes('twitter.') ||
+      /(\.|\/\/)x\.com(\/|$)/.test(ref) ||
       ref.includes('linkedin.') || ref.includes('instagram.') || ref.includes('reddit.') ||
       ref.includes('youtube.') || ref.includes('tiktok.')) {
     return 'SOCIAL';
@@ -85,7 +86,7 @@ export async function trackPageView(pathname: string, request?: NextRequest) {
     } else {
       // Called from server component - use headers() function
       const { headers } = await import('next/headers');
-      const headersList = headers();
+      const headersList = await headers();
       userAgent = headersList.get('user-agent') || '';
       referrer = headersList.get('referer') || headersList.get('referrer') || null;
       ip = headersList.get('x-forwarded-for')?.split(',')[0] || 

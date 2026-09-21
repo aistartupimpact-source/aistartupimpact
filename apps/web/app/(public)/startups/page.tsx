@@ -12,7 +12,7 @@ export const revalidate = 60;
 export const metadata: Metadata = {
   title: 'Indian AI Startup Directory — Browse & Discover',
   description: 'Browse 1000+ Indian AI startups. Filter by stage, search by name, tagline or city.',
-  alternates: { canonical: 'https://aistartupimpact.com/startups' },
+  alternates: { canonical: 'https://udyaibase.com/startups' },
 };
 
 async function getUniqueCities() {
@@ -165,20 +165,21 @@ async function getInitialStartups(
   }
 }
 
-export default async function StartupsPage({
-  searchParams,
-}: {
-  searchParams: {
-    q?: string;
-    stage?: string;
-    category?: string;
-    businessType?: string;
-    status?: string;
-    city?: string;
-    country?: string;
-    employeeRange?: string;
-  };
-}) {
+export default async function StartupsPage(
+  props: {
+    searchParams: Promise<{
+      q?: string;
+      stage?: string;
+      category?: string;
+      businessType?: string;
+      status?: string;
+      city?: string;
+      country?: string;
+      employeeRange?: string;
+    }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const [cities, { startups, total }] = await Promise.all([
     getUniqueCities(),
     getInitialStartups(

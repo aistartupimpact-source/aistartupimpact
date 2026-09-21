@@ -1,11 +1,11 @@
-# AI Startup Impact
+# Udyaibase
 
-> AI Startup Impact is India's independent platform for tracking the AI startup ecosystem — discover startups, funding rounds, AI tools, founder stories, jobs, and events.
+> Udyaibase is India's independent platform for tracking the AI startup ecosystem — discover startups, funding rounds, AI tools, founder stories, jobs, and events.
 
-AI Startup Impact aggregates and curates news, startup profiles, funding data, AI tools, founder stories, job listings, and events across the Indian artificial intelligence ecosystem. The platform is editorially independent with no pay-to-play listings or sponsored rankings. Built by Lahori Venkatesh.
+Udyaibase aggregates and curates news, startup profiles, funding data, AI tools, founder stories, job listings, and events across the Indian artificial intelligence ecosystem. The platform is editorially independent with no pay-to-play listings or sponsored rankings. Built by Lahori Venkatesh.
 
-Website: https://aistartupimpact.com
-Contact: privacy@aistartupimpact.com
+Website: https://udyaibase.com
+Contact: privacy@udyaibase.com
 
 ## Core Sections
 

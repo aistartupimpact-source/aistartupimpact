@@ -1,16 +1,17 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { redirect, notFound } from "next/navigation";
 import EventDashboard from "./EventDashboard";
 
 const EVENT_ROLES = ["SUPER_ADMIN", "EDITOR_IN_CHIEF", "EVENT_ORGANIZER"];
 
-export default async function EventManagePage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default async function EventManagePage(
+  props: {
+    params: Promise<{ id: string }>;
+  }
+) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
 
   if (!session?.user || !EVENT_ROLES.includes(session.user.role)) {

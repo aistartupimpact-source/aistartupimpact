@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { requireApiAuth } from '@/lib/api-auth';
 import { logAuditEvent } from '@/lib/audit-log';
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { error } = await requireApiAuth(['SUPER_ADMIN', 'EDITOR_IN_CHIEF']);
   if (error) return error;
   try {

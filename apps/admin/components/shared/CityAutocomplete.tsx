@@ -25,7 +25,7 @@ export default function CityAutocomplete({ value, cityId, onChange, placeholder 
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout>(undefined);
 
   // Sync external value changes
   useEffect(() => {

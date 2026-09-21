@@ -6,7 +6,7 @@ import {
   submissionReceivedHtml,
   startupApprovalHtml,
   toolApprovalHtml,
-} from '@aistartupimpact/utils';
+} from '@udyaibase/utils';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
@@ -23,7 +23,7 @@ export async function sendVerificationEmail(email: string, name: string, token: 
   const verifyUrl = `${SITE_URL}/auth/verify?token=${token}`;
   const result = await sendEmailWithRetry({
     to: email,
-    subject: 'Verify your email - AI Startup Impact',
+    subject: 'Verify your email - Udyaibase',
     html: verificationEmailHtml(name, verifyUrl),
     type: 'verification',
   });
@@ -34,7 +34,7 @@ export async function sendPasswordResetEmail(email: string, name: string, token:
   const resetUrl = `${SITE_URL}/auth/reset-password?token=${token}`;
   const result = await sendEmailWithRetry({
     to: email,
-    subject: 'Reset your password - AI Startup Impact',
+    subject: 'Reset your password - Udyaibase',
     html: passwordResetHtml(name, resetUrl),
     type: 'password_reset',
   });
@@ -68,7 +68,7 @@ export async function sendApprovalEmail(
 
   sendEmailFireAndForget({
     to: email,
-    subject: `Your ${entityType} "${entityName}" is now live on AI Startup Impact`,
+    subject: `Your ${entityType} "${entityName}" is now live on Udyaibase`,
     html,
     type: 'approval',
   });

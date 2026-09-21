@@ -2,7 +2,7 @@
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 
 const EVENT_ROLES = ["SUPER_ADMIN", "EDITOR_IN_CHIEF", "EVENT_ORGANIZER"];
 

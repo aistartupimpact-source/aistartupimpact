@@ -12,7 +12,7 @@ describe('Post-Deploy Smoke Tests', () => {
     const res = await fetch(BASE_URL);
     expect(res.status).toBe(200);
     const html = await res.text();
-    expect(html).toContain('AI Startup Impact');
+    expect(html).toContain('Udyaibase');
   });
 
   it('tools page returns 200', async () => {

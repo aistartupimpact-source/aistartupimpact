@@ -1,5 +1,5 @@
 /**
- * SEO Utilities for AI Startup Impact
+ * SEO Utilities for Udyaibase
  * Helper functions for schema generation, FAQ creation, and SEO optimization
  */
 

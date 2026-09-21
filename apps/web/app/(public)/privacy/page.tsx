@@ -8,7 +8,7 @@ export default function PrivacyPage() {
         <p className="text-sm text-gray-500 mb-8"><strong>Last updated:</strong> August 10, 2026</p>
 
         <p>
-          Welcome to AI Startup Impact. This Privacy Policy explains how <strong>AI Startup Impact</strong> (&quot;we&quot;, &quot;our&quot;, &quot;us&quot;) collects, uses, stores, and protects the personal data of users (&quot;you&quot;, &quot;your&quot;) when you use our website, newsletters, directories, event platform, job board, and related services (collectively, the &quot;Services&quot;).
+          Welcome to Udyaibase. This Privacy Policy explains how <strong>Udyaibase</strong> (&quot;we&quot;, &quot;our&quot;, &quot;us&quot;) collects, uses, stores, and protects the personal data of users (&quot;you&quot;, &quot;your&quot;) when you use our website, newsletters, directories, event platform, job board, and related services (collectively, the &quot;Services&quot;).
         </p>
         <p>
           We are committed to protecting your personal data in accordance with the <strong>Digital Personal Data Protection Act, 2023 (DPDPA)</strong> and the rules made thereunder, to the extent they are in force at the relevant time. As the DPDPA framework is being implemented in phases, we will update this policy as additional provisions come into effect. This policy also reflects our voluntary adoption of privacy best practices.
@@ -19,7 +19,7 @@ export default function PrivacyPage() {
           Our Services are intended for persons aged <strong>18 years and above</strong>. We do not knowingly collect personal data from anyone under 18 years of age. This age restriction is our operational policy; we recognise that the DPDPA defines &quot;child&quot; as a person below 18 years and imposes specific obligations regarding children&apos;s data.
         </p>
         <p>
-          If we become aware that we have collected data from a person under 18 without verifiable parental or guardian consent, we will delete such data promptly. If you are a parent or guardian and believe your child has provided personal data to us, please contact us at privacy@aistartupimpact.com.
+          If we become aware that we have collected data from a person under 18 without verifiable parental or guardian consent, we will delete such data promptly. If you are a parent or guardian and believe your child has provided personal data to us, please contact us at privacy@udyaibase.com.
         </p>
 
         <h2>2. Personal Data We Collect</h2>
@@ -107,13 +107,13 @@ export default function PrivacyPage() {
         <ul>
           <li><strong>Right to Access:</strong> You may request a summary of the personal data we hold about you and how it is being processed.</li>
           <li><strong>Right to Correction:</strong> You may request correction of inaccurate or incomplete personal data. You can update most account information directly through your profile settings.</li>
-          <li><strong>Right to Erasure:</strong> You may request deletion of your personal data. Founder users can delete their account from their account settings. For other data deletion requests, please contact privacy@aistartupimpact.com.</li>
+          <li><strong>Right to Erasure:</strong> You may request deletion of your personal data. Founder users can delete their account from their account settings. For other data deletion requests, please contact privacy@udyaibase.com.</li>
           <li><strong>Right to Withdraw Consent:</strong> You may withdraw consent at any time by unsubscribing from emails, deleting your account, or contacting us. Withdrawal does not affect the lawfulness of processing carried out before withdrawal.</li>
           <li><strong>Right to Grievance Redressal:</strong> You may raise a grievance with our Grievance Officer (details below).</li>
           <li><strong>Right to Nominate:</strong> You may nominate another person to exercise your rights in the event of your death or incapacity, as provided under the DPDPA.</li>
         </ul>
         <p>
-          To exercise any of these rights, contact us at <strong>privacy@aistartupimpact.com</strong>. We may need to verify your identity before processing your request.
+          To exercise any of these rights, contact us at <strong>privacy@udyaibase.com</strong>. We may need to verify your identity before processing your request.
         </p>
 
         <h2>7. Data Security</h2>
@@ -148,8 +148,8 @@ export default function PrivacyPage() {
         <p>
           <strong>Name:</strong> Lahori Venkatesh<br />
           <strong>Designation:</strong> Grievance Officer<br />
-          <strong>Email:</strong> privacy@aistartupimpact.com<br />
-          <strong>Address:</strong> Hyderabad, Telangana, India
+          <strong>Email:</strong> privacy@udyaibase.com<br />
+          <strong>Address:</strong> Udyaibase Technologies Pvt Ltd, Vijayawada, Andhra Pradesh, India
         </p>
         <p>
           We aim to acknowledge grievances within 48 hours and to resolve them within 30 days, subject to the complexity of the matter and applicable legal requirements.

@@ -1,5 +1,5 @@
 import { getOrganizerSession } from "@/lib/organizer-auth";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { BarChart3, Users, TrendingUp } from "lucide-react";
 export const dynamic = "force-dynamic";
 export default async function AnalyticsPage() {

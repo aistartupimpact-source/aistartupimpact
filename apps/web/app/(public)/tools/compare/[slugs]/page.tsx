@@ -7,7 +7,8 @@ import { getAiToolBySlugDirect, getToolProsConsDirect } from '@/lib/db';
 
 export const revalidate = 60;
 
-export async function generateMetadata({ params }: { params: { slugs: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ slugs: string }> }): Promise<Metadata> {
+  const params = await props.params;
   const parts = params.slugs.split('-vs-');
   if (parts.length !== 2) return { title: 'Compare Tools' };
   const [tool1, tool2] = await Promise.all([
@@ -17,10 +18,11 @@ export async function generateMetadata({ params }: { params: { slugs: string } }
   if (!tool1 || !tool2) return { title: 'Compare Tools' };
   const title = `${(tool1 as any).name} vs ${(tool2 as any).name}: Which Is Better in ${new Date().getFullYear()}?`;
   const description = `Compare ${(tool1 as any).name} and ${(tool2 as any).name} — features, pricing, pros & cons, ratings side by side.`;
-  return { title, description, alternates: { canonical: `https://aistartupimpact.com/tools/compare/${params.slugs}` }, openGraph: { title, description } };
+  return { title, description, alternates: { canonical: `https://udyaibase.com/tools/compare/${params.slugs}` }, openGraph: { title, description } };
 }
 
-export default async function ComparePage({ params }: { params: { slugs: string } }) {
+export default async function ComparePage(props: { params: Promise<{ slugs: string }> }) {
+  const params = await props.params;
   const parts = params.slugs.split('-vs-');
   if (parts.length !== 2) notFound();
 

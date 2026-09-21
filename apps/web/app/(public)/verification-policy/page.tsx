@@ -1,8 +1,8 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Verification Policy — AI Startup Impact",
-  description: "Learn how startup and organizer verification works on AI Startup Impact, including DNS domain verification and what the verified badge means.",
+  title: "Verification Policy — Udyaibase",
+  description: "Learn how startup and organizer verification works on Udyaibase, including DNS domain verification and what the verified badge means.",
 };
 
 export default function VerificationPolicyPage() {
@@ -15,7 +15,7 @@ export default function VerificationPolicyPage() {
         <p className="text-sm text-gray-500 mb-8"><strong>Last updated:</strong> July 2026</p>
 
         <p>
-          AI Startup Impact provides a verification system to help users identify authentic company profiles. This policy explains how verification works, what it means, and how to get verified.
+          Udyaibase provides a verification system to help users identify authentic company profiles. This policy explains how verification works, what it means, and how to get verified.
         </p>
 
         <h2>1. What Does the Verified Badge Mean?</h2>
@@ -24,7 +24,7 @@ export default function VerificationPolicyPage() {
         </p>
         <p>The verified badge does <strong>not</strong> imply:</p>
         <ul>
-          <li>Endorsement by AI Startup Impact</li>
+          <li>Endorsement by Udyaibase</li>
           <li>Accuracy of all information on the profile</li>
           <li>Financial stability or investment worthiness</li>
           <li>Quality of products or services offered</li>
@@ -36,7 +36,7 @@ export default function VerificationPolicyPage() {
         <ol>
           <li><strong>Claim your profile</strong> — Sign in to your Founder Dashboard and navigate to your startup profile.</li>
           <li><strong>Initiate verification</strong> — Click "Verify Ownership" to receive a unique verification token.</li>
-          <li><strong>Add DNS record</strong> — Add a TXT record to your domain's DNS settings with the provided token value. The record format is: <code>aistartupimpact-verify=YOUR_TOKEN</code></li>
+          <li><strong>Add DNS record</strong> — Add a TXT record to your domain's DNS settings with the provided token value. The record format is: <code>udyaibase-verify=YOUR_TOKEN</code></li>
           <li><strong>Confirm verification</strong> — Click "Check Verification" in your dashboard. Our system queries your domain's DNS records to confirm the token.</li>
           <li><strong>Badge applied</strong> — Once confirmed, the verified badge appears on your profile immediately.</li>
         </ol>
@@ -52,7 +52,7 @@ export default function VerificationPolicyPage() {
         <ul>
           <li>A registered domain name that matches or is associated with your company</li>
           <li>Administrative access to your domain's DNS settings</li>
-          <li>An active AI Startup Impact founder or organizer account</li>
+          <li>An active Udyaibase founder or organizer account</li>
           <li>Your profile must comply with our <a href="/content-guidelines">Content Guidelines</a></li>
         </ul>
 
@@ -67,11 +67,11 @@ export default function VerificationPolicyPage() {
 
         <h2>6. Disputes</h2>
         <p>
-          If you believe a profile has been incorrectly verified or someone has claimed your company's profile without authorization, please contact us at <a href="mailto:legal@aistartupimpact.com">legal@aistartupimpact.com</a> with supporting documentation. We will investigate within 5 business days.
+          If you believe a profile has been incorrectly verified or someone has claimed your company's profile without authorization, please contact us at <a href="mailto:legal@udyaibase.com">legal@udyaibase.com</a> with supporting documentation. We will investigate within 5 business days.
         </p>
 
         <h2>7. Contact</h2>
-        <p>For questions about verification, email <a href="mailto:support@aistartupimpact.com">support@aistartupimpact.com</a> or visit our <a href="/contact">Contact page</a>.</p>
+        <p>For questions about verification, email <a href="mailto:support@udyaibase.com">support@udyaibase.com</a> or visit our <a href="/contact">Contact page</a>.</p>
       </div>
     </div>
   );

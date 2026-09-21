@@ -5,7 +5,7 @@ import { SignJWT } from 'jose';
 import { randomBytes } from 'crypto';
 import { authRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { loginSchema, validateInput } from '@/lib/validation';
-import { securityAlertHtml } from '@aistartupimpact/utils';
+import { securityAlertHtml } from '@udyaibase/utils';
 import { sendEmailFireAndForget } from '@/lib/email/send';
 
 const CHALLENGE_SECRET = new TextEncoder().encode(process.env.USER_JWT_SECRET!);
@@ -47,7 +47,7 @@ function checkLockout(user: any): NextResponse | null {
 
 function buildLockoutResponse(user: any, newAttempts: number): NextResponse {
   if (newAttempts >= MAX_FAILED_ATTEMPTS) {
-    const resetUrl = `${process.env.NEXT_PUBLIC_WEB_URL || 'https://aistartupimpact.com'}/forgot-password`;
+    const resetUrl = `${process.env.NEXT_PUBLIC_WEB_URL || 'https://udyaibase.com'}/forgot-password`;
     sendEmailFireAndForget({
       to: user.email,
       subject: 'Security Alert — Failed Login Attempts',

@@ -19,11 +19,11 @@ Email delivery service for transactional and newsletter emails.
 
 ```env
 RESEND_API_KEY=re_xxxxxxxxxxxx
-RESEND_FROM_EMAIL=no-reply@aistartupimpact.com
-RESEND_FROM_NAME=AI Startup Impact
-RESEND_NEWSLETTER_EMAIL=events@aistartupimpact.com
-RESEND_NEWSLETTER_NAME=AI Startup Impact Events
-RESEND_REPLY_TO=hello@aistartupimpact.com
+RESEND_FROM_EMAIL=no-reply@udyaibase.com
+RESEND_FROM_NAME=Udyaibase
+RESEND_NEWSLETTER_EMAIL=events@udyaibase.com
+RESEND_NEWSLETTER_NAME=Udyaibase Events
+RESEND_REPLY_TO=hello@udyaibase.com
 ```
 
 ---
@@ -43,7 +43,7 @@ RESEND_REPLY_TO=hello@aistartupimpact.com
 ## Domains
 
 Configured in Resend Dashboard:
-- `aistartupimpact.com` — verified sending domain
+- `udyaibase.com` — verified sending domain
 - SPF, DKIM, DMARC records configured in Cloudflare DNS
 
 ---

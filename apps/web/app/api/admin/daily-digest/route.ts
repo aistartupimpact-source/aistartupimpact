@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
-import { dailyDigestHtml } from '@aistartupimpact/utils';
+import { prisma } from '@udyaibase/database';
+import { dailyDigestHtml } from '@udyaibase/utils';
 import { sendEmail } from '@/lib/email/send';
 
 export const dynamic = 'force-dynamic';
 
-const ADMIN_EMAIL = process.env.ADMIN_DIGEST_EMAIL || 'admin@aistartupimpact.com';
-const FROM_EMAIL = process.env.RESEND_NEWSLETTER_EMAIL || 'newsletter-noreply@aistartupimpact.com';
+const ADMIN_EMAIL = process.env.ADMIN_DIGEST_EMAIL || 'admin@udyaibase.com';
+const FROM_EMAIL = process.env.RESEND_NEWSLETTER_EMAIL || 'newsletter-noreply@udyaibase.com';
 
 export async function GET(request: NextRequest) {
   // Verify cron secret (Vercel sets this automatically for cron jobs)
@@ -175,7 +175,7 @@ export async function GET(request: NextRequest) {
 
     await sendEmail({
       to: ADMIN_EMAIL,
-      from: `AI Startup Impact <${FROM_EMAIL}>`,
+      from: `Udyaibase <${FROM_EMAIL}>`,
       subject: `Daily Digest — ${yesterdayStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
       html,
       type: 'daily_digest',

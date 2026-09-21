@@ -7,8 +7,9 @@ export const dynamic = 'force-dynamic';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string; faqId: string } }
+  props: { params: Promise<{ id: string; faqId: string }> }
 ) {
+  const params = await props.params;
   try {
     const session = await getFounderSession();
     if (!session) {
@@ -65,8 +66,9 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; faqId: string } }
+  props: { params: Promise<{ id: string; faqId: string }> }
 ) {
+  const params = await props.params;
   try {
     const session = await getFounderSession();
     if (!session) {

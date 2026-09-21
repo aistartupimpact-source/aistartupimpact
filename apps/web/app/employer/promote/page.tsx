@@ -26,7 +26,7 @@ export default async function EmployerPromotePage() {
       price: '₹15,000',
       period: '/month',
       current: session.plan === 'PREMIUM',
-      features: ['Unlimited jobs', 'Newsletter inclusion', 'Social promotion', '"Hiring Now" badge', 'All Featured perks', 'AI Startup Impact recommendation'],
+      features: ['Unlimited jobs', 'Newsletter inclusion', 'Social promotion', '"Hiring Now" badge', 'All Featured perks', 'Udyaibase recommendation'],
     },
   ];
 
@@ -75,7 +75,7 @@ export default async function EmployerPromotePage() {
       </div>
 
       <p className="text-center text-xs text-gray-400 font-jakarta mt-6">
-        Need a custom plan? <a href="mailto:contact@aistartupimpact.com" className="text-brand hover:underline">Contact us</a>
+        Need a custom plan? <a href="mailto:contact@udyaibase.com" className="text-brand hover:underline">Contact us</a>
       </p>
     </div>
   );

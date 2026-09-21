@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { getOrganizerSession } from "@/lib/organizer-auth";
-import { teamInviteHtml } from "@aistartupimpact/utils";
+import { teamInviteHtml } from "@udyaibase/utils";
 import { sendEmailFireAndForget } from "@/lib/email/send";
 import crypto from "crypto";
 
 export const dynamic = "force-dynamic";
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "no-reply@aistartupimpact.com";
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "no-reply@udyaibase.com";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 /**
@@ -74,8 +74,8 @@ export async function POST(request: NextRequest) {
   const acceptUrl = `${SITE_URL}/team/accept?token=${inviteToken}`;
   sendEmailFireAndForget({
     to: email,
-    from: `AI Startup Impact Events <${FROM_EMAIL}>`,
-    subject: "You're invited to manage events — AI Startup Impact",
+    from: `Udyaibase Events <${FROM_EMAIL}>`,
+    subject: "You're invited to manage events — Udyaibase",
     html: teamInviteHtml(session.name, role || "STAFF", acceptUrl),
     type: "team_invite",
   });

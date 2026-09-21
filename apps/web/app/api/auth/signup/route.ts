@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { createUnifiedSession, hashPassword, generateToken } from "@/lib/unified-auth";
 import { checkRateLimit, getClientIdentifier, authRateLimit } from "@/lib/rate-limit";
-import { isDisposableEmail } from "@aistartupimpact/utils";
+import { isDisposableEmail } from "@udyaibase/utils";
 
 export const dynamic = "force-dynamic";
 

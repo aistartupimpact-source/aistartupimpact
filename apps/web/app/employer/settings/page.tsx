@@ -63,7 +63,7 @@ export default function EmployerSettingsPage() {
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url;
-      a.download = `aistartupimpact-employer-data-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `udyaibase-employer-data-${new Date().toISOString().split('T')[0]}.json`;
       a.click(); URL.revokeObjectURL(url);
       setSuccess('Data exported successfully');
       setTimeout(() => setSuccess(''), 3000);

@@ -10,8 +10,7 @@ import CookieConsent from '@/components/CookieConsent';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import ClearConsentButton from '@/components/ClearConsentButton';
 import ScrollRestoration from '@/components/ScrollRestoration';
-import dynamic from 'next/dynamic';
-const ScrollToTop = dynamic(() => import('@/components/ScrollToTop'), { ssr: false });
+import { ScrollToTop } from '@/components/ClientOnly';
 import NewsletterPopup from '@/components/NewsletterPopup';
 import SignupSuccessPopup from '@/components/auth/SignupSuccessPopup';
 import { generateWebSiteSchema, generateOrganizationSchema } from '@/lib/seo';
@@ -56,7 +55,7 @@ export const viewport: Viewport = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const [seo, brand] = await Promise.all([getSeoConfig(), getBrandConfig()]);
-  const siteName = seo.metaTitle.split('–')[0]?.trim() || 'AI Startup Impact';
+  const siteName = seo.metaTitle.split('–')[0]?.trim() || 'Udyaibase';
   const ogImage = brand.ogImage || '/og-image.png';
 
   return {
@@ -73,7 +72,7 @@ export async function generateMetadata(): Promise<Metadata> {
       'top AI companies India', 'Sarvam AI funding', 'AI startup news India', 'IndiaAI Mission',
       'India AI unicorn', 'AI jobs India', 'best AI assistant India', 'India AI funding tracker',
       'Neysa AI India', 'sovereign AI India', 'AI newsletter India', 'Indian AI founder stories',
-      'ai startup impact', 'AI startups India', 'India AI startup news',
+      'udyaibase', 'AI startups India', 'India AI startup news',
       'AI startup funding India 2026', 'Indian AI ecosystem', 'AI founder stories India',
       'India artificial intelligence news', 'AI startup news', 'IndiaAI startup ecosystem',
     ],
@@ -152,9 +151,17 @@ export default async function RootLayout({
         {/* Prevent FOUC — set dark class before paint */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('asi-theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
+            __html: `(function(){try{var t=localStorage.getItem('ub-theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
           }}
         />
+        {/* GA Consent Mode v2 defaults — must run before GA library loads */}
+        {gaId && gaId !== 'G-XXXXXXXXXX' && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag('consent','default',{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});gtag('js',new Date());`,
+            }}
+          />
+        )}
       </head>
       <body className="font-jakarta antialiased bg-page dark:bg-page-dark text-charcoal dark:text-gray-100">
         {/* Site-level structured data */}

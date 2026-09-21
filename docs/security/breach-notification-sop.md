@@ -9,7 +9,7 @@
 
 ## 1. Scope
 
-This procedure covers any confirmed or suspected breach of personal data processed by AI Startup Impact, including unauthorized access, disclosure, alteration, or destruction of personal data held in our databases, email systems, or third-party services.
+This procedure covers any confirmed or suspected breach of personal data processed by Udyaibase, including unauthorized access, disclosure, alteration, or destruction of personal data held in our databases, email systems, or third-party services.
 
 ## 2. Breach Response Team
 
@@ -69,7 +69,7 @@ This procedure covers any confirmed or suspected breach of personal data process
 
 ## 4. Contact Information
 
-- **Grievance Officer**: Lahori Venkatesh — privacy@aistartupimpact.com
+- **Grievance Officer**: Lahori Venkatesh — privacy@udyaibase.com
 - **Data Protection Board of India**: As notified by MeitY
 - **Internal escalation**: All team members should report suspected breaches immediately to the Grievance Officer.
 

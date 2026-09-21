@@ -10,13 +10,13 @@ export const metadata: Metadata = {
   title: "AI Events — Conferences, Hackathons & Meetups",
   description:
     "Discover upcoming AI events, conferences, hackathons, workshops, and meetups. Find events near you and register for free.",
-  alternates: { canonical: "https://aistartupimpact.com/events" },
+  alternates: { canonical: "https://udyaibase.com/events" },
   openGraph: {
     title: "AI Events — Conferences, Hackathons & Meetups",
     description:
       "Discover upcoming AI events near you. Register for free conferences, hackathons, workshops, and meetups.",
     type: "website",
-    url: "https://aistartupimpact.com/events",
+    url: "https://udyaibase.com/events",
   },
 };
 
@@ -105,11 +105,12 @@ async function getEventTags() {
   }
 }
 
-export default async function EventsPage({
-  searchParams,
-}: {
-  searchParams: { q?: string; category?: string; format?: string; timeframe?: string };
-}) {
+export default async function EventsPage(
+  props: {
+    searchParams: Promise<{ q?: string; category?: string; format?: string; timeframe?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const [events, tags] = await Promise.all([
     getEvents(searchParams),
     getEventTags(),

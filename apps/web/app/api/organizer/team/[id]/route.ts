@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { getOrganizerSession } from "@/lib/organizer-auth";
 
 export const dynamic = "force-dynamic";
 
 /** PUT — Update team member role/assignments */
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const session = await getOrganizerSession();
   if (!session) return NextResponse.json({ success: false }, { status: 401 });
 
@@ -26,7 +27,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 /** DELETE — Revoke team member */
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const session = await getOrganizerSession();
   if (!session) return NextResponse.json({ success: false }, { status: 401 });
 

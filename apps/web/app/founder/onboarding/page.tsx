@@ -1,15 +1,16 @@
 import { redirect } from 'next/navigation';
 import { getFounderSession } from '@/lib/founder-auth';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import OnboardingClient from './OnboardingClient';
 
-export default async function OnboardingPage({
-  searchParams,
-}: {
-  searchParams: { returnTo?: string };
-}) {
+export default async function OnboardingPage(
+  props: {
+    searchParams: Promise<{ returnTo?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const session = await getFounderSession();
-  
+
   if (!session) {
     redirect('/auth/login');
   }

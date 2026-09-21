@@ -1,20 +1,21 @@
 import { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
-import { prisma } from '@aistartupimpact/database';
-import { generateSlug } from '@aistartupimpact/utils';
+import { prisma } from '@udyaibase/database';
+import { generateSlug } from '@udyaibase/utils';
 import CityForm from '../../CityForm';
 
 interface EditCityPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export const metadata: Metadata = {
   title: 'Edit City | Admin',
 };
 
-export default async function EditCityPage({ params }: EditCityPageProps) {
+export default async function EditCityPage(props: EditCityPageProps) {
+  const params = await props.params;
   const city = await prisma.indiaAICity.findUnique({
     where: { id: params.id }
   });

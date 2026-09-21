@@ -4,14 +4,14 @@
  * Red-themed social icons, Hyderabad location, minimal margins.
  */
 
-const SITE_URL = 'https://aistartupimpact.com';
+const SITE_URL = 'https://udyaibase.com';
 const YEAR = new Date().getFullYear();
 
 const SOCIAL_LINKS = {
-  x: 'https://x.com/aistartupimpact',
+  x: 'https://x.com/udyaibase',
   linkedin: 'https://www.linkedin.com/company/ai-startup-imapact/',
-  youtube: 'https://www.youtube.com/@aistartupimpact',
-  instagram: 'https://www.instagram.com/aistartupimpact',
+  youtube: 'https://www.youtube.com/@udyaibase',
+  instagram: 'https://www.instagram.com/udyaibase',
 };
 
 const NAV_LINKS = [
@@ -65,14 +65,14 @@ ${NAV_LINKS.map(l => `<a href="${l.url}" style="color:${navColor};text-decoratio
 ${socialIconsHtml(isDark ? 'dark' : 'light')}
 </td></tr></table>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="padding:4px 0 20px"><tr><td align="center">
-<p style="color:${mutedColor};font-size:12px;line-height:1.6;margin:0">You're receiving this because you subscribed to AI Startup Impact. Never spam.</p>
+<p style="color:${mutedColor};font-size:12px;line-height:1.6;margin:0">You're receiving this because you subscribed to Udyaibase. Never spam.</p>
 </td></tr></table>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="padding:0 0 16px"><tr><td align="center">
 ${FOOTER_LINKS.map(l => `<a href="${l.url}" style="color:${linkColor};text-decoration:none;font-size:11px;font-weight:500;padding:2px 6px;display:inline-block">${l.label}</a>`).join(`<span style="color:${mutedColor};font-size:11px">·</span>`)}
 </td></tr></table>
 <div style="height:12px;line-height:12px;font-size:1px">&nbsp;</div>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="padding:0 0 0"><tr><td align="center">
-<p style="color:${mutedColor};font-size:10px;margin:0;opacity:0.7">© ${YEAR} AI Startup Impact · Hyderabad, India</p>
+<p style="color:${mutedColor};font-size:10px;margin:0;opacity:0.7">© ${YEAR} Udyaibase · Hyderabad, India</p>
 </td></tr></table>
 <div style="height:20px;line-height:20px;font-size:1px">&nbsp;</div>
 </td></tr>`;

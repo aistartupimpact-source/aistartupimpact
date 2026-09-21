@@ -11,17 +11,18 @@ export const metadata: Metadata = {
   alternates: { canonical: '/jobs' },
 };
 interface PageProps {
-  searchParams: {
+  searchParams: Promise<{
     category?: string;
     workType?: string;
     experience?: string;
     country?: string;
     visa?: string;
     sort?: string;
-  };
+  }>;
 }
 
-export default async function JobsPage({ searchParams }: PageProps) {
+export default async function JobsPage(props: PageProps) {
+  const searchParams = await props.searchParams;
   const { category, workType, experience, country, visa, sort } = searchParams;
 
   let jobs: any[] = [];
@@ -210,7 +211,7 @@ export default async function JobsPage({ searchParams }: PageProps) {
           <Briefcase className="w-3.5 h-3.5" /> Hire AI Talent
         </div>
         <h2 className="font-sora font-bold text-lg sm:text-xl text-navy dark:text-white mb-2">
-          Reach 45K+ AI professionals through AI Startup Impact
+          Reach 45K+ AI professionals through Udyaibase
         </h2>
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-3 mb-5">
           <span className="flex items-center gap-1"><span className="text-green-500">✓</span> Free job posting</span>

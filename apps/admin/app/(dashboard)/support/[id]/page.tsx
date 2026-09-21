@@ -3,7 +3,8 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import SupportDetailClient from "./SupportDetailClient";
 
-export default async function SupportDetailPage({ params }: { params: { id: string } }) {
+export default async function SupportDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session?.user || !["SUPER_ADMIN", "EDITOR_IN_CHIEF"].includes(session.user.role)) redirect("/dashboard");
 

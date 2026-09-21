@@ -17,15 +17,15 @@ export const metadata: Metadata = {
     'IndiaAI Mission application'
   ].join(', '),
   alternates: {
-    canonical: 'https://aistartupimpact.com/india-ai/schemes/indiaai-mission',
+    canonical: 'https://udyaibase.com/india-ai/schemes/indiaai-mission',
   },
   openGraph: {
     title: 'IndiaAI Mission - ₹10,372 Cr Government AI Funding',
     description: 'Complete guide to IndiaAI Mission funding for AI startups. Eligibility, application process, and compute infrastructure access.',
-    url: 'https://aistartupimpact.com/india-ai/schemes/indiaai-mission',
-    siteName: 'AI Startup Impact',
+    url: 'https://udyaibase.com/india-ai/schemes/indiaai-mission',
+    siteName: 'Udyaibase',
     images: [{
-      url: 'https://aistartupimpact.com/og-images/indiaai-mission.jpg',
+      url: 'https://udyaibase.com/og-images/indiaai-mission.jpg',
       width: 1200,
       height: 630,
     }],

@@ -226,7 +226,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Also from AI Startup Impact */}
+      {/* Also from Udyaibase */}
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <a
           href="/employer/login"

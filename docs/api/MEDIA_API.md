@@ -20,7 +20,7 @@ Upload a file to Cloudflare R2.
 
 **Response (200)**:
 ```json
-{ "url": "https://media.aistartupimpact.com/media/1706123456-logo.png", "key": "media/1706123456-logo.png" }
+{ "url": "https://media.udyaibase.com/media/1706123456-logo.png", "key": "media/1706123456-logo.png" }
 ```
 
 **Errors**:

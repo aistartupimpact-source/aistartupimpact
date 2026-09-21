@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import crypto from 'crypto';
-import { employerPasswordResetHtml } from '@aistartupimpact/utils';
+import { employerPasswordResetHtml } from '@udyaibase/utils';
 import { sendEmailFireAndForget } from '@/lib/email/send';
 import { authRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 
@@ -41,12 +41,12 @@ export async function POST(request: NextRequest) {
       WHERE id = ${employer.id}
     `;
 
-    const siteUrl = process.env.NEXT_PUBLIC_WEB_URL || 'https://aistartupimpact.com';
+    const siteUrl = process.env.NEXT_PUBLIC_WEB_URL || 'https://udyaibase.com';
     const resetUrl = `${siteUrl}/employer/reset-password?token=${resetToken}`;
 
     sendEmailFireAndForget({
       to: email.toLowerCase().trim(),
-      subject: 'Reset Your Password — AI Startup Impact',
+      subject: 'Reset Your Password — Udyaibase',
       html: employerPasswordResetHtml(employer.companyName, resetUrl),
       type: 'password_reset',
     });

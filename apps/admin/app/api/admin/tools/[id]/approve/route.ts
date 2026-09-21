@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
-import { toolApprovalHtml } from '@aistartupimpact/utils';
+import { toolApprovalHtml } from '@udyaibase/utils';
 import { sendEmailFireAndForget } from '@/lib/email-send';
 import { requireApiAuth } from '@/lib/api-auth';
 import { logAuditEvent } from '@/lib/audit-log';
 
 const sql = neon(process.env.DATABASE_URL!);
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { error } = await requireApiAuth(['SUPER_ADMIN', 'EDITOR_IN_CHIEF']);
   if (error) return error;
   try {
@@ -39,7 +37,7 @@ export async function POST(
     if (tool?.founderEmail) {
       sendEmailFireAndForget({
         to: tool.founderEmail,
-        subject: `Your tool "${tool.name}" is now live on AI Startup Impact`,
+        subject: `Your tool "${tool.name}" is now live on Udyaibase`,
         html: toolApprovalHtml(tool.name, tool.founderName || 'there', tool.slug),
         type: 'approval',
       });

@@ -1,11 +1,12 @@
 import { requireFounderAuth } from '@/lib/founder-auth';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, Eye, MousePointerClick, Bookmark, Star, TrendingUp, ArrowUpRight } from 'lucide-react';
 
-export default async function ToolAnalyticsPage({ params }: { params: { slug: string } }) {
+export default async function ToolAnalyticsPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const session = await requireFounderAuth();
 
   // Fetch tool with ownership check

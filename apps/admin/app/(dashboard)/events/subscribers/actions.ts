@@ -2,9 +2,9 @@
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { Resend } from "resend";
-import { eventPromotionHtml } from "@aistartupimpact/utils";
+import { eventPromotionHtml } from "@udyaibase/utils";
 
 const EVENT_ROLES = ["SUPER_ADMIN", "EDITOR_IN_CHIEF"];
 
@@ -14,9 +14,9 @@ function getResend() {
   return resend;
 }
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "no-reply@aistartupimpact.com";
-const FROM_NAME = process.env.RESEND_FROM_NAME || "AI Startup Impact";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://aistartupimpact.com";
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "no-reply@udyaibase.com";
+const FROM_NAME = process.env.RESEND_FROM_NAME || "Udyaibase";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://udyaibase.com";
 
 /**
  * Preview audience count filtered by city and/or occupation from EventRegistration.

@@ -24,7 +24,7 @@ export default function MentionPopup({ query, position, onSelect, onClose }: Men
   const [loading, setLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const popupRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout>(undefined);
 
   const fetchMentions = useCallback(async (q: string) => {
     if (q.length < 2) { setResults([]); return; }

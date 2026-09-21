@@ -5,10 +5,8 @@ import { getFounderSession } from '@/lib/founder-auth';
 export const dynamic = 'force-dynamic';
 const COOLDOWN_DAYS = 45;
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await getFounderSession();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

@@ -14,7 +14,7 @@ vi.mock('@/lib/db', () => ({
   sql: vi.fn(() => Promise.resolve([])),
 }));
 
-vi.mock('@aistartupimpact/database', () => ({
+vi.mock('@udyaibase/database', () => ({
   prisma: {
     webUser: { findUnique: vi.fn(() => Promise.resolve(null)), findFirst: vi.fn(() => Promise.resolve(null)), create: vi.fn() },
     emailOtp: { count: vi.fn(() => Promise.resolve(0)), updateMany: vi.fn(), create: vi.fn(), findFirst: vi.fn(() => Promise.resolve(null)) },
@@ -55,7 +55,7 @@ vi.mock('@neondatabase/serverless', () => ({
 }));
 
 function makeRequest(url: string, method = 'POST', body?: any) {
-  const init: RequestInit = { method };
+  const init: any = { method };
   if (body) {
     init.body = JSON.stringify(body);
     init.headers = { 'Content-Type': 'application/json' };

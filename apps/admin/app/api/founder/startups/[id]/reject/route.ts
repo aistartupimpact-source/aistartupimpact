@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { neon } from '@neondatabase/serverless';
-import { startupRejectionHtml } from '@aistartupimpact/utils';
+import { startupRejectionHtml } from '@udyaibase/utils';
 import { sendEmailFireAndForget } from '@/lib/email-send';
 import { requireApiAuth } from '@/lib/api-auth';
 import { logAuditEvent } from '@/lib/audit-log';
 
 const sql = neon(process.env.DATABASE_URL!);
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { error: authError } = await requireApiAuth(['SUPER_ADMIN', 'EDITOR_IN_CHIEF']);
   if (authError) return authError;
   try {

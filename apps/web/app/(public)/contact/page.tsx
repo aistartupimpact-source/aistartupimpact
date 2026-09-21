@@ -3,13 +3,13 @@ import { Mail, MapPin, Clock, MessageSquare } from 'lucide-react';
 import ContactForm from './ContactForm';
 
 export const metadata: Metadata = {
-  title: 'Contact Us — AI Startup Impact',
-  description: 'Get in touch with the AI Startup Impact team for partnerships, press inquiries, bug reports, or feedback.',
+  title: 'Contact Us — Udyaibase',
+  description: 'Get in touch with the Udyaibase team for partnerships, press inquiries, bug reports, or feedback.',
   alternates: { canonical: '/contact' },
   openGraph: {
-    title: 'Contact Us — AI Startup Impact',
-    description: 'Get in touch with the AI Startup Impact team for partnerships, press inquiries, bug reports, or feedback.',
-    url: 'https://aistartupimpact.com/contact',
+    title: 'Contact Us — Udyaibase',
+    description: 'Get in touch with the Udyaibase team for partnerships, press inquiries, bug reports, or feedback.',
+    url: 'https://udyaibase.com/contact',
   },
 };
 
@@ -17,13 +17,13 @@ const contactInfo = [
   {
     icon: Mail,
     label: 'Email',
-    value: 'hello@aistartupimpact.com',
-    href: 'mailto:hello@aistartupimpact.com',
+    value: 'hello@udyaibase.com',
+    href: 'mailto:hello@udyaibase.com',
   },
   {
     icon: MapPin,
     label: 'Office',
-    value: 'Hyderabad, Telangana, India',
+    value: 'Udyaibase Technologies Pvt Ltd, Vijayawada, Andhra Pradesh, India',
   },
   {
     icon: Clock,

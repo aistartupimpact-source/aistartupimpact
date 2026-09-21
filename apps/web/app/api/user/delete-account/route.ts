@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import bcrypt from 'bcryptjs';
 import { getUserSession } from '@/lib/user-session';
 import { cookies } from 'next/headers';
@@ -49,7 +49,7 @@ export async function DELETE(request: NextRequest) {
       await tx.webUser.delete({ where: { id: user.id } });
     });
 
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     (await cookieStore).delete('user-token');
     (await cookieStore).delete('unified_session');
 

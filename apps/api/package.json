@@ -1,5 +1,5 @@
 {
-  "name": "@aistartupimpact/api",
+  "name": "@udyaibase/api",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,8 +9,8 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@aistartupimpact/types": "*",
-    "@aistartupimpact/utils": "*",
+    "@udyaibase/types": "*",
+    "@udyaibase/utils": "*",
     "@aws-sdk/client-s3": "^3.1004.0",
     "@aws-sdk/s3-request-presigner": "^3.1004.0",
     "@prisma/client": "^5.20.0",

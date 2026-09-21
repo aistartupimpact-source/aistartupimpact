@@ -4,7 +4,7 @@ import { sql } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600;
 
-const SITE_URL = 'https://aistartupimpact.com';
+const SITE_URL = 'https://udyaibase.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {

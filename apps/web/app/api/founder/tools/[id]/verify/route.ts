@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { requireFounderAuth } from '@/lib/founder-auth';
-import { prisma } from '@aistartupimpact/database';
-import { verifyDNS } from '@aistartupimpact/utils/src/verification/dns';
+import { prisma } from '@udyaibase/database';
+import { verifyDNS } from '@udyaibase/utils/src/verification/dns';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,10 +21,8 @@ function extractDomain(url: string): string {
 }
 
 // GET — Check verification status & get token/instructions
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireFounderAuth();
     const { id } = params;
@@ -58,12 +56,12 @@ export async function GET(
       verified: false,
       domain,
       token,
-      dnsRecord: `aistartupimpact-verify=${token}`,
+      dnsRecord: `udyaibase-verify=${token}`,
       instructions: {
         method: 'DNS TXT Record',
         steps: [
           `Go to your DNS provider for ${domain}`,
-          `Add a TXT record with value: aistartupimpact-verify=${token}`,
+          `Add a TXT record with value: udyaibase-verify=${token}`,
           'Wait 1-5 minutes for DNS propagation',
           'Click "Verify" to check',
         ],
@@ -78,10 +76,8 @@ export async function GET(
 }
 
 // POST — Trigger verification check
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireFounderAuth();
     const { id } = params;

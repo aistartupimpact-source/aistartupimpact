@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, use } from 'react';
 import Link from 'next/link';
 import {
   ArrowLeft, Save, ChevronDown, ChevronUp, Image as ImageIcon, Hash, Clock, Globe,
@@ -15,7 +15,8 @@ import SEOScorePanel from '../../../../components/SEOScorePanel';
 import ImageAltTextManager from '../../../../components/ImageAltTextManager';
 import MentionPopup from '../../../../components/MentionPopup';
 
-export default function EditArticlePage({ params }: { params: { id: string } }) {
+export default function EditArticlePage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);

@@ -300,7 +300,7 @@ export default function EditStartupPage() {
               slugChangedAt={formData.slugChangedAt}
               entityType="startup"
               entityId={formData.id}
-              baseUrl="https://aistartupimpact.com/startups"
+              baseUrl="https://udyaibase.com/startups"
               isAdmin={true}
               onSuccess={(newSlug) => {
                 setFormData(prev => prev ? { ...prev, slug: newSlug } : null);

@@ -158,8 +158,8 @@ export default function EventDetailClient({
 
   const handleShare = async () => {
     const shortUrl = event.shortCode
-      ? `${typeof window !== "undefined" ? window.location.origin : "https://aistartupimpact.com"}/e/${event.shortCode}`
-      : `${typeof window !== "undefined" ? window.location.origin : "https://aistartupimpact.com"}/events/${event.slug}`;
+      ? `${typeof window !== "undefined" ? window.location.origin : "https://udyaibase.com"}/e/${event.shortCode}`
+      : `${typeof window !== "undefined" ? window.location.origin : "https://udyaibase.com"}/events/${event.slug}`;
     try {
       await navigator.clipboard.writeText(shortUrl);
       setCopied(true);

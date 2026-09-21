@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: 'Government AI Funding Schemes India | IndiaAI Mission, SISFS, MeitY Grants',
   description: 'Complete guide to government funding schemes for AI startups in India. Explore IndiaAI Mission, Startup India Seed Fund, and MeitY grants with eligibility criteria and application process.',
   alternates: {
-    canonical: 'https://aistartupimpact.com/india-ai/schemes',
+    canonical: 'https://udyaibase.com/india-ai/schemes',
   },
 };
 

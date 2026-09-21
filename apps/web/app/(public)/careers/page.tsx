@@ -462,7 +462,7 @@ export default function CareersPage() {
                         className="w-5 h-5 text-brand border-gray-300 rounded focus:ring-brand mt-0.5 flex-shrink-0"
                       />
                       <span className="text-sm text-gray-600 dark:text-gray-400 font-jakarta leading-relaxed">
-                        I agree to receive newsletters, startup insights, and promotional updates from AI Startup Impact via email. I understand I can unsubscribe at any time.
+                        I agree to receive newsletters, startup insights, and promotional updates from Udyaibase via email. I understand I can unsubscribe at any time.
                       </span>
                     </label>
                   </div>

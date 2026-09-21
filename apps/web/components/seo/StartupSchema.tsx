@@ -26,7 +26,7 @@ interface StartupSchemaProps {
 }
 
 export function StartupSchema({ startup }: StartupSchemaProps) {
-  const pageUrl = `https://aistartupimpact.com/startups/${startup.slug}`;
+  const pageUrl = `https://udyaibase.com/startups/${startup.slug}`;
   const orgId = `${pageUrl}#organization`;
   
   // Use actual database timestamps for SEO integrity
@@ -44,7 +44,7 @@ export function StartupSchema({ startup }: StartupSchemaProps) {
         "url": pageUrl,
         "name": `${startup.name} - ${startup.tagline || startup.description?.slice(0, 60) || 'AI Startup'}`,
         "isPartOf": {
-          "@id": "https://aistartupimpact.com/#website"
+          "@id": "https://udyaibase.com/#website"
         },
         "about": {
           "@id": orgId
@@ -117,13 +117,13 @@ export function StartupSchema({ startup }: StartupSchemaProps) {
             "@type": "ListItem",
             "position": 1,
             "name": "Home",
-            "item": "https://aistartupimpact.com"
+            "item": "https://udyaibase.com"
           },
           {
             "@type": "ListItem",
             "position": 2,
             "name": "Startups",
-            "item": "https://aistartupimpact.com/startups"
+            "item": "https://udyaibase.com/startups"
           },
           {
             "@type": "ListItem",

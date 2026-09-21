@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Search, MapPin, X, CheckCircle } from 'lucide-react';
-import { CITY_DATABASE } from '@aistartupimpact/utils/src/cities';
+import { CITY_DATABASE } from '@udyaibase/utils/src/cities';
 import { DeleteButton } from '../india-ai/components/DeleteButton';
 
 interface CitiesListProps {

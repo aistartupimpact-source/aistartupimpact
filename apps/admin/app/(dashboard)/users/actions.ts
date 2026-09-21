@@ -1,13 +1,13 @@
 "use server";
 
 import { UserRole } from "@prisma/client";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { neon } from '@neondatabase/serverless';
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { logAuditEvent } from '@/lib/audit-log';
-import { userInvitationHtml } from '@aistartupimpact/utils';
+import { userInvitationHtml } from '@udyaibase/utils';
 import { sendEmail } from '@/lib/email-send';
 
 const sql = neon(process.env.DATABASE_URL!);
@@ -90,7 +90,7 @@ export async function inviteUser(data: { name: string; email: string; role: stri
 
     const emailResult = await sendEmail({
       to: data.email,
-      subject: "You've been invited to AI Startup Impact",
+      subject: "You've been invited to Udyaibase",
       html: userInvitationHtml(data.name, data.role),
       type: 'user_invitation',
     });

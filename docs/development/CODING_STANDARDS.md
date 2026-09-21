@@ -1,6 +1,6 @@
 # Coding Standards
 
-Conventions and patterns used across the AI Startup Impact codebase.
+Conventions and patterns used across the Udyaibase codebase.
 
 ---
 

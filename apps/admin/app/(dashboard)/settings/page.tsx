@@ -193,7 +193,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">Canonical Domain</label>
-                  <input type="url" className="input-field text-sm" placeholder="https://aistartupimpact.com" value={settings.canonicalDomain} onChange={(e) => updateSetting('canonicalDomain', e.target.value)} />
+                  <input type="url" className="input-field text-sm" placeholder="https://udyaibase.com" value={settings.canonicalDomain} onChange={(e) => updateSetting('canonicalDomain', e.target.value)} />
                   <p className="text-[11px] text-gray-400 font-jakarta mt-1">Primary domain for canonical URLs, sitemaps, and structured data</p>
                 </div>
               </div>

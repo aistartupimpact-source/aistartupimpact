@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps';
 import { MapPin, Filter, X, Building2, Tag, DollarSign, Calendar, Info } from 'lucide-react';
 import Image from 'next/image';
-import { standardizeCityName } from '@aistartupimpact/utils/src/cities';
+import { standardizeCityName } from '@udyaibase/utils/src/cities';
 
 interface City {
   id: string;

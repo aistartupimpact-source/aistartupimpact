@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 
 // Bot user agents to filter
 const BOT_USER_AGENTS = [

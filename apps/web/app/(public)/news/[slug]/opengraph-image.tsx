@@ -9,7 +9,7 @@ export const contentType = 'image/png';
 export default async function OGImage({ params }: { params: { slug: string } }) {
   const article = await getArticleBySlugDirect(params.slug);
 
-  const title = article?.title || 'AIStartupImpact';
+  const title = article?.title || 'Udyaibase';
   const category = article?.category?.name || 'News';
   const author = article?.author?.name || 'ASI Editorial';
   const coverImage = article?.coverImage;
@@ -127,7 +127,7 @@ export default async function OGImage({ params }: { params: { slug: string } }) 
               </span>
             </div>
             <span style={{ fontSize: '16px', color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>
-              aistartupimpact.com
+              udyaibase.com
             </span>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireFounderAuth } from '@/lib/founder-auth';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
@@ -10,10 +10,8 @@ function generateToken(): string {
   return crypto.randomBytes(16).toString('hex');
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     // Authenticate founder
     let session;
@@ -76,7 +74,7 @@ export async function POST(
 
     // Generate or reuse verification token
     const token = startup.verificationToken || generateToken();
-    const dnsRecord = `aistartupimpact-verify=${token}`;
+    const dnsRecord = `udyaibase-verify=${token}`;
 
     // Update startup with claim info using raw query
     await prisma.$executeRaw`

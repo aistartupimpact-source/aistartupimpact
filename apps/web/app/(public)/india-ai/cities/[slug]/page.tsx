@@ -16,9 +16,9 @@ import { sql } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 
 interface CityPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 async function getCityData(slug: string) {
@@ -70,9 +70,10 @@ function formatCurrency(paise: number): string {
   return `₹${Math.round(inr).toLocaleString('en-IN')}`;
 }
 
-export async function generateMetadata({ params }: CityPageProps): Promise<Metadata> {
+export async function generateMetadata(props: CityPageProps): Promise<Metadata> {
+  const params = await props.params;
   const data = await getCityData(params.slug);
-  
+
   if (!data) {
     return {
       title: 'City Not Found',
@@ -99,7 +100,8 @@ export async function generateMetadata({ params }: CityPageProps): Promise<Metad
   };
 }
 
-export default async function CityPage({ params }: CityPageProps) {
+export default async function CityPage(props: CityPageProps) {
+  const params = await props.params;
   const data = await getCityData(params.slug);
 
   if (!data) {

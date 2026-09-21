@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
-import { paymentSuccessHtml } from '@aistartupimpact/utils';
+import { paymentSuccessHtml } from '@udyaibase/utils';
 import { sendEmailFireAndForget } from '../lib/email-send';
 import { rateLimit } from '../middleware/rateLimit';
 

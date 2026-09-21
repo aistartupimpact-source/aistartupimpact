@@ -12,7 +12,7 @@ export async function GET() {
       LIMIT 50
     `;
 
-    const siteUrl = 'https://aistartupimpact.com';
+    const siteUrl = 'https://udyaibase.com';
     const rssItems = articles.map(a => `
       <item>
         <title><![CDATA[${a.title}]]></title>
@@ -26,7 +26,7 @@ export async function GET() {
     const rssFeed = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0">
   <channel>
-    <title>AIStartupImpact - Latest News &amp; Stories</title>
+    <title>Udyaibase - Latest News &amp; Stories</title>
     <link>${siteUrl}</link>
     <description>India's source for AI startup news, tools, funding, and profiles.</description>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>

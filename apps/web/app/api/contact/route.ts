@@ -52,15 +52,15 @@ export async function POST(request: NextRequest) {
           <p>We've received your message and created ticket <strong>${ticket.ticketNumber}</strong>.</p>
           <p><strong>Subject:</strong> ${sanitizeText(subject)}</p>
           <p><strong>Category:</strong> ${category.replace('_', ' ')}</p>
-          <p>Our team typically responds within 24–48 hours. If your matter is urgent, email us directly at <a href="mailto:hello@aistartupimpact.com">hello@aistartupimpact.com</a>.</p>
+          <p>Our team typically responds within 24–48 hours. If your matter is urgent, email us directly at <a href="mailto:hello@udyaibase.com">hello@udyaibase.com</a>.</p>
           <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 24px 0;" />
-          <p style="color: #888; font-size: 13px;">AI Startup Impact · Hyderabad, India</p>
+          <p style="color: #888; font-size: 13px;">Udyaibase Technologies Pvt Ltd · Vijayawada, India</p>
         </div>
       `,
-      from: process.env.RESEND_FROM_EMAIL || 'noreply@aistartupimpact.com',
+      from: process.env.RESEND_FROM_EMAIL || 'noreply@udyaibase.com',
     });
 
-    const adminEmail = process.env.ADMIN_DIGEST_EMAIL || 'admin@aistartupimpact.com';
+    const adminEmail = process.env.ADMIN_DIGEST_EMAIL || 'admin@udyaibase.com';
     sendEmailFireAndForget({
       to: adminEmail,
       subject: `New contact form: ${sanitizeText(subject)} [${ticket.ticketNumber}]`,
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
           <p>${sanitizeText(message).replace(/\n/g, '<br/>')}</p>
         </div>
       `,
-      from: process.env.RESEND_FROM_EMAIL || 'noreply@aistartupimpact.com',
+      from: process.env.RESEND_FROM_EMAIL || 'noreply@udyaibase.com',
     });
 
     return NextResponse.json({

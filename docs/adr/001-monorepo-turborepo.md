@@ -30,7 +30,7 @@ Structure:
 
 ### Positive
 - Single `npm install` for all apps
-- Shared types and database client via `@aistartupimpact/database`
+- Shared types and database client via `@udyaibase/database`
 - Parallel builds with Turborepo caching
 - Single CI pipeline covers everything
 - Atomic commits across apps when schema changes

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getFounderSession } from '@/lib/founder-auth';
 import { getUnifiedSession } from '@/lib/unified-auth';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
 
@@ -24,7 +24,7 @@ export default async function FounderRootPage() {
 
   if (!founderId) {
     try {
-      const cookieStore = cookies();
+      const cookieStore = await cookies();
       const userToken = cookieStore.get('user-token')?.value;
       if (userToken) {
         const { payload } = await jwtVerify(userToken, USER_JWT_SECRET);

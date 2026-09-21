@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import nextDynamic from 'next/dynamic';
 import {
   Flag,
   MapPin,
@@ -18,7 +17,7 @@ import GovernmentSchemes from '@/components/india-ai/GovernmentSchemes';
 import PolicyLiveFeed from '@/components/india-ai/PolicyLiveFeed';
 import AITalentResearchHubsDB from '@/components/india-ai/AITalentResearchHubsDB';
 
-const RealIndiaMap = nextDynamic(() => import('@/components/india-ai/RealIndiaMap'), { ssr: false });
+import { RealIndiaMap } from '@/components/ClientOnly';
 
 export const revalidate = 300;
 
@@ -108,7 +107,7 @@ export const metadata: Metadata = {
     title: 'India AI Startups - Live Ecosystem Map',
     description: 'Explore India\'s AI revolution with real-time data on startups, funding, IndiaAI Mission tracker, policy updates, and talent insights.',
     type: 'website',
-    url: 'https://aistartupimpact.com/india-ai',
+    url: 'https://udyaibase.com/india-ai',
   },
   twitter: {
     card: 'summary_large_image',
@@ -116,7 +115,7 @@ export const metadata: Metadata = {
     description: 'Real-time intelligence on India\'s AI revolution — startups, funding, policy, and IndiaAI Mission tracker.',
   },
   alternates: {
-    canonical: 'https://aistartupimpact.com/india-ai',
+    canonical: 'https://udyaibase.com/india-ai',
   },
 };
 
@@ -368,13 +367,13 @@ export default async function IndiaAIPage() {
   const organizationSchema = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'AI Startup Impact - India AI Ecosystem',
-    url: 'https://aistartupimpact.com/india-ai',
-    logo: 'https://aistartupimpact.com/logo.png',
+    name: 'Udyaibase - India AI Ecosystem',
+    url: 'https://udyaibase.com/india-ai',
+    logo: 'https://udyaibase.com/logo.png',
     description: 'Comprehensive database and intelligence platform for India\'s AI startup ecosystem',
     sameAs: [
-      'https://twitter.com/aistartupimpact',
-      'https://linkedin.com/company/aistartupimpact',
+      'https://twitter.com/udyaibase',
+      'https://linkedin.com/company/udyaibase',
     ],
   };
 
@@ -383,16 +382,16 @@ export default async function IndiaAIPage() {
     '@type': 'Dataset',
     name: 'India AI Startups Database 2026',
     description: `Comprehensive database of ${startupCount} AI startups in India with funding data, city-wise distribution, and ecosystem insights`,
-    url: 'https://aistartupimpact.com/india-ai',
+    url: 'https://udyaibase.com/india-ai',
     keywords: 'India AI startups, AI funding India, Indian AI companies, AI ecosystem',
     creator: {
       '@type': 'Organization',
-      name: 'AI Startup Impact',
+      name: 'Udyaibase',
     },
     distribution: {
       '@type': 'DataDownload',
       encodingFormat: 'application/json',
-      contentUrl: 'https://aistartupimpact.com/api/india-ai/stats',
+      contentUrl: 'https://udyaibase.com/api/india-ai/stats',
     },
   };
 

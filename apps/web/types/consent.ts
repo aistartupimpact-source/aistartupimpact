@@ -31,4 +31,4 @@ export const DEFAULT_CONSENT: ConsentState = {
   marketing: false,
 };
 
-export const CONSENT_STORAGE_KEY = 'asi_consent_v1';
+export const CONSENT_STORAGE_KEY = 'ub_consent_v1';

@@ -111,7 +111,7 @@ Vercel's deployment model:
 ## Preview Deployments
 
 Every PR gets a preview URL:
-- Format: `https://aistartupimpact-{hash}.vercel.app`
+- Format: `https://udyaibase-{hash}.vercel.app`
 - Uses production environment variables
 - Full-stack deployment (not just frontend)
 - Auto-deleted after PR is merged/closed
@@ -122,8 +122,8 @@ Every PR gets a preview URL:
 
 | Domain | Points To |
 |--------|-----------|
-| `aistartupimpact.com` | Vercel (via Cloudflare proxy) |
-| `www.aistartupimpact.com` | Redirect → apex |
+| `udyaibase.com` | Vercel (via Cloudflare proxy) |
+| `www.udyaibase.com` | Redirect → apex |
 | Admin domain | Vercel (separate project) |
 
 DNS is managed in Cloudflare with proxy enabled (orange cloud).

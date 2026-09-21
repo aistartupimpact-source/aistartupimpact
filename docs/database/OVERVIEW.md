@@ -1,6 +1,6 @@
 # Database Overview
 
-AI Startup Impact uses Neon PostgreSQL as its primary data store with Prisma ORM for type-safe access.
+Udyaibase uses Neon PostgreSQL as its primary data store with Prisma ORM for type-safe access.
 
 ---
 
@@ -38,7 +38,7 @@ The pooled connection goes through Neon's connection proxy (PgBouncer) for conne
 packages/database/prisma/schema.prisma
 ```
 
-The Prisma client is generated as `@aistartupimpact/database` and shared across all apps.
+The Prisma client is generated as `@udyaibase/database` and shared across all apps.
 
 ---
 

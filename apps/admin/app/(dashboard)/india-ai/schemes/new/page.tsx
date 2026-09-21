@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import SchemeForm from '../SchemeForm';
 
 export const metadata: Metadata = {

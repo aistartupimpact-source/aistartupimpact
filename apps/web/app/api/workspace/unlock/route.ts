@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { getUnifiedSession } from "@/lib/unified-auth";
 import { unlockWorkspace } from "@/lib/unified-auth/workspace";
 import { checkRateLimit, getClientIdentifier, authRateLimit } from "@/lib/rate-limit";
@@ -21,7 +21,7 @@ async function getAuthenticatedUnifiedUserId(): Promise<string | null> {
   if (session) return session.id;
 
   // 2. Fallback: read legacy user-token → find the user's email → find UnifiedUser
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const userToken = cookieStore.get("user-token")?.value;
   if (!userToken) return null;
 

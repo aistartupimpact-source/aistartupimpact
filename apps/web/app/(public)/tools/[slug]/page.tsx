@@ -39,14 +39,15 @@ export async function generateStaticParams() {
 
 const getToolCached = cache((slug: string) => getAiToolBySlugDirect(slug));
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const params = await props.params;
   const tool = await getToolCached(params.slug) as any;
   if (!tool) return { title: 'Tool Not Found' };
-  
-  const title = `${tool.name} - ${tool.tagline} | AI Startup Impact`;
+
+  const title = `${tool.name} - ${tool.tagline} | Udyaibase`;
   const description = (tool.description || tool.tagline || '').slice(0, 155);
-  const url = `https://aistartupimpact.com/tools/${tool.slug}`;
-  
+  const url = `https://udyaibase.com/tools/${tool.slug}`;
+
   // Use dynamic OG image (auto-generated from opengraph-image.tsx)
   const image = `${url}/opengraph-image`;
 
@@ -64,7 +65,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       'AI software'
     ].filter(Boolean).join(', '),
     creator: tool.name,
-    publisher: 'AI Startup Impact',
+    publisher: 'Udyaibase',
     alternates: {
       canonical: url,
     },
@@ -72,7 +73,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       title,
       description,
       url,
-      siteName: 'AI Startup Impact',
+      siteName: 'Udyaibase',
       images: [{
         url: image,
         width: 1200,
@@ -87,8 +88,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       title,
       description,
       images: [image],
-      creator: '@aistartupimpact',
-      site: '@aistartupimpact',
+      creator: '@udyaibase',
+      site: '@udyaibase',
     },
     robots: {
       index: true,
@@ -118,7 +119,8 @@ function getEmbedUrl(url: string): string {
   return url;
 }
 
-export default async function ToolDetailPage({ params }: { params: { slug: string } }) {
+export default async function ToolDetailPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const tool = await getToolCached(params.slug) as any;
 
   if (!tool) {
@@ -175,10 +177,10 @@ export default async function ToolDetailPage({ params }: { params: { slug: strin
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
       {/* JSON-LD Schema: Single @graph with WebPage + SoftwareApplication + BreadcrumbList */}
       <ToolSchema tool={tool} />
-      
+
       {/* FAQ Schema (separate) */}
       <FAQSchema faqs={faqs} />
-      
+
       {/* Legacy schema for backward compatibility */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 

@@ -5,9 +5,9 @@ import { PrismaNeonHTTP } from '@prisma/adapter-neon';
 // Override default date/timestamp parsing behavior to return strings.
 // This is required to prevent "Inconsistent column data: Conversion failed" errors
 // when using Prisma with the Neon Serverless HTTP adapter.
-types.setTypeParser(1082, (val) => val); // date
-types.setTypeParser(1114, (val) => val); // timestamp without timezone
-types.setTypeParser(1184, (val) => val); // timestamp with timezone
+types.setTypeParser(1082, (val: string) => val); // date
+types.setTypeParser(1114, (val: string) => val); // timestamp without timezone
+types.setTypeParser(1184, (val: string) => val); // timestamp with timezone
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient | undefined };
 
@@ -16,7 +16,7 @@ function createPrismaClient(): PrismaClient {
   if (!connectionString) {
     throw new Error('DATABASE_URL environment variable is not set');
   }
-  const sql = neon(connectionString);
+  const sql = neon(connectionString) as any;
   const adapter = new PrismaNeonHTTP(sql);
   return new PrismaClient({
     adapter,

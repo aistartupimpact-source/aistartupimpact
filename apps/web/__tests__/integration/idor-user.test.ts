@@ -39,12 +39,12 @@ vi.mock('@neondatabase/serverless', () => ({
   neon: vi.fn(() => vi.fn(() => Promise.resolve([]))),
 }));
 
-vi.mock('@aistartupimpact/database', () => ({
+vi.mock('@udyaibase/database', () => ({
   prisma: { $queryRaw: vi.fn(() => Promise.resolve([])) },
 }));
 
 function makeRequest(url: string, method = 'GET', body?: any) {
-  const init: RequestInit = { method };
+  const init: any = { method };
   if (body) {
     init.body = JSON.stringify(body);
     init.headers = { 'Content-Type': 'application/json' };

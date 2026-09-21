@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { Mail, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 
 function UnsubscribeContent() {
@@ -74,12 +75,12 @@ function UnsubscribeContent() {
           <p className="text-xs text-gray-500 font-jakarta">
             Changed your mind? You can always resubscribe from our homepage.
           </p>
-          <a
+          <Link
             href="/"
             className="mt-6 inline-block px-6 py-2.5 bg-brand hover:bg-brand-dark text-white rounded-xl font-semibold text-sm transition-colors"
           >
             Back to Homepage
-          </a>
+          </Link>
         </div>
       </div>
     );

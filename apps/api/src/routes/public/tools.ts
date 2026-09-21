@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { authenticateToken, AuthRequest } from '../../middleware/auth';
 import crypto from 'crypto';
 

@@ -2,7 +2,7 @@ import { neon } from "@neondatabase/serverless";
 import StartupReviewsClient from "./StartupReviewsClient";
 
 export const metadata = {
-  title: "Startup Reviews | AIStartupImpact Admin",
+  title: "Startup Reviews | Udyaibase Admin",
 };
 
 export default async function StartupReviewsPage() {

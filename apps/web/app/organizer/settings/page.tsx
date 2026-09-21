@@ -277,7 +277,7 @@ export default function OrganizerSettingsPage() {
                       const blob = await res.blob();
                       const url = URL.createObjectURL(blob);
                       const a = document.createElement('a'); a.href = url;
-                      a.download = `aistartupimpact-organizer-data-${new Date().toISOString().split('T')[0]}.json`;
+                      a.download = `udyaibase-organizer-data-${new Date().toISOString().split('T')[0]}.json`;
                       a.click(); URL.revokeObjectURL(url);
                       setMsg('Data exported!');
                       setTimeout(() => setMsg(''), 3000);

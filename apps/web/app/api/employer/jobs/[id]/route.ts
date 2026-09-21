@@ -4,10 +4,8 @@ import { getEmployerSession } from '@/lib/employer-auth';
 
 export const dynamic = 'force-dynamic';
 // GET: Fetch a single job for editing
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await getEmployerSession();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -33,10 +31,8 @@ export async function GET(
 }
 
 // PUT: Update a job listing
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await getEmployerSession();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -73,10 +69,8 @@ export async function PUT(
 }
 
 // DELETE: Soft-delete a job
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await getEmployerSession();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

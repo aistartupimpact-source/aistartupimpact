@@ -1,16 +1,17 @@
 import { requireFounderAuth } from '@/lib/founder-auth';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { notFound, redirect } from 'next/navigation';
 import ToolEditForm from '@/components/founder/ToolEditForm';
 import SlugEditor from '@/components/shared/SlugEditor';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
-export default async function EditToolPage({ params }: PageProps) {
+export default async function EditToolPage(props: PageProps) {
+  const params = await props.params;
   const session = await requireFounderAuth();
 
   // Fetch tool using raw query to avoid serialization issues
@@ -167,7 +168,7 @@ export default async function EditToolPage({ params }: PageProps) {
         slugChangedAt={tool.slugChangedAt || null}
         entityType="tool"
         entityId={tool.id}
-        baseUrl="https://aistartupimpact.com/tools"
+        baseUrl="https://udyaibase.com/tools"
         isAdmin={false}
       />
     </div>

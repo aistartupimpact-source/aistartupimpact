@@ -8,7 +8,7 @@ export default function TermsPage() {
         <p className="text-sm text-gray-500 mb-8"><strong>Last updated:</strong> August 10, 2026</p>
 
         <p>
-          Welcome to AI Startup Impact. By accessing or using our website, newsletters, funding resources, directories, event platform, job board, and related services (collectively, &quot;Services&quot;), you agree to abide by and be bound by the following Terms & Conditions. If you do not agree with any of these terms, please do not use our Services.
+          Welcome to Udyaibase. By accessing or using our website, newsletters, funding resources, directories, event platform, job board, and related services (collectively, &quot;Services&quot;), you agree to abide by and be bound by the following Terms & Conditions. If you do not agree with any of these terms, please do not use our Services.
         </p>
 
         <h2>1. Eligibility</h2>
@@ -18,12 +18,12 @@ export default function TermsPage() {
 
         <h2>2. Scope of Services</h2>
         <p>
-          AI Startup Impact is an informational platform dedicated to the Indian Artificial Intelligence ecosystem. We provide news, startup directory listings, AI tool reviews, funding reports, event management, a job board, and editorial content. All content provided is for informational purposes only and does not constitute professional, financial, or investment advice.
+          Udyaibase is an informational platform dedicated to the Indian Artificial Intelligence ecosystem. We provide news, startup directory listings, AI tool reviews, funding reports, event management, a job board, and editorial content. All content provided is for informational purposes only and does not constitute professional, financial, or investment advice.
         </p>
 
         <h2>3. Intellectual Property Rights</h2>
         <p>
-          All graphics, texts, logos, structural design, and multimedia content featured on AI Startup Impact are the exclusive property of AI Startup Impact or its respective licensors. Users are granted a limited, non-exclusive license to use the content for personal, non-commercial purposes.
+          All graphics, texts, logos, structural design, and multimedia content featured on Udyaibase are the exclusive property of Udyaibase or its respective licensors. Users are granted a limited, non-exclusive license to use the content for personal, non-commercial purposes.
         </p>
         <p>
           Scraping, copying, or republishing our comprehensive startup directories, funding data, or news articles without explicit written authorization is strictly prohibited and subject to legal action.
@@ -36,7 +36,7 @@ export default function TermsPage() {
 
         <h2>5. User-Submitted Content</h2>
         <p>
-          When you submit information (e.g., startup profiles, tool listings, event details, job postings, comments) to AI Startup Impact, you grant us a worldwide, royalty-free license to use, reproduce, modify, and publish this content for the purpose of operating our Services. You guarantee that any submitted material is accurate, lawful, and does not infringe upon third-party rights. We reserve the right to reject or remove content at our discretion.
+          When you submit information (e.g., startup profiles, tool listings, event details, job postings, comments) to Udyaibase, you grant us a worldwide, royalty-free license to use, reproduce, modify, and publish this content for the purpose of operating our Services. You guarantee that any submitted material is accurate, lawful, and does not infringe upon third-party rights. We reserve the right to reject or remove content at our discretion.
         </p>
 
         <h2>6. User Conduct</h2>
@@ -78,12 +78,12 @@ export default function TermsPage() {
 
         <h2>11. Limitations of Liability</h2>
         <p>
-          Under no circumstances shall AI Startup Impact, its directors, employees, or affiliates be liable for any indirect, incidental, consequential, special, or exemplary damages — including but not limited to loss of business, reduced profits, or lost data — resulting from your use of or reliance upon the Services. Our total liability for any claim arising from these Terms shall not exceed the amount you paid to us in the 12 months preceding the claim, or INR 5,000, whichever is greater.
+          Under no circumstances shall Udyaibase, its directors, employees, or affiliates be liable for any indirect, incidental, consequential, special, or exemplary damages — including but not limited to loss of business, reduced profits, or lost data — resulting from your use of or reliance upon the Services. Our total liability for any claim arising from these Terms shall not exceed the amount you paid to us in the 12 months preceding the claim, or INR 5,000, whichever is greater.
         </p>
 
         <h2>12. Indemnification</h2>
         <p>
-          You agree to indemnify and hold harmless AI Startup Impact, its directors, employees, and affiliates from any claims, losses, damages, liabilities, and expenses (including legal fees) arising from your use of the Services, your violation of these Terms, or your infringement of any third-party rights.
+          You agree to indemnify and hold harmless Udyaibase, its directors, employees, and affiliates from any claims, losses, damages, liabilities, and expenses (including legal fees) arising from your use of the Services, your violation of these Terms, or your infringement of any third-party rights.
         </p>
 
         <h2>13. Termination</h2>
@@ -93,7 +93,7 @@ export default function TermsPage() {
 
         <h2>14. Governing Law & Jurisdiction</h2>
         <p>
-          These Terms & Conditions shall be governed by and construed in accordance with the laws of India. Any disputes arising from the use of our Services shall fall under the exclusive jurisdiction of the courts situated in Hyderabad, Telangana.
+          These Terms & Conditions shall be governed by and construed in accordance with the laws of India. Any disputes arising from the use of our Services shall fall under the exclusive jurisdiction of the courts situated in Vijayawada, Andhra Pradesh.
         </p>
 
         <h2>15. Modifications</h2>
@@ -102,7 +102,7 @@ export default function TermsPage() {
         </p>
 
         <p className="mt-8">
-          <strong>Contact Us:</strong> legal@aistartupimpact.com
+          <strong>Contact Us:</strong> legal@udyaibase.com
         </p>
       </div>
     </div>

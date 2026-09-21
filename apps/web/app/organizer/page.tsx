@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getOrganizerSession } from "@/lib/organizer-auth";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import Link from "next/link";
 import { CalendarDays, Users, TrendingUp, Plus, ArrowRight, CheckCircle2 } from "lucide-react";
 

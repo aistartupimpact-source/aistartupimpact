@@ -9,28 +9,28 @@ import EmptyState from '@/components/ui/EmptyState';
 import { generateCollectionPageSchema, generateBreadcrumbSchema } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: 'AI Ecosystem Opinions — Independent Perspectives | AI Startup Impact',
+  title: 'AI Ecosystem Opinions — Independent Perspectives | Udyaibase',
   description: 'Expert opinions and deep analysis on India\'s AI ecosystem — funding, policy, open-source, startups, and edge AI — from founders, investors, and ecosystem leaders.',
-  alternates: { canonical: 'https://aistartupimpact.com/opinions' },
+  alternates: { canonical: 'https://udyaibase.com/opinions' },
   openGraph: {
-    title: 'AI Ecosystem Opinions — Independent Perspectives | AI Startup Impact',
+    title: 'AI Ecosystem Opinions — Independent Perspectives | Udyaibase',
     description: 'Expert opinions and deep analysis on India\'s AI ecosystem from founders, investors, and ecosystem leaders.',
     type: 'website',
-    url: 'https://aistartupimpact.com/opinions',
-    siteName: 'AI Startup Impact',
+    url: 'https://udyaibase.com/opinions',
+    siteName: 'Udyaibase',
     locale: 'en_IN',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AI Ecosystem Opinions | AI Startup Impact',
+    title: 'AI Ecosystem Opinions | Udyaibase',
     description: 'Expert opinions and deep analysis on India\'s AI ecosystem.',
-    images: ['https://aistartupimpact.com/og-image.png'],
+    images: ['https://udyaibase.com/og-image.png'],
   },
 };
 
 export const revalidate = 60;
 
-const SITE_URL = 'https://aistartupimpact.com';
+const SITE_URL = 'https://udyaibase.com';
 
 const formatDate = (d: string) =>
   d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';

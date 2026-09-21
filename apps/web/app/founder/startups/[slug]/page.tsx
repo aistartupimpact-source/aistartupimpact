@@ -1,16 +1,17 @@
 import { requireFounderAuth } from '@/lib/founder-auth';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { notFound, redirect } from 'next/navigation';
 import StartupEditForm from '@/components/founder/StartupEditForm';
 import SlugEditor from '@/components/shared/SlugEditor';
 import { sql } from '@/lib/db';
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
-export default async function EditStartupPage({ params }: PageProps) {
+export default async function EditStartupPage(props: PageProps) {
+  const params = await props.params;
   const session = await requireFounderAuth();
 
   // Fetch startup with all fields including foundersData
@@ -124,7 +125,7 @@ export default async function EditStartupPage({ params }: PageProps) {
           slugChangedAt={startup.slugChangedAt}
           entityType="startup"
           entityId={startup.id}
-          baseUrl="https://aistartupimpact.com/startups"
+          baseUrl="https://udyaibase.com/startups"
           isAdmin={false}
         />
       </div>

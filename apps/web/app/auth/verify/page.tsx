@@ -135,8 +135,8 @@ export default function VerifyEmailPage() {
           {/* Help text */}
           <p className="text-xs text-gray-500 dark:text-gray-500 font-jakarta mt-6">
             Need help? Contact us at{' '}
-            <a href="mailto:support@aistartupimpact.com" className="text-brand hover:underline">
-              support@aistartupimpact.com
+            <a href="mailto:support@udyaibase.com" className="text-brand hover:underline">
+              support@udyaibase.com
             </a>
           </p>
         </div>

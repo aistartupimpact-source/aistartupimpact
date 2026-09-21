@@ -62,30 +62,7 @@ export default function GoogleAnalytics({ measurementId }: GoogleAnalyticsProps)
 
   return (
     <>
-      {/* 
-        Initialize dataLayer and Google Consent Mode v2 BEFORE the GA script loads.
-        This must run synchronously so consent defaults are set before any tracking.
-      */}
-      <Script
-        id="ga-consent-init"
-        strategy="beforeInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            window.gtag = gtag;
-            gtag('consent', 'default', {
-              analytics_storage: 'denied',
-              ad_storage: 'denied',
-              ad_user_data: 'denied',
-              ad_personalization: 'denied',
-              wait_for_update: 500
-            });
-            gtag('js', new Date());
-          `,
-        }}
-      />
-      {/* Load the GA library */}
+      {/* Consent init script moved to root layout <head> for Next.js 16 compatibility */}
       <Script
         id="ga-script"
         strategy="afterInteractive"

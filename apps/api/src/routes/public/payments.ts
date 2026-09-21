@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import Razorpay from 'razorpay';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 
 const router = express.Router();
 

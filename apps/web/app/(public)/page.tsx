@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import dynamic from 'next/dynamic';
 import {
   ArrowRight, TrendingUp, Star, Users, ChevronRight,
   Sparkles, IndianRupee, Zap, Clock,
@@ -49,12 +48,7 @@ import {
 } from '@/lib/fallbacks';
 
 // Dynamic imports for heavy client components — reduces initial JS bundle
-const FeaturedPartnerRotator = dynamic(() => import('@/components/FeaturedPartnerRotator'), { ssr: false });
-const HeroCarousel = dynamic(() => import('@/components/HeroCarousel'), {
-  ssr: false,
-  loading: () => <div className="bg-navy-800 min-h-[340px] sm:min-h-[420px] md:min-h-[500px] animate-pulse" />,
-});
-const SponsorStrip = dynamic(() => import('@/components/SponsorStrip'), { ssr: false });
+import { FeaturedPartnerRotator, SponsorStrip, HeroCarousel } from '@/components/ClientOnly';
 
 const formatDate = (isoString: string) =>
   new Date(isoString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -174,7 +168,7 @@ export default async function HomePage() {
           ╚════════════════════════════════════════════╝ */}
       <div className="bg-navy-900 text-center py-2 border-b border-white/5 px-4">
         <h1 className="text-[7px] sm:text-[10px] text-gray-500 font-jakarta font-medium tracking-[0.12em] sm:tracking-[0.15em] uppercase max-w-full leading-tight">
-          AI Startup Impact — AI Startups in India, News, Stories, Funding & AI Tools
+          Udyaibase — AI Startups in India, News, Stories, Funding & AI Tools
         </h1>
       </div>
       <section>

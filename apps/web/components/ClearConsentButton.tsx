@@ -1,21 +1,22 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function ClearConsentButton() {
   const [show, setShow] = useState(false);
 
   const clearConsent = () => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('asi_consent_v1');
+      localStorage.removeItem('ub_consent_v1');
       window.location.reload();
     }
   };
 
   const clearNewsletter = () => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('asi_newsletter_popup_seen');
-      localStorage.removeItem('asi_newsletter_subscribed');
+      localStorage.removeItem('ub_newsletter_popup_seen');
+      localStorage.removeItem('ub_newsletter_subscribed');
       window.location.reload();
     }
   };
@@ -58,19 +59,19 @@ export default function ClearConsentButton() {
               Reset Newsletter Popup
             </button>
 
-            <a
+            <Link
               href="/?test-cookie-banner=true"
               className="block w-full px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium text-center transition-colors"
             >
               Force Show Banner
-            </a>
+            </Link>
 
-            <a
+            <Link
               href="/test-cookies"
               className="block w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium text-center transition-colors"
             >
               Test Page
-            </a>
+            </Link>
 
             <button
               onClick={() => setShow(false)}

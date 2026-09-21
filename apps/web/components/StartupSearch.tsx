@@ -179,7 +179,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
   const scrollStartX = useRef(0);
 
   const hasUserInteracted = useRef(false);
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout>(undefined);
 
   const typeaheadSuggestions = useMemo(() => {
     if (!query || query.length < 2) return [];

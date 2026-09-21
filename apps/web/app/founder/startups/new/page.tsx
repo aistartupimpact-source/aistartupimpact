@@ -1,5 +1,5 @@
 import { requireFounderAuth } from '@/lib/founder-auth';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import StartupForm from '@/components/founder/StartupForm';
 
 export default async function NewStartupPage() {

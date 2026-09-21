@@ -20,10 +20,8 @@ function hashIP(ip: string): string {
   return createHash('sha256').update(ip + VOTE_SALT).digest('hex');
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function POST(request: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const ip = getClientIdentifier(request);
   const rateCheck = await checkRateLimit(apiRateLimit, ip);
   if (!rateCheck.success) {

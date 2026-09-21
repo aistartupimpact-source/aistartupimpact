@@ -21,7 +21,7 @@ Hosting and deployment platform details.
 
 | Environment | Trigger | URL |
 |-------------|---------|-----|
-| Production | Push to `main` | aistartupimpact.com |
+| Production | Push to `main` | udyaibase.com |
 | Preview | Any PR | `*.vercel.app` |
 | Development | Local only | localhost:3000/3001 |
 

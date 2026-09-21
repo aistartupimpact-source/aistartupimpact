@@ -4,10 +4,8 @@ import { getEmployerSession } from '@/lib/employer-auth';
 
 export const dynamic = 'force-dynamic';
 // PUT: Update application status/notes/rating
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await getEmployerSession();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

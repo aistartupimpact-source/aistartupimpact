@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     if (!parsedUrl) return NextResponse.json({ error: 'Invalid or disallowed URL' }, { status: 400 });
 
     const response = await fetch(parsedUrl.href, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; AIStartupImpactBot/1.0)' },
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; UdyaibaseBot/1.0)' },
       redirect: 'error',
       signal: AbortSignal.timeout(5000)
     });

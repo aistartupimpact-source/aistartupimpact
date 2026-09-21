@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { getOrganizerSession } from "@/lib/organizer-auth";
 import { generateQrToken } from "@/lib/events/qr-token";
 import { sendEmailFireAndForget } from "@/lib/email/send";
-import { eventRegistrationHtml } from "@aistartupimpact/utils";
+import { eventRegistrationHtml } from "@udyaibase/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: { id: reg.id, qrToken: reg.qrToken } });
   }
 
-  const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://aistartupimpact.com";
+  const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://udyaibase.com";
   const tz = event.timezone || "Asia/Kolkata";
   const dateStr = event.startAt ? new Date(event.startAt).toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: tz }) : "TBA";
   const timeStr = event.startAt ? new Date(event.startAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", timeZone: tz }) : "TBA";
@@ -56,10 +56,10 @@ export async function POST(request: NextRequest) {
   const gcalEnd = event.endAt ? new Date(event.endAt).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "") : gcalStart;
   const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${gcalStart}/${gcalEnd}&location=${encodeURIComponent(event.venueName || "")}&details=${encodeURIComponent(`${SITE_URL}/events/${event.slug}`)}`;
 
-  const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "no-reply@aistartupimpact.com";
+  const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "no-reply@udyaibase.com";
   sendEmailFireAndForget({
     to: email,
-    from: `AI Startup Impact Events <${FROM_EMAIL}>`,
+    from: `Udyaibase Events <${FROM_EMAIL}>`,
     subject: `You're registered! ${event.title}`,
     html: eventRegistrationHtml(name, {
       eventTitle: event.title,

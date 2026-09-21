@@ -7,7 +7,8 @@ import { getDirectoryToolsDirect } from '@/lib/db';
 import { sql } from '@/lib/db';
 export const revalidate = 60;
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const params = await props.params;
   const categories = await sql`
     SELECT name, description FROM "ToolCategory" WHERE slug = ${params.slug} AND "isActive" = true LIMIT 1
   `;
@@ -18,12 +19,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   return {
     title,
     description,
-    alternates: { canonical: `https://aistartupimpact.com/tools/category/${params.slug}` },
+    alternates: { canonical: `https://udyaibase.com/tools/category/${params.slug}` },
     openGraph: { title, description, type: 'website' },
   };
 }
 
-export default async function CategoryPage({ params }: { params: { slug: string } }) {
+export default async function CategoryPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   // Get category info
   const categories = await sql`
     SELECT id, name, slug, description, level, "parentId"

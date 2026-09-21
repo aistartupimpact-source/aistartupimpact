@@ -71,7 +71,7 @@ export default function ForgotPasswordPage() {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <Link href="/" className="inline-block mb-6">
-            <h2 className="text-2xl font-bold text-brand">AI Startup Impact</h2>
+            <h2 className="text-2xl font-bold text-brand">Udyaibase</h2>
           </Link>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Reset Password</h1>
           <p className="text-gray-600 dark:text-gray-400">Enter your email and we'll send a reset link</p>

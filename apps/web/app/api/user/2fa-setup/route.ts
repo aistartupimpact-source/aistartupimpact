@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { getUserSession } from '@/lib/user-session';
 import {
   generateTOTPSecret, generateQRCode, generateBackupCodes,

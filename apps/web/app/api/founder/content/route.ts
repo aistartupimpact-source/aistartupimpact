@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { getFounderSession } from "@/lib/founder-auth";
 import { verifyStartupAccess, getFounderStartups } from "@/lib/founder-content-auth";
 import { canCreateContent, canViewAllDrafts } from "@/lib/founder-team-permissions";
 import { checkRateLimit, getClientIdentifier, strictRateLimit } from "@/lib/rate-limit";
-import { generateUniqueSlug } from "@aistartupimpact/utils";
+import { generateUniqueSlug } from "@udyaibase/utils";
 import crypto from "crypto";
 
 async function createUniqueSlug(title: string): Promise<string> {
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
     let systemUser = await prisma.user.findUnique({ where: { id: SYSTEM_AUTHOR_ID }, select: { id: true } });
     if (!systemUser) {
       systemUser = await prisma.user.create({
-        data: { id: SYSTEM_AUTHOR_ID, email: "founder-content@system.aistartupimpact.com", name: "Founder Content", slug: "founder-content-system", role: "CONTRIBUTOR", updatedAt: new Date() },
+        data: { id: SYSTEM_AUTHOR_ID, email: "founder-content@system.udyaibase.com", name: "Founder Content", slug: "founder-content-system", role: "CONTRIBUTOR", updatedAt: new Date() },
       });
     }
 

@@ -12,7 +12,7 @@ const JWT_SECRET = new TextEncoder().encode(
 
 export async function PUT(request: NextRequest) {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const token = cookieStore.get('user-token')?.value;
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

@@ -8,10 +8,14 @@ import TopicFilterPills from '@/components/opinions/TopicFilterPills';
 
 export const revalidate = 60;
 
-const SITE_URL = 'https://aistartupimpact.com';
+const SITE_URL = 'https://udyaibase.com';
 const PER_PAGE = 12;
 
-export async function generateMetadata({ params, searchParams }: { params: { slug: string }; searchParams: { page?: string } }): Promise<Metadata> {
+export async function generateMetadata(
+  props: { params: Promise<{ slug: string }>; searchParams: Promise<{ page?: string }> }
+): Promise<Metadata> {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const tagSlug = params.slug;
   const page = parseInt(searchParams.page || '1', 10);
 
@@ -26,21 +30,21 @@ export async function generateMetadata({ params, searchParams }: { params: { slu
   const noindex = count < 3 || page > 1;
 
   return {
-    title: `${tag.name} Opinions — AI Startup Impact`,
+    title: `${tag.name} Opinions — Udyaibase`,
     description: `Expert opinions and analysis on ${tag.name} from founders, investors, and ecosystem leaders.`,
     alternates: { canonical },
     ...(noindex ? { robots: { index: false, follow: true } } : {}),
     openGraph: {
-      title: `${tag.name} Opinions — AI Startup Impact`,
+      title: `${tag.name} Opinions — Udyaibase`,
       description: `Expert opinions and analysis on ${tag.name}.`,
       type: 'website',
       url: canonical,
-      siteName: 'AI Startup Impact',
+      siteName: 'Udyaibase',
       locale: 'en_IN',
     },
     twitter: {
       card: 'summary',
-      title: `${tag.name} Opinions — AI Startup Impact`,
+      title: `${tag.name} Opinions — Udyaibase`,
       description: `Expert opinions and analysis on ${tag.name} from founders, investors, and ecosystem leaders.`,
     },
   };
@@ -60,7 +64,11 @@ export async function generateStaticParams() {
   }
 }
 
-export default async function TopicPage({ params, searchParams }: { params: { slug: string }; searchParams: { page?: string } }) {
+export default async function TopicPage(
+  props: { params: Promise<{ slug: string }>; searchParams: Promise<{ page?: string }> }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const tagSlug = params.slug;
   const page = Math.max(1, parseInt(searchParams.page || '1', 10));
   const offset = (page - 1) * PER_PAGE;
