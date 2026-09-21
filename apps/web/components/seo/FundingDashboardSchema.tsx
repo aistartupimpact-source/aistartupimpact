@@ -26,7 +26,7 @@ interface FundingDashboardSchemaProps {
 }
 
 export function FundingDashboardSchema({ rounds, stats }: FundingDashboardSchemaProps) {
-  const pageUrl = 'https://aistartupimpact.com/funding';
+  const pageUrl = 'https://udyaibase.com/funding';
   const webpageId = `${pageUrl}#webpage`;
   const datafeedId = `${pageUrl}#datafeed`;
   const breadcrumbId = `${pageUrl}#breadcrumb`;
@@ -63,7 +63,7 @@ export function FundingDashboardSchema({ rounds, stats }: FundingDashboardSchema
         "name": "AI Startup Funding Tracker - Live Dashboard",
         "description": "Real-time tracker of AI startup funding rounds in India with filterable data",
         "isPartOf": {
-          "@id": "https://aistartupimpact.com/#website"
+          "@id": "https://udyaibase.com/#website"
         },
         "about": {
           "@id": datafeedId
@@ -101,7 +101,7 @@ export function FundingDashboardSchema({ rounds, stats }: FundingDashboardSchema
           "recipient": {
             "@type": "Organization",
             "name": round.startupName,
-            "url": `https://aistartupimpact.com/startups/${round.startupSlug}`
+            "url": `https://udyaibase.com/startups/${round.startupSlug}`
           },
           "startDate": round.announcedAt // Correct property for MonetaryGrant
         }))
@@ -116,7 +116,7 @@ export function FundingDashboardSchema({ rounds, stats }: FundingDashboardSchema
             "@type": "ListItem",
             "position": 1,
             "name": "Home",
-            "item": "https://aistartupimpact.com"
+            "item": "https://udyaibase.com"
           },
           {
             "@type": "ListItem",

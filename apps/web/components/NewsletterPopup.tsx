@@ -39,8 +39,8 @@ export default function NewsletterPopup() {
 
   useEffect(() => {
     // Check if user has already seen the popup or subscribed
-    const hasSeenPopup = localStorage.getItem('asi_newsletter_popup_seen');
-    const hasSubscribed = localStorage.getItem('asi_newsletter_subscribed');
+    const hasSeenPopup = localStorage.getItem('ub_newsletter_popup_seen');
+    const hasSubscribed = localStorage.getItem('ub_newsletter_subscribed');
 
     if (hasSeenPopup || hasSubscribed) {
       return;
@@ -94,7 +94,7 @@ export default function NewsletterPopup() {
     // Remember that user has seen the popup (don't show again for 7 days)
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + 7);
-    localStorage.setItem('asi_newsletter_popup_seen', expiryDate.toISOString());
+    localStorage.setItem('ub_newsletter_popup_seen', expiryDate.toISOString());
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -113,7 +113,7 @@ export default function NewsletterPopup() {
 
       if (data.success || res.ok) {
         setIsSuccess(true);
-        localStorage.setItem('asi_newsletter_subscribed', 'true');
+        localStorage.setItem('ub_newsletter_subscribed', 'true');
         
         // Close popup after 3 seconds
         setTimeout(() => {
@@ -242,7 +242,7 @@ export default function NewsletterPopup() {
 
                 {/* Legal footnote */}
                 <p className="text-xs sm:text-xs text-gray-500 dark:text-gray-400 text-center mt-3 leading-relaxed">
-                  By subscribing, you agree to receive marketing emails from AI Startup Impact. Unsubscribe anytime with one click. Read our{' '}
+                  By subscribing, you agree to receive marketing emails from Udyaibase. Unsubscribe anytime with one click. Read our{' '}
                   <a href="/privacy" className="text-purple-600 dark:text-purple-400 hover:underline font-medium">
                     Privacy Policy
                   </a>.

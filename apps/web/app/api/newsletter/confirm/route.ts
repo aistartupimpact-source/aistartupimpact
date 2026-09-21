@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
-import { newsletterWelcomeHtml } from '@aistartupimpact/utils';
+import { prisma } from '@udyaibase/database';
+import { newsletterWelcomeHtml } from '@udyaibase/utils';
 import { sendEmailFireAndForget } from '@/lib/email/send';
 import { generateUnsubscribeToken } from '@/lib/events/unsubscribe';
 
@@ -40,13 +40,13 @@ export async function GET(request: NextRequest) {
       WHERE id = ${subscriber.id}
     `;
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aistartupimpact.com';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://udyaibase.com';
     const unsubToken = await generateUnsubscribeToken(subscriber.id, subscriber.email);
     const unsubUrl = `${siteUrl}/api/events/unsubscribe?token=${unsubToken}`;
 
     sendEmailFireAndForget({
       to: subscriber.email,
-      subject: 'Welcome to AI Startup Impact Newsletter!',
+      subject: 'Welcome to Udyaibase Newsletter!',
       html: newsletterWelcomeHtml(false),
       type: 'newsletter_welcome',
       headers: {
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
 }
 
 function redirectWithStatus(request: NextRequest, status: string): NextResponse {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aistartupimpact.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://udyaibase.com';
   const url = new URL(siteUrl);
   url.searchParams.set('newsletter', status);
   return NextResponse.redirect(url.toString());

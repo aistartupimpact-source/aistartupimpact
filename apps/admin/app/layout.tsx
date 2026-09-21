@@ -25,16 +25,16 @@ const jetbrains = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'AIStartupImpact — India\'s AI Startup Ecosystem',
-    template: '%s | AIStartupImpact',
+    default: 'Udyaibase — India\'s AI Startup Ecosystem',
+    template: '%s | Udyaibase',
   },
   description:
     'India\'s definitive source for AI startup news, tools, funding data, and ecosystem intelligence.',
-  metadataBase: new URL('https://aistartupimpact.com'),
+  metadataBase: new URL('https://udyaibase.com'),
   openGraph: {
     type: 'website',
     locale: 'en_IN',
-    siteName: 'AIStartupImpact',
+    siteName: 'Udyaibase',
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
   },
   twitter: {
@@ -59,7 +59,7 @@ export default function RootLayout({
         {/* Prevent FOUC — set dark class before paint */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('asi-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
+            __html: `(function(){try{var t=localStorage.getItem('ub-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
           }}
         />
       </head>

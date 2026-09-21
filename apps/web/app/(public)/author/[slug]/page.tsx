@@ -29,13 +29,13 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
   return {
     title: `${author.name} — ${author.role}`,
     description: author.bio,
-    alternates: { canonical: `https://aistartupimpact.com/author/${params.slug}` },
+    alternates: { canonical: `https://udyaibase.com/author/${params.slug}` },
     openGraph: {
       title: `${author.name} — ${author.role}`,
       description: author.bio,
       type: 'profile',
-      url: `https://aistartupimpact.com/author/${params.slug}`,
-      siteName: 'AIStartupImpact',
+      url: `https://udyaibase.com/author/${params.slug}`,
+      siteName: 'Udyaibase',
     },
     twitter: {
       card: 'summary',

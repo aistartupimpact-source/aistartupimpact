@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getOrganizerSession } from '@/lib/organizer-auth';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import OnboardingClient from './OnboardingClient';
 
 export default async function OrganizerOnboardingPage(

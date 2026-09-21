@@ -20,17 +20,17 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
     title,
     description,
     alternates: { 
-      canonical: `https://aistartupimpact.com/funding/${params.slug}` 
+      canonical: `https://udyaibase.com/funding/${params.slug}` 
     },
     openGraph: {
       title,
       description,
       type: 'article',
-      url: `https://aistartupimpact.com/funding/${params.slug}`,
-      siteName: 'AI Startup Impact',
+      url: `https://udyaibase.com/funding/${params.slug}`,
+      siteName: 'Udyaibase',
       publishedTime: round.announcedAt,
       images: [{
-        url: 'https://aistartupimpact.com/og-image.png',
+        url: 'https://udyaibase.com/og-image.png',
         width: 1200,
         height: 630,
       }],
@@ -52,7 +52,7 @@ export default async function FundingRoundPage(props: { params: Promise<{ slug: 
   if (!round) notFound();
   const isSignedIn = !!session;
 
-  const pageUrl = `https://aistartupimpact.com/funding/${params.slug}`;
+  const pageUrl = `https://udyaibase.com/funding/${params.slug}`;
 
   // MonetaryGrant schema for individual round
   const schema = {
@@ -88,7 +88,7 @@ export default async function FundingRoundPage(props: { params: Promise<{ slug: 
         "recipient": {
           "@type": "Organization",
           "name": round.startupName,
-          "url": `https://aistartupimpact.com/startups/${round.startupSlug}`,
+          "url": `https://udyaibase.com/startups/${round.startupSlug}`,
           "location": round.headquartersCity ? {
             "@type": "Place",
             "address": {
@@ -109,13 +109,13 @@ export default async function FundingRoundPage(props: { params: Promise<{ slug: 
             "@type": "ListItem",
             "position": 1,
             "name": "Home",
-            "item": "https://aistartupimpact.com"
+            "item": "https://udyaibase.com"
           },
           {
             "@type": "ListItem",
             "position": 2,
             "name": "Funding Tracker",
-            "item": "https://aistartupimpact.com/funding"
+            "item": "https://udyaibase.com/funding"
           },
           {
             "@type": "ListItem",

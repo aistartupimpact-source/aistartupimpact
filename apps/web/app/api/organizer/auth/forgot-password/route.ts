@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { generateToken } from "@/lib/organizer-auth";
 import { sendOrganizerPasswordResetEmail } from "@/lib/organizer-auth/emails";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";

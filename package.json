@@ -1,5 +1,5 @@
 {
-  "name": "aistartupimpact",
+  "name": "udyaibase",
   "private": true,
   "workspaces": [
     "apps/*",

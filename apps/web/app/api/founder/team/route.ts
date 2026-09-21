@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { getFounderSession } from "@/lib/founder-auth";
-import { founderTeamInviteHtml } from "@aistartupimpact/utils";
+import { founderTeamInviteHtml } from "@udyaibase/utils";
 import { sendEmailFireAndForget } from "@/lib/email/send";
 import { checkRateLimit, getClientIdentifier, strictRateLimit } from "@/lib/rate-limit";
 import { canManageTeam } from "@/lib/founder-team-permissions";
@@ -9,7 +9,7 @@ import crypto from "crypto";
 
 export const dynamic = "force-dynamic";
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "no-reply@aistartupimpact.com";
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "no-reply@udyaibase.com";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 const VALID_ROLES = ["ADMIN", "EDITOR", "VIEWER"] as const;
@@ -75,8 +75,8 @@ export async function POST(request: NextRequest) {
     const acceptUrl = `${SITE_URL}/founder-team/accept?token=${inviteToken}`;
     sendEmailFireAndForget({
       to: cleanEmail,
-      from: `AI Startup Impact <${FROM_EMAIL}>`,
-      subject: `You're invited to join ${session.name}'s team — AI Startup Impact`,
+      from: `Udyaibase <${FROM_EMAIL}>`,
+      subject: `You're invited to join ${session.name}'s team — Udyaibase`,
       html: founderTeamInviteHtml(session.name, assignRole, acceptUrl),
       type: "founder_team_invite",
     });

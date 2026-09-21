@@ -11,7 +11,7 @@ const mockPrisma = {
   },
 };
 
-vi.mock('@aistartupimpact/database', () => ({
+vi.mock('@udyaibase/database', () => ({
   prisma: mockPrisma,
 }));
 

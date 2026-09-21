@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { createUnifiedSession } from "@/lib/unified-auth";
 import { verifyTOTPToken, decryptSecret, verifyBackupCode } from "@/lib/two-factor";
 import { checkRateLimit, getClientIdentifier, authRateLimit } from "@/lib/rate-limit";

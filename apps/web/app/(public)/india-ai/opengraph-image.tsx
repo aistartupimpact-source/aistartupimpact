@@ -134,7 +134,7 @@ export default async function OGImage() {
               gap: '10px',
             }}
           >
-            <div style={{ fontSize: '20px', color: '#64748B' }}>aistartupimpact.com/india-ai</div>
+            <div style={{ fontSize: '20px', color: '#64748B' }}>udyaibase.com/india-ai</div>
           </div>
         </div>
       </div>

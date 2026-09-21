@@ -172,7 +172,7 @@ export default function FounderForm({ action, initialData }: FounderFormProps) {
               name="storyUrl"
               defaultValue={initialData?.storyUrl || ''}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-              placeholder="https://aistartupimpact.com/stories/..."
+              placeholder="https://udyaibase.com/stories/..."
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Link to full founder story article

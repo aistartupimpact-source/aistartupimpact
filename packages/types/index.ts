@@ -1,4 +1,4 @@
-// Shared type definitions for AIStartupImpact
+// Shared type definitions for Udyaibase
 
 // ─── User & Auth ─────────────────────────
 

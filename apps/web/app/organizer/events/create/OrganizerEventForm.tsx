@@ -386,7 +386,7 @@ export default function OrganizerEventForm({ organizerId }: { organizerId: strin
               <p className="text-xs font-bold text-gray-400 uppercase mb-1 font-jakarta">Social Preview</p>
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900">
                 {coverImageUrl?<Image src={coverImageUrl} alt="" width={400} height={80} unoptimized className="w-full h-20 object-cover"/>:<div className="w-full h-20 bg-gray-100 dark:bg-gray-800"/>}
-                <div className="p-2"><p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">{seoTitle||title||"Event Title"}</p><p className="text-xs text-gray-400 truncate">{seoDescription||subtitle||"aistartupimpact.com"}</p></div>
+                <div className="p-2"><p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">{seoTitle||title||"Event Title"}</p><p className="text-xs text-gray-400 truncate">{seoDescription||subtitle||"udyaibase.com"}</p></div>
               </div>
             </div>
             <div className="bg-blue-50 dark:bg-blue-900/10 rounded-lg p-3 border border-blue-100 dark:border-blue-900/20">

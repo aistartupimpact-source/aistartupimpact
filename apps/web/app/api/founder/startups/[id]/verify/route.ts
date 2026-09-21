@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireFounderAuth } from '@/lib/founder-auth';
-import { prisma } from '@aistartupimpact/database';
-import { verifyDNS } from '@aistartupimpact/utils/src/verification/dns';
+import { prisma } from '@udyaibase/database';
+import { verifyDNS } from '@udyaibase/utils/src/verification/dns';
 
 export const dynamic = 'force-dynamic';
 
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
           'DNS_VERIFIED',
           'DNS',
           ${startup.verificationToken},
-          ${'aistartupimpact-verify=' + startup.verificationToken},
+          ${'udyaibase-verify=' + startup.verificationToken},
           true,
           ${request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || null},
           ${request.headers.get('user-agent') || null},
@@ -132,7 +132,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
           'VERIFICATION_FAILED',
           'DNS',
           ${startup.verificationToken},
-          ${'aistartupimpact-verify=' + startup.verificationToken},
+          ${'udyaibase-verify=' + startup.verificationToken},
           false,
           'DNS record not found',
           ${request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || null},

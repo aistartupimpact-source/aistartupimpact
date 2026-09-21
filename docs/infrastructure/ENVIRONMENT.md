@@ -56,7 +56,7 @@ The project reads environment from:
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Yes | Client-side Google ID (public) |
 
 **Local**: `http://localhost:3000/api/founder/auth/google/callback`
-**Prod**: `https://aistartupimpact.com/api/founder/auth/google/callback`
+**Prod**: `https://udyaibase.com/api/founder/auth/google/callback`
 
 ---
 

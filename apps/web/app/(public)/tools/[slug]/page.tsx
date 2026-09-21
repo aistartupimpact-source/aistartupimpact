@@ -44,9 +44,9 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
   const tool = await getToolCached(params.slug) as any;
   if (!tool) return { title: 'Tool Not Found' };
 
-  const title = `${tool.name} - ${tool.tagline} | AI Startup Impact`;
+  const title = `${tool.name} - ${tool.tagline} | Udyaibase`;
   const description = (tool.description || tool.tagline || '').slice(0, 155);
-  const url = `https://aistartupimpact.com/tools/${tool.slug}`;
+  const url = `https://udyaibase.com/tools/${tool.slug}`;
 
   // Use dynamic OG image (auto-generated from opengraph-image.tsx)
   const image = `${url}/opengraph-image`;
@@ -65,7 +65,7 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
       'AI software'
     ].filter(Boolean).join(', '),
     creator: tool.name,
-    publisher: 'AI Startup Impact',
+    publisher: 'Udyaibase',
     alternates: {
       canonical: url,
     },
@@ -73,7 +73,7 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
       title,
       description,
       url,
-      siteName: 'AI Startup Impact',
+      siteName: 'Udyaibase',
       images: [{
         url: image,
         width: 1200,
@@ -88,8 +88,8 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
       title,
       description,
       images: [image],
-      creator: '@aistartupimpact',
-      site: '@aistartupimpact',
+      creator: '@udyaibase',
+      site: '@udyaibase',
     },
     robots: {
       index: true,

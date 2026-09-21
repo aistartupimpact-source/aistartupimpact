@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import crypto from 'crypto';
 
 // Parse user agent to detect device type

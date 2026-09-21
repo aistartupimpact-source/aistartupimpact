@@ -8,15 +8,15 @@ export default function ClearConsentButton() {
 
   const clearConsent = () => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('asi_consent_v1');
+      localStorage.removeItem('ub_consent_v1');
       window.location.reload();
     }
   };
 
   const clearNewsletter = () => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('asi_newsletter_popup_seen');
-      localStorage.removeItem('asi_newsletter_subscribed');
+      localStorage.removeItem('ub_newsletter_popup_seen');
+      localStorage.removeItem('ub_newsletter_subscribed');
       window.location.reload();
     }
   };

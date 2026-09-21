@@ -1,4 +1,4 @@
-name: "AI Startup Impact CodeQL Config"
+name: "Udyaibase CodeQL Config"
 
 queries:
   - uses: security-extended

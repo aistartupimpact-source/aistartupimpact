@@ -309,9 +309,9 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
   const s = await getStartup(params.slug) as any;
   if (!s) return { title: 'Startup Not Found' };
 
-  const title = `${s.name} - ${s.tagline || 'AI Startup'} | AI Startup Impact`;
+  const title = `${s.name} - ${s.tagline || 'AI Startup'} | Udyaibase`;
   const description = (s.description || s.tagline || '').slice(0, 155);
-  const url = `https://aistartupimpact.com/startups/${s.slug}`;
+  const url = `https://udyaibase.com/startups/${s.slug}`;
 
   // Use dynamic OG image (auto-generated from opengraph-image.tsx)
   const image = `${url}/opengraph-image`;
@@ -332,7 +332,7 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
     ].filter(Boolean).join(', '),
     authors: s.founders?.map((name: string) => ({ name })),
     creator: s.name,
-    publisher: 'AI Startup Impact',
+    publisher: 'Udyaibase',
     alternates: {
       canonical: url,
     },
@@ -340,7 +340,7 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
       title,
       description,
       url,
-      siteName: 'AI Startup Impact',
+      siteName: 'Udyaibase',
       images: [{
         url: image,
         width: 1200,
@@ -355,8 +355,8 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
       title,
       description,
       images: [image],
-      creator: '@aistartupimpact',
-      site: '@aistartupimpact',
+      creator: '@udyaibase',
+      site: '@udyaibase',
     },
     robots: {
       index: true,
@@ -707,7 +707,7 @@ export default async function StartupDetailPage(props: { params: Promise<{ slug:
             <ShareButton
               title={`${startup.name} — ${startup.tagline}`}
               text={`${startup.name}: ${startup.tagline}${startup.stage ? ` · ${startup.stage.replace(/_/g, ' ')}` : ''}${startup.headquartersCity ? ` · ${startup.headquartersCity}` : ''}`}
-              url={`https://aistartupimpact.com/startups/${startup.slug}`}
+              url={`https://udyaibase.com/startups/${startup.slug}`}
               iconOnly
               size="lg"
             />

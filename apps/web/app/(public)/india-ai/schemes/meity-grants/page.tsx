@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     'government R&D funding'
   ].join(', '),
   alternates: {
-    canonical: 'https://aistartupimpact.com/india-ai/schemes/meity-grants',
+    canonical: 'https://udyaibase.com/india-ai/schemes/meity-grants',
   },
 };
 

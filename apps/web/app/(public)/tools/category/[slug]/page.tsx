@@ -19,7 +19,7 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
   return {
     title,
     description,
-    alternates: { canonical: `https://aistartupimpact.com/tools/category/${params.slug}` },
+    alternates: { canonical: `https://udyaibase.com/tools/category/${params.slug}` },
     openGraph: { title, description, type: 'website' },
   };
 }

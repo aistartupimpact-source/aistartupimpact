@@ -362,7 +362,7 @@ export default function EditToolPage() {
                 slugChangedAt={formData.slugChangedAt}
                 entityType="tool"
                 entityId={formData.id}
-                baseUrl="https://aistartupimpact.com/tools"
+                baseUrl="https://udyaibase.com/tools"
                 isAdmin={true}
                 onSuccess={(newSlug) => {
                   setFormData(prev => prev ? { ...prev, slug: newSlug } : null);

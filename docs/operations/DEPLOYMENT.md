@@ -50,7 +50,7 @@ npx prisma migrate status --schema=packages/database/prisma/schema.prisma
 
 After deployment completes (check Vercel dashboard):
 
-1. Visit https://aistartupimpact.com — homepage loads
+1. Visit https://udyaibase.com — homepage loads
 2. Check a tool detail page — data renders
 3. Check Sentry — no new error spike
 4. Test search — returns results

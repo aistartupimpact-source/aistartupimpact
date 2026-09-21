@@ -8,4 +8,4 @@ Disallow: /organizer/
 Disallow: /auth/
 Disallow: /admin/
 
-Sitemap: https://aistartupimpact.com/sitemap.xml
+Sitemap: https://udyaibase.com/sitemap.xml

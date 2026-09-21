@@ -88,7 +88,7 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 
 // ─── Start Server ────────────────────────────
 app.listen(PORT, () => {
-  console.log(`🚀 AIStartupImpact API running on http://localhost:${PORT}`);
+  console.log(`🚀 Udyaibase API running on http://localhost:${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
 });
 

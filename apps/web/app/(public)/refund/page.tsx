@@ -8,12 +8,12 @@ export default function RefundPage() {
         <p className="text-sm text-gray-500 mb-8"><strong>Last updated:</strong> August 10, 2026</p>
 
         <p>
-          AI Startup Impact provides various digital services, including premium tool listings, sponsored directory placements, job board postings, event tickets, and advertising slots. This Refund & Cancellation Policy outlines the financial terms governing purchases made on our platform.
+          Udyaibase provides various digital services, including premium tool listings, sponsored directory placements, job board postings, event tickets, and advertising slots. This Refund & Cancellation Policy outlines the financial terms governing purchases made on our platform.
         </p>
 
         <h2>1. Payment Processing</h2>
         <p>
-          All payments on AI Startup Impact are processed securely through <strong>Razorpay</strong>, a PCI-DSS compliant payment gateway regulated by the Reserve Bank of India (RBI). We do not store your credit/debit card details on our servers. All payment data is handled directly by Razorpay in accordance with their security standards.
+          All payments on Udyaibase are processed securely through <strong>Razorpay</strong>, a PCI-DSS compliant payment gateway regulated by the Reserve Bank of India (RBI). We do not store your credit/debit card details on our servers. All payment data is handled directly by Razorpay in accordance with their security standards.
         </p>
         <ul>
           <li>All prices are displayed in Indian Rupees (INR).</li>
@@ -38,7 +38,7 @@ export default function RefundPage() {
 
         <h2>4. Job Board Postings</h2>
         <p>
-          All purchases for job listings on the AI Startup Impact Job Board are considered final once the job is published on our platform. No refunds will be provided for positions filled before listing expiration or if the listing does not generate a desired number of applicants.
+          All purchases for job listings on the Udyaibase Job Board are considered final once the job is published on our platform. No refunds will be provided for positions filled before listing expiration or if the listing does not generate a desired number of applicants.
         </p>
 
         <h2>5. Event Tickets</h2>
@@ -76,7 +76,7 @@ export default function RefundPage() {
           To initiate a cancellation, dispute a charge, or request a refund, please contact our billing team with your Razorpay payment ID or order ID:
         </p>
         <p>
-          <strong>Email:</strong> billing@aistartupimpact.com<br />
+          <strong>Email:</strong> billing@udyaibase.com<br />
           <strong>Response time:</strong> Within 48 hours on business days.
         </p>
       </div>

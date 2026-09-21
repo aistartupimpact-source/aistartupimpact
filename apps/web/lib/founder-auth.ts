@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import { SignJWT, jwtVerify } from 'jose';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.FOUNDER_JWT_SECRET!

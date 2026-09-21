@@ -109,7 +109,7 @@ function ResetPasswordContent() {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <Link href="/" className="inline-block mb-6">
-            <h2 className="text-2xl font-bold text-brand">AI Startup Impact</h2>
+            <h2 className="text-2xl font-bold text-brand">Udyaibase</h2>
           </Link>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Set New Password</h1>
           <p className="text-gray-600 dark:text-gray-400">Enter your new password below</p>

@@ -161,7 +161,7 @@ const tools = await sql`
 
 ### Prisma Client (for simple operations)
 ```typescript
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 
 const tool = await prisma.aiTool.findUnique({
   where: { slug },

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     const emailLower = email.toLowerCase();
 
     if (subscribeNewsletter) {
-      const consentText = 'I agree to receive the AI Startup Impact newsletter along with the funding report.';
+      const consentText = 'I agree to receive the Udyaibase newsletter along with the funding report.';
       await prisma.$executeRaw`
         INSERT INTO "NewsletterSubscriber" (id, email, "subscribedAt", source, "isActive", "consentAt", "consentText", "consentVersion", "consentSource")
         VALUES (gen_random_uuid(), ${emailLower}, NOW(), 'funding_report', true, NOW(), ${consentText}, '1.0', 'funding_report_download')

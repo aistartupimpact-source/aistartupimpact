@@ -4,15 +4,15 @@ import { sql } from '@/lib/db';
 import { generateBreadcrumbSchema } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: 'Startup Milestones — AI Startup Impact',
+  title: 'Startup Milestones — Udyaibase',
   description: 'Track the latest milestones from Indian AI startups — funding rounds, product launches, partnerships, awards, and more.',
-  alternates: { canonical: 'https://aistartupimpact.com/milestones' },
+  alternates: { canonical: 'https://udyaibase.com/milestones' },
   openGraph: {
-    title: 'Startup Milestones — AI Startup Impact',
+    title: 'Startup Milestones — Udyaibase',
     description: 'Track the latest milestones from Indian AI startups.',
     type: 'website',
-    url: 'https://aistartupimpact.com/milestones',
-    siteName: 'AIStartupImpact',
+    url: 'https://udyaibase.com/milestones',
+    siteName: 'Udyaibase',
   },
 };
 
@@ -39,7 +39,7 @@ export default async function MilestonesPage() {
     `;
   } catch {}
 
-  const siteUrl = 'https://aistartupimpact.com';
+  const siteUrl = 'https://udyaibase.com';
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: 'Home', url: siteUrl },
     { name: 'Milestones', url: `${siteUrl}/milestones` },

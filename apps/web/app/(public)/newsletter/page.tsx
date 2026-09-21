@@ -253,7 +253,7 @@ export default function NewsletterPage() {
         {/* Brand Header */}
         <div className="relative flex items-center justify-between z-10 mb-2 flex-shrink-0">
           <span className="font-sora font-extrabold text-base tracking-tight text-white">
-            AI Startup <span className="text-brand">Impact</span>
+            Udyai<span className="text-brand">base</span>
           </span>
           <div className="flex items-center gap-1.5 px-2.5 py-1 bg-brand/10 border border-brand/20 rounded-full">
             <span className="w-1.5 h-1.5 bg-brand rounded-full animate-ping" />
@@ -363,7 +363,7 @@ export default function NewsletterPage() {
                   Google, Microsoft, TCS, Flipkart & Amazon
                 </p>
                 <p className="text-xs text-gray-500 leading-relaxed">
-                  By subscribing, you agree to receive the AI Startup Impact newsletter. <a href="/privacy" className="underline hover:text-gray-400">Unsubscribe</a> anytime.
+                  By subscribing, you agree to receive the Udyaibase newsletter. <a href="/privacy" className="underline hover:text-gray-400">Unsubscribe</a> anytime.
                 </p>
               </div>
             </form>
@@ -513,7 +513,7 @@ export default function NewsletterPage() {
                         )}
                       </button>
                       <p className="text-center text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-2 leading-relaxed">
-                        By subscribing, you agree to receive the AI Startup Impact newsletter. You can{' '}
+                        By subscribing, you agree to receive the Udyaibase newsletter. You can{' '}
                         <a href="/privacy" className="underline hover:text-gray-700 dark:hover:text-gray-300">unsubscribe</a> at any time.
                       </p>
                       <p className="text-center text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-1">
@@ -729,7 +729,7 @@ export default function NewsletterPage() {
                 )}
               </button>
               <p className="text-center text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-2 leading-relaxed">
-                By subscribing, you agree to receive the AI Startup Impact newsletter. You can{' '}
+                By subscribing, you agree to receive the Udyaibase newsletter. You can{' '}
                 <a href="/privacy" className="underline hover:text-gray-700 dark:hover:text-gray-300">unsubscribe</a> at any time.
               </p>
               <p className="text-center text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-1">

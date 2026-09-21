@@ -58,7 +58,7 @@ vi.mock('@/lib/db', () => ({
   sql: (...args: any[]) => mockSql(...args),
 }));
 
-vi.mock('@aistartupimpact/database', () => ({
+vi.mock('@udyaibase/database', () => ({
   prisma: { $queryRaw: vi.fn(() => Promise.resolve([])) },
 }));
 

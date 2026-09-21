@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { createOrganizerSession, hashPassword, generateToken } from "@/lib/organizer-auth";
 import { sendOrganizerVerificationEmail } from "@/lib/organizer-auth/emails";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { authRateLimit } from "@/lib/rate-limit";
-import { isDisposableEmail } from "@aistartupimpact/utils";
+import { isDisposableEmail } from "@udyaibase/utils";
 
 export const dynamic = "force-dynamic";
 

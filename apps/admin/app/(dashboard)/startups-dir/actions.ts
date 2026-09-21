@@ -3,9 +3,9 @@
 import { neon } from '@neondatabase/serverless';
 import { revalidatePath } from 'next/cache';
 import { calculateImpactScore } from '@/lib/impact-score';
-import { standardizeCityName } from '@aistartupimpact/utils/src/cities';
+import { standardizeCityName } from '@udyaibase/utils/src/cities';
 import { logAuditEvent, canDelete } from '@/lib/audit-log';
-import { startupApprovalHtml } from '@aistartupimpact/utils';
+import { startupApprovalHtml } from '@udyaibase/utils';
 import { sendEmailFireAndForget } from '@/lib/email-send';
 import { requireActionAuth } from '@/lib/api-auth';
 
@@ -729,7 +729,7 @@ export async function approveStartupAction(id: string) {
     if (startup.founderEmail) {
       sendEmailFireAndForget({
         to: startup.founderEmail,
-        subject: `Your startup "${startup.name}" is now live on AI Startup Impact`,
+        subject: `Your startup "${startup.name}" is now live on Udyaibase`,
         html: startupApprovalHtml(startup.name, startup.founderName || 'there', startup.slug),
         type: 'approval',
       });

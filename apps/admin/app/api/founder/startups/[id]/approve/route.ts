@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { neon } from '@neondatabase/serverless';
 import { calculateImpactScore } from '@/lib/impact-score';
-import { startupApprovalHtml } from '@aistartupimpact/utils';
+import { startupApprovalHtml } from '@udyaibase/utils';
 import { sendEmailFireAndForget } from '@/lib/email-send';
 import { requireApiAuth } from '@/lib/api-auth';
 import { logAuditEvent } from '@/lib/audit-log';
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
     if (startup.founderEmail) {
       sendEmailFireAndForget({
         to: startup.founderEmail,
-        subject: `Your startup "${startup.name}" is now live on AI Startup Impact`,
+        subject: `Your startup "${startup.name}" is now live on Udyaibase`,
         html: startupApprovalHtml(startup.name, startup.founderName || 'there', startup.slug),
         type: 'approval',
       });

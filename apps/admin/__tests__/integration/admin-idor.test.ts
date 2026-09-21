@@ -30,14 +30,14 @@ vi.mock('@/lib/audit-log', () => ({
   snapshot: vi.fn((r: any) => r),
 }));
 
-vi.mock('@aistartupimpact/database', () => ({
+vi.mock('@udyaibase/database', () => ({
   prisma: {
     startup: { findUnique: vi.fn(), update: vi.fn() },
     aiTool: { findUnique: vi.fn(), update: vi.fn() },
   },
 }));
 
-vi.mock('@aistartupimpact/utils', () => ({
+vi.mock('@udyaibase/utils', () => ({
   startupRejectionHtml: vi.fn(() => ''),
   startupApprovalHtml: vi.fn(() => ''),
 }));

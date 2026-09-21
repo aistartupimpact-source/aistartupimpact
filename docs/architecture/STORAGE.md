@@ -56,8 +56,8 @@ Client (form) → POST /api/media/upload
 R2_ACCOUNT_ID=your-cloudflare-account-id
 R2_ACCESS_KEY_ID=your-r2-access-key
 R2_SECRET_ACCESS_KEY=your-r2-secret-key
-R2_BUCKET_NAME=aistartupimpact-media
-R2_PUBLIC_URL=https://media.aistartupimpact.com
+R2_BUCKET_NAME=udyaibase-media
+R2_PUBLIC_URL=https://media.udyaibase.com
 ```
 
 ---
@@ -103,7 +103,7 @@ const s3 = new S3Client({
 - Objects served via public URL (read-only CDN)
 - Write access only via API key (server-side)
 - No executable file types allowed
-- CORS configured for `aistartupimpact.com` origin only
+- CORS configured for `udyaibase.com` origin only
 - Files are not virus-scanned (future improvement)
 
 ---

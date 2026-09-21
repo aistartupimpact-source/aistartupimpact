@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 
 const OTP_EXPIRY_MINUTES = 10;
 const MAX_ATTEMPTS = 3;

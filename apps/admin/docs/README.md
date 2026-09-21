@@ -15,7 +15,7 @@
 
 ## Architecture Overview
 
-The admin panel is a Next.js 14 application with NextAuth.js authentication. It runs on port 3001 and provides content management, analytics, and operational tools for the AI Startup Impact platform.
+The admin panel is a Next.js 14 application with NextAuth.js authentication. It runs on port 3001 and provides content management, analytics, and operational tools for the Udyaibase platform.
 
 **Stack:**
 - Next.js 14 (App Router, Server Actions)

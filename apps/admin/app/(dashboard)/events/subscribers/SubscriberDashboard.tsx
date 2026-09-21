@@ -40,7 +40,7 @@ export default function SubscriberDashboard({ totalCount, events, topCities, top
   const [showPreview, setShowPreview] = useState(false);
 
   const selectedEvent = events.find(e => e.id === selectedEventId);
-  const SITE_URL = typeof window !== "undefined" ? window.location.origin.replace(":3001", ":3000") : "https://aistartupimpact.com";
+  const SITE_URL = typeof window !== "undefined" ? window.location.origin.replace(":3001", ":3000") : "https://udyaibase.com";
 
   const handleEventSelect = (eventId: string) => {
     setSelectedEventId(eventId);
@@ -50,7 +50,7 @@ export default function SubscriberDashboard({ totalCount, events, topCities, top
       const time = new Date(event.startAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
       const location = event.venueName || (event.format === "VIRTUAL" ? "Online" : "TBA");
       setSubject(`🎉 ${event.title} — Register Now!`);
-      setEmailBody(`We're excited to invite you to:\n\n${event.title}\n\n📅 ${date} at ${time}\n📍 ${location}\n🏷️ ${event.category.replace(/_/g, " ")}\n\nThis event is free and spots are limited. Don't miss out!\n\nSee you there,\nAI Startup Impact Events`);
+      setEmailBody(`We're excited to invite you to:\n\n${event.title}\n\n📅 ${date} at ${time}\n📍 ${location}\n🏷️ ${event.category.replace(/_/g, " ")}\n\nThis event is free and spots are limited. Don't miss out!\n\nSee you there,\nUdyaibase Events`);
       setWhatsappBody(`🎉 *${event.title}*\n\n📅 ${date}\n📍 ${location}\n🏷️ ${event.category.replace(/_/g, " ")}\n\nRegister free → ${SITE_URL}/events/${event.slug}`);
     }
   };
@@ -86,7 +86,7 @@ export default function SubscriberDashboard({ totalCount, events, topCities, top
         <div style="font-size:14px;color:#6b7280;line-height:1.8;white-space:pre-wrap;margin:16px 0;">${escapeHtml(emailBody)}</div>
         <div style="margin:24px 0;text-align:center;"><a href="${SITE_URL}/events/${escapeHtml(selectedEvent.slug)}" style="background:#FF3131;color:#fff;padding:14px 32px;text-decoration:none;border-radius:10px;font-weight:700;font-size:15px;display:inline-block;">Register Now →</a></div>
         <hr style="border:none;border-top:1px solid #f3f4f6;margin:24px 0;" />
-        <p style="font-size:11px;color:#9ca3af;text-align:center;">AI Startup Impact Events · <a href="#" style="color:#9ca3af;text-decoration:underline;">Unsubscribe</a></p>
+        <p style="font-size:11px;color:#9ca3af;text-align:center;">Udyaibase Events · <a href="#" style="color:#9ca3af;text-decoration:underline;">Unsubscribe</a></p>
       </div>
     </div>
   ` : "";
@@ -183,7 +183,7 @@ export default function SubscriberDashboard({ totalCount, events, topCities, top
                     <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">📧 Email Preview</p>
                     <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-4 max-h-[500px] overflow-y-auto">
                       <div className="bg-white rounded-lg shadow-sm p-3 mb-2">
-                        <p className="text-[10px] text-gray-400">From: AI Startup Impact &lt;no-reply@aistartupimpact.com&gt;</p>
+                        <p className="text-[10px] text-gray-400">From: Udyaibase &lt;no-reply@udyaibase.com&gt;</p>
                         <p className="text-[10px] text-gray-400">Subject: <strong className="text-gray-700">{subject}</strong></p>
                       </div>
                       <div dangerouslySetInnerHTML={{ __html: emailPreviewHtml }} />

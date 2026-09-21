@@ -1,22 +1,22 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import {
   Mail, BookOpen, Building2, Wrench, TrendingUp, Calendar,
   MapPin, Eye, ShieldCheck, Users, Unlock, ChevronRight, Handshake,
 } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'About AIStartupImpact — One Place to Track the AI Startup Ecosystem',
+  title: 'About Udyaibase — One Place to Track the AI Startup Ecosystem',
   description:
-    "AIStartupImpact is an independent platform tracking India's AI ecosystem — founder stories, startup discovery, funding rounds, and AI tools. Built by Lahori Venkatesh.",
+    "Udyaibase is an independent platform tracking India's AI ecosystem — founder stories, startup discovery, funding rounds, and AI tools. Built by Lahori Venkatesh.",
   alternates: { canonical: '/about' },
   openGraph: {
-    title: 'About AIStartupImpact — One Place to Track the AI Startup Ecosystem',
+    title: 'About Udyaibase — One Place to Track the AI Startup Ecosystem',
     description:
-      "AIStartupImpact is an independent platform tracking India's AI ecosystem — founder stories, startup discovery, funding rounds, and AI tools.",
-    url: 'https://aistartupimpact.com/about',
+      "Udyaibase is an independent platform tracking India's AI ecosystem — founder stories, startup discovery, funding rounds, and AI tools.",
+    url: 'https://udyaibase.com/about',
   },
 };
 
@@ -118,7 +118,7 @@ export default async function AboutPage() {
   const counts = await getLiveCounts();
 
   const stats = [
-    { value: '50K+', label: 'LinkedIn Followers', href: 'https://www.linkedin.com/company/aistartupimpact' },
+    { value: '50K+', label: 'LinkedIn Followers', href: 'https://www.linkedin.com/company/udyaibase' },
     {
       value: counts.monthlyVisitors > 0 ? fmt(counts.monthlyVisitors) : '—',
       label: 'Monthly Visitors',
@@ -146,7 +146,7 @@ export default async function AboutPage() {
       {/* ── Hero ──────────────────────────────────────────── */}
       <section className="text-center mb-12 sm:mb-16" aria-labelledby="about-hero-heading">
         <span className="inline-block text-brand text-xs font-bold uppercase tracking-widest mb-3 font-sora">
-          About AIStartupImpact
+          About Udyaibase
         </span>
         <h1
           id="about-hero-heading"
@@ -156,7 +156,7 @@ export default async function AboutPage() {
           <span className="text-brand">AI startup ecosystem</span>
         </h1>
         <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm sm:text-lg mt-4 sm:mt-5 max-w-2xl mx-auto leading-relaxed">
-          AIStartupImpact is an independent platform built to give AI startups the visibility they
+          Udyaibase is an independent platform built to give AI startups the visibility they
           deserve. From founder stories to funding rounds, from startup discovery to tool reviews —
           we bring everything into one place, and put it in front of a global audience.
         </p>
@@ -220,7 +220,7 @@ export default async function AboutPage() {
             {"We believe great work shouldn't depend on who shouts the loudest."}
           </p>
           <p>
-            AIStartupImpact exists to surface the AI startups that deserve attention but
+            Udyaibase exists to surface the AI startups that deserve attention but
             {"aren't getting it — and to carry their stories to a global audience. We're building"}{" "}
             the single, trusted place where anyone can discover what&apos;s actually being built
             in AI, who&apos;s behind it, and where it&apos;s headed.
@@ -247,7 +247,7 @@ export default async function AboutPage() {
             Our mission is to consolidate it.
           </p>
           <p>
-            AIStartupImpact brings together founder stories, a complete startup directory, an AI
+            Udyaibase brings together founder stories, a complete startup directory, an AI
             tools directory, and a live funding dashboard — so a founder, investor, or operator
             can understand the whole picture in one visit, without paying for access. When the
             ecosystem is easy to see, it&apos;s easier to build in.
@@ -353,7 +353,7 @@ export default async function AboutPage() {
           <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden shrink-0 bg-brand/10 dark:bg-brand/20">
             <Image
               src="/founder-venkatesh.jpg"
-              alt="Lahori Venkatesh — Founder & CEO, AI Startup Impact"
+              alt="Lahori Venkatesh — Founder & CEO, Udyaibase"
               width={96}
               height={96}
               sizes="96px"
@@ -365,20 +365,20 @@ export default async function AboutPage() {
               Lahori Venkatesh
             </h3>
             <p className="text-brand font-jakarta font-semibold text-sm mt-0.5">
-              Founder & CEO, AI Startup Impact
+              Founder & CEO, Udyaibase
             </p>
             <p className="text-xs text-gray-400 dark:text-gray-500 font-jakarta mt-1 mb-4">
               MNIT Jaipur
             </p>
             <div className="space-y-2.5 sm:space-y-3 font-jakarta text-gray-600 dark:text-gray-400 text-sm sm:text-base leading-relaxed">
               <p>
-                Lahori Venkatesh is the Founder & CEO of AI Startup Impact, a global AI startup media and ecosystem platform dedicated to showcasing AI startups, founders, AI tools, industry news, funding, and events.
+                Lahori Venkatesh is the Founder & CEO of Udyaibase, a global AI startup media and ecosystem platform dedicated to showcasing AI startups, founders, AI tools, industry news, funding, and events.
               </p>
               <p>
                 With a vision to build one of the world&apos;s leading AI ecosystem platforms, he helps AI companies increase visibility, build credibility, and connect with customers, investors, partners, and talent through trusted media, community, and strategic partnerships.
               </p>
               <p>
-                A graduate of Malaviya National Institute of Technology (MNIT) Jaipur, Lahori is passionate about accelerating AI innovation and making emerging technologies more discoverable through high-quality content and ecosystem building. Under his leadership, AI Startup Impact reaches millions of professionals worldwide and continues to support the growth of the global AI ecosystem.
+                A graduate of Malaviya National Institute of Technology (MNIT) Jaipur, Lahori is passionate about accelerating AI innovation and making emerging technologies more discoverable through high-quality content and ecosystem building. Under his leadership, Udyaibase reaches millions of professionals worldwide and continues to support the growth of the global AI ecosystem.
               </p>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -413,7 +413,7 @@ export default async function AboutPage() {
               </p>
             </div>
             <a
-              href="mailto:contact@aistartupimpact.com?subject=Feature My Startup"
+              href="mailto:contact@udyaibase.com?subject=Feature My Startup"
               className="mt-auto text-xs font-semibold font-jakarta text-brand hover:underline inline-flex items-center gap-1"
             >
               Get featured <ChevronRight className="w-3.5 h-3.5" />
@@ -434,7 +434,7 @@ export default async function AboutPage() {
               </p>
             </div>
             <a
-              href="mailto:contact@aistartupimpact.com?subject=Partnership Inquiry"
+              href="mailto:contact@udyaibase.com?subject=Partnership Inquiry"
               className="mt-auto text-xs font-semibold font-jakarta text-brand hover:underline inline-flex items-center gap-1"
             >
               Start a conversation <ChevronRight className="w-3.5 h-3.5" />
@@ -455,7 +455,7 @@ export default async function AboutPage() {
               </p>
             </div>
             <a
-              href="mailto:contact@aistartupimpact.com?subject=Founder Story"
+              href="mailto:contact@udyaibase.com?subject=Founder Story"
               className="mt-auto text-xs font-semibold font-jakarta text-brand hover:underline inline-flex items-center gap-1"
             >
               Pitch your story <ChevronRight className="w-3.5 h-3.5" />
@@ -489,15 +489,15 @@ export default async function AboutPage() {
             Contact Us
           </Link>
           <a
-            href="mailto:contact@aistartupimpact.com"
+            href="mailto:contact@udyaibase.com"
             className="inline-flex items-center gap-2 text-sm font-jakarta font-semibold text-gray-600 dark:text-gray-400 hover:text-brand dark:hover:text-brand transition-colors border border-gray-200 dark:border-gray-800 rounded-xl px-5 py-2.5"
           >
             <Mail className="w-4 h-4" />
-            contact@aistartupimpact.com
+            contact@udyaibase.com
           </a>
         </div>
         <p className="text-xs text-gray-400 dark:text-gray-600 font-jakarta mt-8 italic">
-          AIStartupImpact — One place to track the AI startup ecosystem.
+          Udyaibase — One place to track the AI startup ecosystem.
         </p>
       </section>
 

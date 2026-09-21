@@ -12,7 +12,7 @@ export function generateVerificationToken(): string {
  * Generate DNS TXT record value
  */
 export function generateDNSRecord(token: string): string {
-  return `aistartupimpact-verify=${token}`;
+  return `udyaibase-verify=${token}`;
 }
 
 /**
@@ -40,7 +40,7 @@ export async function verifyDNS(domain: string, expectedToken: string): Promise<
 }> {
   try {
     const cleanDomain = extractDomain(domain);
-    const subdomain = `_aistartupimpact-verify.${cleanDomain}`;
+    const subdomain = `_udyaibase-verify.${cleanDomain}`;
     
     console.log(`Checking DNS TXT record for: ${subdomain}`);
     
@@ -49,7 +49,7 @@ export async function verifyDNS(domain: string, expectedToken: string): Promise<
     
     // Flatten array of arrays
     const allRecords = records.flat();
-    const expectedRecord = `aistartupimpact-verify=${expectedToken}`;
+    const expectedRecord = `udyaibase-verify=${expectedToken}`;
     
     console.log('Found TXT records:', allRecords);
     console.log('Expected record:', expectedRecord);

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { requireFounderAuth } from '@/lib/founder-auth';
 import { createOtp } from '@/lib/otp';
 import { sendEmailFireAndForget } from '@/lib/email/send';
-import { isDisposableEmail, isFreeEmailProvider, companyEmailOtpHtml, extractEmailDomain } from '@aistartupimpact/utils';
+import { isDisposableEmail, isFreeEmailProvider, companyEmailOtpHtml, extractEmailDomain } from '@udyaibase/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     sendEmailFireAndForget({
       to: emailLower,
-      subject: 'Verify your company email — AI Startup Impact',
+      subject: 'Verify your company email — Udyaibase',
       html: companyEmailOtpHtml(session.name, otp),
       type: 'company_email_otp',
     });

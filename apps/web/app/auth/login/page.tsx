@@ -35,7 +35,7 @@ function LoginContent() {
             </div>
 
             <h2 className="font-sora font-extrabold text-xl lg:text-3xl text-white leading-tight mb-2 lg:mb-3">
-              Welcome Back to AI Startup Impact
+              Welcome Back to Udyaibase
             </h2>
             <p className="text-white/80 text-xs lg:text-sm font-jakarta leading-relaxed mb-4 lg:mb-8 max-w-sm">
               Sign in to manage your startup profile, access funding data, and connect with the AI community.

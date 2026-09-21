@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { getOrganizerSession, verifyPassword } from '@/lib/organizer-auth';
 import { sendEmailFireAndForget } from '@/lib/email/send';
 import crypto from 'crypto';
@@ -53,12 +53,12 @@ export async function POST(request: NextRequest) {
       data: { pendingEmail: emailLower, emailChangeToken: token, emailChangeTokenExpiry: expiry },
     });
 
-    const verifyUrl = `${process.env.NEXT_PUBLIC_WEB_URL || 'https://aistartupimpact.com'}/api/verify-email-change?token=${token}&type=organizer`;
+    const verifyUrl = `${process.env.NEXT_PUBLIC_WEB_URL || 'https://udyaibase.com'}/api/verify-email-change?token=${token}&type=organizer`;
 
     sendEmailFireAndForget({
       to: emailLower,
-      subject: 'Confirm your new email address — AI Startup Impact',
-      html: `<p>You requested to change your email address on AI Startup Impact.</p>
+      subject: 'Confirm your new email address — Udyaibase',
+      html: `<p>You requested to change your email address on Udyaibase.</p>
 <p>Click the link below to confirm your new email:</p>
 <p><a href="${verifyUrl}">Confirm Email Change</a></p>
 <p>This link expires in 24 hours. If you didn't request this, ignore this email.</p>`,

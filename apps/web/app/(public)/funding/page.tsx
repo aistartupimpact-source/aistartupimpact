@@ -13,19 +13,19 @@ const FundingDashboard = dynamic(() => import('./FundingDashboard'));
 export const metadata: Metadata = {
   title: 'Funding Dashboard — AI Startups Funding Rounds Tracker',
   description: 'Filterable tracker of all AI startup funding rounds. Track deals, top investors, and total capital flow in the AI ecosystem.',
-  alternates: { canonical: 'https://aistartupimpact.com/funding' },
+  alternates: { canonical: 'https://udyaibase.com/funding' },
   openGraph: {
     title: 'Funding Dashboard — AI Startups Funding Rounds Tracker',
     description: 'Filterable tracker of all AI startup funding rounds. Track deals, top investors, and total capital flow.',
     type: 'website',
-    url: 'https://aistartupimpact.com/funding',
-    siteName: 'AIStartupImpact',
-    images: [{ url: 'https://aistartupimpact.com/og-image.png', width: 1200, height: 630 }],
+    url: 'https://udyaibase.com/funding',
+    siteName: 'Udyaibase',
+    images: [{ url: 'https://udyaibase.com/og-image.png', width: 1200, height: 630 }],
   },
 };
 
 export default async function FundingPage() {
-  const siteUrl = 'https://aistartupimpact.com';
+  const siteUrl = 'https://udyaibase.com';
 
   // Real DB connection 
   const rounds = await getAllFundingRoundsDirect();

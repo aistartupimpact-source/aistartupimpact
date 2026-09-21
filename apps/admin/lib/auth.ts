@@ -1,7 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { UserRole } from "@prisma/client";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 
 const LOCKOUT_THRESHOLD = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;

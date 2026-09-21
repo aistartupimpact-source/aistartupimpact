@@ -1,5 +1,5 @@
 import { requireFounderAuth } from '@/lib/founder-auth';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { notFound, redirect } from 'next/navigation';
 import StartupEditForm from '@/components/founder/StartupEditForm';
 import SlugEditor from '@/components/shared/SlugEditor';
@@ -125,7 +125,7 @@ export default async function EditStartupPage(props: PageProps) {
           slugChangedAt={startup.slugChangedAt}
           entityType="startup"
           entityId={startup.id}
-          baseUrl="https://aistartupimpact.com/startups"
+          baseUrl="https://udyaibase.com/startups"
           isAdmin={false}
         />
       </div>

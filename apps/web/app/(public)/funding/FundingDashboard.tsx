@@ -5,7 +5,7 @@ import { IndianRupee, MapPin, Building2, Calendar, TrendingUp, Download, Users, 
 import { useUser } from '@/components/UserProvider';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
-import { standardizeCityName } from '@aistartupimpact/utils/src/cities';
+import { standardizeCityName } from '@udyaibase/utils/src/cities';
 
 interface FundingRound {
   id: string;
@@ -351,7 +351,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
               />
               <label className="flex items-start gap-2 mb-4 cursor-pointer">
                 <input type="checkbox" name="subscribe" className="mt-0.5 rounded border-gray-300" />
-                <span className="text-xs text-gray-500 dark:text-gray-400">I agree to receive the AI Startup Impact newsletter with AI startup news and insights. Unsubscribe anytime.</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">I agree to receive the Udyaibase newsletter with AI startup news and insights. Unsubscribe anytime.</span>
               </label>
               <div className="flex gap-3">
                 <button

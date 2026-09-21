@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { authenticateToken, AuthRequest } from '../../middleware/auth';
 import { requireRole } from '../../middleware/roles';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 
 const router = Router();
 
@@ -175,8 +175,8 @@ router.post('/:id/publish',
       setTimeout(async () => {
         try {
           await Promise.all([
-            fetch(`https://www.google.com/ping?sitemap=https://aistartupimpact.com/sitemap.xml`).catch(e => console.error('Ping Google Error:', e)),
-            fetch(`https://aistartupimpact.com`).catch(e => console.error('Homepage Fetch Error:', e)),
+            fetch(`https://www.google.com/ping?sitemap=https://udyaibase.com/sitemap.xml`).catch(e => console.error('Ping Google Error:', e)),
+            fetch(`https://udyaibase.com`).catch(e => console.error('Homepage Fetch Error:', e)),
           ]);
         } catch (err) {
           console.error('Trigger Error:', err);

@@ -1,6 +1,6 @@
 # Database Schema
 
-Entity-Relationship overview of the AI Startup Impact database.
+Entity-Relationship overview of the Udyaibase database.
 
 ---
 

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { requireFounderAuth } from '@/lib/founder-auth';
 
 export const dynamic = 'force-dynamic';

@@ -25,7 +25,7 @@ interface IndiaAISchemeSchemaProps {
 }
 
 export function IndiaAISchemeSchema({ scheme, faqs }: IndiaAISchemeSchemaProps) {
-  const pageUrl = `https://aistartupimpact.com/india-ai/schemes/${scheme.slug}`;
+  const pageUrl = `https://udyaibase.com/india-ai/schemes/${scheme.slug}`;
   const serviceId = `${pageUrl}#service`;
   const webpageId = `${pageUrl}#webpage`;
   const breadcrumbId = `${pageUrl}#breadcrumb`;
@@ -46,7 +46,7 @@ export function IndiaAISchemeSchema({ scheme, faqs }: IndiaAISchemeSchemaProps) 
         "name": `${scheme.name} - Government AI Funding Scheme India`,
         "description": scheme.description,
         "isPartOf": {
-          "@id": "https://aistartupimpact.com/#website"
+          "@id": "https://udyaibase.com/#website"
         },
         "about": {
           "@id": serviceId
@@ -114,19 +114,19 @@ export function IndiaAISchemeSchema({ scheme, faqs }: IndiaAISchemeSchemaProps) 
             "@type": "ListItem",
             "position": 1,
             "name": "Home",
-            "item": "https://aistartupimpact.com"
+            "item": "https://udyaibase.com"
           },
           {
             "@type": "ListItem",
             "position": 2,
             "name": "India AI Ecosystem",
-            "item": "https://aistartupimpact.com/india-ai"
+            "item": "https://udyaibase.com/india-ai"
           },
           {
             "@type": "ListItem",
             "position": 3,
             "name": "Government Schemes",
-            "item": "https://aistartupimpact.com/india-ai/schemes"
+            "item": "https://udyaibase.com/india-ai/schemes"
           },
           {
             "@type": "ListItem",

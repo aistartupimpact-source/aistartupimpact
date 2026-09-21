@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     'government startup grants'
   ].join(', '),
   alternates: {
-    canonical: 'https://aistartupimpact.com/india-ai/schemes/startup-india-seed-fund',
+    canonical: 'https://udyaibase.com/india-ai/schemes/startup-india-seed-fund',
   },
 };
 

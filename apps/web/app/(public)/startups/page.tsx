@@ -12,7 +12,7 @@ export const revalidate = 60;
 export const metadata: Metadata = {
   title: 'Indian AI Startup Directory — Browse & Discover',
   description: 'Browse 1000+ Indian AI startups. Filter by stage, search by name, tagline or city.',
-  alternates: { canonical: 'https://aistartupimpact.com/startups' },
+  alternates: { canonical: 'https://udyaibase.com/startups' },
 };
 
 async function getUniqueCities() {

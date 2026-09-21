@@ -9,4 +9,4 @@ export {
   jobApplicationHtml,
   paymentSuccessHtml,
   newsletterWelcomeHtml,
-} from '@aistartupimpact/utils';
+} from '@udyaibase/utils';

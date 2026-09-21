@@ -6,8 +6,8 @@ describe('generateWebSiteSchema', () => {
     const schema = generateWebSiteSchema();
     expect(schema['@context']).toBe('https://schema.org');
     expect(schema['@type']).toBe('WebSite');
-    expect(schema.name).toBe('AI Startup Impact');
-    expect(schema.url).toBe('https://aistartupimpact.com');
+    expect(schema.name).toBe('Udyaibase');
+    expect(schema.url).toBe('https://udyaibase.com');
   });
 
   it('includes SearchAction', () => {
@@ -36,15 +36,15 @@ describe('generateOrganizationSchema', () => {
   it('includes contact point', () => {
     const schema = generateOrganizationSchema();
     expect(schema.contactPoint['@type']).toBe('ContactPoint');
-    expect(schema.contactPoint.email).toContain('@aistartupimpact.com');
+    expect(schema.contactPoint.email).toContain('@udyaibase.com');
   });
 });
 
 describe('generateBreadcrumbSchema', () => {
   it('returns valid BreadcrumbList schema', () => {
     const crumbs = [
-      { name: 'Home', url: 'https://aistartupimpact.com' },
-      { name: 'Tools', url: 'https://aistartupimpact.com/tools' },
+      { name: 'Home', url: 'https://udyaibase.com' },
+      { name: 'Tools', url: 'https://udyaibase.com/tools' },
     ];
     const schema = generateBreadcrumbSchema(crumbs);
     expect(schema['@context']).toBe('https://schema.org');
@@ -53,9 +53,9 @@ describe('generateBreadcrumbSchema', () => {
 
   it('generates correct position numbers', () => {
     const crumbs = [
-      { name: 'Home', url: 'https://aistartupimpact.com' },
-      { name: 'Tools', url: 'https://aistartupimpact.com/tools' },
-      { name: 'ChatGPT', url: 'https://aistartupimpact.com/tools/chatgpt' },
+      { name: 'Home', url: 'https://udyaibase.com' },
+      { name: 'Tools', url: 'https://udyaibase.com/tools' },
+      { name: 'ChatGPT', url: 'https://udyaibase.com/tools/chatgpt' },
     ];
     const schema = generateBreadcrumbSchema(crumbs);
     expect(schema.itemListElement[0].position).toBe(1);
@@ -64,9 +64,9 @@ describe('generateBreadcrumbSchema', () => {
   });
 
   it('includes item names and URLs', () => {
-    const crumbs = [{ name: 'Tools', url: 'https://aistartupimpact.com/tools' }];
+    const crumbs = [{ name: 'Tools', url: 'https://udyaibase.com/tools' }];
     const schema = generateBreadcrumbSchema(crumbs);
     expect(schema.itemListElement[0].name).toBe('Tools');
-    expect(schema.itemListElement[0].item).toBe('https://aistartupimpact.com/tools');
+    expect(schema.itemListElement[0].item).toBe('https://udyaibase.com/tools');
   });
 });

@@ -1,6 +1,6 @@
 # System Overview
 
-AI Startup Impact is a monorepo containing 3 applications and 1 shared package, serving the AI startup ecosystem with directories, news, events, and community features.
+Udyaibase is a monorepo containing 3 applications and 1 shared package, serving the AI startup ecosystem with directories, news, events, and community features.
 
 ---
 
@@ -50,7 +50,7 @@ AI Startup Impact is a monorepo containing 3 applications and 1 shared package, 
 ## Monorepo Structure
 
 ```
-aistartupimpact/
+udyaibase/
 ├── apps/
 │   ├── web/              → Public website + Founder + Organizer dashboards
 │   │   ├── app/          → Next.js App Router pages

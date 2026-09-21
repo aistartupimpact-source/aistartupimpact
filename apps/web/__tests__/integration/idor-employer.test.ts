@@ -37,7 +37,7 @@ vi.mock('@neondatabase/serverless', () => ({
   neon: vi.fn(() => vi.fn(() => Promise.resolve([]))),
 }));
 
-vi.mock('@aistartupimpact/database', () => ({
+vi.mock('@udyaibase/database', () => ({
   prisma: { $queryRaw: vi.fn(() => Promise.resolve([])) },
 }));
 

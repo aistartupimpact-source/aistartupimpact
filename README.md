@@ -1,10 +1,10 @@
-# AI Startup Impact
+# Udyaibase
 
 > One place to track the entire AI startup ecosystem.
 
-AI Startup Impact is a full-stack platform for discovering AI startups, tools, founders, events, and funding. Built to give India's AI ecosystem the visibility it deserves.
+Udyaibase is a full-stack platform for discovering AI startups, tools, founders, events, and funding. Built to give India's AI ecosystem the visibility it deserves.
 
-[![CI](https://github.com/aistartupimpact/aistartupimpact/actions/workflows/ci.yml/badge.svg)](https://github.com/aistartupimpact/aistartupimpact/actions/workflows/ci.yml)
+[![CI](https://github.com/udyaibase/udyaibase/actions/workflows/ci.yml/badge.svg)](https://github.com/udyaibase/udyaibase/actions/workflows/ci.yml)
 
 ---
 
@@ -62,7 +62,7 @@ AI Startup Impact is a full-stack platform for discovering AI startups, tools, f
 ## Project Structure
 
 ```
-aistartupimpact/
+udyaibase/
 ├── apps/
 │   ├── web/                    # Public website + all user-facing portals
 │   │   ├── app/(public)/       #   Public pages (tools, startups, events, stories, funding)
@@ -88,8 +88,8 @@ aistartupimpact/
 
 ```bash
 # 1. Clone
-git clone https://github.com/aistartupimpact/aistartupimpact.git
-cd aistartupimpact
+git clone https://github.com/udyaibase/udyaibase.git
+cd udyaibase
 
 # 2. Install dependencies
 npm install
@@ -261,6 +261,6 @@ Proprietary. All rights reserved.
 ---
 
 <p align="center">
-  <strong>AI Startup Impact</strong> — Hyderabad, Telangana, India<br/>
-  <a href="https://aistartupimpact.com">aistartupimpact.com</a>
+  <strong>Udyaibase</strong> — Hyderabad, Telangana, India<br/>
+  <a href="https://udyaibase.com">udyaibase.com</a>
 </p>

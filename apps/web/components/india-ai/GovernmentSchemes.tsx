@@ -1,4 +1,4 @@
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import GovernmentSchemesClient from './GovernmentSchemesClient';
 
 interface Scheme {

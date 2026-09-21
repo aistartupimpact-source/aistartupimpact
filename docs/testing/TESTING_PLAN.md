@@ -1,4 +1,4 @@
-# Testing Plan — AI Startup Impact
+# Testing Plan — Udyaibase
 
 > Industry-standard testing strategy. Visual Regression postponed until UI stabilizes.
 

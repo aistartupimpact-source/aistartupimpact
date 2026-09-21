@@ -41,15 +41,15 @@ export const metadata: Metadata = {
   title: "Editor's Picks: Best AI Tools — Reviewed & Rated",
   description:
     "150+ AI tools reviewed and rated by our editorial team. Honest verdicts, ratings, and pricing — no pay-to-play, no affiliate bias.",
-  alternates: { canonical: 'https://aistartupimpact.com/tools' },
+  alternates: { canonical: 'https://udyaibase.com/tools' },
   openGraph: {
     title: "Editor's Picks: Best AI Tools — Reviewed & Rated",
     description:
       "150+ AI tools reviewed and rated by our editorial team. Honest verdicts, ratings, and pricing.",
     type: 'website',
-    url: 'https://aistartupimpact.com/tools',
-    siteName: 'AIStartupImpact',
-    images: [{ url: 'https://aistartupimpact.com/og-image.png', width: 1200, height: 630 }],
+    url: 'https://udyaibase.com/tools',
+    siteName: 'Udyaibase',
+    images: [{ url: 'https://udyaibase.com/og-image.png', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
@@ -91,11 +91,11 @@ export default async function ToolsPage(
 
   const initialPricing = searchParams.pricing || null;
 
-  const siteUrl = 'https://aistartupimpact.com';
+  const siteUrl = 'https://udyaibase.com';
 
   const itemListSchema = generateItemListSchema({
     name: "Editor's Picks: Best AI Tools",
-    description: "AI tools reviewed and rated by the AIStartupImpact editorial team.",
+    description: "AI tools reviewed and rated by the Udyaibase editorial team.",
     url: `${siteUrl}/tools`,
     items: picks.map((t, i) => ({
       position: i + 1,
@@ -107,7 +107,7 @@ export default async function ToolsPage(
 
   const collectionSchema = generateCollectionPageSchema({
     name: "Editor's Picks: Best AI Tools",
-    description: "AI tools reviewed and rated by the AIStartupImpact editorial team. No pay-to-play, no affiliate bias.",
+    description: "AI tools reviewed and rated by the Udyaibase editorial team. No pay-to-play, no affiliate bias.",
     url: `${siteUrl}/tools`,
   });
 

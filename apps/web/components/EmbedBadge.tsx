@@ -12,8 +12,8 @@ interface EmbedBadgeProps {
 export default function EmbedBadge({ urlSlug, type }: EmbedBadgeProps) {
   const [copied, setCopied] = useState(false);
 
-  const embedCode = `<a href="https://aistartupimpact.com/${type}/${urlSlug}" target="_blank" rel="noopener noreferrer">
-  <img src="https://aistartupimpact.com/featured-badge.svg" alt="Featured on AIStartupImpact" width="220" height="60" />
+  const embedCode = `<a href="https://udyaibase.com/${type}/${urlSlug}" target="_blank" rel="noopener noreferrer">
+  <img src="https://udyaibase.com/featured-badge.svg" alt="Featured on Udyaibase" width="220" height="60" />
 </a>`;
 
   const handleCopy = async () => {
@@ -33,14 +33,14 @@ export default function EmbedBadge({ urlSlug, type }: EmbedBadgeProps) {
         <h4 className="font-sora font-bold text-sm text-navy dark:text-white">Are you the founder?</h4>
       </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta mb-4 leading-relaxed">
-        Let the world know you're featured on AIStartupImpact! Copy the code below and place it on your website's footer or feature section.
+        Let the world know you're featured on Udyaibase! Copy the code below and place it on your website's footer or feature section.
       </p>
 
       {/* Badge Preview */}
       <div className="flex justify-center mb-4 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
         <Image
           src="/featured-badge.svg"
-          alt="Featured on AIStartupImpact"
+          alt="Featured on Udyaibase"
           width={220}
           height={60}
           className="hover:scale-105 transition-transform duration-300"

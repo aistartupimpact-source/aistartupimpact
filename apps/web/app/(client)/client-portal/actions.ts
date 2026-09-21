@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { getFounderSession } from "@/lib/founder-auth";
 
 export async function getClientPortalDataAction() {

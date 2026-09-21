@@ -25,7 +25,7 @@ export default function PromotePage() {
   const [showPreview, setShowPreview] = useState(false);
 
   const selectedEvent = events.find((e: any) => e.id === selectedEventId);
-  const SITE_URL = typeof window !== "undefined" ? window.location.origin : "https://aistartupimpact.com";
+  const SITE_URL = typeof window !== "undefined" ? window.location.origin : "https://udyaibase.com";
 
   useEffect(() => {
     Promise.all([
@@ -90,7 +90,7 @@ export default function PromotePage() {
         <h2 style="font-size:18px;font-weight:700;color:#0D1B2A;margin:0 0 12px;">${escapeHtml(selectedEvent.title)}</h2>
         <div style="font-size:13px;color:#6b7280;line-height:1.7;white-space:pre-wrap;">${escapeHtml(emailBody)}</div>
         <div style="margin:20px 0;"><a style="background:#FF3131;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:700;font-size:13px;">Register Now →</a></div>
-        <p style="font-size:10px;color:#9ca3af;">AI Startup Impact Events · Unsubscribe</p>
+        <p style="font-size:10px;color:#9ca3af;">Udyaibase Events · Unsubscribe</p>
       </div>
     </div>` : "";
 

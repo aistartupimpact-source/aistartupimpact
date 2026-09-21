@@ -2,8 +2,8 @@ import { Metadata } from 'next';
 import type { SeoConfig } from './seo-config';
 import type { BrandConfig } from './brand';
 
-const DEFAULT_DOMAIN = 'https://aistartupimpact.com';
-const DEFAULT_NAME = 'AI Startup Impact';
+const DEFAULT_DOMAIN = 'https://udyaibase.com';
+const DEFAULT_NAME = 'Udyaibase';
 const DEFAULT_TWITTER = '@aikitstartup';
 
 function domain(seo?: Partial<SeoConfig>) {
@@ -44,14 +44,14 @@ export function generateOrganizationSchema(seo?: Partial<SeoConfig>, brand?: Par
     "@type": "Organization",
     name,
     alternateName: "AI Startup India",
-    description: seo?.metaDescription || "AI Startup Impact is India's leading platform for AI startup news, funding updates, founder stories, curated AI tools, ecosystem insights, and emerging innovation.",
+    description: seo?.metaDescription || "Udyaibase is India's leading platform for AI startup news, funding updates, founder stories, curated AI tools, ecosystem insights, and emerging innovation.",
     url: d,
     logo: brand?.logoLight || brand?.ogImage || `${d}/logo.png`,
     ...(sameAs.length ? { sameAs } : {}),
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer support",
-      email: seo?.contactEmail || "support@aistartupimpact.com",
+      email: seo?.contactEmail || "support@udyaibase.com",
     },
   };
 }

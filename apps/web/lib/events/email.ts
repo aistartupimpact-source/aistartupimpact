@@ -1,10 +1,10 @@
 import { generateUnsubscribeToken } from "./unsubscribe";
-import { eventRegistrationHtml, eventNewsletterWelcomeHtml } from "@aistartupimpact/utils";
-import type { EventEmailData } from "@aistartupimpact/utils";
+import { eventRegistrationHtml, eventNewsletterWelcomeHtml } from "@udyaibase/utils";
+import type { EventEmailData } from "@udyaibase/utils";
 import { sendEmailFireAndForget } from "../email/send";
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "no-reply@aistartupimpact.com";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://aistartupimpact.com";
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "no-reply@udyaibase.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://udyaibase.com";
 
 export type { EventEmailData };
 
@@ -18,7 +18,7 @@ export async function sendRegistrationConfirmationEmail(
 
   sendEmailFireAndForget({
     to: email,
-    from: `AI Startup Impact Events <${FROM_EMAIL}>`,
+    from: `Udyaibase Events <${FROM_EMAIL}>`,
     subject: `You're registered! ${data.eventTitle}`,
     html: eventRegistrationHtml(name, data),
     type: "event_registration",
@@ -39,7 +39,7 @@ export async function sendNewsletterWelcomeEmail(
 
   sendEmailFireAndForget({
     to: email,
-    from: `AI Startup Impact Events <${FROM_EMAIL}>`,
+    from: `Udyaibase Events <${FROM_EMAIL}>`,
     subject: "Welcome! You'll get AI event updates near you",
     html: eventNewsletterWelcomeHtml(name, unsubUrl),
     type: "event_newsletter_welcome",

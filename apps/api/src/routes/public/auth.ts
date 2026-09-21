@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { sendEmailLogged } from '../../lib/email-send';
-import { otpEmailHtml } from '@aistartupimpact/utils';
+import { otpEmailHtml } from '@udyaibase/utils';
 import { rateLimit } from '../../lib/redis';
 
 const router = express.Router();
@@ -33,7 +33,7 @@ router.post('/request-otp', rateLimit(3, 300), async (req: Request, res: Respons
     // Send the OTP email using Resend
     const result = await sendEmailLogged({
       to: email,
-      subject: 'Your AIStartupImpact Login Code',
+      subject: 'Your Udyaibase Login Code',
       html: otpEmailHtml(otp),
       type: 'otp',
     });

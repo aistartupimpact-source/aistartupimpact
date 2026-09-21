@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 
 export const dynamic = 'force-dynamic';
 
@@ -153,7 +153,7 @@ export async function GET(request: NextRequest) {
 }
 
 function redirectWithMessage(message: string, success = false) {
-  const baseUrl = process.env.NEXT_PUBLIC_WEB_URL || 'https://aistartupimpact.com';
+  const baseUrl = process.env.NEXT_PUBLIC_WEB_URL || 'https://udyaibase.com';
   const params = new URLSearchParams({ message, status: success ? 'success' : 'error' });
   return NextResponse.redirect(`${baseUrl}/?${params.toString()}`);
 }

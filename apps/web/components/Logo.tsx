@@ -27,7 +27,7 @@ export default function Logo({
     return (
       <Image
         src="/logo-dark.svg"
-        alt="AI Startup Impact"
+        alt="Udyaibase"
         width={0}
         height={height}
         priority={priority}
@@ -43,7 +43,7 @@ export default function Logo({
       {/* Light mode → use light theme logo (dark text) */}
       <Image
         src="/logo-light.svg"
-        alt="AI Startup Impact"
+        alt="Udyaibase"
         width={0}
         height={height}
         priority={priority}
@@ -54,7 +54,7 @@ export default function Logo({
       {/* Dark mode → use dark theme logo (white text) */}
       <Image
         src="/logo-dark.svg"
-        alt="AI Startup Impact"
+        alt="Udyaibase"
         width={0}
         height={height}
         priority={priority}

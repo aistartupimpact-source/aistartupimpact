@@ -1,5 +1,5 @@
 import { getOrganizerSession } from "@/lib/organizer-auth";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import Image from "next/image";
 import Link from "next/link";
 import { Plus, Calendar, Users, MapPin } from "lucide-react";

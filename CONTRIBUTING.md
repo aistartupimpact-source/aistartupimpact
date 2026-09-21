@@ -1,4 +1,4 @@
-# Contributing to AI Startup Impact
+# Contributing to Udyaibase
 
 Thank you for your interest in contributing. This guide covers the workflow, standards, and expectations for all contributors.
 

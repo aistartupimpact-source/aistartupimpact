@@ -1,7 +1,7 @@
 'use server';
 
 import { requireFounderAuth, setFounderSession } from '@/lib/founder-auth';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { revalidatePath } from 'next/cache';
 
 export async function completeOnboardingAction(data: {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiAuth } from "@/lib/api-auth";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { verifyTOTPToken, decryptSecret } from "@/lib/two-factor";
 
 export async function POST(request: NextRequest) {

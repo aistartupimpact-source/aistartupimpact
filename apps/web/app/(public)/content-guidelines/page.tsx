@@ -1,8 +1,8 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Content Guidelines — AI Startup Impact",
-  description: "Community standards and content guidelines for startups, tools, events, and user-generated content on AI Startup Impact.",
+  title: "Content Guidelines — Udyaibase",
+  description: "Community standards and content guidelines for startups, tools, events, and user-generated content on Udyaibase.",
 };
 
 export default function ContentGuidelinesPage() {
@@ -15,7 +15,7 @@ export default function ContentGuidelinesPage() {
         <p className="text-sm text-gray-500 mb-8"><strong>Last updated:</strong> July 2026</p>
 
         <p>
-          AI Startup Impact is a platform for the AI startup community — founders, builders, investors, and enthusiasts. These guidelines ensure our directory, events, and content remain trustworthy, accurate, and valuable for everyone.
+          Udyaibase is a platform for the AI startup community — founders, builders, investors, and enthusiasts. These guidelines ensure our directory, events, and content remain trustworthy, accurate, and valuable for everyone.
         </p>
 
         <h2>1. Startup & Tool Listings</h2>
@@ -88,16 +88,16 @@ export default function ContentGuidelinesPage() {
 
         <h2>7. Reporting Violations</h2>
         <p>
-          If you encounter content that violates these guidelines, please use the <strong>"Report"</strong> button on any listing, event, or profile page. You can also email <a href="mailto:support@aistartupimpact.com">support@aistartupimpact.com</a>.
+          If you encounter content that violates these guidelines, please use the <strong>"Report"</strong> button on any listing, event, or profile page. You can also email <a href="mailto:support@udyaibase.com">support@udyaibase.com</a>.
         </p>
 
         <h2>8. Appeals</h2>
         <p>
-          If your content was removed or your account was suspended and you believe it was in error, you may appeal by emailing <a href="mailto:appeals@aistartupimpact.com">appeals@aistartupimpact.com</a> with your case details. Appeals are reviewed within 5 business days.
+          If your content was removed or your account was suspended and you believe it was in error, you may appeal by emailing <a href="mailto:appeals@udyaibase.com">appeals@udyaibase.com</a> with your case details. Appeals are reviewed within 5 business days.
         </p>
 
         <h2>9. Changes</h2>
-        <p>We may update these guidelines as the platform evolves. Continued use of AI Startup Impact implies acceptance of the current guidelines.</p>
+        <p>We may update these guidelines as the platform evolves. Continued use of Udyaibase implies acceptance of the current guidelines.</p>
       </div>
     </div>
   );

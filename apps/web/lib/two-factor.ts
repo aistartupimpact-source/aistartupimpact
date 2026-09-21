@@ -3,7 +3,7 @@ import QRCode from 'qrcode';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 
-const APP_NAME = 'AI Startup Impact';
+const APP_NAME = 'Udyaibase';
 
 /**
  * Generate a new TOTP secret for a user

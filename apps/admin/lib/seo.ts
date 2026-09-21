@@ -44,14 +44,14 @@ export function generateArticleSchema(data: ArticleData) {
     "author": {
       "@type": "Person",
       "name": data.author.name,
-      "url": data.author.url || `https://aistartupimpact.com/author/${data.author.slug}`
+      "url": data.author.url || `https://udyaibase.com/author/${data.author.slug}`
     },
     "publisher": {
       "@type": "Organization",
-      "name": data.publisherName || "AIStartupImpact",
+      "name": data.publisherName || "Udyaibase",
       "logo": {
         "@type": "ImageObject",
-        "url": data.publisherLogoUrl || "https://aistartupimpact.com/og-image.png"
+        "url": data.publisherLogoUrl || "https://udyaibase.com/og-image.png"
       }
     },
     "keywords": data.tags ? data.tags.join(', ') : "",

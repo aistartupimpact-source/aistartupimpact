@@ -1,9 +1,9 @@
 function getSiteUrl(): string {
   const url = process.env.NEXT_PUBLIC_SITE_URL;
-  return url && !url.includes('localhost') ? url : 'https://aistartupimpact.com';
+  return url && !url.includes('localhost') ? url : 'https://udyaibase.com';
 }
 
-function emailWrapper(content: string, accentColor = '#6366f1', brandName = 'AI Startup Impact'): string {
+function emailWrapper(content: string, accentColor = '#6366f1', brandName = 'Udyaibase'): string {
   const siteUrl = getSiteUrl();
   return `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
   <div style="border-bottom: 3px solid ${accentColor}; padding-bottom: 20px; margin-bottom: 30px;">
@@ -25,7 +25,7 @@ function emailWrapper(content: string, accentColor = '#6366f1', brandName = 'AI 
 }
 
 function eventsWrapper(content: string): string {
-  return emailWrapper(content, '#FF3131', 'AI Startup Impact Events');
+  return emailWrapper(content, '#FF3131', 'Udyaibase Events');
 }
 
 function eventsButton(href: string, label: string): string {
@@ -115,7 +115,7 @@ export function startupRejectionHtml(
   <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 8px;">Hi ${founderName || 'there'},</p>
 
   <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-    Thank you for submitting <strong>"${name}"</strong> to AI Startup Impact. We appreciate your patience while our editorial team reviewed your application.
+    Thank you for submitting <strong>"${name}"</strong> to Udyaibase. We appreciate your patience while our editorial team reviewed your application.
   </p>
 
   <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
@@ -153,14 +153,14 @@ export function startupRejectionHtml(
 
 export function userInvitationHtml(name: string, role: string): string {
   const adminUrl = process.env.NODE_ENV === 'production'
-    ? (process.env.ADMIN_NEXTAUTH_URL || 'https://admin.aistartupimpact.com')
+    ? (process.env.ADMIN_NEXTAUTH_URL || 'https://admin.udyaibase.com')
     : (process.env.ADMIN_NEXTAUTH_URL || 'http://localhost:3001');
 
   return emailWrapper(`
   <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 8px;">Hi ${name},</p>
 
   <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-    You have been invited to join the AI Startup Impact editorial team as <strong>${role.replace(/_/g, ' ')}</strong>.
+    You have been invited to join the Udyaibase editorial team as <strong>${role.replace(/_/g, ' ')}</strong>.
   </p>
 
   <p style="color: #374151; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
@@ -178,7 +178,7 @@ export function submissionReceivedHtml(name: string, entityType: 'startup' | 'to
   return emailWrapper(`
   <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 8px;">Hi ${name},</p>
 
-  <p style="color: #374151; font-size: 16px; line-height: 1.6;">Thank you for submitting "${entityName}" to AI Startup Impact.</p>
+  <p style="color: #374151; font-size: 16px; line-height: 1.6;">Thank you for submitting "${entityName}" to Udyaibase.</p>
   <p style="color: #374151; font-size: 16px; line-height: 1.6;">Our team will review your submission within 2-3 business days.</p>
   <p style="color: #374151; font-size: 16px; line-height: 1.6;"><strong>Status:</strong> Pending Review</p>
 
@@ -189,7 +189,7 @@ export function submissionReceivedHtml(name: string, entityType: 'startup' | 'to
 
 export function verificationEmailHtml(name: string, verifyUrl: string): string {
   return emailWrapper(`
-  <h2 style="color: #1f2937;">Welcome to AI Startup Impact, ${name}!</h2>
+  <h2 style="color: #1f2937;">Welcome to Udyaibase, ${name}!</h2>
   <p style="color: #4b5563; line-height: 1.6;">Please verify your email address by clicking the button below:</p>
   <div style="margin: 30px 0;">
     <a href="${verifyUrl}" style="background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Verify Email</a>
@@ -216,7 +216,7 @@ export function jobApplicationHtml(name: string, role: string): string {
   return emailWrapper(`
   <h2 style="color: #1f2937;">Application Received</h2>
   <p style="color: #4b5563; line-height: 1.6;">Hi ${name},</p>
-  <p style="color: #4b5563; line-height: 1.6;">Thank you for applying for the <strong>${role}</strong> position at AI Startup Impact.</p>
+  <p style="color: #4b5563; line-height: 1.6;">Thank you for applying for the <strong>${role}</strong> position at Udyaibase.</p>
   <p style="color: #4b5563; line-height: 1.6;">We've received your application and will review it carefully. If your profile is a good match, we'll reach out to schedule the next steps.</p>
   <p style="color: #6b7280; font-size: 14px;">This is an automated confirmation — no reply needed.</p>`);
 }
@@ -247,7 +247,7 @@ export function paymentSuccessHtml(toolName: string, founderName: string, tier: 
 export function newsletterConfirmHtml(confirmUrl: string): string {
   return emailWrapper(`
   <h2 style="color: #1f2937;">Confirm your subscription</h2>
-  <p style="color: #4b5563; line-height: 1.6;">Thanks for signing up for the AI Startup Impact newsletter!</p>
+  <p style="color: #4b5563; line-height: 1.6;">Thanks for signing up for the Udyaibase newsletter!</p>
   <p style="color: #4b5563; line-height: 1.6;">Please click the button below to confirm your email address and start receiving our weekly digest.</p>
   <div style="margin: 30px 0; text-align: center;">
     ${primaryButton(confirmUrl, 'Confirm Subscription')}
@@ -262,15 +262,15 @@ export function newsletterWelcomeHtml(isResubscribe = false): string {
   if (isResubscribe) {
     return emailWrapper(`
     <h2 style="color: #1f2937;">Welcome Back!</h2>
-    <p style="color: #4b5563; line-height: 1.6;">You've been re-subscribed to the AI Startup Impact newsletter.</p>
+    <p style="color: #4b5563; line-height: 1.6;">You've been re-subscribed to the Udyaibase newsletter.</p>
     <p style="color: #4b5563; line-height: 1.6;">You'll receive our weekly digest with the latest AI startups, tools, and industry insights.</p>
     <div style="margin: 30px 0;">
-      ${primaryButton(siteUrl, 'Visit AI Startup Impact')}
+      ${primaryButton(siteUrl, 'Visit Udyaibase')}
     </div>`);
   }
 
   return emailWrapper(`
-  <h2 style="color: #1f2937;">Welcome to AI Startup Impact!</h2>
+  <h2 style="color: #1f2937;">Welcome to Udyaibase!</h2>
   <p style="color: #4b5563; line-height: 1.6;">Thank you for subscribing to our newsletter.</p>
   <p style="color: #4b5563; line-height: 1.6;">Every week, you'll get curated updates on the most impactful AI startups, tools, funding rounds, and industry insights.</p>
   <div style="margin: 30px 0;">
@@ -311,7 +311,7 @@ export function teamInviteHtml(inviterName: string, role: string, acceptUrl: str
   return eventsWrapper(`
   <p style="color: #374151; font-size: 16px; line-height: 1.6;">Hi,</p>
   <p style="color: #374151; font-size: 16px; line-height: 1.6;">
-    <strong>${inviterName}</strong> has invited you as <strong>${role}</strong> to help manage events on AI Startup Impact.
+    <strong>${inviterName}</strong> has invited you as <strong>${role}</strong> to help manage events on Udyaibase.
   </p>
   <div style="margin: 32px 0; text-align: center;">
     ${eventsButton(acceptUrl, 'Accept Invitation')}
@@ -323,7 +323,7 @@ export function founderTeamInviteHtml(inviterName: string, role: string, acceptU
   return eventsWrapper(`
   <p style="color: #374151; font-size: 16px; line-height: 1.6;">Hi,</p>
   <p style="color: #374151; font-size: 16px; line-height: 1.6;">
-    <strong>${inviterName}</strong> has invited you as <strong>${role}</strong> to their founder team on AI Startup Impact.
+    <strong>${inviterName}</strong> has invited you as <strong>${role}</strong> to their founder team on Udyaibase.
   </p>
   <div style="margin: 32px 0; text-align: center;">
     ${eventsButton(acceptUrl, 'Accept Invitation')}
@@ -603,8 +603,8 @@ ${data.clickSources.length > 0 ? `<p style="color:#64748b;font-size:12px;font-we
 </table>
 </td></tr>
 <tr><td style="padding:16px 24px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center">
-<p style="color:#94a3b8;font-size:11px;margin:0">AI Startup Impact - Daily Admin Digest</p>
-<p style="color:#94a3b8;font-size:11px;margin:4px 0 0"><a href="https://aistartupimpact.com/admin/analytics" style="color:#6366f1;text-decoration:none">View Full Dashboard</a></p>
+<p style="color:#94a3b8;font-size:11px;margin:0">Udyaibase - Daily Admin Digest</p>
+<p style="color:#94a3b8;font-size:11px;margin:4px 0 0"><a href="https://udyaibase.com/admin/analytics" style="color:#6366f1;text-decoration:none">View Full Dashboard</a></p>
 </td></tr>
 </table>
 </td></tr></table></body></html>`;
