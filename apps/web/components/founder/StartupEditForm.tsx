@@ -115,10 +115,9 @@ export default function StartupEditForm({ startup, existingFaqs = [], existingFu
 
   const [draftLoaded, setDraftLoaded] = useState(false);
 
-  // Load draft from localStorage on mount
   useEffect(() => {
     const draftKey = `draft_founder_edit_startup_${startup.id}`;
-    const draft = localStorage.getItem(draftKey);
+    const draft = sessionStorage.getItem(draftKey);
     if (draft) {
       try {
         const { formData: dForm, faqs: dFaqs, fundingRounds: dRounds, foundersDetails: dFounders, socialLinks: dSocialLinks } = JSON.parse(draft);
@@ -157,7 +156,7 @@ export default function StartupEditForm({ startup, existingFaqs = [], existingFu
   useEffect(() => {
     if (!draftLoaded) return;
     const draftKey = `draft_founder_edit_startup_${startup.id}`;
-    localStorage.setItem(draftKey, JSON.stringify({ formData, faqs, fundingRounds, foundersDetails, socialLinks }));
+    sessionStorage.setItem(draftKey, JSON.stringify({ formData, faqs, fundingRounds, foundersDetails, socialLinks }));
   }, [formData, faqs, fundingRounds, foundersDetails, socialLinks, draftLoaded, startup.id]);
 
   const taglineCharLimit = 60;
@@ -270,7 +269,7 @@ export default function StartupEditForm({ startup, existingFaqs = [], existingFu
         throw new Error(result.error || 'Update failed');
       }
 
-      localStorage.removeItem(`draft_founder_edit_startup_${startup.id}`);
+      sessionStorage.removeItem(`draft_founder_edit_startup_${startup.id}`);
       router.push('/founder/startups');
       router.refresh();
     } catch (err: any) {

@@ -54,7 +54,7 @@ export default function OnboardingClient({ employer }: { employer: Employer }) {
   const [draftLoaded, setDraftLoaded] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('employer_onboarding_draft');
+    const saved = sessionStorage.getItem('employer_onboarding_draft');
     if (saved) {
       try {
         setFormData(prev => ({ ...prev, ...JSON.parse(saved) }));
@@ -65,7 +65,7 @@ export default function OnboardingClient({ employer }: { employer: Employer }) {
 
   useEffect(() => {
     if (draftLoaded) {
-      localStorage.setItem('employer_onboarding_draft', JSON.stringify(formData));
+      sessionStorage.setItem('employer_onboarding_draft', JSON.stringify(formData));
     }
   }, [formData, draftLoaded]);
 
@@ -113,7 +113,7 @@ export default function OnboardingClient({ employer }: { employer: Employer }) {
         setLoading(false);
         return;
       }
-      localStorage.removeItem('employer_onboarding_draft');
+      sessionStorage.removeItem('employer_onboarding_draft');
       router.push('/employer/dashboard?welcome=true');
     } catch {
       setError('An error occurred. Please try again.');

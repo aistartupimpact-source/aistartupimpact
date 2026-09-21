@@ -41,7 +41,7 @@ export function generateGoogleCalendarUrl(data: CalendarEventData): string {
  * Returns a string that can be served as a downloadable file.
  */
 export function generateICSContent(data: CalendarEventData): string {
-  const uid = `${Date.now()}-${Math.random().toString(36).slice(2)}@udyaibase.com`;
+  const uid = `${Date.now()}-${crypto.randomUUID()}@udyaibase.com`;
   const now = formatDateForICS(new Date().toISOString());
   const start = formatDateForICS(data.startAt);
   const end = formatDateForICS(data.endAt);
