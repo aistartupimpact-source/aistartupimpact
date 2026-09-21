@@ -51,23 +51,6 @@ export default function OnboardingClient({ employer }: { employer: Employer }) {
     twitterUrl: employer.twitterUrl || '',
   });
 
-  const [draftLoaded, setDraftLoaded] = useState(false);
-
-  useEffect(() => {
-    const saved = sessionStorage.getItem('employer_onboarding_draft');
-    if (saved) {
-      try {
-        setFormData(prev => ({ ...prev, ...JSON.parse(saved) }));
-      } catch {}
-    }
-    setDraftLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (draftLoaded) {
-      sessionStorage.setItem('employer_onboarding_draft', JSON.stringify(formData));
-    }
-  }, [formData, draftLoaded]);
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -113,7 +96,6 @@ export default function OnboardingClient({ employer }: { employer: Employer }) {
         setLoading(false);
         return;
       }
-      sessionStorage.removeItem('employer_onboarding_draft');
       router.push('/employer/dashboard?welcome=true');
     } catch {
       setError('An error occurred. Please try again.');
