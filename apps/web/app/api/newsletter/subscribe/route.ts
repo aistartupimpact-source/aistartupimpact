@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { apiRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { newsletterSchema, validateInput } from '@/lib/validation';
-import { newsletterConfirmHtml, newsletterWelcomeHtml } from '@aistartupimpact/utils';
+import { newsletterConfirmHtml, newsletterWelcomeHtml } from '@udyaibase/utils';
 
 export const runtime = 'edge';
 
-const CONSENT_TEXT = 'I agree to receive the AI Startup Impact newsletter with AI startup news, tools, and insights. You can unsubscribe at any time.';
+const CONSENT_TEXT = 'I agree to receive the Udyaibase newsletter with AI startup news, tools, and insights. You can unsubscribe at any time.';
 const CONSENT_VERSION = 1;
 
 function generateId(): string {
@@ -27,8 +27,8 @@ async function sendEmailEdge(to: string, subject: string, html: string, headers?
 
   const { Resend } = await import('resend');
   const resend = new Resend(resendKey);
-  const fromEmail = process.env.RESEND_FROM_EMAIL || 'no-reply@aistartupimpact.com';
-  const fromName = process.env.RESEND_FROM_NAME || 'AI Startup Impact';
+  const fromEmail = process.env.RESEND_FROM_EMAIL || 'no-reply@udyaibase.com';
+  const fromName = process.env.RESEND_FROM_NAME || 'Udyaibase';
 
   const { data, error } = await resend.emails.send({
     from: `${fromName} <${fromEmail}>`,
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
 
     const { email, source, name } = validation.data;
     const tags = body.tags;
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aistartupimpact.com';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://udyaibase.com';
 
     const existing = await sql`
       SELECT id, "isActive", "emailVerified" FROM "NewsletterSubscriber"
@@ -101,7 +101,7 @@ export async function POST(request: Request) {
         try {
           await sendEmailEdge(
             email.toLowerCase(),
-            'Confirm your newsletter subscription — AI Startup Impact',
+            'Confirm your newsletter subscription — Udyaibase',
             newsletterConfirmHtml(confirmUrl),
           );
         } catch (emailError) {
@@ -137,7 +137,7 @@ export async function POST(request: Request) {
       try {
         await sendEmailEdge(
           email.toLowerCase(),
-          'Confirm your newsletter subscription — AI Startup Impact',
+          'Confirm your newsletter subscription — Udyaibase',
           newsletterConfirmHtml(confirmUrl),
         );
       } catch (emailError) {
@@ -180,7 +180,7 @@ export async function POST(request: Request) {
     try {
       await sendEmailEdge(
         email.toLowerCase(),
-        'Confirm your newsletter subscription — AI Startup Impact',
+        'Confirm your newsletter subscription — Udyaibase',
         newsletterConfirmHtml(confirmUrl),
       );
     } catch (emailError) {

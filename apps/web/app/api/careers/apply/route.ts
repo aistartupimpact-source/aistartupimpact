@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
-import { jobApplicationHtml } from '@aistartupimpact/utils';
+import { jobApplicationHtml } from '@udyaibase/utils';
 import { sendEmailFireAndForget } from '@/lib/email/send';
 import { apiRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       `;
       sendEmailFireAndForget({
         to: email,
-        subject: `Application received — ${role} at AI Startup Impact`,
+        subject: `Application received — ${role} at Udyaibase`,
         html: jobApplicationHtml(fullName, role),
         type: 'job_application',
       });
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       `;
 
       if (existing.length === 0) {
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aistartupimpact.com';
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://udyaibase.com';
         const token = crypto.randomUUID();
         await sql`
           INSERT INTO "NewsletterSubscriber" (
@@ -90,16 +90,16 @@ export async function POST(req: NextRequest) {
             "consentAt", "consentText", "consentVersion", "consentSource"
           ) VALUES (
             gen_random_uuid(), ${email}, ${fullName}, 'job_application', false, false, ${token}, NOW(), '{job_application}',
-            NOW(), 'I agree to receive the AI Startup Impact newsletter with AI startup news, tools, and insights.', 1, 'job_application'
+            NOW(), 'I agree to receive the Udyaibase newsletter with AI startup news, tools, and insights.', 1, 'job_application'
           )
           RETURNING id, email
         `;
 
-        const { newsletterConfirmHtml } = await import('@aistartupimpact/utils');
+        const { newsletterConfirmHtml } = await import('@udyaibase/utils');
         const confirmUrl = `${siteUrl}/api/newsletter/confirm?token=${token}`;
         sendEmailFireAndForget({
           to: email,
-          subject: 'Confirm your newsletter subscription — AI Startup Impact',
+          subject: 'Confirm your newsletter subscription — Udyaibase',
           html: newsletterConfirmHtml(confirmUrl),
           type: 'newsletter_confirm',
         });

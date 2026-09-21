@@ -3,7 +3,7 @@ import { sql } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
 import { setEmployerSession } from '@/lib/employer-auth';
-import { securityAlertHtml } from '@aistartupimpact/utils';
+import { securityAlertHtml } from '@udyaibase/utils';
 import { sendEmailFireAndForget } from '@/lib/email/send';
 import { authRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
           WHERE id = ${employer.id}
         `;
 
-        const resetUrl = `${process.env.NEXT_PUBLIC_WEB_URL || 'https://aistartupimpact.com'}/employer/forgot-password`;
+        const resetUrl = `${process.env.NEXT_PUBLIC_WEB_URL || 'https://udyaibase.com'}/employer/forgot-password`;
         sendEmailFireAndForget({
           to: employer.email,
           subject: 'Security Alert — Failed Login Attempts',

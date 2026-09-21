@@ -1,6 +1,6 @@
 # Security Overview
 
-Security posture and defense layers for AI Startup Impact.
+Security posture and defense layers for Udyaibase.
 
 ---
 

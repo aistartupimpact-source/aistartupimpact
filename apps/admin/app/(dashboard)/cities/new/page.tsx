@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { prisma } from '@aistartupimpact/database';
-import { generateSlug } from '@aistartupimpact/utils';
+import { prisma } from '@udyaibase/database';
+import { generateSlug } from '@udyaibase/utils';
 import CityForm from '../CityForm';
 
 export const metadata: Metadata = {

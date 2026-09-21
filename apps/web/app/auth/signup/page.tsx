@@ -31,7 +31,7 @@ function SignupContent() {
               <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
                 <Rocket className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
               </div>
-              <span className="font-sora font-bold text-white text-xs lg:text-sm tracking-wide uppercase">Join AI Startup Impact</span>
+              <span className="font-sora font-bold text-white text-xs lg:text-sm tracking-wide uppercase">Join Udyaibase</span>
             </div>
 
             <h2 className="font-sora font-extrabold text-xl lg:text-3xl text-white leading-tight mb-2 lg:mb-3">

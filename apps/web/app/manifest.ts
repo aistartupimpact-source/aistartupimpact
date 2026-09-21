@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'AI Startup Impact',
-    short_name: 'AI Startup Impact',
+    name: 'Udyaibase',
+    short_name: 'Udyaibase',
     description: 'Premier platform for Indian AI news. Discover top AI startups, funding, tools, and founder stories.',
     start_url: '/',
     display: 'standalone',

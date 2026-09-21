@@ -128,7 +128,7 @@ DNS domain verification for tool ownership.
 | Auth | Required (`founder-token`) |
 | Ownership | Must be tool owner |
 
-**Flow**: System checks DNS TXT records for `aistartupimpact-verify={token}`
+**Flow**: System checks DNS TXT records for `udyaibase-verify={token}`
 
 **Response (200)**:
 ```json

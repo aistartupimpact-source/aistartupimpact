@@ -7,7 +7,7 @@ Where things live in the monorepo and why.
 ## Top-Level Structure
 
 ```
-aistartupimpact/
+udyaibase/
 ├── apps/           → Application code (3 apps)
 ├── packages/       → Shared libraries
 ├── docs/           → Documentation
@@ -177,7 +177,7 @@ packages/database/
 │   ├── schema.prisma       → All 80+ models, enums, relations
 │   └── migrations/         → Migration history
 ├── index.ts                → Re-exports Prisma client
-└── package.json            → Published as @aistartupimpact/database
+└── package.json            → Published as @udyaibase/database
 ```
 
 ---

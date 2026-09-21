@@ -176,7 +176,7 @@ export default function EmployerCompanyPage() {
           /* Not Connected — Search */
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta mb-3">
-              If your company is listed on AI Startup Impact, connect it to automatically sync your profile and show jobs on your startup page.
+              If your company is listed on Udyaibase, connect it to automatically sync your profile and show jobs on your startup page.
             </p>
 
             <div className="relative">

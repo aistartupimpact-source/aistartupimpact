@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { getUnifiedSession } from "@/lib/unified-auth";
 import { unlockWorkspace } from "@/lib/unified-auth/workspace";
 import { checkRateLimit, getClientIdentifier, authRateLimit } from "@/lib/rate-limit";

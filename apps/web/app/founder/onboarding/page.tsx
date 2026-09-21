@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getFounderSession } from '@/lib/founder-auth';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import OnboardingClient from './OnboardingClient';
 
 export default async function OnboardingPage(

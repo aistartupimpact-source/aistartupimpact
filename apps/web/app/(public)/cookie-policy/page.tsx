@@ -1,8 +1,8 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Cookie Policy | AI Startup Impact',
-  description: 'Learn about how we use cookies and similar technologies on AI Startup Impact.',
+  title: 'Cookie Policy | Udyaibase',
+  description: 'Learn about how we use cookies and similar technologies on Udyaibase.',
 };
 
 export default function CookiePolicyPage() {
@@ -106,7 +106,7 @@ export default function CookiePolicyPage() {
 
         <h2>7. Contact Us</h2>
         <p>If you have any questions about our use of cookies, please contact us at:</p>
-        <p><strong>Email:</strong> <a href="mailto:privacy@aistartupimpact.com">privacy@aistartupimpact.com</a><br /><strong>Address:</strong> Hyderabad, Telangana, India</p>
+        <p><strong>Email:</strong> <a href="mailto:privacy@udyaibase.com">privacy@udyaibase.com</a><br /><strong>Address:</strong> Udyaibase Technologies Pvt Ltd, Vijayawada, Andhra Pradesh, India</p>
       </div>
     </div>
   );

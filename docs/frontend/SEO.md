@@ -34,7 +34,7 @@ export async function generateMetadata({ params }): Promise<Metadata> {
 
 Every page specifies a canonical URL via `alternates.canonical`:
 - Prevents duplicate content issues
-- Base URL: `https://aistartupimpact.com`
+- Base URL: `https://udyaibase.com`
 - Set in `metadataBase` in root layout
 
 ---
@@ -92,7 +92,7 @@ Disallow: /api/
 Disallow: /founder/
 Disallow: /organizer/
 Disallow: /admin/
-Sitemap: https://aistartupimpact.com/sitemap.xml
+Sitemap: https://udyaibase.com/sitemap.xml
 ```
 
 ---

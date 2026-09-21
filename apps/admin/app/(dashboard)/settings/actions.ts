@@ -2,7 +2,7 @@
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 
 const ALLOWED = ["SUPER_ADMIN", "EDITOR_IN_CHIEF", "AD_MANAGER"];
 
@@ -29,22 +29,22 @@ export async function getSettingsAction() {
 
     // Default values if not set
     const defaults = {
-      siteTitle: 'AIStartupImpact',
+      siteTitle: 'Udyaibase',
       tagline: "India's AI Startup Ecosystem",
-      contactEmail: 'hello@aistartupimpact.com',
-      socialTwitter: 'https://twitter.com/aistartupimpact',
-      socialLinkedin: 'https://linkedin.com/company/aistartupimpact',
-      socialInstagram: 'https://instagram.com/aistartupimpact',
-      socialFacebook: 'https://facebook.com/aistartupimpact',
-      metaTitle: "AI Startup Impact – AI Startup India News & Funding",
-      metaDescription: "AI Startup Impact is the premier platform for Indian AI news. Discover top artificial intelligence startups, funding, tools, and founder stories.",
+      contactEmail: 'hello@udyaibase.com',
+      socialTwitter: 'https://twitter.com/udyaibase',
+      socialLinkedin: 'https://linkedin.com/company/udyaibase',
+      socialInstagram: 'https://instagram.com/udyaibase',
+      socialFacebook: 'https://facebook.com/udyaibase',
+      metaTitle: "Udyaibase – AI Startup India News & Funding",
+      metaDescription: "Udyaibase is the premier platform for Indian AI news. Discover top artificial intelligence startups, funding, tools, and founder stories.",
       autoSitemap: true,
       seo_twitterHandle: '@aikitstartup',
       seo_gaId: '',
       seo_gscVerification: '',
-      canonicalDomain: 'https://aistartupimpact.com',
+      canonicalDomain: 'https://udyaibase.com',
       seo_noindex: false,
-      socialYoutube: 'https://www.youtube.com/@aistartupimpact',
+      socialYoutube: 'https://www.youtube.com/@udyaibase',
       brandColor: '#FF3131',
       brandSecondary: '#1B3A5C',
       brandTertiary: '#F59E0B',

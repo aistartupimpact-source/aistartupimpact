@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 import { authRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
-import { isDisposableEmail } from '@aistartupimpact/utils';
+import { isDisposableEmail } from '@udyaibase/utils';
 
 export const dynamic = 'force-dynamic';
 

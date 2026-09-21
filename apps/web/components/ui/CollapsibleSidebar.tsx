@@ -38,11 +38,11 @@ export default function CollapsibleSidebar({ logoHref, children, bottomSlot, col
       {/* Logo */}
       <div className={`h-16 flex items-center border-b border-gray-100 dark:border-gray-800 ${collapsed ? 'justify-center px-2' : 'px-4'}`}>
         <Link href={logoHref} className="flex items-center gap-2.5 overflow-hidden">
-          <Image src="/logo-light.svg" alt="AI Startup Impact" width={64} height={64} sizes="64px" className="h-14 w-auto shrink-0 dark:hidden" />
-          <Image src="/logo-dark.svg" alt="AI Startup Impact" width={64} height={64} sizes="64px" className="h-14 w-auto shrink-0 hidden dark:block" />
+          <Image src="/logo-light.svg" alt="Udyaibase" width={64} height={64} sizes="64px" className="h-14 w-auto shrink-0 dark:hidden" />
+          <Image src="/logo-dark.svg" alt="Udyaibase" width={64} height={64} sizes="64px" className="h-14 w-auto shrink-0 hidden dark:block" />
           {!collapsed && (
             <span className="font-sora font-bold text-[13px] text-navy dark:text-white whitespace-nowrap">
-              AI Startup <span className="text-brand">Impact</span>
+              Udyai<span className="text-brand">base</span>
             </span>
           )}
         </Link>

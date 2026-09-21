@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import crypto from 'crypto';
-import { otpEmailHtml } from '@aistartupimpact/utils';
+import { otpEmailHtml } from '@udyaibase/utils';
 import { sendEmail } from '@/lib/email/send';
 import { authRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     sendEmail({
       to: email.toLowerCase().trim(),
-      subject: 'Your Verification Code — AI Startup Impact Employer Portal',
+      subject: 'Your Verification Code — Udyaibase Employer Portal',
       html: otpEmailHtml(code, 'employer'),
       type: 'otp',
     }).catch(err => console.error('[OTP Email Error]', err));

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import crypto from 'crypto';
 
 // Parse user agent to detect device type
@@ -49,7 +49,8 @@ function getTrafficSource(referrer: string | null): string {
   }
   
   // Social media
-  if (ref.includes('facebook.') || ref.includes('twitter.') || ref.includes('x.com') ||
+  if (ref.includes('facebook.') || ref.includes('twitter.') ||
+      /(\.|\/\/)x\.com(\/|$)/.test(ref) ||
       ref.includes('linkedin.') || ref.includes('instagram.') || ref.includes('reddit.') ||
       ref.includes('youtube.') || ref.includes('tiktok.')) {
     return 'SOCIAL';

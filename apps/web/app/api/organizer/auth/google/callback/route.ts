@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { createOrganizerSession } from "@/lib/organizer-auth";
 import { OAuth2Client } from "google-auth-library";
 

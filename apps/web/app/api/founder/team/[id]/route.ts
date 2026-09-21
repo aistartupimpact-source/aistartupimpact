@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { getFounderSession } from "@/lib/founder-auth";
 import { canChangeRole, canRemoveMember } from "@/lib/founder-team-permissions";
 import { verifyOTP } from "@/lib/action-otp";

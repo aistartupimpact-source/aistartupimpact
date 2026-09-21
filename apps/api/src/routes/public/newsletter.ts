@@ -1,10 +1,10 @@
 import { Router, Request, Response } from 'express';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import crypto from 'crypto';
 
 const router = Router();
 
-const CONSENT_TEXT = 'I agree to receive the AI Startup Impact newsletter with AI startup news, tools, and insights. You can unsubscribe at any time.';
+const CONSENT_TEXT = 'I agree to receive the Udyaibase newsletter with AI startup news, tools, and insights. You can unsubscribe at any time.';
 const CONSENT_VERSION = 1;
 
 // POST /v1/newsletter/subscribe

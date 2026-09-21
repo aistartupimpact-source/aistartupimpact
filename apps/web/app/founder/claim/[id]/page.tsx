@@ -1,5 +1,5 @@
 import { requireFounderAuth } from '@/lib/founder-auth';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { notFound, redirect } from 'next/navigation';
 import ClaimStartupClient from '@/components/founder/ClaimStartupClient';
 

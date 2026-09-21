@@ -259,7 +259,7 @@ export default function SecuritySection() {
                   const blob = await res.blob();
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a'); a.href = url;
-                  a.download = `aistartupimpact-founder-data-${new Date().toISOString().split('T')[0]}.json`;
+                  a.download = `udyaibase-founder-data-${new Date().toISOString().split('T')[0]}.json`;
                   a.click(); URL.revokeObjectURL(url);
                   setToast({ type: 'success', message: 'Data exported successfully' });
                 } catch { setToast({ type: 'error', message: 'Failed to export data' }); } finally { setExportLoading(false); }

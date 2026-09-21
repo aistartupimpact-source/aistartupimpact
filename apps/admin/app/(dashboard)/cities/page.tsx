@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import CitiesList from './CitiesList';
 
 export const metadata: Metadata = {

@@ -1,6 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.EMPLOYER_JWT_SECRET!

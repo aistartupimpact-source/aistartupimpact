@@ -8,7 +8,7 @@ import TopicFilterPills from '@/components/opinions/TopicFilterPills';
 
 export const revalidate = 60;
 
-const SITE_URL = 'https://aistartupimpact.com';
+const SITE_URL = 'https://udyaibase.com';
 const PER_PAGE = 12;
 
 export async function generateMetadata(
@@ -30,21 +30,21 @@ export async function generateMetadata(
   const noindex = count < 3 || page > 1;
 
   return {
-    title: `${tag.name} Opinions — AI Startup Impact`,
+    title: `${tag.name} Opinions — Udyaibase`,
     description: `Expert opinions and analysis on ${tag.name} from founders, investors, and ecosystem leaders.`,
     alternates: { canonical },
     ...(noindex ? { robots: { index: false, follow: true } } : {}),
     openGraph: {
-      title: `${tag.name} Opinions — AI Startup Impact`,
+      title: `${tag.name} Opinions — Udyaibase`,
       description: `Expert opinions and analysis on ${tag.name}.`,
       type: 'website',
       url: canonical,
-      siteName: 'AI Startup Impact',
+      siteName: 'Udyaibase',
       locale: 'en_IN',
     },
     twitter: {
       card: 'summary',
-      title: `${tag.name} Opinions — AI Startup Impact`,
+      title: `${tag.name} Opinions — Udyaibase`,
       description: `Expert opinions and analysis on ${tag.name} from founders, investors, and ecosystem leaders.`,
     },
   };

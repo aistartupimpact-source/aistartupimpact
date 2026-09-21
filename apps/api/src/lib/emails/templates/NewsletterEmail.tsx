@@ -33,9 +33,9 @@ export const NewsletterEmail = ({ subject, previewText, articles }: NewsletterEm
         <Container style={container}>
           <Section style={header}>
             <Img
-              src="https://aistartupimpact.com/logo.png"
+              src="https://udyaibase.com/logo.png"
               width="180"
-              alt="AIStartupImpact Logo"
+              alt="Udyaibase Logo"
               style={logo}
             />
           </Section>
@@ -59,9 +59,9 @@ export const NewsletterEmail = ({ subject, previewText, articles }: NewsletterEm
           <Hr style={footerHr} />
 
           <Text style={footerText}>
-            You are receiving this because you subscribed to AIStartupImpact.
+            You are receiving this because you subscribed to Udyaibase.
             <br />
-            <Link href="https://aistartupimpact.com/unsubscribe" style={unsubscribeLink}>
+            <Link href="https://udyaibase.com/unsubscribe" style={unsubscribeLink}>
               Unsubscribe from these emails
             </Link>
           </Text>

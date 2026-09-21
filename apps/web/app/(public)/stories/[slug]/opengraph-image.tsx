@@ -133,7 +133,7 @@ export default async function OGImage({ params }: { params: { slug: string } }) 
               </span>
             </div>
             <span style={{ fontSize: '16px', color: 'rgba(255,255,255,0.4)' }}>
-              aistartupimpact.com
+              udyaibase.com
             </span>
           </div>
         </div>

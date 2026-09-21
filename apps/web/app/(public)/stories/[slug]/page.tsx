@@ -59,7 +59,7 @@ export default async function StoryDetailPage(props: { params: Promise<{ slug: s
 
   const relatedStories = (related || []).filter((s: any) => s.slug !== params.slug).slice(0, 3);
 
-  const siteUrl = 'https://aistartupimpact.com';
+  const siteUrl = 'https://udyaibase.com';
   const storyUrl = `${siteUrl}/stories/${story.slug}`;
 
   const articleSchema = generateArticleSchema({

@@ -76,11 +76,11 @@ async function main() {
 
   // Create or find a default author to link articles to
   const defaultAuthor = await prisma.user.upsert({
-    where: { email: 'author@aistartupimpact.com' },
+    where: { email: 'author@udyaibase.com' },
     update: {},
     create: {
       name: 'System Author',
-      email: 'author@aistartupimpact.com',
+      email: 'author@udyaibase.com',
       slug: 'system-author',
       role: 'SUPER_ADMIN',
     },

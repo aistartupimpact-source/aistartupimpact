@@ -1,13 +1,13 @@
 # AI Jobs Platform — Implementation Plan
 
-> An AI Hiring Platform inside AI Startup Impact. Not just a job board — a recruitment engine connected to the startup ecosystem.
+> An AI Hiring Platform inside Udyaibase. Not just a job board — a recruitment engine connected to the startup ecosystem.
 
 ---
 
 ## Vision
 
 ```
-AI Startup Impact
+Udyaibase
 ├── Startup Directory
 ├── AI Tool Directory
 ├── AI Events
@@ -52,12 +52,12 @@ Every job is connected to: startup profile, founder profile, funding history, ne
 |-----------|--------|---------|
 | `Job` model (old) | ⚠️ Legacy | Basic model linked to Startup — will keep for existing startup jobs display |
 | `JobApplication` model (old) | ⚠️ Legacy | Used by `/careers` (internal hiring) |
-| `/careers` page | ✅ Working | **Internal hiring for AI Startup Impact team (separate, not related to job board)** |
+| `/careers` page | ✅ Working | **Internal hiring for Udyaibase team (separate, not related to job board)** |
 | Jobs on startup detail page | ✅ Working | Uses old `Job` model — will migrate to new system |
 | `/jobs` page | ⚠️ Redirect | Currently redirects to /newsletter — will become public job board |
 | `JobType` enum | ✅ | REMOTE, HYBRID, ONSITE — will reuse |
 
-> **Important**: `/careers` is for hiring AI Startup Impact's own team (interns, editors, etc.). The Job Board is a completely separate product for **external companies** to post AI roles. They share NO models or pages.
+> **Important**: `/careers` is for hiring Udyaibase's own team (interns, editors, etc.). The Job Board is a completely separate product for **external companies** to post AI roles. They share NO models or pages.
 
 ---
 
@@ -320,7 +320,7 @@ JobBoardSaved      │
 
 - The old `Job` model stays as-is (serves the existing "Jobs at {company}" section on startup pages)
 - Migration plan: Once the job board is live, migrate old `Job` entries into `JobBoardListing` and deprecate the old model
-- `/careers` page continues using `JobApplication` for AI Startup Impact's own hiring — completely independent
+- `/careers` page continues using `JobApplication` for Udyaibase's own hiring — completely independent
 
 ---
 
@@ -449,7 +449,7 @@ const jobs = await sql`
 2. Update startup detail page query from `Job` → `JobBoardListing`
 3. Deprecate old `Job` model (keep in schema but stop writing to it)
 
-> `/careers` page remains unchanged — it uses `JobApplication` model for AI Startup Impact's own team hiring.
+> `/careers` page remains unchanged — it uses `JobApplication` model for Udyaibase's own team hiring.
 
 #### Founder Portal Integration
 
@@ -486,7 +486,7 @@ Founders who have a linked startup can:
 | Analytics | Basic (views) | Full (views, CTR, sources) | Full + competitive insights |
 | Application pipeline | ✓ | ✓ | ✓ + bulk actions |
 | Company page boost | ✗ | ✓ | ✓ |
-| AI Startup Impact recommendation | ✗ | ✗ | ✓ |
+| Udyaibase recommendation | ✗ | ✗ | ✓ |
 | Duration | 30 days | 30 days | Monthly subscription |
 
 #### Admin Management
@@ -599,7 +599,7 @@ Each job detail page generates `JobPosting` structured data:
   "hiringOrganization": {
     "@type": "Organization",
     "name": "Anthropic",
-    "sameAs": "https://aistartupimpact.com/startups/anthropic"
+    "sameAs": "https://udyaibase.com/startups/anthropic"
   },
   "jobLocation": { "@type": "Place", "address": "Remote" },
   "baseSalary": {

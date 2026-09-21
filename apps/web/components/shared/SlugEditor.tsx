@@ -9,7 +9,7 @@ interface SlugEditorProps {
   slugChangedAt?: string | null; // ISO date string from DB
   entityType: 'startup' | 'tool';
   entityId: string;
-  baseUrl: string; // e.g. "https://aistartupimpact.com/startups"
+  baseUrl: string; // e.g. "https://udyaibase.com/startups"
   isAdmin?: boolean; // Admins bypass cooldown
   onSuccess?: (newSlug: string) => void;
 }

@@ -73,7 +73,7 @@ export default function MyPlacementsClient({ campaigns, stats }: { campaigns: Ca
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-12 text-center">
           <Crown className="w-10 h-10 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
           <p className="text-sm text-gray-400 font-jakarta">No placement campaigns yet.</p>
-          <p className="text-xs text-gray-400 font-jakarta mt-1">Contact us to advertise on AI Startup Impact.</p>
+          <p className="text-xs text-gray-400 font-jakarta mt-1">Contact us to advertise on Udyaibase.</p>
         </div>
       ) : (
         <>

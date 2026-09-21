@@ -37,7 +37,13 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem('asi-theme') as ThemeMode | null;
+    // Migrate legacy key
+    const legacy = localStorage.getItem('asi-theme');
+    if (legacy) {
+      localStorage.setItem('ub-theme', legacy);
+      localStorage.removeItem('asi-theme');
+    }
+    const stored = localStorage.getItem('ub-theme') as ThemeMode | null;
     const m = stored || 'system';
     setModeState(m);
     setTheme(resolveTheme(m));
@@ -61,7 +67,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
   const setMode = useCallback((m: ThemeMode) => {
     setModeState(m);
     setTheme(resolveTheme(m));
-    localStorage.setItem('asi-theme', m);
+    localStorage.setItem('ub-theme', m);
   }, []);
 
   const toggle = useCallback(() => {

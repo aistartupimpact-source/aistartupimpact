@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { detectCategory } from '@/lib/categories';
-import { standardizeCityName } from '@aistartupimpact/utils/src/cities';
+import { standardizeCityName } from '@udyaibase/utils/src/cities';
 import { apiRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';

@@ -1,7 +1,7 @@
 'use server';
 
 import { getEmployerSession, setEmployerSession } from '@/lib/employer-auth';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { revalidatePath } from 'next/cache';
 
 export async function completeEmployerOnboarding(data: {

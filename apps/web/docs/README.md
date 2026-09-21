@@ -17,7 +17,7 @@
 
 ## Architecture Overview
 
-The web app is a Next.js 14 application using the App Router pattern. It serves the public-facing website at aistartupimpact.com on port 3000.
+The web app is a Next.js 14 application using the App Router pattern. It serves the public-facing website at udyaibase.com on port 3000.
 
 **Stack:**
 - Next.js 14 (App Router, Server Components, Server Actions)
@@ -205,7 +205,7 @@ This avoids Prisma ORM issues with the Neon HTTP adapter.
 Writes use Prisma since they don't involve Date-based where clauses:
 
 ```typescript
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 await prisma.affiliateClick.create({ data: { ... } });
 ```
 

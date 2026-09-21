@@ -1,4 +1,4 @@
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import PolicyLiveFeedClient from './PolicyLiveFeedClient';
 
 interface PolicyUpdate {

@@ -16,7 +16,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
   if (employers.length === 0) return { title: 'Company Not Found' };
   return {
     title: `Jobs at ${(employers[0] as any).companyName} — AI Jobs`,
-    description: `Browse open AI positions at ${(employers[0] as any).companyName}. Apply now on AI Startup Impact.`,
+    description: `Browse open AI positions at ${(employers[0] as any).companyName}. Apply now on Udyaibase.`,
     alternates: { canonical: `/jobs/company/${params.slug}` },
   };
 }

@@ -18,7 +18,7 @@ export async function generateMetadata(props: { params: Promise<{ slugs: string 
   if (!tool1 || !tool2) return { title: 'Compare Tools' };
   const title = `${(tool1 as any).name} vs ${(tool2 as any).name}: Which Is Better in ${new Date().getFullYear()}?`;
   const description = `Compare ${(tool1 as any).name} and ${(tool2 as any).name} — features, pricing, pros & cons, ratings side by side.`;
-  return { title, description, alternates: { canonical: `https://aistartupimpact.com/tools/compare/${params.slugs}` }, openGraph: { title, description } };
+  return { title, description, alternates: { canonical: `https://udyaibase.com/tools/compare/${params.slugs}` }, openGraph: { title, description } };
 }
 
 export default async function ComparePage(props: { params: Promise<{ slugs: string }> }) {

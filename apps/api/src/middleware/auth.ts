@@ -20,7 +20,7 @@ export function authenticateToken(req: AuthRequest, res: Response, next: NextFun
     if (process.env.NODE_ENV === 'development') {
       req.user = {
         id: 'ab688fe9-886e-4f0b-b4c5-7b76c1052bd6',
-        email: 'author@aistartupimpact.com',
+        email: 'author@udyaibase.com',
         role: 'SUPER_ADMIN',
         name: 'System Author',
       };

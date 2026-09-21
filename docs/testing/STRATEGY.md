@@ -1,6 +1,6 @@
 # Testing Strategy
 
-Testing approach and goals for AI Startup Impact.
+Testing approach and goals for Udyaibase.
 
 ---
 

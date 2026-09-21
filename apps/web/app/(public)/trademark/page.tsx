@@ -1,8 +1,8 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Trademark Policy — AI Startup Impact",
-  description: "AI Startup Impact's policy on trademark use, disputes, and how to report trademark infringement.",
+  title: "Trademark Policy — Udyaibase",
+  description: "Udyaibase's policy on trademark use, disputes, and how to report trademark infringement.",
 };
 
 export default function TrademarkPolicyPage() {
@@ -15,11 +15,11 @@ export default function TrademarkPolicyPage() {
         <p className="text-sm text-gray-500 mb-8"><strong>Last updated:</strong> July 2026</p>
 
         <p>
-          AI Startup Impact lists startups, AI tools, and events as part of our directory service. We respect trademark rights and have established this policy to address concerns related to trademark use on our platform.
+          Udyaibase lists startups, AI tools, and events as part of our directory service. We respect trademark rights and have established this policy to address concerns related to trademark use on our platform.
         </p>
 
         <h2>1. How Trademarks Appear on Our Platform</h2>
-        <p>Company names, logos, and product names listed on AI Startup Impact are used for identification and informational purposes. Listings may be:</p>
+        <p>Company names, logos, and product names listed on Udyaibase are used for identification and informational purposes. Listings may be:</p>
         <ul>
           <li>Submitted by the company itself (claimed profiles)</li>
           <li>Added by our editorial team from public sources (news, press releases, funding announcements)</li>
@@ -27,7 +27,7 @@ export default function TrademarkPolicyPage() {
         </ul>
 
         <h2>2. Reporting Trademark Concerns</h2>
-        <p>If you believe a listing on AI Startup Impact misuses your trademark, you may report it. Your notice should include:</p>
+        <p>If you believe a listing on Udyaibase misuses your trademark, you may report it. Your notice should include:</p>
         <ol>
           <li>Your full name, company, and relationship to the trademark owner</li>
           <li>The trademark registration number (if registered) and jurisdiction</li>
@@ -38,7 +38,7 @@ export default function TrademarkPolicyPage() {
 
         <h2>3. How to Report</h2>
         <ul>
-          <li><strong>Email:</strong> <a href="mailto:legal@aistartupimpact.com">legal@aistartupimpact.com</a></li>
+          <li><strong>Email:</strong> <a href="mailto:legal@udyaibase.com">legal@udyaibase.com</a></li>
           <li><strong>Subject:</strong> Trademark Concern — [Your Company/Brand Name]</li>
           <li><strong>Alternative:</strong> Use the "Report" button on any listing page and select "Trademark concern"</li>
         </ul>
@@ -67,11 +67,11 @@ export default function TrademarkPolicyPage() {
 
         <h2>6. Nominal / Fair Use</h2>
         <p>
-          AI Startup Impact uses company names and logos for the purpose of identification, commentary, and news reporting. Such use is generally considered nominative fair use. We do not claim ownership of any third-party trademarks displayed on our platform.
+          Udyaibase uses company names and logos for the purpose of identification, commentary, and news reporting. Such use is generally considered nominative fair use. We do not claim ownership of any third-party trademarks displayed on our platform.
         </p>
 
         <h2>7. Contact</h2>
-        <p>For trademark inquiries: <a href="mailto:legal@aistartupimpact.com">legal@aistartupimpact.com</a></p>
+        <p>For trademark inquiries: <a href="mailto:legal@udyaibase.com">legal@udyaibase.com</a></p>
       </div>
     </div>
   );

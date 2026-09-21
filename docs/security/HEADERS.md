@@ -26,7 +26,7 @@ script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com
 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
 font-src 'self' https://fonts.gstatic.com;
 img-src 'self' data: blob: https:;
-connect-src 'self' https://aistartupimpact.com https://www.google-analytics.com;
+connect-src 'self' https://udyaibase.com https://www.google-analytics.com;
 frame-ancestors 'none';
 base-uri 'self';
 form-action 'self';
@@ -80,7 +80,7 @@ Cloudflare adds at the edge:
 
 ```bash
 # Check headers for any page
-curl -I https://aistartupimpact.com
+curl -I https://udyaibase.com
 
 # Or use securityheaders.com for a full audit
 ```

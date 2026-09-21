@@ -1,4 +1,4 @@
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { cache } from "react";
 
 export interface SeoConfig {
@@ -26,20 +26,20 @@ const SEO_KEYS = [
 ];
 
 const DEFAULTS: SeoConfig = {
-  metaTitle: "AI Startup Impact – AI Startup India News & Funding",
-  metaDescription: "AI Startup Impact is the premier platform for Indian AI news. Discover top artificial intelligence startups, funding, tools, and founder stories.",
-  canonicalDomain: "https://aistartupimpact.com",
+  metaTitle: "Udyaibase – AI Startup India News & Funding",
+  metaDescription: "Udyaibase is the premier platform for Indian AI news. Discover top artificial intelligence startups, funding, tools, and founder stories.",
+  canonicalDomain: "https://udyaibase.com",
   twitterHandle: "@aikitstartup",
   gaId: "",
   gscVerification: "",
   noindex: false,
   autoSitemap: true,
-  contactEmail: "hello@aistartupimpact.com",
-  socialTwitter: "https://x.com/aistartupimpact",
-  socialLinkedin: "https://www.linkedin.com/company/ai-startup-impact/",
-  socialInstagram: "https://www.instagram.com/aistartupimpact/",
-  socialFacebook: "https://facebook.com/aistartupimpact",
-  socialYoutube: "https://www.youtube.com/@aistartupimpact",
+  contactEmail: "hello@udyaibase.com",
+  socialTwitter: "https://x.com/udyaibase",
+  socialLinkedin: "https://www.linkedin.com/company/udyaibase/",
+  socialInstagram: "https://www.instagram.com/udyaibase/",
+  socialFacebook: "https://facebook.com/udyaibase",
+  socialYoutube: "https://www.youtube.com/@udyaibase",
 };
 
 export const getSeoConfig = cache(async (): Promise<SeoConfig> => {

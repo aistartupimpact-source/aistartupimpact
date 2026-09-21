@@ -168,7 +168,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
             color: 'rgba(255,255,255,0.7)',
             fontWeight: 600
           }}>
-            aistartupimpact.com
+            udyaibase.com
           </div>
         </div>
       ),
@@ -189,7 +189,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
             justifyContent: 'center',
           }}
         >
-          <div style={{ fontSize: 48, color: 'white' }}>AI Startup Impact</div>
+          <div style={{ fontSize: 48, color: 'white' }}>Udyaibase</div>
         </div>
       ),
       { ...size }

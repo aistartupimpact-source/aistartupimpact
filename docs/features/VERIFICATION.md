@@ -10,7 +10,7 @@ Allow founders to prove they own a startup/tool's domain by adding a DNS TXT rec
 
 ## Business Logic
 1. Founder clicks "Verify Ownership" → system generates unique token
-2. Token format: `aistartupimpact-verify={TOKEN}`
+2. Token format: `udyaibase-verify={TOKEN}`
 3. Founder adds TXT record to their domain's DNS
 4. Founder clicks "Check Verification" → system queries DNS
 5. If token found in TXT records → mark as verified

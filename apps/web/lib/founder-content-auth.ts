@@ -1,4 +1,4 @@
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { getFounderSession } from "@/lib/founder-auth";
 import type { FounderTeamRole } from "@/lib/founder-team-permissions";
 

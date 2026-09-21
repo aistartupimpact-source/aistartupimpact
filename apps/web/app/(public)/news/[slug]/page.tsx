@@ -59,7 +59,7 @@ export default async function ArticlePage(props: { params: Promise<{ slug: strin
 
   const relatedArticles = (related || []).filter((a: any) => a.slug !== params.slug).slice(0, 3);
 
-  const siteUrl = 'https://aistartupimpact.com';
+  const siteUrl = 'https://udyaibase.com';
   const articleUrl = `${siteUrl}/news/${article.slug}`;
 
   const articleSchema = generateArticleSchema({

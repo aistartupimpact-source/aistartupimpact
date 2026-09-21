@@ -1,5 +1,5 @@
 import { requireFounderAuth } from '@/lib/founder-auth';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { notFound, redirect } from 'next/navigation';
 import ToolEditForm from '@/components/founder/ToolEditForm';
 import SlugEditor from '@/components/shared/SlugEditor';
@@ -168,7 +168,7 @@ export default async function EditToolPage(props: PageProps) {
         slugChangedAt={tool.slugChangedAt || null}
         entityType="tool"
         entityId={tool.id}
-        baseUrl="https://aistartupimpact.com/tools"
+        baseUrl="https://udyaibase.com/tools"
         isAdmin={false}
       />
     </div>

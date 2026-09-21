@@ -1,5 +1,5 @@
 import { requireFounderAuth } from '@/lib/founder-auth';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import Link from 'next/link';
 import { Plus, Search, Filter } from 'lucide-react';
 import ListingCard from '@/components/founder/ListingCard';
@@ -92,7 +92,7 @@ export default async function ToolsPage() {
             No tools yet
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            Submit your first AI tool to get featured on AI Startup Impact
+            Submit your first AI tool to get featured on Udyaibase
           </p>
           <Link
             href="/founder/tools/new"

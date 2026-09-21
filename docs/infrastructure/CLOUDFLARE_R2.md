@@ -23,8 +23,8 @@ S3-compatible object storage for media files.
 R2_ACCOUNT_ID=your-cloudflare-account-id
 R2_ACCESS_KEY_ID=your-access-key
 R2_SECRET_ACCESS_KEY=your-secret-key
-R2_BUCKET_NAME=aistartupimpact-media
-R2_PUBLIC_URL=https://media.aistartupimpact.com
+R2_BUCKET_NAME=udyaibase-media
+R2_PUBLIC_URL=https://media.udyaibase.com
 ```
 
 ---
@@ -48,7 +48,7 @@ bucket/
 
 - **Write**: Server-side only (via S3 API with access key)
 - **Read**: Public via `R2_PUBLIC_URL` (no auth needed)
-- **CORS**: Configured for `aistartupimpact.com` origin
+- **CORS**: Configured for `udyaibase.com` origin
 - **No directory listing**: bucket is not publicly listable
 
 ---

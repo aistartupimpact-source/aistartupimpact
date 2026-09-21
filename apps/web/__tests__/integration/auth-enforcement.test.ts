@@ -47,7 +47,7 @@ vi.mock('@neondatabase/serverless', () => ({
   neon: vi.fn(() => vi.fn(() => Promise.resolve([]))),
 }));
 
-vi.mock('@aistartupimpact/database', () => ({
+vi.mock('@udyaibase/database', () => ({
   prisma: {
     webUser: { findUnique: vi.fn(() => Promise.resolve(null)) },
     founderUser: { findUnique: vi.fn(() => Promise.resolve(null)) },

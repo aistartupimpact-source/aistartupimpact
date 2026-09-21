@@ -199,7 +199,7 @@ jobs:
         run: npx prisma generate --schema=packages/database/prisma/schema.prisma
 
       - name: Build web app
-        run: npx turbo run build --filter=@aistartupimpact/web
+        run: npx turbo run build --filter=@udyaibase/web
 
       - name: Install Playwright Chromium
         run: npx playwright install chromium --with-deps

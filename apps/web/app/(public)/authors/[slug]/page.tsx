@@ -8,7 +8,7 @@ import { generatePersonSchema, generateBreadcrumbSchema } from '@/lib/seo';
 
 export const revalidate = 120;
 
-const SITE_URL = 'https://aistartupimpact.com';
+const SITE_URL = 'https://udyaibase.com';
 
 export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const params = await props.params;
@@ -16,14 +16,14 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
   if (!author) return { title: 'Author Not Found' };
 
   const canonical = `${SITE_URL}/authors/${params.slug}`;
-  const description = author.bio || `Articles by ${author.name} on AI Startup Impact.`;
+  const description = author.bio || `Articles by ${author.name} on Udyaibase.`;
 
   return {
-    title: `${author.name} — AI Startup Impact`,
+    title: `${author.name} — Udyaibase`,
     description,
     alternates: { canonical },
     openGraph: {
-      title: `${author.name} — AI Startup Impact`,
+      title: `${author.name} — Udyaibase`,
       description,
       type: 'profile',
       url: canonical,
@@ -31,7 +31,7 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
     },
     twitter: {
       card: 'summary',
-      title: `${author.name} — AI Startup Impact`,
+      title: `${author.name} — Udyaibase`,
       description,
     },
   };

@@ -76,7 +76,7 @@ export default function SubmitContentPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-sora font-extrabold text-2xl text-navy dark:text-white">Submit Content</h1>
-          <p className="text-gray-400 dark:text-gray-500 text-sm font-jakarta mt-1">Write and submit articles for publishing on AIStartupImpact</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm font-jakarta mt-1">Write and submit articles for publishing on Udyaibase</p>
         </div>
         <button onClick={openCreate} className="btn-brand text-sm flex items-center gap-2"><Plus className="w-4 h-4" /> New Submission</button>
       </div>

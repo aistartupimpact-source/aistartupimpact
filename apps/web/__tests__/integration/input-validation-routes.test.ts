@@ -14,7 +14,7 @@ vi.mock('@/lib/db', () => ({
   sql: vi.fn(() => Promise.resolve([])),
 }));
 
-vi.mock('@aistartupimpact/database', () => ({
+vi.mock('@udyaibase/database', () => ({
   prisma: {
     webUser: { findUnique: vi.fn(() => Promise.resolve(null)), findFirst: vi.fn(() => Promise.resolve(null)), create: vi.fn() },
     emailOtp: { count: vi.fn(() => Promise.resolve(0)), updateMany: vi.fn(), create: vi.fn(), findFirst: vi.fn(() => Promise.resolve(null)) },

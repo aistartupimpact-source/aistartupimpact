@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { createOrganizerSession, verifyPassword } from "@/lib/organizer-auth";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { authRateLimit } from "@/lib/rate-limit";
 import { SignJWT } from "jose";
-import { securityAlertHtml } from "@aistartupimpact/utils";
+import { securityAlertHtml } from "@udyaibase/utils";
 import { sendEmailFireAndForget } from "@/lib/email/send";
 
 const CHALLENGE_SECRET = new TextEncoder().encode(process.env.ORGANIZER_JWT_SECRET || process.env.USER_JWT_SECRET!);
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
           data: { failedLoginAttempts: newAttempts, lockedUntil: lockUntil },
         });
 
-        const resetUrl = `${process.env.NEXT_PUBLIC_WEB_URL || 'https://aistartupimpact.com'}/organizer/forgot-password`;
+        const resetUrl = `${process.env.NEXT_PUBLIC_WEB_URL || 'https://udyaibase.com'}/organizer/forgot-password`;
         sendEmailFireAndForget({
           to: organizer.email,
           subject: 'Security Alert — Failed Login Attempts',

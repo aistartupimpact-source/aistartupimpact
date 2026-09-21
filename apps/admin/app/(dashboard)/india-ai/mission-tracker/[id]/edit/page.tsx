@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import MissionForm from '../../MissionForm';
 
 export const metadata: Metadata = {

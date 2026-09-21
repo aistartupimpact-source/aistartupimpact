@@ -20,7 +20,7 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
   const meta = buildArticleMetadata(article);
   return {
     ...meta,
-    alternates: { canonical: `https://aistartupimpact.com/opinion/${params.slug}` },
+    alternates: { canonical: `https://udyaibase.com/opinion/${params.slug}` },
   };
 }
 
@@ -56,7 +56,7 @@ export default async function OpinionArticlePage(props: { params: Promise<{ slug
 
   const relatedArticles = (related || []).filter((a: any) => a.slug !== params.slug).slice(0, 3);
 
-  const siteUrl = 'https://aistartupimpact.com';
+  const siteUrl = 'https://udyaibase.com';
   const articleUrl = `${siteUrl}/opinion/${article.slug}`;
 
   const articleSchema = generateArticleSchema({

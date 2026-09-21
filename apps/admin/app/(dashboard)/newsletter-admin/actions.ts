@@ -2,7 +2,7 @@
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { Resend } from "resend";
 import { generateNewsletterHtml } from "@/lib/newsletter-templates";
 import { logAuditEvent, canDelete } from '@/lib/audit-log';
@@ -10,10 +10,10 @@ import { logAuditEvent, canDelete } from '@/lib/audit-log';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Newsletter-specific email configuration
-const FROM_EMAIL = process.env.RESEND_NEWSLETTER_EMAIL || "newsletter-noreply@aistartupimpact.com";
-const FROM_NAME = process.env.RESEND_NEWSLETTER_NAME || "AI Startup Impact Weekly";
-const REPLY_TO = process.env.RESEND_REPLY_TO || "hello@aistartupimpact.com";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.WEB_URL || "https://aistartupimpact.com";
+const FROM_EMAIL = process.env.RESEND_NEWSLETTER_EMAIL || "newsletter-noreply@udyaibase.com";
+const FROM_NAME = process.env.RESEND_NEWSLETTER_NAME || "Udyaibase Weekly";
+const REPLY_TO = process.env.RESEND_REPLY_TO || "hello@udyaibase.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.WEB_URL || "https://udyaibase.com";
 
 const ALLOWED = ["SUPER_ADMIN", "EDITOR_IN_CHIEF", "SENIOR_WRITER"];
 

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 
 export const dynamic = 'force-dynamic';
 

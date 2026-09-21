@@ -16,7 +16,7 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
   return {
     title,
     description,
-    alternates: { canonical: `https://aistartupimpact.com/tools/alternatives/${params.slug}` },
+    alternates: { canonical: `https://udyaibase.com/tools/alternatives/${params.slug}` },
     openGraph: { title, description, type: 'website' },
   };
 }
@@ -112,7 +112,7 @@ export default async function AlternativesPage(props: { params: Promise<{ slug: 
         itemListElement: alternatives.map((alt: any, i: number) => ({
           '@type': 'ListItem',
           position: i + 1,
-          item: { '@type': 'SoftwareApplication', name: alt.name, url: `https://aistartupimpact.com/tools/${alt.slug}` },
+          item: { '@type': 'SoftwareApplication', name: alt.name, url: `https://udyaibase.com/tools/${alt.slug}` },
         })),
       }) }} />
     </div>

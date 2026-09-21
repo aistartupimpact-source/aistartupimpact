@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiAuth } from "@/lib/api-auth";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import {
   generateTOTPSecret, generateQRCode, verifyTOTPToken,
   encryptSecret, decryptSecret, generateBackupCodes, hashBackupCodes,

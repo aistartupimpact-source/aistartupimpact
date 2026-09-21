@@ -1,4 +1,4 @@
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import Link from 'next/link';

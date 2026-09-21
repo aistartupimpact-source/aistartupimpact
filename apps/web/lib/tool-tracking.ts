@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { createHash } from 'crypto';
 
 export type ClickSource = 

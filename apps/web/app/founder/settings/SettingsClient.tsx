@@ -207,7 +207,7 @@ export default function SettingsClient() {
               Need Help?
             </h3>
             <p className="text-xs text-gray-600 dark:text-gray-400">
-              Contact our support team at support@aistartupimpact.com for assistance with your account settings.
+              Contact our support team at support@udyaibase.com for assistance with your account settings.
             </p>
           </div>
         </div>

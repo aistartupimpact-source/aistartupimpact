@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getFounderSession } from '@/lib/founder-auth';
 import { getUnifiedSession } from '@/lib/unified-auth';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
 

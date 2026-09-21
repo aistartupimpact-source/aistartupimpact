@@ -19,8 +19,8 @@ No local PostgreSQL required — we use Neon (cloud).
 ## Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/aistartupimpact/aistartupimpact.git
-cd aistartupimpact
+git clone https://github.com/udyaibase/udyaibase.git
+cd udyaibase
 ```
 
 ---

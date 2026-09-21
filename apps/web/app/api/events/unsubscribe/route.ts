@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { verifyUnsubscribeToken } from "@/lib/events/unsubscribe";
 
 export const dynamic = "force-dynamic";
@@ -109,7 +109,7 @@ function renderPage(title: string, message: string, success: boolean): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title} — AI Startup Impact</title>
+  <title>${title} — Udyaibase</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f9fafb; color: #374151; }
     .card { background: white; border-radius: 16px; padding: 48px; max-width: 420px; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
@@ -125,7 +125,7 @@ function renderPage(title: string, message: string, success: boolean): string {
     <div class="icon">${icon}</div>
     <h1>${title}</h1>
     <p>${message}</p>
-    <a href="/">Back to AI Startup Impact</a>
+    <a href="/">Back to Udyaibase</a>
   </div>
 </body>
 </html>`;

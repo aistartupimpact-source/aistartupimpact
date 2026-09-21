@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 import { authRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { signupSchema, validateInput } from '@/lib/validation';
-import { isDisposableEmail } from '@aistartupimpact/utils';
+import { isDisposableEmail } from '@udyaibase/utils';
 
 export const dynamic = 'force-dynamic';
 function generateId(): string {

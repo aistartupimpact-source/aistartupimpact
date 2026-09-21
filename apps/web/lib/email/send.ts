@@ -9,8 +9,8 @@ function getResend(): Resend | null {
   return resendClient;
 }
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'no-reply@aistartupimpact.com';
-const FROM_NAME = process.env.RESEND_FROM_NAME || 'AI Startup Impact';
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'no-reply@udyaibase.com';
+const FROM_NAME = process.env.RESEND_FROM_NAME || 'Udyaibase';
 
 interface SendEmailOptions {
   to: string;
@@ -31,7 +31,7 @@ interface SendResult {
 
 async function logEmail(opts: { type: string; to: string; subject: string; status: string; resendId?: string; error?: string }) {
   try {
-    const { prisma } = await import('@aistartupimpact/database');
+    const { prisma } = await import('@udyaibase/database');
     await prisma.$executeRaw`
       INSERT INTO "EmailLog" (id, type, "to", subject, status, "resendId", error, "sentAt")
       VALUES (gen_random_uuid(), ${opts.type}, ${opts.to}, ${opts.subject}, ${opts.status}, ${opts.resendId || null}, ${opts.error || null}, NOW())

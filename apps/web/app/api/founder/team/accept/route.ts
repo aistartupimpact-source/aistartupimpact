@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@aistartupimpact/database";
+import { prisma } from "@udyaibase/database";
 import { randomBytes } from "crypto";
 import { checkRateLimit, getClientIdentifier, strictRateLimit } from "@/lib/rate-limit";
 import { validatePassword } from "@/lib/password-validation";

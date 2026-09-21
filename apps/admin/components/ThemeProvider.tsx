@@ -21,7 +21,13 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
 
   // Read persisted preference on mount
   useEffect(() => {
-    const stored = localStorage.getItem('asi-theme') as Theme | null;
+    // Migrate legacy key
+    const legacy = localStorage.getItem('asi-theme');
+    if (legacy) {
+      localStorage.setItem('ub-theme', legacy);
+      localStorage.removeItem('asi-theme');
+    }
+    const stored = localStorage.getItem('ub-theme') as Theme | null;
     if (stored) {
       setTheme(stored);
     } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -35,7 +41,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
     if (!mounted) return;
     const root = document.documentElement;
     root.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem('asi-theme', theme);
+    localStorage.setItem('ub-theme', theme);
   }, [theme, mounted]);
 
   const toggle = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'));

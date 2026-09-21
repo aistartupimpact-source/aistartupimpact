@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { requireFounderAuth } from '@/lib/founder-auth';
 import { verifyOtp } from '@/lib/otp';
-import { extractEmailDomain } from '@aistartupimpact/utils';
+import { extractEmailDomain } from '@udyaibase/utils';
 
 export const dynamic = 'force-dynamic';
 

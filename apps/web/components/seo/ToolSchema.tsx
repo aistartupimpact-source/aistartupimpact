@@ -28,7 +28,7 @@ interface ToolSchemaProps {
 }
 
 export function ToolSchema({ tool }: ToolSchemaProps) {
-  const pageUrl = `https://aistartupimpact.com/tools/${tool.slug}`;
+  const pageUrl = `https://udyaibase.com/tools/${tool.slug}`;
   const softwareId = `${pageUrl}#software`;
   
   // CRITICAL: Only add rating if BOTH exist AND rating is not 0
@@ -49,7 +49,7 @@ export function ToolSchema({ tool }: ToolSchemaProps) {
         "url": pageUrl,
         "name": `${tool.name} - ${tool.tagline}`,
         "isPartOf": {
-          "@id": "https://aistartupimpact.com/#website"
+          "@id": "https://udyaibase.com/#website"
         },
         "about": {
           "@id": softwareId
@@ -110,13 +110,13 @@ export function ToolSchema({ tool }: ToolSchemaProps) {
             "@type": "ListItem",
             "position": 1,
             "name": "Home",
-            "item": "https://aistartupimpact.com"
+            "item": "https://udyaibase.com"
           },
           {
             "@type": "ListItem",
             "position": 2,
             "name": "AI Tools",
-            "item": "https://aistartupimpact.com/tools"
+            "item": "https://udyaibase.com/tools"
           },
           {
             "@type": "ListItem",

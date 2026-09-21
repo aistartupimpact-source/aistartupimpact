@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getFounderSession } from "@/lib/founder-auth";
 import { generateOTP } from "@/lib/action-otp";
-import { founderTeamOtpHtml } from "@aistartupimpact/utils";
+import { founderTeamOtpHtml } from "@udyaibase/utils";
 import { sendEmailFireAndForget } from "@/lib/email/send";
 import { checkRateLimit, getClientIdentifier, strictRateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "no-reply@aistartupimpact.com";
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "no-reply@udyaibase.com";
 
 const ACTION_LABELS: Record<string, string> = {
   role_change: "change a team member's role",
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     sendEmailFireAndForget({
       to: session.email,
-      from: `AI Startup Impact <${FROM_EMAIL}>`,
+      from: `Udyaibase <${FROM_EMAIL}>`,
       subject: `Security Code: ${code} — Team Action Verification`,
       html: founderTeamOtpHtml(ACTION_LABELS[action], code),
       type: "founder_team_otp",

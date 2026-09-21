@@ -1,7 +1,7 @@
 'use server';
 
 import { getOrganizerSession } from '@/lib/organizer-auth';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { revalidatePath } from 'next/cache';
 
 export async function completeOrganizerOnboarding(data: {

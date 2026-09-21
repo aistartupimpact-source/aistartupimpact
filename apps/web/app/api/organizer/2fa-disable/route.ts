@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { getOrganizerSession } from '@/lib/organizer-auth';
 import { verifyTOTPToken, decryptSecret } from '@/lib/two-factor';
 

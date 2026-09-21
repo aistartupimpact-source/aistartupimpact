@@ -34,7 +34,7 @@ function RazorpayIcon({ className }: { className?: string }) {
 export const revalidate = 3600;
 
 export const metadata = {
-  title: 'Advertise — AI Startup Impact',
+  title: 'Advertise — Udyaibase',
   description: 'Launch Year pricing: AI jobs & events free for 12 months. One-time placement packages from ₹2,999. No subscriptions.',
 };
 
@@ -798,7 +798,7 @@ export default async function AdvertisePage() {
             Get Started <ArrowRight className="w-4 h-4 ml-1 inline" />
           </Link>
           */}
-          <span className="text-xs text-gray-400 font-jakarta">Email ads@aistartupimpact.com</span>
+          <span className="text-xs text-gray-400 font-jakarta">Email ads@udyaibase.com</span>
         </div>
       </section>
     </div>

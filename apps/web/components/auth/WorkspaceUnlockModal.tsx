@@ -19,7 +19,7 @@ const WORKSPACE_INFO = {
     icon: Calendar,
     color: 'brand',
     features: [
-      'Host events on AI Startup Impact',
+      'Host events on Udyaibase',
       'Manage attendees & registrations',
       'QR code check-in',
       'Event analytics & promotion tools',

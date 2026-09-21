@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
     const event = rows[0];
     const SITE_URL =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://aistartupimpact.com";
+      process.env.NEXT_PUBLIC_SITE_URL || "https://udyaibase.com";
 
     const location = event.venueName
       ? `${event.venueName}${event.address ? `, ${event.address}` : ""}`

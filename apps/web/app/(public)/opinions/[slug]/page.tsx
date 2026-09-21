@@ -16,7 +16,7 @@ import OpinionCard from '@/components/opinions/OpinionCard';
 
 export const revalidate = 60;
 
-const SITE_URL = 'https://aistartupimpact.com';
+const SITE_URL = 'https://udyaibase.com';
 
 export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const params = await props.params;
@@ -38,7 +38,7 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
       description: article.excerpt || '',
       type: 'article',
       url: canonical,
-      siteName: 'AI Startup Impact',
+      siteName: 'Udyaibase',
       locale: 'en_IN',
       images,
       ...(article.publishedAt ? { publishedTime: new Date(article.publishedAt).toISOString() } : {}),
@@ -225,7 +225,7 @@ export default async function OpinionDetailPage(props: { params: Promise<{ slug:
 
           <div className="mt-8 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200/60 dark:border-gray-700/40">
             <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta italic">
-              This opinion reflects the author&apos;s personal perspective. It is not AI Startup Impact&apos;s editorial position.
+              This opinion reflects the author&apos;s personal perspective. It is not Udyaibase&apos;s editorial position.
             </p>
           </div>
 

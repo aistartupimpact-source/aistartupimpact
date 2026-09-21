@@ -97,7 +97,7 @@ export default function SubscribeForm({ buttonText = 'Subscribe', source = 'webs
         </button>
       </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-jakarta text-center sm:text-left leading-relaxed">
-        By subscribing, you agree to receive the AI Startup Impact newsletter. You can{' '}
+        By subscribing, you agree to receive the Udyaibase newsletter. You can{' '}
         <a href="/privacy" className="underline hover:text-gray-700 dark:hover:text-gray-300">unsubscribe</a> at any time.
       </p>
       {status === 'error' && (

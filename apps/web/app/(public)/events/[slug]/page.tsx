@@ -174,7 +174,7 @@ export async function generateMetadata(
       title,
       description,
       type: "website",
-      url: `https://aistartupimpact.com/events/${event.slug}`,
+      url: `https://udyaibase.com/events/${event.slug}`,
       images: event.socialImageUrl || event.coverImageUrl
         ? [{ url: event.socialImageUrl || event.coverImageUrl }]
         : undefined,
@@ -231,7 +231,7 @@ export default async function EventDetailPage(
       getSimilarEvents(event.id, event.category),
     ]);
 
-  const eventUrl = `https://aistartupimpact.com/events/${event.slug}`;
+  const eventUrl = `https://udyaibase.com/events/${event.slug}`;
   const descriptionText = typeof event.description === 'string'
     ? event.description.slice(0, 300)
     : (event.subtitle || event.title);

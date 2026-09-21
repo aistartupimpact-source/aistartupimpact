@@ -38,10 +38,10 @@ const footerLinks = [
 ];
 
 const socials = [
-  { icon: Twitter, href: 'https://twitter.com/aistartupimpact', label: 'Twitter' },
-  { icon: Linkedin, href: 'https://linkedin.com/company/aistartupimpact', label: 'LinkedIn' },
-  { icon: Instagram, href: 'https://instagram.com/aistartupimpact', label: 'Instagram' },
-  { icon: Facebook, href: 'https://facebook.com/aistartupimpact', label: 'Facebook' },
+  { icon: Twitter, href: 'https://twitter.com/udyaibase', label: 'Twitter' },
+  { icon: Linkedin, href: 'https://linkedin.com/company/udyaibase', label: 'LinkedIn' },
+  { icon: Instagram, href: 'https://instagram.com/udyaibase', label: 'Instagram' },
+  { icon: Facebook, href: 'https://facebook.com/udyaibase', label: 'Facebook' },
 ];
 
 export default function Footer() {
@@ -131,10 +131,10 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500 font-jakarta">
-            <span>&copy; {new Date().getFullYear()} AIStartupImpact. All rights reserved.</span>
+            <span>&copy; {new Date().getFullYear()} Udyaibase. All rights reserved.</span>
             <span className="flex items-center gap-1.5">
               <Mail className="w-3.5 h-3.5" />
-              hello@aistartupimpact.com
+              hello@udyaibase.com
             </span>
           </div>
         </div>

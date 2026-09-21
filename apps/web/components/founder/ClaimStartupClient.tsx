@@ -220,10 +220,10 @@ export default function ClaimStartupClient({ startup, startupId }: ClaimStartupC
                   </label>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 px-4 py-3 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg font-mono text-sm text-navy dark:text-white">
-                      _aistartupimpact-verify
+                      _udyaibase-verify
                     </code>
                     <button
-                      onClick={() => copyToClipboard('_aistartupimpact-verify')}
+                      onClick={() => copyToClipboard('_udyaibase-verify')}
                       className="p-3 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-lg transition-colors"
                       title="Copy"
                     >
@@ -231,7 +231,7 @@ export default function ClaimStartupClient({ startup, startupId }: ClaimStartupC
                     </button>
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Some providers may require you to enter just "_aistartupimpact-verify" or the full subdomain
+                    Some providers may require you to enter just "_udyaibase-verify" or the full subdomain
                   </p>
                 </div>
 
@@ -279,7 +279,7 @@ export default function ClaimStartupClient({ startup, startupId }: ClaimStartupC
                   </div>
                   <div className="flex gap-2">
                     <span className="text-gray-500 dark:text-gray-400 w-20">Name:</span>
-                    <span className="text-navy dark:text-white font-semibold">_aistartupimpact-verify</span>
+                    <span className="text-navy dark:text-white font-semibold">_udyaibase-verify</span>
                   </div>
                   <div className="flex gap-2">
                     <span className="text-gray-500 dark:text-gray-400 w-20">Value:</span>

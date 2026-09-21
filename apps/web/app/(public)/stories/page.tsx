@@ -11,14 +11,14 @@ export const metadata: Metadata = {
   title: 'Founder Stories — Indian AI Entrepreneurs',
   description:
     "Deep-dive interviews and profiles of the founders building India's AI future. Learn from their journeys, challenges, and insights.",
-  alternates: { canonical: 'https://aistartupimpact.com/stories' },
+  alternates: { canonical: 'https://udyaibase.com/stories' },
   openGraph: {
     title: 'Founder Stories — Indian AI Entrepreneurs',
     description: "Deep-dive interviews and profiles of the founders building India's AI future.",
     type: 'website',
-    url: 'https://aistartupimpact.com/stories',
-    siteName: 'AIStartupImpact',
-    images: [{ url: 'https://aistartupimpact.com/og-image.png', width: 1200, height: 630 }],
+    url: 'https://udyaibase.com/stories',
+    siteName: 'Udyaibase',
+    images: [{ url: 'https://udyaibase.com/og-image.png', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
@@ -42,7 +42,7 @@ export default async function StoriesPage() {
     .sort((a, b) => new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime());
   const featured = articles.filter((a) => a.isFeatured).slice(0, 2);
 
-  const siteUrl = 'https://aistartupimpact.com';
+  const siteUrl = 'https://udyaibase.com';
 
   const collectionSchema = generateCollectionPageSchema({
     name: 'Founder Stories — Indian AI Entrepreneurs',

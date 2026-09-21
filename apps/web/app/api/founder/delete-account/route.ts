@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import bcrypt from 'bcryptjs';
 import { requireFounderAuth } from '@/lib/founder-auth';
 import { clearFounderSession } from '@/lib/founder-auth';

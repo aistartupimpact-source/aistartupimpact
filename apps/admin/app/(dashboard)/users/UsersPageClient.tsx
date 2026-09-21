@@ -430,7 +430,7 @@ export default function UsersPageClient({ initialUsers }: { initialUsers: User[]
                   onChange={(e) =>
                     setEditing({ ...editing, email: e.target.value })
                   }
-                  placeholder="name@aistartupimpact.com"
+                  placeholder="name@udyaibase.com"
                 />
               </div>
               <div>

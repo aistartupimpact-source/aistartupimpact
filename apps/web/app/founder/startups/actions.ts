@@ -2,7 +2,7 @@
 
 import { requireFounderAuth } from '@/lib/founder-auth';
 import { sendSubmissionReceivedEmail } from '@/lib/founder-email';
-import { prisma } from '@aistartupimpact/database';
+import { prisma } from '@udyaibase/database';
 import { revalidatePath } from 'next/cache';
 
 interface StartupSubmission {
