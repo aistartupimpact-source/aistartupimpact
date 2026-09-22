@@ -324,6 +324,8 @@ export async function updateToolAction(id: string, data: {
   twitterUrl?: string;
   linkedinUrl?: string;
   socialLinks?: Array<{ platform: string; url: string }>;
+  features?: string[];
+  useCases?: string[];
 }) {
   const { error } = await requireActionAuth();
   if (error) return { success: false, error };
@@ -380,6 +382,18 @@ export async function updateToolAction(id: string, data: {
       }
     }
     
+    // Update features/useCases (stored in ToolUseCase table)
+    if (data.features !== undefined || data.useCases !== undefined) {
+      await sql`DELETE FROM "ToolUseCase" WHERE "toolId" = ${id}`;
+      const allEntries = [
+        ...(data.features || []).filter(t => t.trim()),
+        ...(data.useCases || []).filter(t => t.trim()),
+      ];
+      for (const text of allEntries) {
+        await sql`INSERT INTO "ToolUseCase" (id, "toolId", text) VALUES (gen_random_uuid(), ${id}, ${text.trim()})`;
+      }
+    }
+
     revalidatePath('/tools-dir');
     invalidateToolCache();
 
@@ -395,6 +409,17 @@ export async function updateToolAction(id: string, data: {
   } catch (error: any) {
     console.error('updateToolAction error:', error);
     return { success: false, error: error.message || 'Failed to update tool' };
+  }
+}
+
+export async function getToolUseCasesAction(toolId: string) {
+  const { error } = await requireActionAuth();
+  if (error) return [];
+  try {
+    const rows = await sql`SELECT id, text FROM "ToolUseCase" WHERE "toolId" = ${toolId} ORDER BY id`;
+    return rows as Array<{ id: string; text: string }>;
+  } catch {
+    return [];
   }
 }
 
@@ -450,7 +475,7 @@ export async function setListingTierAction(id: string, tier: string) {
 
 export async function getToolFAQsAction(toolId: string) {
   const { error } = await requireActionAuth();
-  if (error) return { success: false, error };
+  if (error) return [];
   try {
     const faqs = await sql`
       SELECT id, question, answer, "order"
@@ -472,7 +497,7 @@ export async function getToolFAQsAction(toolId: string) {
 
 export async function getToolProsConsAction(toolId: string) {
   const { error } = await requireActionAuth();
-  if (error) return { success: false, error };
+  if (error) return { pros: [], cons: [] };
   try {
     const [pros, cons] = await Promise.all([
       sql`SELECT id, text FROM "ToolPro" WHERE "toolId" = ${toolId} ORDER BY id ASC`,
@@ -499,14 +524,14 @@ export async function updateToolProsConsAction(toolId: string, data: { pros: str
     // Insert new pros
     for (const text of data.pros) {
       if (text.trim()) {
-        await sql`INSERT INTO "ToolPro" (id, "toolId", text) VALUES (gen_random_uuid(), ${toolId}, ${text.trim()})`;
+        await sql`INSERT INTO "ToolPro" (id, "toolId", text) VALUES (gen_random_uuid()::text, ${toolId}, ${text.trim()})`;
       }
     }
 
     // Insert new cons
     for (const text of data.cons) {
       if (text.trim()) {
-        await sql`INSERT INTO "ToolCon" (id, "toolId", text) VALUES (gen_random_uuid(), ${toolId}, ${text.trim()})`;
+        await sql`INSERT INTO "ToolCon" (id, "toolId", text) VALUES (gen_random_uuid()::text, ${toolId}, ${text.trim()})`;
       }
     }
 

@@ -47,7 +47,7 @@ const nextConfig = {
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
-      "connect-src 'self' https://ep-restless-shadow-a1jxwm0a.ap-southeast-1.aws.neon.tech",
+      "connect-src 'self' https://media.udyaibase.com https://ep-restless-shadow-a1jxwm0a.ap-southeast-1.aws.neon.tech",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

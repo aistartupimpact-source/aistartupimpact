@@ -8,8 +8,12 @@ const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
 
 async function isOrgWide2FARequired(): Promise<boolean> {
   try {
-    const setting = await prisma.siteSetting.findUnique({ where: { key: "require2FA" } });
-    return setting?.value === true;
+    const rows = await prisma.$queryRawUnsafe<Array<{ value: string }>>(
+      `SELECT value::text FROM "SiteSetting" WHERE key = $1 LIMIT 1`,
+      "require2FA"
+    );
+    if (rows.length === 0) return false;
+    try { return JSON.parse(rows[0].value) === true; } catch { return false; }
   } catch {
     return false;
   }

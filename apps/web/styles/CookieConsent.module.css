@@ -15,7 +15,7 @@
   box-shadow: 
     0 10px 30px -10px rgba(13, 27, 42, 0.15), 
     0 1px 3px rgba(13, 27, 42, 0.05),
-    0 20px 40px -20px rgba(255, 49, 49, 0.1);
+    0 20px 40px -20px color-mix(in srgb, var(--brand-color, #FF3131) 10%, transparent);
   z-index: 100;
   overflow: hidden;
   animation: popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -52,10 +52,10 @@
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
-  background: linear-gradient(135deg, #FF5E5E, #FF3131);
+  background: var(--brand-color, #FF3131);
   color: #ffffff;
   border-radius: 0.75rem;
-  box-shadow: 0 4px 10px rgba(255, 49, 49, 0.25);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--brand-color, #FF3131) 25%, transparent);
   flex-shrink: 0;
 }
 
@@ -105,14 +105,14 @@
 }
 
 .buttonPrimary {
-  background: linear-gradient(135deg, #FF5E5E, #FF3131);
+  background: var(--brand-color, #FF3131);
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(255, 49, 49, 0.2);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--brand-color, #FF3131) 20%, transparent);
 }
 
 .buttonPrimary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(255, 49, 49, 0.3);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--brand-color, #FF3131) 30%, transparent);
   filter: brightness(1.05);
 }
 
@@ -261,7 +261,7 @@
 
 .preferenceItem:hover {
   background: rgba(249, 250, 251, 0.9);
-  border-color: rgba(255, 49, 49, 0.15);
+  border-color: color-mix(in srgb, var(--brand-color, #FF3131) 15%, transparent);
   box-shadow: 0 4px 12px rgba(13, 27, 42, 0.02);
 }
 
@@ -304,9 +304,9 @@
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 600;
-  background: rgba(255, 49, 49, 0.08);
-  color: #FF3131;
-  border: 1px solid rgba(255, 49, 49, 0.15);
+  background: color-mix(in srgb, var(--brand-color, #FF3131) 8%, transparent);
+  color: var(--brand-color, #FF3131);
+  border: 1px solid color-mix(in srgb, var(--brand-color, #FF3131) 15%, transparent);
 }
 
 .preferenceDescription {
@@ -370,8 +370,8 @@
 }
 
 .toggle input:checked + .toggleSlider {
-  background-color: #FF3131;
-  border-color: rgba(255, 49, 49, 0.2);
+  background-color: var(--brand-color, #FF3131);
+  border-color: color-mix(in srgb, var(--brand-color, #FF3131) 20%, transparent);
 }
 
 .toggle input:checked + .toggleSlider:before {
@@ -390,7 +390,7 @@
 
 /* Link Styles */
 .link {
-  color: #FF3131;
+  color: var(--brand-color, #FF3131);
   text-decoration: none;
   font-weight: 600;
   border-bottom: 1.5px solid transparent;
@@ -398,7 +398,7 @@
 }
 
 .link:hover {
-  border-color: #FF3131;
+  border-color: var(--brand-color, #FF3131);
 }
 
 /* ==========================================
@@ -410,7 +410,7 @@
   box-shadow: 
     0 10px 30px -10px rgba(0, 0, 0, 0.5), 
     0 1px 3px rgba(0, 0, 0, 0.3),
-    0 20px 40px -20px rgba(255, 49, 49, 0.15);
+    0 20px 40px -20px color-mix(in srgb, var(--brand-color, #FF3131) 15%, transparent);
 }
 
 :global(.dark) .bannerTitle {
@@ -468,7 +468,7 @@
 
 :global(.dark) .preferenceItem:hover {
   background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 49, 49, 0.3);
+  border-color: color-mix(in srgb, var(--brand-color, #FF3131) 30%, transparent);
 }
 
 :global(.dark) .preferenceTitle {

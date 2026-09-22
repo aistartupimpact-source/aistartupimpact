@@ -2,6 +2,7 @@ import { prisma } from '@udyaibase/database';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import Link from 'next/link';
+import Greeting from '@/components/shared/Greeting';
 import {
   FileText,
   Users,
@@ -17,13 +18,6 @@ import {
   Megaphone,
   UserPlus,
 } from 'lucide-react';
-
-function getGreeting() {
-  const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
-}
 
 function formatRelativeTime(date: Date): string {
   const now = new Date();
@@ -163,7 +157,7 @@ export default async function DashboardPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-sora font-extrabold text-2xl text-navy dark:text-white">
-            {getGreeting()}, {userName}
+            <Greeting name={userName} />
           </h1>
           <p className="text-gray-400 dark:text-gray-500 text-sm font-jakarta mt-1">
             {todayFormatted} &mdash; Here&apos;s your platform overview.

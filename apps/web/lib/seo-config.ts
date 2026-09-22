@@ -44,13 +44,16 @@ const DEFAULTS: SeoConfig = {
 
 export const getSeoConfig = cache(async (): Promise<SeoConfig> => {
   try {
-    const settings = await prisma.siteSetting.findMany({
-      where: { key: { in: SEO_KEYS } },
-      select: { key: true, value: true },
-    });
+    const placeholders = SEO_KEYS.map((_, i) => `$${i + 1}`).join(', ');
+    const settings = await prisma.$queryRawUnsafe<Array<{ key: string; value: string }>>(
+      `SELECT key, value::text FROM "SiteSetting" WHERE key IN (${placeholders})`,
+      ...SEO_KEYS
+    );
 
     const map: Record<string, any> = {};
-    for (const s of settings) map[s.key] = s.value;
+    for (const s of settings) {
+      try { map[s.key] = JSON.parse(s.value); } catch { map[s.key] = s.value; }
+    }
 
     return {
       metaTitle: (map.metaTitle as string) || DEFAULTS.metaTitle,

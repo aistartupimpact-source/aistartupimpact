@@ -514,8 +514,11 @@ function BrandDesignSection({ settings, updateSetting, Toggle }: { settings: any
     setBrandAssets(prev => ({ ...prev, [assetType]: url }));
   };
 
+  const [colorError, setColorError] = useState('');
+
   const saveColors = async () => {
     setSavingColors(true);
+    setColorError('');
     try {
       const res = await fetch('/api/admin/brand', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -524,9 +527,15 @@ function BrandDesignSection({ settings, updateSetting, Toggle }: { settings: any
       const data = await res.json();
       if (data.success) {
         updateSetting('brandColor', brandColors.primary);
+        updateSetting('brandSecondary', brandColors.secondary);
+        updateSetting('brandTertiary', brandColors.tertiary);
         setColorSaved(true); setTimeout(() => setColorSaved(false), 2000);
+      } else {
+        setColorError(data.error || 'Failed to save colors');
       }
-    } catch {}
+    } catch (e: any) {
+      setColorError(e.message || 'Network error saving colors');
+    }
     finally { setSavingColors(false); }
   };
 
@@ -568,6 +577,7 @@ function BrandDesignSection({ settings, updateSetting, Toggle }: { settings: any
             {savingColors ? 'Saving...' : colorSaved ? 'Saved!' : 'Save Colors'}
           </button>
         </div>
+        {colorError && <p className="text-xs text-red-500 font-jakarta">{colorError}</p>}
         <div className="space-y-4">
           <ColorPicker label="Primary" description="Buttons, links, CTAs, active states" value={brandColors.primary} onChange={(v) => setBrandColors(prev => ({ ...prev, primary: v }))} />
           <ColorPicker label="Secondary" description="Supporting UI, card headers, navigation accents" value={brandColors.secondary} onChange={(v) => setBrandColors(prev => ({ ...prev, secondary: v }))} />

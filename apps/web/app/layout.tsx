@@ -163,7 +163,7 @@ export default async function RootLayout({
           />
         )}
       </head>
-      <body className="font-jakarta antialiased bg-page dark:bg-page-dark text-charcoal dark:text-gray-100">
+      <body className="font-jakarta antialiased bg-page dark:bg-page-dark text-charcoal dark:text-gray-100" suppressHydrationWarning>
         {/* Site-level structured data */}
         <script
           type="application/ld+json"
