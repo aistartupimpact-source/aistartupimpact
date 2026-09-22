@@ -8,6 +8,7 @@ import { updateToolAction, getTagGroupsForFounderAction, getToolTagIdsAction } f
 import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
 import CategoryCascadeSelect from '@/components/shared/CategoryCascadeSelect';
 import ToolTagSelector from '@/components/shared/ToolTagSelector';
+import ProsConsManager from '@/components/shared/ProsConsManager';
 
 interface AiTool {
   id: string;
@@ -43,6 +44,10 @@ interface ToolEditFormProps {
   tool: AiTool & {
     useCases: Array<{ id: string; text: string }>;
     faqs?: Array<{ id: string; question: string; answer: string; order: number }>;
+    pros?: string[];
+    cons?: string[];
+    demoVideoUrl?: string | null;
+    freeTrialDays?: number | null;
   };
 }
 
@@ -54,7 +59,8 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
   const [screenshots, setScreenshots] = useState<string[]>(tool.screenshotUrls || []);
   const [tagGroups, setTagGroups] = useState<any[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
-  // Extract features and use cases from the useCases array
+  const [pros, setPros] = useState<string[]>(tool.pros || []);
+  const [cons, setCons] = useState<string[]>(tool.cons || []);
   const existingUseCases = tool.useCases.map(uc => uc.text).join('\n');
 
   const [draftLoaded, setDraftLoaded] = useState(false);
@@ -94,17 +100,19 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
     description: tool.description,
     websiteUrl: tool.websiteUrl,
     affiliateUrl: tool.affiliateUrl || '',
+    demoVideoUrl: tool.demoVideoUrl || '',
     categoryId: tool.categoryId || '',
     pricingModel: tool.pricingModel,
     pricingUrl: tool.pricingUrl || '',
     startingPrice: tool.startingPrice ? (tool.startingPrice / 100).toString() : '',
+    freeTrialDays: tool.freeTrialDays ? tool.freeTrialDays.toString() : '',
     hasApi: tool.hasApi || false,
     hasMobileApp: tool.hasMobileApp || false,
     launchYear: tool.launchYear || new Date().getFullYear(),
     founderNames: tool.founderNames?.join(', ') || '',
     headquartersCountry: tool.headquartersCountry || '',
     features: existingUseCases,
-    useCases: existingUseCases,
+    useCases: '',
     logoUrl: tool.logoUrl || '',
     twitterUrl: tool.twitterUrl || '',
     linkedinUrl: tool.linkedinUrl || '',
@@ -306,10 +314,12 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
         description: formData.description,
         websiteUrl: formData.websiteUrl,
         affiliateUrl: formData.affiliateUrl || undefined,
+        demoVideoUrl: formData.demoVideoUrl || undefined,
         categoryId: (formData.categoryId || tool.categoryId) as string,
         pricingModel: formData.pricingModel as any,
         pricingUrl: formData.pricingUrl || undefined,
         startingPrice: formData.startingPrice ? parseFloat(formData.startingPrice) : undefined,
+        freeTrialDays: formData.freeTrialDays ? parseInt(formData.freeTrialDays) : undefined,
         hasApi: formData.hasApi,
         hasMobileApp: formData.hasMobileApp,
         launchYear: formData.launchYear,
@@ -321,6 +331,8 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
         screenshotUrls: screenshots,
         faqs: faqs.length > 0 ? faqs : undefined,
         tagIds: selectedTagIds,
+        pros: pros.length > 0 ? pros : undefined,
+        cons: cons.length > 0 ? cons : undefined,
         twitterUrl: formData.twitterUrl || undefined,
         linkedinUrl: formData.linkedinUrl || undefined,
         socialLinks: socialLinks.filter(l => l.url.trim()).length > 0 ? socialLinks.filter(l => l.url.trim()) : undefined,
@@ -386,21 +398,31 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
         </div>
       </div>
 
-      {/* Tool Name */}
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Tool Name <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          id="name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
-          placeholder="e.g. ChatGPT"
-        />
+      {/* Tool Name & Category */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Tool Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+            placeholder="e.g. ChatGPT"
+          />
+        </div>
+
+        <div>
+          <CategoryCascadeSelect
+            value={formData.categoryId}
+            onChange={(categoryId) => setFormData(prev => ({ ...prev, categoryId }))}
+            required
+          />
+        </div>
       </div>
 
       {/* Tagline */}
@@ -422,16 +444,6 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
           {formData.tagline.length}/100 characters
         </p>
-      </div>
-
-      {/* Category */}
-      {/* Category */}
-      <div>
-        <CategoryCascadeSelect
-          value={formData.categoryId}
-          onChange={(categoryId) => setFormData(prev => ({ ...prev, categoryId }))}
-          required
-        />
       </div>
 
       {/* Description */}
@@ -487,6 +499,23 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
             placeholder="https://yourtool.com?ref=..."
           />
         </div>
+      </div>
+
+      {/* Demo Video */}
+      <div>
+        <label htmlFor="demoVideoUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Demo Video URL
+        </label>
+        <input
+          type="url"
+          id="demoVideoUrl"
+          name="demoVideoUrl"
+          value={formData.demoVideoUrl}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+          placeholder="YouTube, Vimeo, or Loom link"
+        />
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Add a demo or walkthrough video of your tool</p>
       </div>
 
       {/* Social Links */}
@@ -607,6 +636,23 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
         </div>
 
         <div>
+          <label htmlFor="freeTrialDays" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Free Trial (Days)
+          </label>
+          <input
+            type="number"
+            id="freeTrialDays"
+            name="freeTrialDays"
+            value={formData.freeTrialDays}
+            onChange={handleChange}
+            min="0"
+            max="365"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+            placeholder="e.g. 14"
+          />
+        </div>
+
+        <div>
           <label htmlFor="pricingUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Pricing Page URL
           </label>
@@ -653,25 +699,24 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
         </div>
       </div>
 
-      {/* Launch Year */}
-      <div>
-        <label htmlFor="launchYear" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Launch Year
-        </label>
-        <input
-          type="number"
-          id="launchYear"
-          name="launchYear"
-          value={formData.launchYear}
-          onChange={handleChange}
-          min="1900"
-          max={new Date().getFullYear()}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
-        />
-      </div>
+      {/* Launch Year, Founders, HQ */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label htmlFor="launchYear" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Launch Year
+          </label>
+          <input
+            type="number"
+            id="launchYear"
+            name="launchYear"
+            value={formData.launchYear}
+            onChange={handleChange}
+            min="1900"
+            max={new Date().getFullYear()}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
+          />
+        </div>
 
-      {/* Founder Names and Country */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="founderNames" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Founder Names
@@ -683,16 +728,16 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
             value={formData.founderNames}
             onChange={handleChange}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
-            placeholder="e.g. John Doe, Jane Smith"
+            placeholder="e.g. Vivek Raghavan, John Doe"
           />
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Separate multiple founders with commas
+            Comma-separated names
           </p>
         </div>
 
         <div>
           <label htmlFor="headquartersCountry" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Headquarters Country
+            Headquarters
           </label>
           <input
             type="text"
@@ -701,7 +746,7 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
             value={formData.headquartersCountry}
             onChange={handleChange}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand focus:border-transparent"
-            placeholder="e.g. USA, India, UK"
+            placeholder="e.g. United States, India"
           />
         </div>
       </div>
@@ -808,6 +853,18 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
             maxTags={30}
           />
         ) : null}
+      </div>
+
+      {/* Pros & Cons */}
+      <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
+        <ProsConsManager
+          pros={pros}
+          cons={cons}
+          onChangePros={setPros}
+          onChangeCons={setCons}
+          maxPros={6}
+          maxCons={3}
+        />
       </div>
 
       {/* FAQs Section */}

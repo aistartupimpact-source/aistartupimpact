@@ -3,7 +3,7 @@ import QRCode from 'qrcode';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 
-const APP_NAME = 'ASI Admin';
+const APP_NAME = 'Udyaibase Admin';
 
 export function generateTOTPSecret(email: string) {
   const secret = speakeasy.generateSecret({

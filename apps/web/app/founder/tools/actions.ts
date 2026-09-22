@@ -303,6 +303,8 @@ export async function updateToolAction(id: string, data: ToolSubmission) {
         "twitterUrl" = ${data.twitterUrl || null},
         "linkedinUrl" = ${data.linkedinUrl || null},
         "socialLinks" = ${socialLinksJson}::jsonb,
+        "demoVideoUrl" = ${data.demoVideoUrl || null},
+        "freeTrialDays" = ${data.freeTrialDays || null},
         "updatedAt" = NOW()
       WHERE id = ${id}
     `;
@@ -345,6 +347,30 @@ export async function updateToolAction(id: string, data: ToolSubmission) {
             INSERT INTO "ToolFAQ" (id, "toolId", question, answer, "order", "createdAt", "updatedAt")
             VALUES (gen_random_uuid()::text, ${id}, ${faq.question}, ${faq.answer}, ${faq.order}, NOW(), NOW())
           `;
+        }
+      }
+    }
+
+    // Update pros
+    if (data.pros !== undefined) {
+      await prisma.$queryRaw`DELETE FROM "ToolPro" WHERE "toolId" = ${id}`;
+      if (data.pros.length > 0) {
+        for (const text of data.pros) {
+          if (text.trim()) {
+            await prisma.$queryRaw`INSERT INTO "ToolPro" (id, "toolId", text) VALUES (gen_random_uuid(), ${id}, ${text.trim()})`;
+          }
+        }
+      }
+    }
+
+    // Update cons
+    if (data.cons !== undefined) {
+      await prisma.$queryRaw`DELETE FROM "ToolCon" WHERE "toolId" = ${id}`;
+      if (data.cons.length > 0) {
+        for (const text of data.cons) {
+          if (text.trim()) {
+            await prisma.$queryRaw`INSERT INTO "ToolCon" (id, "toolId", text) VALUES (gen_random_uuid(), ${id}, ${text.trim()})`;
+          }
         }
       }
     }

@@ -23,6 +23,7 @@ export default async function EditToolPage(props: PageProps) {
       "hasApi", "hasMobileApp", "launchYear", "founderNames", "headquartersCountry",
       "screenshotUrls", "isUrlVerified",
       "twitterUrl", "linkedinUrl", "socialLinks",
+      "demoVideoUrl", "freeTrialDays",
       "slugChangedAt"::text AS "slugChangedAt"
     FROM "AiTool"
     WHERE slug = ${params.slug}
@@ -56,6 +57,14 @@ export default async function EditToolPage(props: PageProps) {
     ORDER BY "order" ASC
   `;
 
+  // Fetch pros and cons separately
+  const pros = await prisma.$queryRaw<any[]>`
+    SELECT id, text FROM "ToolPro" WHERE "toolId" = ${tool.id}
+  `;
+  const cons = await prisma.$queryRaw<any[]>`
+    SELECT id, text FROM "ToolCon" WHERE "toolId" = ${tool.id}
+  `;
+
   // Serialize the tool data for client component
   const serializedTool = {
     id: tool.id,
@@ -81,6 +90,8 @@ export default async function EditToolPage(props: PageProps) {
     twitterUrl: tool.twitterUrl,
     linkedinUrl: tool.linkedinUrl,
     socialLinks: tool.socialLinks,
+    demoVideoUrl: tool.demoVideoUrl,
+    freeTrialDays: tool.freeTrialDays,
     useCases: useCases.map(uc => ({
       id: uc.id,
       text: uc.text,
@@ -91,6 +102,8 @@ export default async function EditToolPage(props: PageProps) {
       answer: faq.answer,
       order: faq.order,
     })),
+    pros: pros.map(p => p.text),
+    cons: cons.map(c => c.text),
   };
 
   return (

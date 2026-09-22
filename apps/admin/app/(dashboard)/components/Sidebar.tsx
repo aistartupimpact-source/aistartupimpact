@@ -179,8 +179,8 @@ export function AdminSidebar({ session }: { session: any }) {
         <div className="h-16 flex items-center justify-between px-6 border-b border-white/10 dark:border-gray-800">
           <Link href="/dashboard" className="flex items-center gap-2">
             <span className="font-sora font-extrabold text-lg">
-              <span className="text-brand">A</span>
-              <span className="text-white">SI</span>
+              <span className="text-brand">U</span>
+              <span className="text-white">B</span>
             </span>
             <span className="text-gray-400 text-xs font-jakarta">Admin</span>
           </Link>

@@ -52,7 +52,7 @@ function LoginContent() {
               <Shield className="w-8 h-8" />
             </div>
             <h1 className="font-sora font-extrabold text-2xl text-navy dark:text-white mb-2">
-              Welcome to ASI Admin
+              Welcome to Udyaibase Admin
             </h1>
             <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm">
               Sign in with your authorized Google account to access the dashboard.
