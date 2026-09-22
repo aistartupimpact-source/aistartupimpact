@@ -81,7 +81,7 @@ export async function saveSettingsAction(settings: Record<string, any>) {
           updatedAt: new Date(),
         },
         create: {
-          id: `setting_${key}_${Date.now()}`,
+          id: `setting_${key}_${crypto.randomUUID()}`,
           key,
           value: value as any,
           updatedAt: new Date(),

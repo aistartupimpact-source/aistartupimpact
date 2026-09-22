@@ -52,42 +52,52 @@ export async function POST(request: NextRequest) {
       const { action } = body;
 
       if (action === "saveColors") {
-        const { brandColor, brandSecondary, brandTertiary } = body;
-        const colorEntries: [string, string][] = [];
-        if (brandColor) colorEntries.push(["brandColor", brandColor]);
-        if (brandSecondary) colorEntries.push(["brandSecondary", brandSecondary]);
-        if (brandTertiary) colorEntries.push(["brandTertiary", brandTertiary]);
+        try {
+          const { brandColor, brandSecondary, brandTertiary } = body;
+          const colorEntries: [string, string][] = [];
+          if (brandColor) colorEntries.push(["brandColor", brandColor]);
+          if (brandSecondary) colorEntries.push(["brandSecondary", brandSecondary]);
+          if (brandTertiary) colorEntries.push(["brandTertiary", brandTertiary]);
 
-        for (const [key, value] of colorEntries) {
-          await prisma.siteSetting.upsert({
-            where: { key },
-            update: { value: value as any, updatedAt: new Date() },
-            create: { id: `setting_${key}_${Date.now()}`, key, value: value as any, updatedAt: new Date() },
-          });
-        }
-        logAuditEvent({ action: 'CONFIG_CHANGE', resourceType: 'BRAND', after: { brandColor, brandSecondary, brandTertiary } });
-        return NextResponse.json({ success: true });
-      }
-
-      if (action === "saveFonts") {
-        const { displayFont, bodyFont } = body;
-        const fontEntries: [string, string | null][] = [
-          ["brand_displayFont", displayFont || null],
-          ["brand_bodyFont", bodyFont || null],
-        ];
-        for (const [key, value] of fontEntries) {
-          if (value === null) {
-            await prisma.siteSetting.deleteMany({ where: { key } });
-          } else {
+          for (const [key, value] of colorEntries) {
             await prisma.siteSetting.upsert({
               where: { key },
               update: { value: value as any, updatedAt: new Date() },
-              create: { id: `setting_${key}_${Date.now()}`, key, value: value as any, updatedAt: new Date() },
+              create: { id: `setting_${key}_${crypto.randomUUID()}`, key, value: value as any, updatedAt: new Date() },
             });
           }
+          logAuditEvent({ action: 'CONFIG_CHANGE', resourceType: 'BRAND', after: { brandColor, brandSecondary, brandTertiary } });
+          return NextResponse.json({ success: true });
+        } catch (e: any) {
+          console.error("Save colors error:", e);
+          return NextResponse.json({ error: e.message || "Failed to save colors" }, { status: 500 });
         }
-        logAuditEvent({ action: 'CONFIG_CHANGE', resourceType: 'BRAND', after: { displayFont, bodyFont } });
-        return NextResponse.json({ success: true });
+      }
+
+      if (action === "saveFonts") {
+        try {
+          const { displayFont, bodyFont } = body;
+          const fontEntries: [string, string | null][] = [
+            ["brand_displayFont", displayFont || null],
+            ["brand_bodyFont", bodyFont || null],
+          ];
+          for (const [key, value] of fontEntries) {
+            if (value === null) {
+              await prisma.siteSetting.deleteMany({ where: { key } });
+            } else {
+              await prisma.siteSetting.upsert({
+                where: { key },
+                update: { value: value as any, updatedAt: new Date() },
+                create: { id: `setting_${key}_${crypto.randomUUID()}`, key, value: value as any, updatedAt: new Date() },
+              });
+            }
+          }
+          logAuditEvent({ action: 'CONFIG_CHANGE', resourceType: 'BRAND', after: { displayFont, bodyFont } });
+          return NextResponse.json({ success: true });
+        } catch (e: any) {
+          console.error("Save fonts error:", e);
+          return NextResponse.json({ error: e.message || "Failed to save fonts" }, { status: 500 });
+        }
       }
 
       if (action === "removeCustomFont") {
@@ -162,12 +172,12 @@ export async function POST(request: NextRequest) {
       await prisma.siteSetting.upsert({
         where: { key: urlKey },
         update: { value: url as any, updatedAt: new Date() },
-        create: { id: `setting_${urlKey}_${Date.now()}`, key: urlKey, value: url as any, updatedAt: new Date() },
+        create: { id: `setting_${urlKey}_${crypto.randomUUID()}`, key: urlKey, value: url as any, updatedAt: new Date() },
       });
       await prisma.siteSetting.upsert({
         where: { key: nameKey },
         update: { value: fontName as any, updatedAt: new Date() },
-        create: { id: `setting_${nameKey}_${Date.now()}`, key: nameKey, value: fontName as any, updatedAt: new Date() },
+        create: { id: `setting_${nameKey}_${crypto.randomUUID()}`, key: nameKey, value: fontName as any, updatedAt: new Date() },
       });
       logAuditEvent({ action: 'UPLOAD', resourceType: 'BRAND', after: { assetType, fontName, url } });
       return NextResponse.json({ success: true, url, fontName });
@@ -177,7 +187,7 @@ export async function POST(request: NextRequest) {
     await prisma.siteSetting.upsert({
       where: { key: settingKey },
       update: { value: url as any, updatedAt: new Date() },
-      create: { id: `setting_${settingKey}_${Date.now()}`, key: settingKey, value: url as any, updatedAt: new Date() },
+      create: { id: `setting_${settingKey}_${crypto.randomUUID()}`, key: settingKey, value: url as any, updatedAt: new Date() },
     });
 
     logAuditEvent({ action: 'UPLOAD', resourceType: 'BRAND', after: { assetType, url } });
