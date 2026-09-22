@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Upload, Loader2, Save, Plus, X } from 'lucide-react';
-import { getToolsAction, getToolFAQsAction, updateToolAction, getCategoriesAction, getToolProsConsAction, updateToolProsConsAction } from '../../actions';
+import { getToolsAction, getToolFAQsAction, updateToolAction, getCategoriesAction, getToolProsConsAction, updateToolProsConsAction, getToolUseCasesAction } from '../../actions';
 import { uploadLogoAction } from '../../../media/actions';
 import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
 import ProsConsManager from '@/components/shared/ProsConsManager';
@@ -78,6 +78,8 @@ export default function EditToolPage() {
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [pros, setPros] = useState<string[]>([]);
   const [cons, setCons] = useState<string[]>([]);
+  const [features, setFeatures] = useState('');
+  const [useCases, setUseCases] = useState('');
   const [socialLinks, setSocialLinks] = useState<Array<{ platform: string; url: string }>>([]);
 
   const [formData, setFormData] = useState<Tool | null>(null);
@@ -114,18 +116,23 @@ export default function EditToolPage() {
       setSocialLinks(Array.isArray(tool.socialLinks) ? tool.socialLinks : []);
       setTagGroups(tagGroupsData as any[]);
       
-      // Load FAQs and Tags in parallel
+      // Load FAQs, Tags, Pros/Cons, Use Cases in parallel
       setLoadingFaqs(true);
       try {
-        const [toolFaqs, toolTags, prosConsData] = await Promise.all([
-          getToolFAQsAction(toolId),
-          getToolTagsAction(toolId),
-          getToolProsConsAction(toolId),
+        const [toolFaqs, toolTags, prosConsData, toolUseCases] = await Promise.all([
+          getToolFAQsAction(toolId).catch(() => []),
+          getToolTagsAction(toolId).catch(() => []),
+          getToolProsConsAction(toolId).catch(() => ({ pros: [], cons: [] })),
+          getToolUseCasesAction(toolId).catch(() => []),
         ]);
-        setFaqs(toolFaqs as FAQ[]);
-        setSelectedTagIds((toolTags as any[]).map((t: any) => t.id));
-        setPros((prosConsData.pros as any[]).map((p: any) => p.text));
-        setCons((prosConsData.cons as any[]).map((c: any) => c.text));
+        setFaqs(Array.isArray(toolFaqs) ? toolFaqs as FAQ[] : []);
+        setSelectedTagIds(Array.isArray(toolTags) ? (toolTags as any[]).map((t: any) => t.id) : []);
+        const pc = prosConsData as any;
+        setPros(Array.isArray(pc?.pros) ? pc.pros.map((p: any) => p.text) : []);
+        setCons(Array.isArray(pc?.cons) ? pc.cons.map((c: any) => c.text) : []);
+        const ucTexts = Array.isArray(toolUseCases) ? (toolUseCases as any[]).map((uc: any) => uc.text) : [];
+        setFeatures(ucTexts.join('\n'));
+        setUseCases('');
       } catch (faqError) {
         console.error('Error loading FAQs/Tags:', faqError);
         setFaqs([]);
@@ -249,6 +256,9 @@ export default function EditToolPage() {
           ? (formData.founderNames as string).split(',').map(f => f.trim()).filter(Boolean)
           : [];
 
+      const featuresArray = features.split('\n').map(l => l.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean);
+      const useCasesArray = useCases.split('\n').map(l => l.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean);
+
       const result = await updateToolAction(toolId, {
         name: formData.name,
         tagline: formData.tagline,
@@ -275,14 +285,22 @@ export default function EditToolPage() {
         twitterUrl: formData.twitterUrl || undefined,
         linkedinUrl: formData.linkedinUrl || undefined,
         socialLinks: socialLinks.filter(l => l.url.trim()).length > 0 ? socialLinks.filter(l => l.url.trim()) : undefined,
+        features: featuresArray,
+        useCases: useCasesArray,
       });
       
       if (result.success) {
         // Save tags and pros/cons separately
-        await Promise.all([
+        const [tagResult, prosConsResult] = await Promise.all([
           updateToolTagsAction(toolId, selectedTagIds),
           updateToolProsConsAction(toolId, { pros, cons }),
         ]);
+        const errors: string[] = [];
+        if (tagResult && !tagResult.success && tagResult.error) errors.push('Tags: ' + tagResult.error);
+        if (prosConsResult && !prosConsResult.success && prosConsResult.error) errors.push('Pros/Cons: ' + prosConsResult.error);
+        if (errors.length > 0) {
+          alert('Tool saved but some data failed:\n' + errors.join('\n'));
+        }
         localStorage.removeItem(`draft_admin_edit_tool_${toolId}`);
         router.push('/tools-dir');
         router.refresh();
@@ -447,6 +465,39 @@ export default function EditToolPage() {
             maxPros={6}
             maxCons={6}
           />
+        </div>
+
+        {/* Features & Use Cases */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6 space-y-6">
+          <h2 className="font-sora font-bold text-lg text-navy dark:text-white">Features & Use Cases</h2>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
+              Key Features
+            </label>
+            <textarea
+              value={features}
+              onChange={(e) => setFeatures(e.target.value)}
+              rows={4}
+              className="input-field text-sm"
+              placeholder="Paste features here — one per line, auto-formatted with bullet points"
+            />
+            <p className="text-xs text-gray-400 mt-1">One feature per line</p>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 block font-jakarta">
+              Use Cases
+            </label>
+            <textarea
+              value={useCases}
+              onChange={(e) => setUseCases(e.target.value)}
+              rows={4}
+              className="input-field text-sm"
+              placeholder="Paste use cases here — one per line"
+            />
+            <p className="text-xs text-gray-400 mt-1">One use case per line</p>
+          </div>
         </div>
 
         {/* Logo & URLs */}

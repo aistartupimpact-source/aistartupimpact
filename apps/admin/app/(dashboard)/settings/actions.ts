@@ -16,11 +16,11 @@ export async function getSettingsAction() {
   try {
     let settingsMap = {};
     try {
-      const settings = await prisma.siteSetting.findMany({
-        select: { key: true, value: true },
-      });
+      const settings = await prisma.$queryRawUnsafe<Array<{ key: string; value: string }>>(
+        `SELECT key, value::text FROM "SiteSetting"`
+      );
       settingsMap = settings.reduce((acc: any, setting: any) => {
-        acc[setting.key] = setting.value;
+        try { acc[setting.key] = JSON.parse(setting.value); } catch { acc[setting.key] = setting.value; }
         return acc;
       }, {});
     } catch {
@@ -74,19 +74,13 @@ export async function saveSettingsAction(settings: Record<string, any>) {
   try {
     for (const [key, value] of Object.entries(settings)) {
       if (key === 'require2FA' && session.user.role !== 'SUPER_ADMIN') continue;
-      await prisma.siteSetting.upsert({
-        where: { key },
-        update: { 
-          value: value as any,
-          updatedAt: new Date(),
-        },
-        create: {
-          id: `setting_${key}_${crypto.randomUUID()}`,
-          key,
-          value: value as any,
-          updatedAt: new Date(),
-        },
-      });
+      const jsonValue = JSON.stringify(value);
+      const id = `setting_${key}_${crypto.randomUUID()}`;
+      await prisma.$executeRaw`
+        INSERT INTO "SiteSetting" (id, key, value, "updatedAt")
+        VALUES (${id}, ${key}, ${jsonValue}::jsonb, NOW())
+        ON CONFLICT (key) DO UPDATE SET value = ${jsonValue}::jsonb, "updatedAt" = NOW()
+      `;
     }
 
     return { success: true };

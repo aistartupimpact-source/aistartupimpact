@@ -60,11 +60,13 @@ export async function POST(request: NextRequest) {
           if (brandTertiary) colorEntries.push(["brandTertiary", brandTertiary]);
 
           for (const [key, value] of colorEntries) {
-            await prisma.siteSetting.upsert({
-              where: { key },
-              update: { value: value as any, updatedAt: new Date() },
-              create: { id: `setting_${key}_${crypto.randomUUID()}`, key, value: value as any, updatedAt: new Date() },
-            });
+            const jsonValue = JSON.stringify(value);
+            const id = `setting_${key}_${crypto.randomUUID()}`;
+            await prisma.$executeRaw`
+              INSERT INTO "SiteSetting" (id, key, value, "updatedAt")
+              VALUES (${id}, ${key}, ${jsonValue}::jsonb, NOW())
+              ON CONFLICT (key) DO UPDATE SET value = ${jsonValue}::jsonb, "updatedAt" = NOW()
+            `;
           }
           logAuditEvent({ action: 'CONFIG_CHANGE', resourceType: 'BRAND', after: { brandColor, brandSecondary, brandTertiary } });
           return NextResponse.json({ success: true });
@@ -85,11 +87,13 @@ export async function POST(request: NextRequest) {
             if (value === null) {
               await prisma.siteSetting.deleteMany({ where: { key } });
             } else {
-              await prisma.siteSetting.upsert({
-                where: { key },
-                update: { value: value as any, updatedAt: new Date() },
-                create: { id: `setting_${key}_${crypto.randomUUID()}`, key, value: value as any, updatedAt: new Date() },
-              });
+              const jsonValue = JSON.stringify(value);
+              const id = `setting_${key}_${crypto.randomUUID()}`;
+              await prisma.$executeRaw`
+                INSERT INTO "SiteSetting" (id, key, value, "updatedAt")
+                VALUES (${id}, ${key}, ${jsonValue}::jsonb, NOW())
+                ON CONFLICT (key) DO UPDATE SET value = ${jsonValue}::jsonb, "updatedAt" = NOW()
+              `;
             }
           }
           logAuditEvent({ action: 'CONFIG_CHANGE', resourceType: 'BRAND', after: { displayFont, bodyFont } });
@@ -169,26 +173,32 @@ export async function POST(request: NextRequest) {
       const fontName = formData.get("fontName") as string || file.name.replace(/\.woff2$/i, "");
       const urlKey = `brand_${assetType}Url`;
       const nameKey = `brand_${assetType}Name`;
-      await prisma.siteSetting.upsert({
-        where: { key: urlKey },
-        update: { value: url as any, updatedAt: new Date() },
-        create: { id: `setting_${urlKey}_${crypto.randomUUID()}`, key: urlKey, value: url as any, updatedAt: new Date() },
-      });
-      await prisma.siteSetting.upsert({
-        where: { key: nameKey },
-        update: { value: fontName as any, updatedAt: new Date() },
-        create: { id: `setting_${nameKey}_${crypto.randomUUID()}`, key: nameKey, value: fontName as any, updatedAt: new Date() },
-      });
+      const urlJson = JSON.stringify(url);
+      const nameJson = JSON.stringify(fontName);
+      const urlId = `setting_${urlKey}_${crypto.randomUUID()}`;
+      const nameId = `setting_${nameKey}_${crypto.randomUUID()}`;
+      await prisma.$executeRaw`
+        INSERT INTO "SiteSetting" (id, key, value, "updatedAt")
+        VALUES (${urlId}, ${urlKey}, ${urlJson}::jsonb, NOW())
+        ON CONFLICT (key) DO UPDATE SET value = ${urlJson}::jsonb, "updatedAt" = NOW()
+      `;
+      await prisma.$executeRaw`
+        INSERT INTO "SiteSetting" (id, key, value, "updatedAt")
+        VALUES (${nameId}, ${nameKey}, ${nameJson}::jsonb, NOW())
+        ON CONFLICT (key) DO UPDATE SET value = ${nameJson}::jsonb, "updatedAt" = NOW()
+      `;
       logAuditEvent({ action: 'UPLOAD', resourceType: 'BRAND', after: { assetType, fontName, url } });
       return NextResponse.json({ success: true, url, fontName });
     }
 
     const settingKey = `brand_${assetType}`;
-    await prisma.siteSetting.upsert({
-      where: { key: settingKey },
-      update: { value: url as any, updatedAt: new Date() },
-      create: { id: `setting_${settingKey}_${crypto.randomUUID()}`, key: settingKey, value: url as any, updatedAt: new Date() },
-    });
+    const settingJson = JSON.stringify(url);
+    const settingId = `setting_${settingKey}_${crypto.randomUUID()}`;
+    await prisma.$executeRaw`
+      INSERT INTO "SiteSetting" (id, key, value, "updatedAt")
+      VALUES (${settingId}, ${settingKey}, ${settingJson}::jsonb, NOW())
+      ON CONFLICT (key) DO UPDATE SET value = ${settingJson}::jsonb, "updatedAt" = NOW()
+    `;
 
     logAuditEvent({ action: 'UPLOAD', resourceType: 'BRAND', after: { assetType, url } });
 
@@ -201,13 +211,16 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const settings = await prisma.siteSetting.findMany({
-      where: { key: { in: BRAND_KEYS } },
-      select: { key: true, value: true },
-    });
+    const placeholders = BRAND_KEYS.map((_, i) => `$${i + 1}`).join(', ');
+    const settings = await prisma.$queryRawUnsafe<Array<{ key: string; value: string }>>(
+      `SELECT key, value::text FROM "SiteSetting" WHERE key IN (${placeholders})`,
+      ...BRAND_KEYS
+    );
 
     const map: Record<string, any> = {};
-    for (const s of settings) map[s.key] = s.value;
+    for (const s of settings) {
+      try { map[s.key] = JSON.parse(s.value); } catch { map[s.key] = s.value; }
+    }
 
     return NextResponse.json({
       success: true,

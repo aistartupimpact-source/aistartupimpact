@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   Search, X, Menu, Moon, Sun, Monitor,
   Home, Newspaper, BookOpen, Wrench, Flag, Building2, TrendingUp, Users, Star,
+  Briefcase, CalendarDays, Globe, Mail, Info, ChevronRight, Rocket, LogOut, User, Bookmark, LayoutDashboard,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import { useUser } from '@/components/UserProvider';
@@ -36,12 +37,22 @@ const mobileNav = [
 ];
 
 const mobileMenuNav = [
-  { label: 'Stories', href: '/stories' },
-  { label: 'Tools', href: '/tools' },
-  { label: 'Startups', href: '/startups' },
-  { label: 'Funding', href: '/funding' },
-  { label: 'India AI', href: '/india-ai' },
-  { label: 'About Us', href: '/about' },
+  { label: 'Home', href: '/', icon: Home },
+  { label: 'Founder Stories', href: '/stories', icon: BookOpen },
+  { label: 'AI Tools', href: '/tools', icon: Wrench },
+  { label: 'AI Startups', href: '/startups', icon: Building2 },
+  { label: 'AI Jobs', href: '/jobs', icon: Briefcase },
+  { label: 'Events', href: '/events', icon: CalendarDays },
+  { label: 'Funding', href: '/funding', icon: TrendingUp },
+  { label: 'India AI', href: '/india-ai', icon: Globe },
+];
+
+const mobileMenuSecondary = [
+  { label: 'Submit Your Startup', href: '/submit-startup', icon: Rocket },
+  { label: 'Submit AI Tool', href: '/submit-tool', icon: Wrench },
+  { label: 'Newsletter', href: '/newsletter', icon: Mail },
+  { label: 'About Us', href: '/about', icon: Info },
+  { label: 'Contact', href: '/contact', icon: Mail },
 ];
 
 export default function Navbar({ hasSession = false }: { hasSession?: boolean }) {
@@ -225,39 +236,63 @@ export default function Navbar({ hasSession = false }: { hasSession?: boolean })
         </div>
       </header>
 
-      {/* ─── Mobile Full-Screen Nav ─────────────────── */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-overlay bg-white dark:bg-gray-950 lg:hidden">
-          {/* Status Bar Accent */}
-          <div className="h-[3px] bg-brand w-full" />
-
+      {/* ─── Mobile Side Drawer ─────────────────── */}
+      <div
+        className={`fixed inset-0 z-overlay lg:hidden transition-opacity duration-300 ${mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        onClick={() => setMobileOpen(false)}
+      >
+        <div className="absolute inset-0 bg-black/40" />
+      </div>
+      <aside
+        className={`fixed top-0 right-0 bottom-0 z-overlay w-[78%] max-w-[320px] bg-white dark:bg-gray-950 lg:hidden transform transition-transform duration-300 ease-out ${mobileOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between px-5 h-[72px] border-b border-gray-100 dark:border-gray-800">
-            <Logo height={52} />
+          <div className="flex items-center justify-between px-4 h-14 border-b border-gray-100 dark:border-gray-800 shrink-0">
+            {showProfile && user ? (
+              <Link href="/profile" onClick={() => setMobileOpen(false)} className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden shrink-0">
+                  {user.avatar ? (
+                    <Image src={user.avatar} alt={user.name || 'User'} className="w-full h-full object-cover" width={32} height={32} sizes="32px" />
+                  ) : (
+                    <span className="text-xs font-bold text-gray-600 dark:text-gray-300">{(user.name || 'U').charAt(0)}</span>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-[13px] text-gray-900 dark:text-white truncate leading-tight">{user.name}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate leading-tight">{user.email}</p>
+                </div>
+              </Link>
+            ) : (
+              <span className="font-sora font-bold text-sm text-gray-900 dark:text-white">Menu</span>
+            )}
             <button
               onClick={() => setMobileOpen(false)}
               aria-label="Close menu"
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 active:scale-90 transition-transform"
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
-              <X className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
+              <X className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             </button>
           </div>
 
-          {/* Navigation Links */}
-          <nav className="px-4 pt-4 pb-6 overflow-y-auto max-h-[calc(100vh-56px)]">
-            <div className="space-y-1">
+          {/* Scrollable content */}
+          <nav className="flex-1 overflow-y-auto overscroll-contain py-2">
+            {/* Main Navigation */}
+            <div className="px-2">
               {mobileMenuNav.map((item) => {
-                const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+                const isActive = item.href === '/' ? pathname === '/' : pathname === item.href || pathname?.startsWith(item.href + '/');
                 return (
                   <Link
                     key={item.label}
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
-                    className={`flex items-center px-5 py-4 rounded-2xl text-[16px] font-jakarta font-semibold transition-all active:scale-[0.98] ${isActive
-                      ? 'bg-brand/10 text-brand'
-                      : 'text-gray-800 dark:text-gray-200 active:bg-gray-100 dark:active:bg-gray-800'
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-jakarta font-medium transition-colors ${isActive
+                      ? 'bg-brand/8 text-brand'
+                      : 'text-gray-700 dark:text-gray-300 active:bg-gray-100 dark:active:bg-gray-800'
                     }`}
                   >
+                    <item.icon className={`w-[18px] h-[18px] shrink-0 ${isActive ? 'text-brand' : 'text-gray-400 dark:text-gray-500'}`} />
                     {item.label}
                   </Link>
                 );
@@ -265,96 +300,85 @@ export default function Navbar({ hasSession = false }: { hasSession?: boolean })
             </div>
 
             {/* Divider */}
-            <div className="my-5 mx-5 border-t border-gray-100 dark:border-gray-800" />
+            <div className="my-2 mx-4 border-t border-gray-100 dark:border-gray-800" />
 
-            {/* User Section */}
-            <div className="space-y-2 px-1">
-              {showProfile ? (
-                user ? (
-                <>
-                  {/* User Info */}
-                  <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-900 rounded-xl">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden shrink-0">
-                      {user.avatar ? (
-                        <Image src={user.avatar} alt={user.name || 'User'} className="w-full h-full object-cover" width={40} height={40} sizes="40px" />
-                      ) : (
-                        <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">{(user.name || 'U').charAt(0)}</span>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-[14px] text-gray-900 dark:text-white truncate">{user.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
-                    </div>
-                  </div>
+            {/* Secondary links */}
+            <div className="px-2">
+              <p className="px-3 py-1.5 text-[10px] font-jakarta font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">More</p>
+              {mobileMenuSecondary.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-jakarta font-medium text-gray-600 dark:text-gray-400 active:bg-gray-100 dark:active:bg-gray-800 transition-colors"
+                >
+                  <item.icon className="w-[18px] h-[18px] shrink-0 text-gray-400 dark:text-gray-500" />
+                  {item.label}
+                </Link>
+              ))}
+            </div>
 
+            {/* User account links when signed in */}
+            {showProfile && user && (
+              <>
+                <div className="my-2 mx-4 border-t border-gray-100 dark:border-gray-800" />
+                <div className="px-2">
+                  <p className="px-3 py-1.5 text-[10px] font-jakarta font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Account</p>
                   <Link href="/profile" onClick={() => setMobileOpen(false)}
-                    className="block w-full px-4 py-3 text-[14px] font-medium text-gray-800 dark:text-gray-200 rounded-xl active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-jakarta font-medium text-gray-600 dark:text-gray-400 active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
+                    <User className="w-[18px] h-[18px] shrink-0 text-gray-400 dark:text-gray-500" />
                     Profile
                   </Link>
                   <Link href="/profile#saved" onClick={() => setMobileOpen(false)}
-                    className="block w-full px-4 py-3 text-[14px] font-medium text-gray-800 dark:text-gray-200 rounded-xl active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-jakarta font-medium text-gray-600 dark:text-gray-400 active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
+                    <Bookmark className="w-[18px] h-[18px] shrink-0 text-gray-400 dark:text-gray-500" />
                     Saved
                   </Link>
                   <Link href="/events/my-events" onClick={() => setMobileOpen(false)}
-                    className="block w-full px-4 py-3 text-[14px] font-medium text-gray-800 dark:text-gray-200 rounded-xl active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-jakarta font-medium text-gray-600 dark:text-gray-400 active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
+                    <CalendarDays className="w-[18px] h-[18px] shrink-0 text-gray-400 dark:text-gray-500" />
                     My Events
                   </Link>
-
-                  {/* Workspace links */}
-                  {(user.founderId || user.organizerId) && (
-                    <div className="border-t border-gray-100 dark:border-gray-800 pt-2 mt-1">
-                      {user.founderId && (
-                        <Link href="/founder/dashboard" onClick={() => setMobileOpen(false)}
-                          className="block w-full px-4 py-3 text-[14px] font-medium text-gray-800 dark:text-gray-200 rounded-xl active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
-                          Founder Dashboard
-                        </Link>
-                      )}
-                      {user.organizerId && (
-                        <Link href="/organizer" onClick={() => setMobileOpen(false)}
-                          className="block w-full px-4 py-3 text-[14px] font-medium text-gray-800 dark:text-gray-200 rounded-xl active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
-                          Organizer Dashboard
-                        </Link>
-                      )}
-                    </div>
+                  {user.founderId && (
+                    <Link href="/founder/dashboard" onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-jakarta font-medium text-gray-600 dark:text-gray-400 active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
+                      <LayoutDashboard className="w-[18px] h-[18px] shrink-0 text-gray-400 dark:text-gray-500" />
+                      Founder Dashboard
+                    </Link>
                   )}
-
-                  <div className="border-t border-gray-100 dark:border-gray-800 pt-2 mt-1">
-                    <button
-                      onClick={() => { handleLogout(); setMobileOpen(false); }}
-                      className="block w-full text-left px-4 py-3 text-[14px] font-medium text-gray-500 dark:text-gray-400 rounded-xl active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
-                      Sign out
-                    </button>
-                  </div>
-                </>
-                ) : (
-                  <div className="flex items-center gap-3 px-4 py-3">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
-                    <div className="space-y-2 flex-1">
-                      <div className="h-3 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-                      <div className="h-2 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-                    </div>
-                  </div>
-                )
-              ) : showSignIn ? (
-                <>
-                  {/* Sign In - Black */}
-                  <button
-                    onClick={() => { setMobileOpen(false); setSignInModalOpen(true); }}
-                    className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold text-[15px] font-jakarta active:scale-[0.98] transition-transform">
-                    Sign In
-                  </button>
-                </>
-              ) : null}
-
-              {/* Subscribe - Red */}
-              <Link href="/newsletter" onClick={() => setMobileOpen(false)}
-                className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl bg-brand text-white font-bold text-[15px] font-jakarta active:scale-[0.98] transition-transform">
-                Subscribe to Newsletter
-              </Link>
-            </div>
+                  {user.organizerId && (
+                    <Link href="/organizer" onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-jakarta font-medium text-gray-600 dark:text-gray-400 active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
+                      <LayoutDashboard className="w-[18px] h-[18px] shrink-0 text-gray-400 dark:text-gray-500" />
+                      Organizer Dashboard
+                    </Link>
+                  )}
+                </div>
+              </>
+            )}
           </nav>
+
+          {/* Footer actions — pinned at bottom */}
+          <div className="shrink-0 border-t border-gray-100 dark:border-gray-800 px-3 py-3 space-y-2">
+            {showProfile && user ? (
+              <button
+                onClick={() => { handleLogout(); setMobileOpen(false); }}
+                className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-[13px] font-jakarta font-medium text-gray-500 dark:text-gray-400 active:bg-gray-100 dark:active:bg-gray-800 transition-colors"
+              >
+                <LogOut className="w-[18px] h-[18px]" />
+                Sign out
+              </button>
+            ) : showSignIn ? (
+              <button
+                onClick={() => { setMobileOpen(false); setSignInModalOpen(true); }}
+                className="flex items-center justify-center w-full py-2.5 rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold text-[13px] font-jakarta active:scale-[0.98] transition-transform"
+              >
+                Sign In
+              </button>
+            ) : null}
+          </div>
         </div>
-      )}
+      </aside>
 
       {/* ─── Mobile Bottom Tab Bar ──────────────────── */}
       <nav className="fixed bottom-0 left-0 right-0 z-sticky bg-white/95 dark:bg-gray-950/95 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 lg:hidden pb-[env(safe-area-inset-bottom)]">

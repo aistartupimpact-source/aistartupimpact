@@ -239,16 +239,20 @@ export default function NewToolPage() {
         socialLinks: socialLinks.filter(l => l.url.trim()).length > 0 ? socialLinks.filter(l => l.url.trim()) : undefined,
       });
 
-      if (result.success) {
-        // Save tags, pros/cons if any
-        const promises: Promise<any>[] = [];
-        if (selectedTagIds.length > 0 && result.toolId) {
-          promises.push(updateToolTagsAction(result.toolId, selectedTagIds));
+      if (result.success && result.toolId) {
+        // Save tags, pros/cons
+        const errors: string[] = [];
+        if (selectedTagIds.length > 0) {
+          const tagResult = await updateToolTagsAction(result.toolId, selectedTagIds);
+          if (tagResult && !tagResult.success && tagResult.error) errors.push('Tags: ' + tagResult.error);
         }
-        if ((pros.length > 0 || cons.length > 0) && result.toolId) {
-          promises.push(updateToolProsConsAction(result.toolId, { pros, cons }));
+        if (pros.length > 0 || cons.length > 0) {
+          const pcResult = await updateToolProsConsAction(result.toolId, { pros, cons });
+          if (pcResult && !pcResult.success && pcResult.error) errors.push('Pros/Cons: ' + pcResult.error);
         }
-        if (promises.length > 0) await Promise.all(promises);
+        if (errors.length > 0) {
+          alert('Tool created but some data failed:\n' + errors.join('\n'));
+        }
         localStorage.removeItem('draft_admin_new_tool');
         router.push('/tools-dir');
         router.refresh();

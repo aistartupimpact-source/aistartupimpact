@@ -28,13 +28,16 @@ const BRAND_KEYS = [
 
 export const getBrandConfig = cache(async (): Promise<BrandConfig> => {
   try {
-    const settings = await prisma.siteSetting.findMany({
-      where: { key: { in: BRAND_KEYS } },
-      select: { key: true, value: true },
-    });
+    const placeholders = BRAND_KEYS.map((_, i) => `$${i + 1}`).join(', ');
+    const settings = await prisma.$queryRawUnsafe<Array<{ key: string; value: string }>>(
+      `SELECT key, value::text FROM "SiteSetting" WHERE key IN (${placeholders})`,
+      ...BRAND_KEYS
+    );
 
     const map: Record<string, any> = {};
-    for (const s of settings) map[s.key] = s.value;
+    for (const s of settings) {
+      try { map[s.key] = JSON.parse(s.value); } catch { map[s.key] = s.value; }
+    }
 
     return {
       logoLight: map.brand_logoLight || null,
@@ -52,7 +55,8 @@ export const getBrandConfig = cache(async (): Promise<BrandConfig> => {
       customDisplayFontName: (map.brand_customDisplayFontName as string) || null,
       customBodyFontName: (map.brand_customBodyFontName as string) || null,
     };
-  } catch {
+  } catch (e) {
+    console.error('[brand.ts] getBrandConfig error:', e);
     return {
       logoLight: null, logoDark: null, favicon: null, ogImage: null,
       brandColor: "#FF3131", brandSecondary: "#1B3A5C", brandTertiary: "#F59E0B",

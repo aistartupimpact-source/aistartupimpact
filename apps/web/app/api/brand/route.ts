@@ -14,13 +14,16 @@ const BRAND_KEYS = [
 
 export async function GET() {
   try {
-    const settings = await prisma.siteSetting.findMany({
-      where: { key: { in: BRAND_KEYS } },
-      select: { key: true, value: true },
-    });
+    const placeholders = BRAND_KEYS.map((_, i) => `$${i + 1}`).join(', ');
+    const settings = await prisma.$queryRawUnsafe<Array<{ key: string; value: string }>>(
+      `SELECT key, value::text FROM "SiteSetting" WHERE key IN (${placeholders})`,
+      ...BRAND_KEYS
+    );
 
     const map: Record<string, any> = {};
-    for (const s of settings) map[s.key] = s.value;
+    for (const s of settings) {
+      try { map[s.key] = JSON.parse(s.value); } catch { map[s.key] = s.value; }
+    }
 
     return NextResponse.json({
       logoLight: map.brand_logoLight || null,
