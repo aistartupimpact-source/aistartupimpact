@@ -251,29 +251,34 @@ export default async function ToolDetailPage(props: { params: Promise<{ slug: st
             </span>
           )}
         </div>
-        <div className="flex gap-3 mt-4">
+        <div className="flex items-center gap-2 sm:gap-3 mt-4">
           <ToolCTAButton
             toolId={tool.id}
             toolName={tool.name}
             source="TOOL_DETAIL"
             variant="primary"
-            className="text-sm"
+            className="text-xs sm:text-sm !px-3 sm:!px-4 h-9 sm:h-auto"
           >
             Visit Site
           </ToolCTAButton>
           {tool.pricingUrl && (
-            <a href={tool.pricingUrl} target="_blank" rel="noopener noreferrer" className="btn-outline text-sm">
-              Pricing <ExternalLink className="w-3.5 h-3.5 ml-1" />
+            <a href={tool.pricingUrl} target="_blank" rel="noopener noreferrer" className="btn-outline text-xs sm:text-sm !px-2.5 sm:!px-4 !py-0 sm:!py-2.5 h-9 sm:h-auto !min-h-0 sm:!min-h-[44px] !rounded-lg sm:!rounded-xl">
+              Pricing <ExternalLink className="w-3 sm:w-3.5 h-3 sm:h-3.5 ml-0.5 sm:ml-1" />
             </a>
           )}
-          <BookmarkButton
-            type="tool"
-            itemId={tool.slug}
-            itemName={tool.name}
-            variant="button"
-            size="md"
-          />
-          <UpvoteButton toolSlug={tool.slug} initialCount={tool.upvoteCount || 0} size="md" />
+          {/* Mobile: icon-only, Desktop: full button */}
+          <span className="sm:hidden">
+            <BookmarkButton type="tool" itemId={tool.slug} itemName={tool.name} variant="icon" size="md" />
+          </span>
+          <span className="hidden sm:inline-flex">
+            <BookmarkButton type="tool" itemId={tool.slug} itemName={tool.name} variant="button" size="md" />
+          </span>
+          <span className="sm:hidden">
+            <UpvoteButton toolSlug={tool.slug} initialCount={tool.upvoteCount || 0} size="sm" />
+          </span>
+          <span className="hidden sm:inline-flex">
+            <UpvoteButton toolSlug={tool.slug} initialCount={tool.upvoteCount || 0} size="md" />
+          </span>
         </div>
         {(tool.twitterUrl || tool.linkedinUrl || (Array.isArray(tool.socialLinks) && tool.socialLinks.length > 0)) && (
           <div className="flex items-center gap-2 mt-3 flex-wrap">
@@ -405,7 +410,7 @@ export default async function ToolDetailPage(props: { params: Promise<{ slug: st
               )}
               {/* Website link hidden — redundant with Visit Site button above */}
               {tool.startingPrice && (
-                <div><span className="text-xs text-gray-400 font-jakarta block">Starting Price</span><span className="font-sora font-bold text-sm text-navy dark:text-white">${(tool.startingPrice / 8300).toFixed(0)}/mo</span></div>
+                <div><span className="text-xs text-gray-400 font-jakarta block">Starting Price</span><span className="font-sora font-bold text-sm text-navy dark:text-white">${(tool.startingPrice / 100).toFixed(tool.startingPrice % 100 === 0 ? 0 : 2)}/mo</span></div>
               )}
             </div>
           </div>

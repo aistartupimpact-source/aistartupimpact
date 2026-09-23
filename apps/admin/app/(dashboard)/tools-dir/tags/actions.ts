@@ -3,6 +3,7 @@
 import { neon } from '@neondatabase/serverless';
 import { revalidatePath } from 'next/cache';
 import { requireActionAuth } from '@/lib/api-auth';
+import { invalidateToolCache, invalidateTaxonomyCache, invalidateToolTagsCache } from '@/lib/cache-invalidate';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -60,8 +61,9 @@ export async function getToolTagsAction(toolId: string) {
 // ─── Tool Tag Assignment ────────────────────────────────────────────────────
 
 export async function updateToolTagsAction(toolId: string, tagIds: string[]) {
+  console.log('[updateToolTagsAction] toolId:', toolId, 'tagIds:', tagIds);
   const { error } = await requireActionAuth();
-  if (error) return { success: false, error };
+  if (error) { console.log('[updateToolTagsAction] auth error:', error); return { success: false, error }; }
   try {
     // Cap at 30 tags per tool
     const cappedTagIds = tagIds.slice(0, 30);
@@ -110,6 +112,9 @@ export async function updateToolTagsAction(toolId: string, tagIds: string[]) {
     }
 
     revalidatePath('/tools-dir');
+    invalidateToolCache();
+    invalidateTaxonomyCache();
+    invalidateToolTagsCache(toolId);
     return { success: true, count: cappedTagIds.length };
   } catch (error: any) {
     console.error('updateToolTagsAction error:', error);

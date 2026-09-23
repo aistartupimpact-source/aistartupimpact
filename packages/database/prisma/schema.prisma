@@ -1375,6 +1375,7 @@ model ToolUseCase {
   id     String @id
   toolId String
   text   String
+  type   String @default("feature")
   AiTool AiTool @relation(fields: [toolId], references: [id], onDelete: Cascade)
 
   @@index([toolId])

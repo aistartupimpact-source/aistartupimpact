@@ -232,7 +232,7 @@ export function generateToolFAQs(tool: ToolData): FAQ[] {
   
   const pricingText = pricingLabels[tool.pricingModel] || 'available';
   const priceDetail = tool.startingPrice 
-    ? ` with plans starting at $${(tool.startingPrice / 8300).toFixed(0)}/month`
+    ? ` with plans starting at $${(tool.startingPrice / 100).toFixed(tool.startingPrice % 100 === 0 ? 0 : 2)}/month`
     : '';
   
   faqs.push({
