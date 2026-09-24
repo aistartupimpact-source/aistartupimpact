@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Upload, Loader2, Save, Plus, X } from 'lucide-react';
 import { createToolAction, getCategoriesAction, updateToolProsConsAction } from '../actions';
-import { uploadLogoAction } from '../../media/actions';
 import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
 import CategoryCascadeSelect from '@/components/shared/CategoryCascadeSelect';
 import ToolTagSelector from '@/components/shared/ToolTagSelector';
@@ -32,6 +31,7 @@ export default function NewToolPage() {
   const [logoUploading, setLogoUploading] = useState(false);
   const [screenshotUploading, setScreenshotUploading] = useState(false);
   const [logoPreviewError, setLogoPreviewError] = useState(false);
+  const [logoUploadError, setLogoUploadError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [screenshots, setScreenshots] = useState<string[]>([]);
@@ -129,22 +129,32 @@ export default function NewToolPage() {
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setLogoUploadError(`File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max 5MB.`);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
     setLogoUploading(true);
     setLogoPreviewError(false);
-    
+    setLogoUploadError(null);
+
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const result = await uploadLogoAction(fd);
-      
-      if (result.success && result.url) {
-        setFormData(prev => ({ ...prev, logoUrl: result.url! }));
+      const res = await fetch('/api/media/upload', { method: 'POST', body: fd });
+      const result = await res.json();
+
+      if (res.ok && result.success && result.url) {
+        setFormData(prev => ({ ...prev, logoUrl: result.url }));
+        setLogoUploadError(null);
       } else {
-        alert('Upload failed: ' + (result.error || 'Unknown error'));
+        setLogoUploadError(result.error || `Upload failed (${res.status}). Please try again.`);
       }
     } catch (err: any) {
-      alert('Upload error: ' + err.message);
+      setLogoUploadError('Network error: ' + (err?.message || 'Check your connection and try again.'));
     } finally {
       setLogoUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -166,10 +176,11 @@ export default function NewToolPage() {
       try {
         const fd = new FormData();
         fd.append('file', file);
-        const result = await uploadLogoAction(fd);
-        
-        if (result.success && result.url) {
-          setScreenshots(prev => [...prev, result.url!]);
+        const res = await fetch('/api/media/upload', { method: 'POST', body: fd });
+        const result = await res.json();
+
+        if (res.ok && result.success && result.url) {
+          setScreenshots(prev => [...prev, result.url]);
         }
       } catch (err: any) {
         console.error('Screenshot upload error:', err);
@@ -421,6 +432,9 @@ export default function NewToolPage() {
                 placeholder="https://... or upload above"
               />
             </div>
+            {logoUploadError && (
+              <p className="mt-1.5 text-xs text-red-500 font-jakarta">{logoUploadError}</p>
+            )}
             {formData.logoUrl && !logoPreviewError && (
               <div className="mt-2 flex items-center gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
