@@ -291,10 +291,7 @@ export default function EditToolPage() {
         useCases: useCasesArray,
       });
       
-      console.log('[EditTool] updateToolAction result:', result);
       if (result.success) {
-        // Save tags and pros/cons separately
-        console.log('[EditTool] saving tags:', selectedTagIds);
         const [tagResult, prosConsResult] = await Promise.all([
           updateToolTagsAction(toolId, selectedTagIds),
           updateToolProsConsAction(toolId, { pros, cons }),

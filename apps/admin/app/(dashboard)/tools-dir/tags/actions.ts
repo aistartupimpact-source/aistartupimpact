@@ -61,9 +61,8 @@ export async function getToolTagsAction(toolId: string) {
 // ─── Tool Tag Assignment ────────────────────────────────────────────────────
 
 export async function updateToolTagsAction(toolId: string, tagIds: string[]) {
-  console.log('[updateToolTagsAction] toolId:', toolId, 'tagIds:', tagIds);
   const { error } = await requireActionAuth();
-  if (error) { console.log('[updateToolTagsAction] auth error:', error); return { success: false, error }; }
+  if (error) return { success: false, error };
   try {
     // Cap at 30 tags per tool
     const cappedTagIds = tagIds.slice(0, 30);
