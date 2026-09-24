@@ -256,7 +256,7 @@ export async function createToolAction(data: {
     if (data.features && data.features.length > 0) {
       for (const text of data.features) {
         if (text.trim()) {
-          await sql`INSERT INTO "ToolUseCase" (id, "toolId", text) VALUES (gen_random_uuid(), ${toolId}, ${text.trim()})`;
+          await sql`INSERT INTO "ToolUseCase" (id, "toolId", text, type) VALUES (gen_random_uuid(), ${toolId}, ${text.trim()}, 'feature')`;
         }
       }
     }
@@ -265,7 +265,7 @@ export async function createToolAction(data: {
     if (data.useCases && data.useCases.length > 0) {
       for (const text of data.useCases) {
         if (text.trim()) {
-          await sql`INSERT INTO "ToolUseCase" (id, "toolId", text) VALUES (gen_random_uuid(), ${toolId}, ${text.trim()})`;
+          await sql`INSERT INTO "ToolUseCase" (id, "toolId", text, type) VALUES (gen_random_uuid(), ${toolId}, ${text.trim()}, 'use_case')`;
         }
       }
     }
@@ -382,15 +382,14 @@ export async function updateToolAction(id: string, data: {
       }
     }
     
-    // Update features/useCases (stored in ToolUseCase table)
+    // Update features/useCases (stored in ToolUseCase table with type column)
     if (data.features !== undefined || data.useCases !== undefined) {
       await sql`DELETE FROM "ToolUseCase" WHERE "toolId" = ${id}`;
-      const allEntries = [
-        ...(data.features || []).filter(t => t.trim()),
-        ...(data.useCases || []).filter(t => t.trim()),
-      ];
-      for (const text of allEntries) {
-        await sql`INSERT INTO "ToolUseCase" (id, "toolId", text) VALUES (gen_random_uuid(), ${id}, ${text.trim()})`;
+      for (const text of (data.features || []).filter(t => t.trim())) {
+        await sql`INSERT INTO "ToolUseCase" (id, "toolId", text, type) VALUES (gen_random_uuid(), ${id}, ${text.trim()}, 'feature')`;
+      }
+      for (const text of (data.useCases || []).filter(t => t.trim())) {
+        await sql`INSERT INTO "ToolUseCase" (id, "toolId", text, type) VALUES (gen_random_uuid(), ${id}, ${text.trim()}, 'use_case')`;
       }
     }
 
@@ -414,12 +413,14 @@ export async function updateToolAction(id: string, data: {
 
 export async function getToolUseCasesAction(toolId: string) {
   const { error } = await requireActionAuth();
-  if (error) return [];
+  if (error) return { features: [], useCases: [] };
   try {
-    const rows = await sql`SELECT id, text FROM "ToolUseCase" WHERE "toolId" = ${toolId} ORDER BY id`;
-    return rows as Array<{ id: string; text: string }>;
+    const rows = await sql`SELECT id, text, type FROM "ToolUseCase" WHERE "toolId" = ${toolId} ORDER BY id`;
+    const features = (rows as any[]).filter(r => r.type === 'feature').map(r => ({ id: r.id, text: r.text }));
+    const useCases = (rows as any[]).filter(r => r.type !== 'feature').map(r => ({ id: r.id, text: r.text }));
+    return { features, useCases };
   } catch {
-    return [];
+    return { features: [], useCases: [] };
   }
 }
 

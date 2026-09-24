@@ -102,16 +102,13 @@ export default function UpvoteButton({ toolSlug, initialCount = 0, size = 'sm' }
         <button
           onClick={handleUpvote}
           disabled={loading}
-          className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border transition-all ${
+          className={`inline-flex items-center justify-center w-9 h-9 rounded-lg border transition-all ${
             upvoted
               ? 'bg-brand/10 border-brand/30 text-brand'
               : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-brand/30 hover:text-brand'
           } ${loading ? 'opacity-60' : ''}`}
         >
-          <ThumbsUp className={`w-3 h-3 ${upvoted ? 'fill-current' : ''}`} />
-          {count >= THRESHOLD && (
-            <span className="font-bold text-xs">{count}</span>
-          )}
+          <ThumbsUp className={`w-4 h-4 ${upvoted ? 'fill-current' : ''}`} />
         </button>
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover/upvote:flex flex-col items-center z-dropdown">
           <div className="w-2.5 h-2.5 bg-black dark:bg-gray-800 rotate-45 -mb-1.5" />

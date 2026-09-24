@@ -123,16 +123,18 @@ export default function EditToolPage() {
           getToolFAQsAction(toolId).catch(() => []),
           getToolTagsAction(toolId).catch(() => []),
           getToolProsConsAction(toolId).catch(() => ({ pros: [], cons: [] })),
-          getToolUseCasesAction(toolId).catch(() => []),
+          getToolUseCasesAction(toolId).catch(() => ({ features: [], useCases: [] })),
         ]);
         setFaqs(Array.isArray(toolFaqs) ? toolFaqs as FAQ[] : []);
         setSelectedTagIds(Array.isArray(toolTags) ? (toolTags as any[]).map((t: any) => t.id) : []);
         const pc = prosConsData as any;
         setPros(Array.isArray(pc?.pros) ? pc.pros.map((p: any) => p.text) : []);
         setCons(Array.isArray(pc?.cons) ? pc.cons.map((c: any) => c.text) : []);
-        const ucTexts = Array.isArray(toolUseCases) ? (toolUseCases as any[]).map((uc: any) => uc.text) : [];
-        setFeatures(ucTexts.join('\n'));
-        setUseCases('');
+        const uc = toolUseCases as any;
+        const featureTexts = Array.isArray(uc?.features) ? uc.features.map((f: any) => f.text) : [];
+        const useCaseTexts = Array.isArray(uc?.useCases) ? uc.useCases.map((u: any) => u.text) : [];
+        setFeatures(featureTexts.join('\n'));
+        setUseCases(useCaseTexts.join('\n'));
       } catch (faqError) {
         console.error('Error loading FAQs/Tags:', faqError);
         setFaqs([]);
@@ -290,7 +292,6 @@ export default function EditToolPage() {
       });
       
       if (result.success) {
-        // Save tags and pros/cons separately
         const [tagResult, prosConsResult] = await Promise.all([
           updateToolTagsAction(toolId, selectedTagIds),
           updateToolProsConsAction(toolId, { pros, cons }),

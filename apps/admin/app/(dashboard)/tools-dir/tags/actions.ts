@@ -3,6 +3,7 @@
 import { neon } from '@neondatabase/serverless';
 import { revalidatePath } from 'next/cache';
 import { requireActionAuth } from '@/lib/api-auth';
+import { invalidateToolCache, invalidateTaxonomyCache, invalidateToolTagsCache } from '@/lib/cache-invalidate';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -110,6 +111,9 @@ export async function updateToolTagsAction(toolId: string, tagIds: string[]) {
     }
 
     revalidatePath('/tools-dir');
+    invalidateToolCache();
+    invalidateTaxonomyCache();
+    invalidateToolTagsCache(toolId);
     return { success: true, count: cappedTagIds.length };
   } catch (error: any) {
     console.error('updateToolTagsAction error:', error);

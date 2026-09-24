@@ -7,7 +7,8 @@ on:
     branches: [main, develop]
 
 env:
-  NODE_VERSION: "22"
+  NODE_VERSION: "20"
+  NPM_VERSION: "11.3.0"
   # Dummy values for build (Prisma generate needs DATABASE_URL syntax but won't connect)
   DATABASE_URL: "postgresql://user:pass@localhost:5432/db"
   DIRECT_URL: "postgresql://user:pass@localhost:5432/db"
@@ -55,6 +56,9 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
+      - name: Install correct npm version
+        run: npm install -g npm@${{ env.NPM_VERSION }}
+
       - name: Install dependencies
         run: npm ci
 
@@ -75,6 +79,9 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
+      - name: Install correct npm version
+        run: npm install -g npm@${{ env.NPM_VERSION }}
+
       - name: Install dependencies
         run: npm ci
 
@@ -94,6 +101,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
+
+      - name: Install correct npm version
+        run: npm install -g npm@${{ env.NPM_VERSION }}
 
       - name: Install dependencies
         run: npm ci
@@ -155,6 +165,9 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
+      - name: Install correct npm version
+        run: npm install -g npm@${{ env.NPM_VERSION }}
+
       - name: Install dependencies
         run: npm ci
 
@@ -191,6 +204,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
+
+      - name: Install correct npm version
+        run: npm install -g npm@${{ env.NPM_VERSION }}
 
       - name: Install dependencies
         run: npm ci

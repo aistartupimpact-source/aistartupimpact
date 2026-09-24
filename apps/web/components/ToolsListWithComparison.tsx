@@ -737,6 +737,14 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
           {visibleTools.map((tool) => {
             const isSelected = !!selectedTools.find((t) => t.slug === tool.slug);
             const iconUrl = tool.logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(tool.name)}&background=random&color=fff&size=150`;
+            const listTagIds = toolTagMap[tool.id] || [];
+            const listTagNames = listTagIds.slice(0, 2).map(tid => {
+              for (const g of tagGroups) {
+                const found = g.tags.find((t: any) => t.id === tid);
+                if (found) return found.name;
+              }
+              return null;
+            }).filter(Boolean);
 
             return (
               <Link
@@ -761,6 +769,15 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                   <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta truncate mt-0.5">
                     {tool.tagline}
                   </p>
+                  {listTagNames.length > 0 && (
+                    <div className="hidden sm:flex items-center gap-1 mt-1">
+                      {listTagNames.map((name, idx) => (
+                        <span key={idx} className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-jakarta">
+                          {name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Rating */}

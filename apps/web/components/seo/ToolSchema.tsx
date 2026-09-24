@@ -82,7 +82,7 @@ export function ToolSchema({ tool }: ToolSchemaProps) {
         "operatingSystem": tool.hasMobileApp ? "Web, iOS, Android" : "Web",
         "offers": tool.startingPrice ? {
           "@type": "Offer",
-          "price": (tool.startingPrice / 8300).toFixed(2),
+          "price": (tool.startingPrice / 100).toFixed(2),
           "priceCurrency": "USD",
           "availability": "https://schema.org/InStock"
         } : {
