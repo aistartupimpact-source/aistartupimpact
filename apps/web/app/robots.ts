@@ -50,6 +50,9 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
             `${domain}/india-ai/sitemap.xml`,
             `${domain}/opinions/sitemap.xml`,
             `${domain}/authors/sitemap.xml`,
+            `${domain}/funding/sitemap.xml`,
+            `${domain}/tools/compare/sitemap.xml`,
+            `${domain}/tools/alternatives/sitemap.xml`,
           ],
         }
       : {}),
