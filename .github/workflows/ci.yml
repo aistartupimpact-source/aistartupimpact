@@ -7,7 +7,7 @@ on:
     branches: [main, develop]
 
 env:
-  NODE_VERSION: "22"
+  NODE_VERSION: "20"
   # Dummy values for build (Prisma generate needs DATABASE_URL syntax but won't connect)
   DATABASE_URL: "postgresql://user:pass@localhost:5432/db"
   DIRECT_URL: "postgresql://user:pass@localhost:5432/db"
