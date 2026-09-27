@@ -24,6 +24,13 @@ interface FundingRound {
 
 const FREE_ROWS_LIMIT = 5;
 
+// Chart tooltips use a fixed dark surface so the label stays readable in light and dark mode
+const TOOLTIP_STYLE = {
+  contentStyle: { backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.2)' },
+  labelStyle: { color: '#f9fafb', fontWeight: 600, marginBottom: 2 },
+  itemStyle: { color: '#e5e7eb' },
+};
+
 export default function FundingDashboard({ data: rawData }: { data: FundingRound[] }) {
   const { user, signIn } = useUser();
   const data = useMemo(() => {
@@ -152,21 +159,21 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
     
     // Hot: Large deals (>$100M) announced in last 60 days
     if (amount >= 100e6 && daysAgo <= 60) {
-      return { label: 'Hot', color: 'text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400' };
+      return { label: 'Hot', color: 'text-red-600 dark:text-red-400' };
     }
     
     // Rising: Medium-large deals ($10M-$100M) in last 90 days
     if (amount >= 10e6 && amount < 100e6 && daysAgo <= 90) {
-      return { label: 'Rising', color: 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400' };
+      return { label: 'Rising', color: 'text-green-600 dark:text-green-400' };
     }
     
     // New: Any deal in last 30 days
     if (daysAgo <= 30) {
-      return { label: 'New', color: 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400' };
+      return { label: 'New', color: 'text-blue-600 dark:text-blue-400' };
     }
     
     // Watch: Everything else
-    return { label: 'Watch', color: 'text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-400' };
+    return { label: 'Watch', color: 'text-gray-500 dark:text-gray-400' };
   };
 
   const filteredData = useMemo(() => {
@@ -375,20 +382,18 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
 
       {/* Hero CTA Banner */}
       <div className="card p-4 sm:p-8 bg-gradient-to-br from-brand-50 via-purple-50 to-pink-50 dark:from-brand-900/20 dark:via-purple-900/20 dark:to-pink-900/20 border-2 border-brand/20">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-6">
-          <div className="flex-1">
-            <h2 className="font-sora font-extrabold text-base sm:text-3xl mb-1 sm:mb-2 text-navy dark:text-white">
-              AI Startups Funding Tracker
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-lg">
-              Complete analysis of {data.length} funding rounds • Sector breakdowns • Investor profiles • City distribution
-            </p>
-          </div>
+        <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-center md:gap-x-6 md:gap-y-2">
+          <h2 className="font-sora font-extrabold text-lg sm:text-2xl text-navy dark:text-white md:col-start-1 md:row-start-1">
+            Free AI Funding Report
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-lg leading-relaxed md:col-start-1 md:row-start-2">
+            Complete analysis of {data.length} funding rounds • Sector breakdowns • Investor profiles • City distribution
+          </p>
           <button
             onClick={handleDownloadReport}
-            className="flex items-center gap-2 px-4 py-2.5 sm:px-8 sm:py-4 bg-brand text-white rounded-lg sm:rounded-xl hover:bg-brand-600 transition-all shadow-lg hover:shadow-xl font-semibold text-xs sm:text-lg whitespace-nowrap"
+            className="btn-brand gap-2 whitespace-nowrap w-full md:w-auto mt-1 md:mt-0 md:col-start-2 md:row-start-1"
           >
-            <Download className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
+            <Download className="w-4 h-4" />
             Download Free PDF
           </button>
         </div>
@@ -398,14 +403,14 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         {/* Total Capital Raised */}
         <div className="card p-3 sm:p-6 bg-gradient-to-br from-brand-50 to-white dark:from-brand-900/20 dark:to-gray-900">
-          <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-1 sm:mb-3">
+          <div className="text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-1 sm:mb-3">
             Total Capital Raised
           </div>
           <div className="font-sora font-extrabold text-lg sm:text-4xl text-navy dark:text-white mb-0.5 sm:mb-2">
             {totalDisplay}+
           </div>
           {yoyGrowth && (
-            <div className={`text-[10px] sm:text-sm font-semibold ${Number(yoyGrowth) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`text-xs sm:text-sm font-semibold ${Number(yoyGrowth) > 0 ? 'text-green-600' : 'text-red-600'}`}>
               {Number(yoyGrowth) > 0 ? '↑' : '↓'} {Math.abs(Number(yoyGrowth))}% vs {new Date().getFullYear() - 1}
             </div>
           )}
@@ -413,19 +418,19 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
 
         {/* Total Deals */}
         <div className="card p-3 sm:p-6">
-          <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-1 sm:mb-3">
+          <div className="text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-1 sm:mb-3">
             AI-only deals tracked
           </div>
           <div className="font-sora font-extrabold text-lg sm:text-4xl text-navy dark:text-white mb-0.5 sm:mb-2">
             {data.length}
           </div>
           {dealCountGrowth && (
-            <div className={`text-[10px] sm:text-sm font-semibold ${Number(dealCountGrowth) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`text-xs sm:text-sm font-semibold ${Number(dealCountGrowth) > 0 ? 'text-green-600' : 'text-red-600'}`}>
               {Number(dealCountGrowth) > 0 ? '↑' : '↓'} {Math.abs(Number(dealCountGrowth))}% YoY
             </div>
           )}
           {!dealCountGrowth && (
-            <div className="text-[10px] sm:text-sm text-gray-500">
+            <div className="text-xs sm:text-sm text-gray-500">
               <a href="/submit-tool" className="text-brand hover:underline font-medium">Submit yours →</a>
             </div>
           )}
@@ -434,13 +439,13 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
         {/* Largest Single Round */}
         {largestRound && (
           <div className="card p-3 sm:p-6 bg-gradient-to-br from-green-50 to-white dark:from-green-900/20 dark:to-gray-900">
-            <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-1 sm:mb-3">
+            <div className="text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-1 sm:mb-3">
               Largest Round
             </div>
             <div className="font-sora font-extrabold text-lg sm:text-4xl text-navy dark:text-white mb-0.5 sm:mb-2">
               {largestRound.amount}
             </div>
-            <div className="text-[10px] sm:text-sm text-gray-600 dark:text-gray-400 truncate">
+            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
               {largestRound.startup} · {largestRound.date}
             </div>
           </div>
@@ -448,13 +453,13 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
 
         {/* YTD Period */}
         <div className="card p-3 sm:p-6">
-          <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-1 sm:mb-3">
+          <div className="text-xs uppercase tracking-wide text-gray-500 font-jakarta font-semibold mb-1 sm:mb-3">
             {ytdStats.label}
           </div>
           <div className="font-sora font-extrabold text-lg sm:text-4xl text-navy dark:text-white mb-0.5 sm:mb-2">
             {ytdStats.display}+
           </div>
-          <div className="text-[10px] sm:text-sm text-gray-500">
+          <div className="text-xs sm:text-sm text-gray-500">
             {ytdStats.deals} deals · Updated daily
           </div>
         </div>
@@ -474,11 +479,11 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
               <div key={sector.name}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">{sector.name}</span>
-                  <span className="text-[10px] sm:text-xs text-gray-500">{sector.count} deals • ${(sector.amount / 1e6).toFixed(1)}M</span>
+                  <span className="text-xs text-gray-500">{sector.count} deals • ${(sector.amount / 1e6).toFixed(1)}M</span>
                 </div>
                 <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 sm:h-2.5">
                   <div
-                    className="bg-gradient-to-r from-brand to-purple-500 h-2 sm:h-2.5 rounded-full transition-all duration-500"
+                    className="bg-brand h-2 sm:h-2.5 rounded-full transition-all duration-500"
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
@@ -507,7 +512,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
                     <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-brand" />
                     <span className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">{city.name}</span>
                   </div>
-                  <span className="text-[10px] sm:text-xs text-gray-500">{city.count} startups • ${(city.amount / 1e6).toFixed(1)}M</span>
+                  <span className="text-xs text-gray-500">{city.count} startups • ${(city.amount / 1e6).toFixed(1)}M</span>
                 </div>
                 <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 sm:h-2">
                   <div
@@ -529,11 +534,11 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 10, right: 5, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" opacity={0.2} />
-                <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: '#6b7280' }} dy={10} />
-                <YAxis tickLine={false} axisLine={false} tickFormatter={formatChartValue} width={50} tick={{ fontSize: 10, fill: '#6b7280' }} />
+                <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} dy={10} />
+                <YAxis tickLine={false} axisLine={false} tickFormatter={formatChartValue} width={50} tick={{ fontSize: 12, fill: '#6b7280' }} />
                 <Tooltip
                   cursor={{ fill: 'rgba(79, 70, 229, 0.05)' }}
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  {...TOOLTIP_STYLE}
                   formatter={(value: any) => [`$${Number(value).toLocaleString()}M`, 'Amount']}
                 />
                 <Bar dataKey="amount" fill="#4f46e5" radius={[4, 4, 0, 0]} maxBarSize={50} />
@@ -542,11 +547,11 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
           </div>
         </div>
 
-        <div className="card p-4 sm:p-6">
-          <h3 className="section-title mb-3 sm:mb-6">Dist. by Stage</h3>
-          <div className="h-44 sm:h-64 w-full flex flex-col items-center justify-center">
+        <div className="card p-4 sm:p-6 lg:self-start">
+          <h3 className="section-title mb-3 sm:mb-6 lg:mb-2">Dist. by Stage</h3>
+          <div className="h-60 sm:h-72 lg:h-60 w-full flex flex-col items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
+              <PieChart margin={{ top: 20, right: 24, bottom: 20, left: 24 }}>
                 <Pie 
                   data={stageData} 
                   cx="50%" 
@@ -554,16 +559,17 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
                   innerRadius={50} 
                   outerRadius={70} 
                   paddingAngle={4} 
+                  stroke="none"
                   dataKey="value"
                   label={({ name, percent }) => percent ? `${(percent * 100).toFixed(0)}%` : ''}
                   labelLine={false}
                 >
                   {stageData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} stroke="none" />
                   ))}
                 </Pie>
                 <Tooltip 
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
+                  {...TOOLTIP_STYLE} 
                   formatter={(value: any, name: any, props: any) => {
                     const total = stageData.reduce((sum, entry) => sum + entry.value, 0);
                     const percent = ((value / total) * 100).toFixed(1);
@@ -573,12 +579,12 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex flex-wrap gap-x-3 sm:gap-x-4 gap-y-1.5 sm:gap-y-2 justify-center mt-2 sm:mt-4">
+          <div className="flex flex-wrap gap-x-3 sm:gap-x-4 gap-y-1.5 sm:gap-y-2 justify-center mt-2 sm:mt-4 lg:mt-1">
             {stageData.map((entry, index) => {
               const total = stageData.reduce((sum, e) => sum + e.value, 0);
               const percent = ((entry.value / total) * 100).toFixed(0);
               return (
-                <div key={entry.name} className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-gray-500 font-jakarta whitespace-nowrap">
+                <div key={entry.name} className="flex items-center gap-1 sm:gap-1.5 text-xs text-gray-500 font-jakarta whitespace-nowrap">
                   <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[index % PIE_COLORS.length] }} />
                   {entry.name} <span className="text-gray-400 font-medium">({entry.value} • {percent}%)</span>
                 </div>
@@ -609,34 +615,32 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
           )}
 
           {/* Title & Filters */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <h3 className="font-sora font-bold text-sm sm:text-lg whitespace-nowrap flex-shrink-0">All Rounds</h3>
-
-            <div className="hidden sm:block w-px h-6 bg-gray-300 dark:bg-gray-600 flex-shrink-0"></div>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <h3 className="font-sora font-bold text-sm sm:text-lg whitespace-nowrap flex-shrink-0 sm:mr-1">All Rounds</h3>
 
             <div className="flex flex-wrap gap-1.5 sm:gap-2">
-              <select className="input-field !min-h-0 py-1 sm:py-2 px-1.5 sm:px-3 shadow-sm text-[11px] sm:text-sm min-w-0 w-auto cursor-pointer rounded-lg sm:rounded-xl" value={filterStage} onChange={(e) => setFilterStage(e.target.value)}>
+              <select className="input-field !min-h-0 py-1 sm:py-2 px-1.5 sm:px-3 shadow-sm text-xs sm:text-sm min-w-0 w-auto cursor-pointer rounded-lg sm:rounded-xl" value={filterStage} onChange={(e) => setFilterStage(e.target.value)}>
                 <option value="All">All Stages</option>
                 <option value="Seed">Pre-Seed & Seed</option>
                 <option value="Series A">Series A</option>
                 <option value="Series B">Series B</option>
               </select>
 
-              <select className="input-field !min-h-0 py-1 sm:py-2 px-1.5 sm:px-3 shadow-sm text-[11px] sm:text-sm min-w-0 w-auto cursor-pointer rounded-lg sm:rounded-xl" value={filterYear} onChange={(e) => setFilterYear(e.target.value)}>
+              <select className="input-field !min-h-0 py-1 sm:py-2 px-1.5 sm:px-3 shadow-sm text-xs sm:text-sm min-w-0 w-auto cursor-pointer rounded-lg sm:rounded-xl" value={filterYear} onChange={(e) => setFilterYear(e.target.value)}>
                 <option value="All">All Years</option>
                 <option value="2026">2026</option>
                 <option value="2025">2025</option>
                 <option value="2024">2024</option>
               </select>
 
-              <select className="input-field !min-h-0 py-1 sm:py-2 px-1.5 sm:px-3 shadow-sm text-[11px] sm:text-sm min-w-0 w-auto cursor-pointer rounded-lg sm:rounded-xl" value={filterSector} onChange={(e) => setFilterSector(e.target.value)}>
+              <select className="input-field !min-h-0 py-1 sm:py-2 px-1.5 sm:px-3 shadow-sm text-xs sm:text-sm min-w-0 w-auto cursor-pointer rounded-lg sm:rounded-xl" value={filterSector} onChange={(e) => setFilterSector(e.target.value)}>
                 <option value="All">All Sectors</option>
                 {sectorData.map(s => (
                   <option key={s.name} value={s.name}>{s.name}</option>
                 ))}
               </select>
 
-              <select className="input-field !min-h-0 py-1 sm:py-2 px-1.5 sm:px-3 shadow-sm text-[11px] sm:text-sm min-w-0 w-auto cursor-pointer rounded-lg sm:rounded-xl" value={filterCity} onChange={(e) => setFilterCity(e.target.value)}>
+              <select className="input-field !min-h-0 py-1 sm:py-2 px-1.5 sm:px-3 shadow-sm text-xs sm:text-sm min-w-0 w-auto cursor-pointer rounded-lg sm:rounded-xl" value={filterCity} onChange={(e) => setFilterCity(e.target.value)}>
                 <option value="All">All Cities</option>
                 {cityData.slice(0, 10).map(c => (
                   <option key={c.name} value={c.name}>{c.name}</option>
@@ -644,7 +648,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
               </select>
 
               <select
-                className="input-field !min-h-0 py-1 sm:py-2 px-1.5 sm:px-3 shadow-sm text-[11px] sm:text-sm min-w-0 w-auto cursor-pointer rounded-lg sm:rounded-xl"
+                className="input-field !min-h-0 py-1 sm:py-2 px-1.5 sm:px-3 shadow-sm text-xs sm:text-sm min-w-0 w-auto cursor-pointer rounded-lg sm:rounded-xl"
                 onChange={(e) => {
                   const val = e.target.value;
                   if (val === 'All') {
@@ -677,7 +681,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
         
         <div className="overflow-x-auto relative">
           <table className="w-full sm:min-w-[900px] text-left font-jakarta">
-            <thead className="bg-gray-50 dark:bg-gray-800/50 text-[10px] sm:text-xs uppercase text-gray-500 font-semibold border-b border-gray-100 dark:border-gray-800">
+            <thead className="bg-gray-50 dark:bg-gray-800/50 text-xs uppercase text-gray-500 font-semibold border-b border-gray-100 dark:border-gray-800">
               <tr>
                 <th className="px-3 sm:px-6 py-2.5 sm:py-4">Startup</th>
                 <th className="px-2 sm:px-6 py-2.5 sm:py-4">Round</th>
@@ -702,22 +706,22 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
                           <img src={row.startupLogoUrl} alt="" className="w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg object-contain bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex-shrink-0" />
                         ) : (
                           <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-brand/10 flex items-center justify-center flex-shrink-0">
-                            <span className="text-[10px] sm:text-xs font-bold text-brand">{row.startupName?.charAt(0)}</span>
+                            <span className="text-xs font-bold text-brand">{row.startupName?.charAt(0)}</span>
                           </div>
                         )}
                         <div className="min-w-0">
                           <a href={`/startups/${row.startupSlug}`} className="font-sora font-bold text-xs sm:text-sm text-navy dark:text-white hover:text-brand transition-colors block whitespace-nowrap">
                             {row.startupName}
                             {topDeals.has(row.id) && (
-                              <span className="ml-1.5 px-1 py-0.5 rounded text-[9px] sm:text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 align-middle">FEATURED</span>
+                              <span className="ml-1.5 px-1 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 align-middle">FEATURED</span>
                             )}
                           </a>
                           <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
-                            <span className="text-[10px] sm:text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 px-1.5 sm:px-2 py-0.5 rounded-full inline-block font-semibold">
+                            <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 px-1.5 sm:px-2 py-0.5 rounded-full inline-block font-semibold">
                               AI Startup
                             </span>
                             {row.headquartersCity && (
-                              <span className="text-[10px] sm:text-xs text-gray-400 flex items-center gap-0.5">
+                              <span className="text-xs text-gray-400 flex items-center gap-0.5">
                                 <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3" />{row.headquartersCity}
                               </span>
                             )}
@@ -726,7 +730,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
                       </div>
                     </td>
                     <td className="px-2 sm:px-6 py-3 sm:py-4">
-                      <span className="text-[10px] font-semibold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded-full uppercase whitespace-nowrap">{row.roundType}</span>
+                      <span className="text-xs font-semibold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full whitespace-nowrap">{row.roundType}</span>
                     </td>
                     <td className="px-2 sm:px-6 py-3 sm:py-4">
                       <span className="font-sora font-extrabold text-xs sm:text-sm text-brand block">
@@ -734,7 +738,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
                       </span>
                     </td>
                     <td className="px-6 py-4 hidden xl:table-cell">
-                      <span className="text-[10px] font-semibold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-1.5 py-0.5 rounded-full uppercase whitespace-nowrap">
+                      <span className="text-xs font-semibold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2 py-0.5 rounded-full whitespace-nowrap">
                         {sector}
                       </span>
                     </td>
@@ -760,8 +764,9 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
                       </div>
                     </td>
                     <td className="px-6 py-4 hidden xl:table-cell">
-                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full uppercase whitespace-nowrap ${trend.color}`}>
-                        ↑ {trend.label}
+                      <span className={`inline-flex items-center gap-1.5 text-xs font-medium whitespace-nowrap ${trend.color}`}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-current" aria-hidden="true" />
+                        {trend.label}
                       </span>
                     </td>
                     <td className="px-6 py-4 hidden md:table-cell text-xs text-gray-500 whitespace-nowrap">
@@ -789,19 +794,19 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
               <div className="w-8 h-8 sm:w-14 sm:h-14 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-4">
                 <Lock className="w-3.5 h-3.5 sm:w-6 sm:h-6 text-brand" />
               </div>
-              <h3 className="font-sora font-bold text-sm sm:text-xl text-navy dark:text-white mb-1 sm:mb-2">
+              <h3 className="font-sora font-bold text-sm sm:text-lg text-navy dark:text-white mb-1 sm:mb-2">
                 Sign in to see all {filteredData.length} rounds
               </h3>
-              <p className="text-[11px] sm:text-sm text-gray-500 dark:text-gray-400 mb-3 sm:mb-6 font-jakarta leading-relaxed">
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-3 sm:mb-6 font-jakarta leading-relaxed">
                 Unlock the full funding table with filters, investor details, and trend signals.
               </p>
               <button
                 onClick={() => signIn('/funding')}
-                className="inline-flex items-center justify-center bg-brand hover:bg-brand-600 text-white font-bold font-jakarta rounded-lg sm:rounded-xl transition-all px-4 sm:px-10 py-1.5 sm:py-3 text-[11px] sm:text-sm mb-2 sm:mb-4"
+                className="inline-flex items-center justify-center bg-brand hover:bg-brand-600 text-white font-bold font-jakarta rounded-lg sm:rounded-xl transition-all px-4 sm:px-10 py-1.5 sm:py-3 text-xs sm:text-sm mb-2 sm:mb-4"
               >
                 Sign In — It&apos;s Free
               </button>
-              <p className="text-[9px] sm:text-xs text-gray-400 dark:text-gray-500 font-jakarta">
+              <p className="text-xs text-gray-400 dark:text-gray-500 font-jakarta">
                 No credit card · Google sign-in · 5 seconds
               </p>
             </div>
@@ -845,14 +850,14 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
             return (
               <div key={investor.name} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg sm:rounded-xl p-3 sm:p-6 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-700">
                 <div className="mb-2 sm:mb-4">
-                  <h3 className="font-sora font-bold text-xs sm:text-lg text-navy dark:text-white mb-1 sm:mb-2 truncate">
+                  <h3 className="font-sora font-bold text-sm sm:text-lg leading-snug text-navy dark:text-white mb-1 sm:mb-2 line-clamp-2">
                     {investor.name}
                   </h3>
-                  <div className="text-[10px] sm:text-sm text-gray-600 dark:text-gray-400 mb-0.5 sm:mb-1">
+                  <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-0.5 sm:mb-1">
                     <span className="font-semibold text-brand">{investor.deals}</span> AI deals
                   </div>
                   {totalAmount >= 1e6 && (
-                    <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
                       {displayAmount} total
                     </div>
                   )}
@@ -881,7 +886,7 @@ export default function FundingDashboard({ data: rawData }: { data: FundingRound
 
                 <button
                   onClick={() => setFilterInvestor(investor.name)}
-                  className="text-[10px] sm:text-sm font-semibold text-brand hover:text-brand-600 transition-colors flex items-center gap-1 w-full justify-center py-1.5 sm:py-2 px-2 sm:px-3 rounded-md sm:rounded-lg border border-brand/20 hover:border-brand/40 hover:bg-brand/5"
+                  className="text-xs sm:text-sm font-semibold text-brand hover:text-brand-600 transition-colors flex items-center gap-1 w-full justify-center py-1.5 sm:py-2 px-2 sm:px-3 rounded-md sm:rounded-lg border border-brand/20 hover:border-brand/40 hover:bg-brand/5"
                 >
                   View deals →
                 </button>

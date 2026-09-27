@@ -55,7 +55,7 @@ export const viewport: Viewport = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const [seo, brand] = await Promise.all([getSeoConfig(), getBrandConfig()]);
-  const siteName = seo.metaTitle.split('–')[0]?.trim() || 'Udyaibase';
+  const siteName = seo.metaTitle.split(/\s[–—|-]\s/)[0]?.trim() || 'Udyaibase';
   const ogImage = brand.ogImage || '/og-image.png';
 
   return {

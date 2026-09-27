@@ -218,8 +218,8 @@ export default async function HomePage() {
           <div>
             <h2 className="font-sora font-bold text-base sm:text-2xl text-gray-900 dark:text-white">Latest Stories</h2>
           </div>
-          <Link href="/news" className="text-red-500 hover:text-red-600 font-medium text-xs sm:text-sm flex items-center gap-1 font-jakarta">
-            View All →
+          <Link href="/news" className="text-brand font-semibold text-xs sm:text-sm hover:underline flex items-center gap-1 font-jakarta" aria-label="View all news">
+            View All <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
 
@@ -307,8 +307,8 @@ export default async function HomePage() {
               Featured
             </span>
           </div>
-          <Link href="/stories" className="text-brand font-semibold text-xs sm:text-sm hover:underline flex items-center gap-1 font-jakarta">
-            All Stories <ChevronRight className="w-4 h-4" />
+          <Link href="/stories" className="text-brand font-semibold text-xs sm:text-sm hover:underline flex items-center gap-1 font-jakarta" aria-label="View all founder stories">
+            View All <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
 
@@ -430,9 +430,9 @@ export default async function HomePage() {
           </div>
           <Link 
             href={hasFunding ? "/funding" : "/stories"} 
-            className="text-brand font-semibold text-sm hover:underline flex items-center gap-1 font-jakarta"
+            className="text-brand font-semibold text-xs sm:text-sm hover:underline flex items-center gap-1 font-jakarta" aria-label={hasFunding ? "View all funding digests" : "View all founder stories"}
           >
-            {hasFunding ? "All Digests" : "All Stories"} <ChevronRight className="w-4 h-4" />
+            View All <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
 
@@ -581,8 +581,8 @@ export default async function HomePage() {
             <div>
               <h2 className="font-sora font-bold text-base sm:text-2xl text-gray-900 dark:text-white">India AI Ecosystem</h2>
             </div>
-            <Link href="/startups" className="text-red-500 hover:text-red-600 font-medium text-xs sm:text-sm flex items-center gap-1 font-jakarta">
-              Explore →
+            <Link href="/startups" className="text-brand font-semibold text-xs sm:text-sm hover:underline flex items-center gap-1 font-jakarta" aria-label="View all startups">
+              View All <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
 
@@ -658,8 +658,8 @@ export default async function HomePage() {
               <Briefcase className="w-5 h-5 sm:w-6 sm:h-6 text-brand" />
               <h2 className="font-sora font-bold text-base sm:text-2xl text-gray-900 dark:text-white">Latest AI Jobs</h2>
             </div>
-            <Link href="/jobs" className="text-brand font-semibold text-xs sm:text-sm hover:underline flex items-center gap-1 font-jakarta">
-              View All Jobs <ChevronRight className="w-4 h-4" />
+            <Link href="/jobs" className="text-brand font-semibold text-xs sm:text-sm hover:underline flex items-center gap-1 font-jakarta" aria-label="View all jobs">
+              View All <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
 
@@ -725,8 +725,8 @@ export default async function HomePage() {
               <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-brand" />
               <h2 className="font-sora font-bold text-base sm:text-2xl text-gray-900 dark:text-white">Upcoming Events</h2>
             </div>
-            <Link href="/events" className="text-brand font-semibold text-xs sm:text-sm hover:underline flex items-center gap-1 font-jakarta">
-              View All Events <ChevronRight className="w-4 h-4" />
+            <Link href="/events" className="text-brand font-semibold text-xs sm:text-sm hover:underline flex items-center gap-1 font-jakarta" aria-label="View all events">
+              View All <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
 
@@ -799,8 +799,8 @@ export default async function HomePage() {
               <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-brand" />
               <h2 className="font-sora font-bold text-base sm:text-2xl text-gray-900 dark:text-white">AI Tool Picks</h2>
             </div>
-            <Link href="/tools" className="text-brand font-semibold text-xs sm:text-sm hover:underline flex items-center gap-1 font-jakarta">
-              Browse All <ChevronRight className="w-4 h-4" />
+            <Link href="/tools" className="text-brand font-semibold text-xs sm:text-sm hover:underline flex items-center gap-1 font-jakarta" aria-label="View all AI tools">
+              View All <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
 
@@ -877,7 +877,7 @@ export default async function HomePage() {
                         {/* Category & CTA */}
                         <div className="mt-auto space-y-2">
                           <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                            <span className="text-xs font-bold uppercase tracking-wider text-brand">{tool.category?.name || 'Tool'}</span>
+                            <span className="block truncate text-xs font-bold uppercase tracking-wider text-brand" title={tool.category?.name || 'Tool'}>{tool.category?.name || 'Tool'}</span>
                           </div>
                           <ToolCTAButton
                             toolId={tool.id}
@@ -914,8 +914,8 @@ export default async function HomePage() {
                 Recent achievements from the ecosystem
               </p>
             </div>
-            <Link href="/milestones" className="text-brand font-semibold text-xs sm:text-sm hover:underline flex items-center gap-1 font-jakarta">
-              View all <ArrowRight className="w-3.5 h-3.5" />
+            <Link href="/milestones" className="text-brand font-semibold text-xs sm:text-sm hover:underline flex items-center gap-1 font-jakarta" aria-label="View all startup milestones">
+              View All <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

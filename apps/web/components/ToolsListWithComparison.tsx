@@ -650,11 +650,13 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
 
                   {/* Top Actions */}
                   <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
-                    <BookmarkButton type="tool" itemId={tool.slug} itemName={tool.name} size="sm" />
+                    <BookmarkButton type="tool" itemId={tool.slug} itemName={tool.name} size="md" />
                     <div className="relative group/compare">
                       <button
                         onClick={(e) => toggleTool(tool, e)}
-                        className={`p-1 transition-colors ${isSelected ? 'text-brand font-semibold' : 'text-gray-300 hover:text-brand'}`}
+                        aria-label={`Compare ${tool.name}`}
+                        aria-pressed={isSelected}
+                        className={`btn-icon ${isSelected ? 'btn-icon-active' : ''}`}
                       >
                         {isSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
                       </button>

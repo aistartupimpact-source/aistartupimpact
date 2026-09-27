@@ -68,7 +68,7 @@ function FeaturedPartnerRotator({ partners }: { partners: Partner[] }) {
         }}
       />
 
-      <div className="relative z-10 px-5 sm:px-10 pt-12 pb-5 sm:pt-20 sm:pb-14">
+      <div className="relative z-10 px-5 sm:px-10 pt-12 pb-5 sm:pt-20 sm:pb-8">
         {/* Top-left badge */}
         <div className="absolute top-2 left-3 sm:top-3 sm:left-4 flex items-center gap-1 bg-red-500/15 border border-red-500/30 px-1.5 sm:px-2 py-px sm:py-0.5 rounded-full">
           <span className="w-1 h-1 rounded-full bg-brand animate-pulse" />
@@ -76,39 +76,6 @@ function FeaturedPartnerRotator({ partners }: { partners: Partner[] }) {
             Featured Partner
           </span>
         </div>
-
-        {/* Pagination dots + arrows — top right */}
-        {partners.length > 1 && (
-          <div className="absolute top-3 right-4 flex items-center gap-2">
-            <button
-              onClick={prev}
-              className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
-              aria-label="Previous partner"
-            >
-              <ChevronLeft className="w-4 h-4 text-white/60" />
-            </button>
-            <div className="flex items-center gap-1.5">
-              {partners.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => goTo(i)}
-                  className={`rounded-full transition-all duration-300 ${i === active
-                      ? 'w-4 h-1.5 bg-brand'
-                      : 'w-1.5 h-1.5 bg-white/20 hover:bg-white/40'
-                    }`}
-                  aria-label={`Go to partner ${i + 1}`}
-                />
-              ))}
-            </div>
-            <button
-              onClick={next}
-              className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
-              aria-label="Next partner"
-            >
-              <ChevronRight className="w-4 h-4 text-white/60" />
-            </button>
-          </div>
-        )}
 
         {/* Content — fades on transition */}
         <div
@@ -167,6 +134,40 @@ function FeaturedPartnerRotator({ partners }: { partners: Partner[] }) {
             </Link>
           </div>
         </div>
+
+        {/* Pagination dots + arrows — centered below content */}
+        {partners.length > 1 && (
+          <div className="mt-5 sm:mt-8 flex items-center justify-center gap-2" role="group" aria-label="Featured partner controls">
+            <button
+              onClick={prev}
+              className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+              aria-label="Previous partner"
+            >
+              <ChevronLeft className="w-4 h-4 text-white/60" />
+            </button>
+            <div className="flex items-center gap-1.5">
+              {partners.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => goTo(i)}
+                  className={`rounded-full transition-all duration-300 ${i === active
+                      ? 'w-4 h-1.5 bg-brand'
+                      : 'w-1.5 h-1.5 bg-white/20 hover:bg-white/40'
+                    }`}
+                  aria-label={`Go to partner ${i + 1}`}
+                  aria-current={i === active ? 'true' : undefined}
+                />
+              ))}
+            </div>
+            <button
+              onClick={next}
+              className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+              aria-label="Next partner"
+            >
+              <ChevronRight className="w-4 h-4 text-white/60" />
+            </button>
+          </div>
+        )}
 
         {/* Progress bar */}
         {partners.length > 1 && (

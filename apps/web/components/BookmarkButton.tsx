@@ -149,11 +149,9 @@ export default function BookmarkButton({
       <button
         onClick={handleToggle}
         disabled={isLoading}
-        className={`${sizeClasses[size]} rounded-lg flex items-center justify-center transition-all duration-200 ${
-          isSaved
-            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/30'
-            : 'bg-white dark:bg-gray-900 text-blue-500/80 dark:text-blue-400/80 border border-gray-200 dark:border-gray-700 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-950/20'
-        } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 active:scale-95'} ${className}`}
+        aria-label={`Save ${itemName || type}`}
+        aria-pressed={isSaved}
+        className={`btn-icon ${size === 'md' ? '' : sizeClasses[size]} ${isSaved ? 'btn-icon-active' : ''} ${className}`}
       >
         <Bookmark
           className={`${iconSizes[size]} transition-all duration-300 ${

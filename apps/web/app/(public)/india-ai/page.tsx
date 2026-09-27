@@ -158,7 +158,7 @@ async function getIndiaAIData() {
     `,
     // Manual stats (AI Engineers, Global Rank — can't be auto-computed)
     sql`
-      SELECT "metricKey", "metricLabel", "metricValue", "metricChange", "metricIcon", source
+      SELECT id, "metricKey", "metricLabel", "metricValue", "metricChange", "metricIcon", source
       FROM "IndiaAIStats"
       WHERE "isActive" = true
         AND "metricKey" IN ('ai_engineers', 'global_rank')

@@ -133,7 +133,7 @@ export default function Navbar({ hasSession = false }: { hasSession?: boolean })
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Logo */}
-            <Link href="/" className="flex items-center shrink-0">
+            <Link href="/" className="flex items-center shrink-0 [&_img]:!h-[52px] sm:[&_img]:!h-[72px] [&_img]:w-auto">
               <Logo height={72} priority />
             </Link>
 
@@ -270,7 +270,7 @@ export default function Navbar({ hasSession = false }: { hasSession?: boolean })
             <button
               onClick={() => setMobileOpen(false)}
               aria-label="Close menu"
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
               <X className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             </button>

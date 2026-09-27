@@ -97,7 +97,7 @@ export default async function StoriesPage() {
         {/* ── Main column ── */}
         <div className="flex-1 min-w-0">
           {articles.length > 0 && (
-            <StoriesListClient stories={articles}>
+            <StoriesListClient stories={articles} excludeSlugs={featured.map((a) => a.slug)}>
               {/* Featured — rendered between filters and story grid */}
               {featured.length > 0 && (
                 <div className="relative mb-8 sm:mb-10">
@@ -201,18 +201,20 @@ export default async function StoriesPage() {
           {articles.slice(0, 5).length > 0 && (
             <div className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
               <h3 className="font-sora font-bold text-sm text-navy dark:text-white mb-4">Recent Stories</h3>
-              <div className="space-y-3">
+              <ol className="space-y-3">
                 {articles.slice(0, 5).map((s: any, i: number) => (
-                  <Link key={s.slug} href={`/stories/${s.slug}`} className="group flex gap-3 items-start">
-                    <span className="font-sora font-extrabold text-xl text-gray-100 dark:text-gray-800 leading-none shrink-0 w-6 text-right">
-                      {i + 1}
-                    </span>
-                    <p className="text-xs font-semibold text-navy dark:text-white group-hover:text-brand transition-colors leading-snug line-clamp-2 font-jakarta">
-                      {s.title}
-                    </p>
-                  </Link>
+                  <li key={s.slug}>
+                    <Link href={`/stories/${s.slug}`} className="group flex gap-3 items-start">
+                      <span aria-hidden="true" className="font-sora font-extrabold text-xl text-gray-300 dark:text-gray-600 leading-none shrink-0 w-6 text-right tabular-nums">
+                        {i + 1}
+                      </span>
+                      <span className="text-xs font-semibold text-navy dark:text-white group-hover:text-brand transition-colors leading-snug line-clamp-2 font-jakarta">
+                        {s.title}
+                      </span>
+                    </Link>
+                  </li>
                 ))}
-              </div>
+              </ol>
             </div>
           )}
         </aside>

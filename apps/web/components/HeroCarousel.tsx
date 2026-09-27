@@ -27,7 +27,7 @@ function SlideContent({ s, onClick }: { s: HeroSlide; onClick?: (e: React.MouseE
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 mb-4 sm:mb-5">
               <div className="h-px w-8 bg-red-500/60" />
-              <span className="text-red-500 text-xs sm:text-xs font-bold uppercase tracking-[0.2em] font-jakarta">
+              <span className="text-red-500 text-xs sm:text-sm font-bold tracking-wide font-jakarta">
                 {s.badgeText || 'India AI · Cover Story'}
               </span>
             </div>
