@@ -549,6 +549,11 @@ export default function EditToolPage() {
             {logoUploadError && (
               <p className="mt-1.5 text-xs text-red-500 font-jakarta">{logoUploadError}</p>
             )}
+            {formData.logoUrl && logoPreviewError && (
+              <p className="mt-1.5 text-xs text-amber-600 font-jakarta">
+                Logo URL could not be loaded. The image may not be publicly reachable — check the URL or the media domain.
+              </p>
+            )}
             {formData.logoUrl && !logoPreviewError && (
               <div className="mt-2 flex items-center gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}

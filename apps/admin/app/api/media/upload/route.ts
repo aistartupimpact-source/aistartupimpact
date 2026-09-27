@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("API media upload error:", error);
     return NextResponse.json(
-      { error: "Upload failed" },
+      { error: `Upload failed: ${error?.name || ''} ${error?.message || ''}`.trim() },
       { status: 500 }
     );
   }
