@@ -102,11 +102,9 @@ export default function UpvoteButton({ toolSlug, initialCount = 0, size = 'sm' }
         <button
           onClick={handleUpvote}
           disabled={loading}
-          className={`inline-flex items-center justify-center w-9 h-9 rounded-lg border transition-all ${
-            upvoted
-              ? 'bg-brand/10 border-brand/30 text-brand'
-              : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-brand/30 hover:text-brand'
-          } ${loading ? 'opacity-60' : ''}`}
+          aria-label="Upvote"
+          aria-pressed={upvoted}
+          className={`btn-icon ${upvoted ? 'btn-icon-active' : ''}`}
         >
           <ThumbsUp className={`w-4 h-4 ${upvoted ? 'fill-current' : ''}`} />
         </button>

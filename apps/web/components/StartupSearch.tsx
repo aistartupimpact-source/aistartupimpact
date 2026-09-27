@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, Building2, MapPin, X, Loader2, SlidersHorizontal, ChevronDown, ChevronUp, ArrowUpDown, ChevronLeft, ChevronRight, TrendingUp, Sparkles, LayoutGrid, List } from 'lucide-react';
+import { Search, Building2, MapPin, X, Loader2, SlidersHorizontal, ChevronDown, ChevronUp, ArrowUpDown, ChevronLeft, ChevronRight, TrendingUp, Sparkles, LayoutGrid, List, Users } from 'lucide-react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { VerifiedBadge } from './VerifiedBadge';
 
@@ -177,6 +177,28 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
   const wasDragged = useRef(false);
   const dragStartX = useRef(0);
   const scrollStartX = useRef(0);
+  const [sectorOverflow, setSectorOverflow] = useState({ left: false, right: false });
+
+  // Track whether the sector pill row can scroll further in either direction
+  const updateSectorOverflow = useCallback(() => {
+    const el = categoryScrollerRef.current;
+    if (!el) return;
+    setSectorOverflow({
+      left: el.scrollLeft > 4,
+      right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4,
+    });
+  }, []);
+
+  useEffect(() => {
+    updateSectorOverflow();
+    window.addEventListener('resize', updateSectorOverflow);
+    return () => window.removeEventListener('resize', updateSectorOverflow);
+  }, [updateSectorOverflow]);
+
+  const scrollSectors = (dir: 1 | -1) => {
+    const el = categoryScrollerRef.current;
+    if (el) el.scrollBy({ left: dir * el.clientWidth * 0.7, behavior: 'smooth' });
+  };
 
   const hasUserInteracted = useRef(false);
   const debounceRef = useRef<NodeJS.Timeout>(undefined);
@@ -324,6 +346,7 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
           <div
             ref={categoryScrollerRef}
             className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide pb-1 cursor-grab active:cursor-grabbing select-none"
+            onScroll={updateSectorOverflow}
             onMouseDown={(e) => {
               isDragging.current = true;
               wasDragged.current = false;
@@ -367,7 +390,20 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
               </button>
             ))}
           </div>
-          <div className="absolute right-0 top-0 bottom-1 w-6 bg-gradient-to-l from-gray-50 dark:from-gray-950 to-transparent pointer-events-none" />
+          {sectorOverflow.left && (
+            <div className="absolute left-0 top-0 bottom-1 flex items-center pr-8 bg-gradient-to-r from-gray-50 via-gray-50/90 dark:from-gray-950 dark:via-gray-950/90 to-transparent pointer-events-none">
+              <button type="button" onClick={() => scrollSectors(-1)} className="btn-icon w-7 h-7 pointer-events-auto hidden sm:inline-flex" aria-label="Scroll sectors left">
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+          {sectorOverflow.right && (
+            <div className="absolute right-0 top-0 bottom-1 flex items-center justify-end pl-8 w-12 sm:w-auto bg-gradient-to-l from-gray-50 via-gray-50/90 dark:from-gray-950 dark:via-gray-950/90 to-transparent pointer-events-none">
+              <button type="button" onClick={() => scrollSectors(1)} className="btn-icon w-7 h-7 pointer-events-auto hidden sm:inline-flex" aria-label="Scroll sectors right">
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -617,32 +653,37 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
           )}
 
           {/* Results Count & View Toggle */}
-          <div className="flex items-center justify-between text-xs text-gray-400 font-jakarta">
-            {loading ? (
-              <span className="flex items-center gap-1.5"><Loader2 className="w-3 h-3 animate-spin" /> Finding startups...</span>
-            ) : (
-              <span>Found <span className="font-bold text-navy dark:text-white">{total}</span> startups</span>
-            )}
-            <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+          <div className="flex items-center justify-between gap-3 text-sm text-gray-500 dark:text-gray-400 font-jakarta">
+            <p aria-live="polite">
+              {loading ? (
+                <span className="flex items-center gap-1.5"><Loader2 className="w-4 h-4 animate-spin" /> Finding startups...</span>
+              ) : (
+                <>Found <span className="font-bold text-navy dark:text-white">{total}</span> {total === 1 ? 'startup' : 'startups'}</>
+              )}
+            </p>
+            <div role="group" aria-label="View" className="flex items-center gap-1.5">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-1.5 transition-colors ${viewMode === 'grid' ? 'bg-brand/10 text-brand' : 'bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                aria-pressed={viewMode === 'grid'}
+                className={`btn-icon ${viewMode === 'grid' ? 'btn-icon-active' : ''}`}
                 aria-label="Grid view"
               >
-                <LayoutGrid className="w-3.5 h-3.5" />
+                <LayoutGrid className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-1.5 transition-colors ${viewMode === 'list' ? 'bg-brand/10 text-brand' : 'bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                aria-pressed={viewMode === 'list'}
+                className={`btn-icon ${viewMode === 'list' ? 'btn-icon-active' : ''}`}
                 aria-label="List view"
               >
-                <List className="w-3.5 h-3.5" />
+                <List className="w-4 h-4" />
               </button>
             </div>
           </div>
         </div>
       </div>
 
+      <h2 className="sr-only">Startup results</h2>
       {/* ── Grid ── */}
       {loading && startups.length === 0 ? (
         /* Skeleton loading — matches card layout exactly */
@@ -727,7 +768,6 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <h3 className="font-sora font-bold text-sm text-navy dark:text-white group-hover:text-brand transition-colors truncate">{s.name}</h3>
-                    {s.isVerified && <VerifiedBadge size="sm" showText={false} />}
                     {isNewStartup(s.foundedYear) && (
                       <span className="shrink-0 text-[9px] font-bold font-jakarta bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded uppercase tracking-wide leading-none">New</span>
                     )}
@@ -802,7 +842,6 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-0.5">
                       <h3 className="font-sora font-extrabold text-sm sm:text-base text-navy dark:text-white group-hover:text-brand transition-colors truncate">{s.name}</h3>
-                      {s.isVerified && <VerifiedBadge size="sm" showText={false} />}
                       {isNewStartup(s.foundedYear) && (
                         <span className="shrink-0 text-[9px] font-bold font-jakarta bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded uppercase tracking-wide leading-none">New</span>
                       )}
@@ -833,11 +872,15 @@ export default function StartupSearch({ initialStartups, initialTotal, cities }:
 
                 <div className="flex items-center justify-between pt-2.5 border-t border-gray-100 dark:border-gray-800 text-xs font-jakarta">
                   <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                    <Users className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>Team</span>
                     <span className="font-semibold text-navy dark:text-gray-200">{s.employeeCount ? `${s.employeeCount}+` : '1-10'}</span>
-                    <span>team</span>
                   </div>
-                  <div className={`font-sora font-bold ${formatUsd(Number(s.totalUsd)) ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 dark:text-gray-500'}`}>
-                    {formatUsd(Number(s.totalUsd)) || '—'}
+                  <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                    <span>Raised</span>
+                    <span className={`font-sora font-bold ${formatUsd(Number(s.totalUsd)) ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                      {formatUsd(Number(s.totalUsd)) || '—'}
+                    </span>
                   </div>
                 </div>
 

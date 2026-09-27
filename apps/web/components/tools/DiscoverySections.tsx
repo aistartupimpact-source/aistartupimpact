@@ -42,7 +42,7 @@ export default function DiscoverySections({ trending, recentlyAdded, editorPicks
       )}
 
       {recentlyAdded.length > 0 && (
-        <Section title="Recently Added" badge="New" badgeColor="text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400">
+        <Section title="Recently Added" badge="New" badgeColor="text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400">
           {recentlyAdded.map(tool => <NewCard key={tool.id} tool={tool} />)}
         </Section>
       )}
@@ -124,7 +124,7 @@ function Section({ title, badge, badgeColor, children }: { title: string; badge:
           <button
             onClick={() => scroll('left')}
             disabled={!canScrollLeft}
-            className="p-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 hover:text-brand disabled:opacity-30 disabled:cursor-default transition-colors"
+            className="btn-icon w-7 h-7 disabled:opacity-30 disabled:cursor-default"
             aria-label="Scroll left"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -132,7 +132,7 @@ function Section({ title, badge, badgeColor, children }: { title: string; badge:
           <button
             onClick={() => scroll('right')}
             disabled={!canScrollRight}
-            className="p-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 hover:text-brand disabled:opacity-30 disabled:cursor-default transition-colors"
+            className="btn-icon w-7 h-7 disabled:opacity-30 disabled:cursor-default"
             aria-label="Scroll right"
           >
             <ChevronRight className="w-4 h-4" />
@@ -192,7 +192,7 @@ function TrendingCard({ tool, rank }: { tool: ToolCard; rank: number }) {
         <ToolLogo tool={tool} />
         <div className="min-w-0">
           <p className="text-sm font-semibold text-navy dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors truncate">{tool.name}</p>
-          {tool.categoryName && <p className="text-xs text-gray-400 truncate">{tool.categoryName}</p>}
+          {tool.categoryName && <p className="text-xs text-gray-400 leading-tight">{tool.categoryName}</p>}
         </div>
       </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 font-jakarta">{tool.tagline}</p>
@@ -220,7 +220,7 @@ function UpvotedCard({ tool }: { tool: ToolCard }) {
         <ToolLogo tool={tool} />
         <div className="min-w-0">
           <p className="text-sm font-semibold text-navy dark:text-white group-hover:text-brand transition-colors truncate">{tool.name}</p>
-          {tool.categoryName && <p className="text-xs text-gray-400 truncate">{tool.categoryName}</p>}
+          {tool.categoryName && <p className="text-xs text-gray-400 leading-tight">{tool.categoryName}</p>}
         </div>
       </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 font-jakarta">{tool.tagline}</p>
@@ -240,14 +240,14 @@ function NewCard({ tool }: { tool: ToolCard }) {
     <Link
       href={`/tools/${tool.slug}`}
       prefetch={false}
-      className="shrink-0 w-44 sm:w-56 p-2.5 sm:p-3 rounded-xl active:scale-[0.97] border border-emerald-100 dark:border-emerald-900/30 bg-white dark:bg-gray-900 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-sm transition-all group relative"
+      className="shrink-0 w-44 sm:w-56 p-2.5 sm:p-3 rounded-xl active:scale-[0.97] border border-green-100 dark:border-green-900/30 bg-white dark:bg-gray-900 hover:border-green-300 dark:hover:border-green-700 hover:shadow-sm transition-all group relative"
     >
-      <div className="absolute -top-1.5 right-2 bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-px rounded shadow-sm leading-tight">NEW</div>
+      <div className="absolute -top-1.5 right-2 bg-green-500 text-white text-[10px] font-bold px-1.5 py-px rounded shadow-sm leading-tight">NEW</div>
       <div className="flex items-center gap-2.5 mb-2">
         <ToolLogo tool={tool} />
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-navy dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">{tool.name}</p>
-          {tool.categoryName && <p className="text-xs text-gray-400 truncate">{tool.categoryName}</p>}
+          <p className="text-sm font-semibold text-navy dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors truncate">{tool.name}</p>
+          {tool.categoryName && <p className="text-xs text-gray-400 leading-tight">{tool.categoryName}</p>}
         </div>
       </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 font-jakarta">{tool.tagline}</p>
@@ -275,7 +275,7 @@ function EditorPickCard({ tool }: { tool: ToolCard }) {
         <ToolLogo tool={tool} />
         <div className="min-w-0">
           <p className="text-sm font-semibold text-navy dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors truncate">{tool.name}</p>
-          {tool.categoryName && <p className="text-xs text-gray-400 truncate">{tool.categoryName}</p>}
+          {tool.categoryName && <p className="text-xs text-gray-400 leading-tight">{tool.categoryName}</p>}
         </div>
       </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 font-jakarta">{tool.tagline}</p>

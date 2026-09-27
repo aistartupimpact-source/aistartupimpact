@@ -91,7 +91,7 @@ export default function AnnouncementBar() {
               : 'opacity-0 -translate-y-3'
           }`}
         >
-          <span className="text-sm">{current.emoji}</span>
+          <span className="text-sm text-white" aria-hidden="true">{current.emoji}</span>
 
           {current.badge && (
             <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-white/15 text-white border border-white/20 backdrop-blur-sm">
@@ -99,10 +99,10 @@ export default function AnnouncementBar() {
             </span>
           )}
 
-          <span className="hidden sm:inline font-jakarta text-sm font-medium text-white/95">
+          <span className="hidden sm:inline font-jakarta text-sm font-medium text-white">
             {current.text}
           </span>
-          <span className="sm:hidden font-jakarta text-xs font-medium text-white/95">
+          <span className="sm:hidden font-jakarta text-xs font-medium text-white">
             {current.mobileText || current.text}
           </span>
 

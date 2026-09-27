@@ -91,7 +91,7 @@ export default function SubscribeForm({ buttonText = 'Subscribe', source = 'webs
         <button
           type="submit"
           disabled={loading || !email}
-          className="btn-brand whitespace-nowrap text-sm flex items-center justify-center gap-2 min-w-[120px] disabled:opacity-50"
+          className={`${source === 'sidebar' ? 'btn-brand-outline' : 'btn-brand'} whitespace-nowrap text-sm flex items-center justify-center gap-2 min-w-[120px] disabled:opacity-50`}
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : buttonText}
         </button>

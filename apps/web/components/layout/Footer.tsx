@@ -121,7 +121,7 @@ export default function Footer() {
             <Link href="/" className="inline-block">
               <Logo height={76} forceLight />
             </Link>
-            <p className="text-gray-400 text-[13px] font-jakarta mt-4 leading-relaxed max-w-xs">
+            <p className="text-gray-400 text-sm font-jakarta mt-4 leading-relaxed max-w-xs">
               Udyaibase is your source for AI startups in India, startup news, stories, funding, AI tools, and the Indian AI ecosystem.
             </p>
             <p className="text-gray-500 text-xs font-jakarta mt-3">
@@ -132,9 +132,9 @@ export default function Footer() {
           {/* Link Columns */}
           {footerLinks.map((col) => (
             <div key={col.title}>
-              <h4 className="font-jakarta font-bold text-xs sm:text-xs uppercase tracking-widest text-white mb-3 sm:mb-5">
+              <h2 className="font-jakarta font-bold text-xs sm:text-xs uppercase tracking-widest text-white mb-3 sm:mb-5">
                 {col.title}
-              </h4>
+              </h2>
               <ul className="space-y-2 sm:space-y-3">
                 {col.links.map((link) => (
                   <li key={link.label}>

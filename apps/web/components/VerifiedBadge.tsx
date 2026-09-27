@@ -53,22 +53,26 @@ export function VerifiedBadge({
     : 'This profile has not yet been verified with a company email.';
   const displayTooltipText = tooltipText || defaultTooltipText;
 
-  const tooltip = (
-    <div className={`absolute z-dropdown bottom-full left-0 mb-2 w-64 bg-gray-900 dark:bg-gray-800 rounded-lg rounded-bl-none shadow-xl px-3.5 py-2.5 pointer-events-none transition-all duration-150 ${showTooltip ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1 invisible'}`}>
-      <div className="flex items-center gap-1.5 mb-1">
+  // Only mounted while open, so the hidden explanation isn't part of the card's content
+  const tooltip = showTooltip && (
+    <span role="tooltip" className="absolute z-dropdown bottom-full left-0 mb-2 w-64 bg-gray-900 dark:bg-gray-800 rounded-lg rounded-bl-none shadow-xl px-3.5 py-2.5 pointer-events-none block text-left">
+      <span className="flex items-center gap-1.5 mb-1">
         <BadgeCheck className={`w-3.5 h-3.5 ${verified ? 'text-green-400' : 'text-gray-400'}`} />
         <span className="text-xs font-bold text-white font-jakarta">{verified ? 'Verified' : 'Not Verified'}</span>
-      </div>
-      <p className="text-xs text-gray-300 font-jakarta leading-relaxed">
+      </span>
+      <span className="block text-xs font-normal text-gray-300 font-jakarta leading-relaxed">
         {displayTooltipText}
-      </p>
-      <div className="absolute top-full left-0 w-0 h-0 border-t-[8px] border-t-gray-900 dark:border-t-gray-800 border-r-[8px] border-r-transparent" />
-    </div>
+      </span>
+      <span className="absolute top-full left-0 w-0 h-0 border-t-[8px] border-t-gray-900 dark:border-t-gray-800 border-r-[8px] border-r-transparent" />
+    </span>
   );
+  const label = verified ? 'Verified' : 'Not verified';
 
   if (onLogo) {
     return (
-      <div
+      <span
+        role="img"
+        aria-label={label}
         className={`absolute bottom-[-3px] right-[-3px] ${verified ? 'bg-green-500 dark:bg-green-600' : 'bg-gray-400 dark:bg-gray-600'} rounded-full ${s.badgePadding} border-2 border-white dark:border-gray-900 shadow-sm flex items-center justify-center text-white cursor-pointer ${className}`}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
@@ -76,7 +80,7 @@ export function VerifiedBadge({
       >
         <Check className={`${s.logoIcon} stroke-[3.5] text-white`} />
         {tooltip}
-      </div>
+      </span>
     );
   }
 
@@ -87,6 +91,7 @@ export function VerifiedBadge({
           ? 'bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 border border-green-100/60 dark:border-green-900/30'
           : 'bg-gray-100 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 border border-gray-200/60 dark:border-gray-700/30'
       } font-medium ${s.text} cursor-pointer ${className}`}
+      aria-label={showText ? undefined : label}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
       onClick={() => setShowTooltip(!showTooltip)}

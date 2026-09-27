@@ -270,7 +270,7 @@ export default function Navbar({ hasSession = false }: { hasSession?: boolean })
             <button
               onClick={() => setMobileOpen(false)}
               aria-label="Close menu"
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
               <X className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             </button>

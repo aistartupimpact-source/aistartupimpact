@@ -74,13 +74,13 @@ export default async function FundingPage() {
             AI Startups <span className="text-brand">Funding Tracker</span>
           </h1>
         </div>
-        <p className="text-gray-500 dark:text-gray-400 font-jakarta text-[11px] sm:text-sm max-w-2xl mx-auto mt-1.5 sm:mt-4 px-1 sm:px-0">
+        <p className="text-gray-500 dark:text-gray-400 font-jakarta text-xs sm:text-sm max-w-2xl mx-auto mt-1.5 sm:mt-4 px-1 sm:px-0">
           The most comprehensive, continuously-updated dashboard of capital raised by Artificial Intelligence startups.
         </p>
 
         {/* Stats Bar */}
         <div className="mt-2 sm:mt-6 mb-2 sm:mb-4">
-          <p className="text-[11px] sm:text-sm text-gray-600 dark:text-gray-400 font-jakarta">
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-jakarta">
             <strong className="text-brand font-bold">{stats.totalRaisedDisplay}</strong> raised across{' '}
             <strong className="text-brand font-bold">{stats.totalDeals}</strong> deals • Updated{' '}
             <span className="text-gray-500">
@@ -95,8 +95,8 @@ export default async function FundingPage() {
               <Megaphone className="w-3 h-3 sm:w-4 sm:h-4" />
             </div>
             <div className="flex flex-col text-left">
-              <span className="text-[11px] sm:text-sm font-sora font-bold text-navy dark:text-white leading-none">Announce your round</span>
-              <span className="text-[10px] sm:text-xs text-brand font-semibold mt-0.5 leading-none">Premium PR Service <ArrowRight className="inline w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5" /></span>
+              <span className="text-xs sm:text-sm font-sora font-bold text-navy dark:text-white leading-none">Announce your round</span>
+              <span className="text-xs text-brand font-semibold mt-0.5 leading-none">Premium PR Service <ArrowRight className="inline w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5" /></span>
             </div>
           </Link>
         </div>

@@ -23,7 +23,7 @@ function formatDate(d: string) {
   return d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
 }
 
-export default function StoriesListClient({ stories, children }: { stories: Story[]; children?: React.ReactNode }) {
+export default function StoriesListClient({ stories, excludeSlugs = [], children }: { stories: Story[]; excludeSlugs?: string[]; children?: React.ReactNode }) {
   const [visible, setVisible] = useState(PAGE_SIZE);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -40,9 +40,12 @@ export default function StoriesListClient({ stories, children }: { stories: Stor
       .map(([name, count]) => ({ name, count }));
   }, [stories]);
 
-  // Filter stories
+  // Filter stories. Stories already shown above (e.g. Featured) are skipped in the unfiltered list,
+  // but still included when the user searches or picks a category.
+  const isFiltering = searchQuery !== '' || selectedCategory !== 'all';
   const filteredStories = useMemo(() => {
     return stories.filter(story => {
+      if (!isFiltering && excludeSlugs.includes(story.slug)) return false;
       const matchesSearch = searchQuery === '' ||
         story.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (story.excerpt || '').toLowerCase().includes(searchQuery.toLowerCase());
@@ -52,7 +55,7 @@ export default function StoriesListClient({ stories, children }: { stories: Stor
 
       return matchesSearch && matchesCategory;
     });
-  }, [stories, searchQuery, selectedCategory]);
+  }, [stories, searchQuery, selectedCategory, isFiltering, excludeSlugs]);
 
   const shown = filteredStories.slice(0, visible);
   const hasMore = visible < filteredStories.length;
@@ -134,7 +137,7 @@ export default function StoriesListClient({ stories, children }: { stories: Stor
       {/* ── All Stories heading ── */}
       <div className="flex items-center justify-between">
         <h2 className="font-sora font-bold text-base sm:text-xl text-gray-900 dark:text-white">All Stories</h2>
-        <span className="text-xs text-gray-400 font-jakarta">{filteredStories.length} stories</span>
+        <span className="text-xs text-gray-400 font-jakarta">{filteredStories.length} {filteredStories.length === 1 ? 'story' : 'stories'}</span>
       </div>
 
       {/* ── Story List ── */}
