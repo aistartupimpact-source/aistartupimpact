@@ -1,11 +1,19 @@
 import { withSentryConfig } from "@sentry/nextjs";
+import { execSync } from "node:child_process";
+
+// Build metadata for Settings → System Info (Vercel's own git variables take precedence at runtime)
+function gitValue(cmd) {
+  try { return execSync(cmd, { stdio: ["ignore", "pipe", "ignore"] }).toString().trim(); } catch { return ""; }
+}
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  serverActions: {
-    bodySizeLimit: '10mb',
+  env: {
+    BUILD_TIME: new Date().toISOString(),
+    BUILD_COMMIT_SHA: gitValue("git rev-parse HEAD"),
+    BUILD_COMMIT_REF: gitValue("git rev-parse --abbrev-ref HEAD"),
   },
   images: {
     remotePatterns: [

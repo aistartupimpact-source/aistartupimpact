@@ -2,7 +2,11 @@
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@udyaibase/database";
+import { prisma, Prisma } from "@udyaibase/database";
+import { version as reactVersion } from "react";
+import nextPackage from "next/package.json";
+import appPackage from "../../../package.json";
+import { runServiceChecks } from "./service-health";
 
 const ALLOWED = ["SUPER_ADMIN", "EDITOR_IN_CHIEF", "AD_MANAGER"];
 
@@ -98,26 +102,90 @@ export async function getSystemStatsAction() {
   try {
     const [
       articleCount,
-      userCount,
+      toolCount,
+      startupCount,
+      fundingRoundCount,
+      webUserCount,
       subscriberCount,
+      teamCount,
       campaignCount,
     ] = await Promise.all([
       prisma.article.count({ where: { deletedAt: null } }),
-      prisma.user.count({ where: { isActive: true } }),
+      prisma.aiTool.count({ where: { deletedAt: null, status: { in: ["APPROVED", "FEATURED"] } } }),
+      prisma.startup.count({ where: { deletedAt: null, isApproved: true } }),
+      prisma.fundingRound.count(),
+      prisma.webUser.count({ where: { deletedAt: null, isActive: true } }),
       prisma.newsletterSubscriber.count({ where: { isActive: true } }),
+      prisma.user.count({ where: { deletedAt: null, isActive: true } }),
       prisma.adCampaign.count(),
     ]);
+
+    // Live database check — reports the real server version and round-trip time
+    let database: { connected: boolean; version: string | null; latencyMs: number | null } = {
+      connected: false, version: null, latencyMs: null,
+    };
+    try {
+      const started = Date.now();
+      const rows = await prisma.$queryRaw<Array<{ server_version: string }>>`SHOW server_version`;
+      database = {
+        connected: true,
+        version: rows[0]?.server_version?.split(" ")[0] ?? null,
+        latencyMs: Date.now() - started,
+      };
+    } catch (err) {
+      console.error("getSystemStatsAction: database check failed", err);
+    }
 
     return {
       success: true,
       data: {
         articles: articleCount,
-        users: userCount,
+        tools: toolCount,
+        startups: startupCount,
+        fundingRounds: fundingRoundCount,
+        webUsers: webUserCount,
         subscribers: subscriberCount,
+        team: teamCount,
         campaigns: campaignCount,
+        database,
+        versions: {
+          app: appPackage.version,
+          next: nextPackage.version,
+          react: reactVersion,
+          node: process.version,
+          prisma: Prisma.prismaVersion.client,
+          environment: process.env.NODE_ENV,
+        },
+        deployment: getDeploymentInfo(),
       },
     };
   } catch (e: any) {
     return { success: false, error: e.message };
+  }
+}
+// Vercel exposes the deployed commit at runtime; BUILD_* come from next.config for other hosts and local builds
+function getDeploymentInfo() {
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA || process.env.BUILD_COMMIT_SHA || null;
+  const owner = process.env.VERCEL_GIT_REPO_OWNER;
+  const repo = process.env.VERCEL_GIT_REPO_SLUG;
+  return {
+    platform: process.env.VERCEL ? `Vercel (${process.env.VERCEL_ENV || "unknown"})` : "Local / self-hosted",
+    commit: sha,
+    commitUrl: sha && owner && repo ? `https://github.com/${owner}/${repo}/commit/${sha}` : null,
+    branch: process.env.VERCEL_GIT_COMMIT_REF || process.env.BUILD_COMMIT_REF || null,
+    message: process.env.VERCEL_GIT_COMMIT_MESSAGE || null,
+    builtAt: process.env.BUILD_TIME || null,
+  };
+}
+
+export async function getServiceHealthAction() {
+  const session: any = await getServerSession(authOptions);
+  if (!session?.user || !ALLOWED.includes(session.user.role))
+    return { success: false as const, error: "Unauthorized" };
+
+  try {
+    return { success: true as const, data: { checks: await runServiceChecks(), checkedAt: new Date().toISOString() } };
+  } catch (e: any) {
+    return { success: false as const, error: e.message };
   }
 }

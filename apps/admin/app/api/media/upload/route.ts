@@ -1,24 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import crypto from 'crypto';
-
-const ALLOWED_ROLES = ["SUPER_ADMIN", "EDITOR_IN_CHIEF", "SENIOR_WRITER", "WRITER"];
-
-const s3 = new S3Client({
-  region: "auto",
-  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
-  },
-});
-
-function getPublicUrl(key: string) {
-  if (process.env.R2_PUBLIC_URL) return `${process.env.R2_PUBLIC_URL}/${key}`;
-  return `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/v1/media/${key}`;
-}
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { ALLOWED_ROLES, uploadToMediaLibrary } from "@/lib/media";
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,52 +16,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: "File too large. Maximum size is 10MB." }, { status: 400 });
-    }
-
-    const ALLOWED_TYPES = [
-      'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
-      'image/avif', 'application/pdf',
-    ];
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json({ error: "File type not allowed. Accepted: JPEG, PNG, GIF, WebP, SVG, AVIF, PDF." }, { status: 400 });
-    }
-
-    const ALLOWED_EXTENSIONS = /\.(jpe?g|png|gif|webp|svg|avif|pdf)$/i;
-    if (!ALLOWED_EXTENSIONS.test(file.name)) {
-      return NextResponse.json({ error: "File extension not allowed." }, { status: 400 });
-    }
-
-    const bucket = process.env.R2_BUCKET_NAME;
-    if (!bucket) {
-      return NextResponse.json({ error: "R2 bucket name is not configured" }, { status: 500 });
-    }
-
-    const uniqueId = crypto.randomUUID();
-    const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const key = `uploads/${uniqueId}-${cleanName}`;
-    const buffer = Buffer.from(await file.arrayBuffer());
-
-    await s3.send(
-      new PutObjectCommand({
-        Bucket: bucket,
-        Key: key,
-        ContentType: file.type,
-        Body: buffer,
-      })
-    );
-
-    return NextResponse.json({
-      success: true,
-      url: getPublicUrl(key),
+    const result = await uploadToMediaLibrary(file, {
+      prefix: "uploads",
+      uploadedById: session.user.id,
     });
+
+    return NextResponse.json({ success: true, url: result.url, mediaId: result.id });
   } catch (error: any) {
     console.error("API media upload error:", error);
-    return NextResponse.json(
-      { error: `Upload failed: ${error?.name || ''} ${error?.message || ''}`.trim() },
-      { status: 500 }
-    );
+    const status = error.message?.includes("not allowed") || error.message?.includes("too large") ? 400 : 500;
+    return NextResponse.json({ error: error.message || "Upload failed" }, { status });
   }
 }

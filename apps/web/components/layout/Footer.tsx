@@ -125,8 +125,48 @@ export default function Footer() {
               Udyaibase is your source for AI startups in India, startup news, stories, funding, AI tools, and the Indian AI ecosystem.
             </p>
             <p className="text-gray-500 text-xs font-jakarta mt-3">
-              Udyaibase Technologies Pvt Ltd · Vijayawada, Andhra Pradesh, India
+              Vijayawada, Andhra Pradesh, India
             </p>
+
+            {/* Startup India DPIIT Recognition Badge */}
+            <a
+              href="https://recognition-be.startupindia.gov.in/s3/download/document/RECOGNITION_CERTIFICATE/38a95db9-53f1-402f-9902-b80623c7f294.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center gap-2.5 px-3 py-2 rounded-lg border border-white/25 hover:border-white/40 transition-all duration-200 hover:scale-[1.02]"
+              style={{ background: 'linear-gradient(135deg, rgba(255,153,51,0.25) 0%, rgba(255,255,255,0.12) 50%, rgba(19,136,8,0.25) 100%)' }}
+            >
+              <div className="relative flex-shrink-0 w-8 h-8">
+                <svg viewBox="0 0 32 32" fill="none" className="w-full h-full">
+                  <circle cx="16" cy="16" r="14.5" stroke="#FF9933" strokeWidth="2" fill="none" />
+                  <circle cx="16" cy="16" r="11" stroke="white" strokeWidth="1" fill="none" opacity="0.7" />
+                  <circle cx="16" cy="16" r="8" stroke="#138808" strokeWidth="1" fill="none" />
+                  {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map(angle => (
+                    <line
+                      key={angle}
+                      x1="16"
+                      y1="16"
+                      x2={16 + 5.5 * Math.cos((angle * Math.PI) / 180)}
+                      y2={16 + 5.5 * Math.sin((angle * Math.PI) / 180)}
+                      stroke="#000080"
+                      strokeWidth="0.5"
+                      opacity="0.6"
+                    />
+                  ))}
+                  <circle cx="16" cy="16" r="2" fill="#000080" opacity="0.7" />
+                  <circle cx="16" cy="16" r="1" fill="white" />
+                  <path d="M12 16.5l2.5 2.5 5.5-5.5" stroke="#138808" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                </svg>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-extrabold text-white uppercase tracking-widest leading-tight">
+                  DPIIT Recognised
+                </span>
+                <span className="text-[9px] font-semibold text-[#FF9933] tracking-wide leading-tight">
+                  Startup India · Govt. of India
+                </span>
+              </div>
+            </a>
           </div>
 
           {/* Link Columns */}
@@ -189,7 +229,7 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-4 text-xs sm:text-xs text-gray-500 font-jakarta">
 
             <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 text-center sm:text-left order-last md:order-first">
-              <span>&copy; {new Date().getFullYear()} Udyaibase. All rights reserved.</span>
+              <span>&copy; {new Date().getFullYear()} Udyaibase Technologies Private Limited. All rights reserved.</span>
               <CookieSettingsLink className="hover:text-brand transition-colors" />
             </div>
 

@@ -86,12 +86,15 @@ function FeaturedPartnerRotator({ partners }: { partners: Partner[] }) {
           {/* Logo + Name + Tagline — fixed width so layout is consistent across all partners */}
           <div className="flex items-center gap-4 shrink-0 w-full sm:w-72">
             <div className="relative shrink-0">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white border border-white/10 flex items-center justify-center overflow-hidden shadow-lg shadow-brand/10">
-                {p.logoUrl ? (
-                  <Image src={p.logoUrl} alt={p.name} className="w-12 h-12 sm:w-14 sm:h-14 object-contain" width={56} height={56} sizes="56px" />
-                ) : (
-                  <Image src={`https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=random&color=fff&size=150`} alt={p.name} className="w-full h-full object-cover" width={80} height={80} unoptimized />
-                )}
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-white border border-white/10 overflow-hidden shadow-lg shadow-brand/10">
+                <Image
+                  src={p.logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=random&color=fff&size=150`}
+                  alt={p.name}
+                  className="w-full h-full object-cover"
+                  width={80}
+                  height={80}
+                  unoptimized
+                />
               </div>
               <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-[#0D1B2A] flex items-center justify-center">
                 <span className="text-xs text-white font-bold">✓</span>

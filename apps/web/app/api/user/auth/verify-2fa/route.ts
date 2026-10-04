@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     const users = await sql`
-      SELECT id, email, name, avatar, slug, "twoFactorEnabled", "twoFactorSecret", "twoFactorBackupCodes"
+      SELECT id, email, name, avatar, slug, "twoFactorEnabled", "twoFactorSecret", "twoFactorBackupCodes", "onboardingCompleted"
       FROM "WebUser"
       WHERE id = ${userId}
       LIMIT 1
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     const sessionId = generateId();
-    const jwtToken = await new SignJWT({ userId: user.id, email: user.email, name: user.name, sessionId })
+    const jwtToken = await new SignJWT({ userId: user.id, email: user.email, name: user.name, sessionId, onboardingCompleted: user.onboardingCompleted ?? false })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setExpirationTime('7d')
@@ -149,7 +149,7 @@ async function verifyOrganizerAndCreateSession(userId: string, token: string, is
 
   const webUser = await ensureWebUser({ email: org.email as string, name: org.name as string });
   const sessionId = generateId();
-  const jwtToken = await new SignJWT({ userId: webUser.id, email: webUser.email, name: webUser.name, sessionId })
+  const jwtToken = await new SignJWT({ userId: webUser.id, email: webUser.email, name: webUser.name, sessionId, onboardingCompleted: webUser.onboardingCompleted ?? false })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('7d')
@@ -180,12 +180,12 @@ async function verifyOrganizerAndCreateSession(userId: string, token: string, is
 }
 
 async function ensureWebUser(account: { email: string; name: string }) {
-  const existing = await sql`SELECT id, email, name FROM "WebUser" WHERE email = ${account.email.toLowerCase()} LIMIT 1`;
+  const existing = await sql`SELECT id, email, name, "onboardingCompleted" FROM "WebUser" WHERE email = ${account.email.toLowerCase()} LIMIT 1`;
   if (existing.length > 0) return existing[0];
 
   const id = generateId();
   const slug = account.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + randomBytes(3).toString('hex');
   await sql`INSERT INTO "WebUser" (id, email, name, slug, "isActive", "createdAt", "updatedAt") VALUES (${id}, ${account.email.toLowerCase()}, ${account.name}, ${slug}, true, NOW(), NOW()) ON CONFLICT (email) DO NOTHING`;
-  const created = await sql`SELECT id, email, name FROM "WebUser" WHERE email = ${account.email.toLowerCase()} LIMIT 1`;
+  const created = await sql`SELECT id, email, name, "onboardingCompleted" FROM "WebUser" WHERE email = ${account.email.toLowerCase()} LIMIT 1`;
   return created[0];
 }

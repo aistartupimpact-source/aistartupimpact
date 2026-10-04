@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { Settings, Globe, Palette, Bell, Shield, Save, Check, Database, Loader2, Smartphone, Copy, CheckCircle2, XCircle, AlertTriangle, Upload, Type, X } from 'lucide-react';
-import { getSettingsAction, saveSettingsAction, getSystemStatsAction } from './actions';
+import { getSettingsAction, saveSettingsAction } from './actions';
+import SystemInfoSection from './SystemInfoSection';
 
 const sections = [
   { id: 'general', label: 'General', icon: Settings },
@@ -25,10 +26,6 @@ interface SettingsData {
   require2FA: boolean; sessionTimeout: number;
 }
 
-interface SystemStats {
-  articles: number; users: number; subscribers: number; campaigns: number;
-}
-
 export default function SettingsPage() {
   const { data: session } = useSession();
   const [active, setActive] = useState('general');
@@ -36,25 +33,18 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<SettingsData | null>(null);
-  const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
   const [error, setError] = useState<string | null>(null);
   const userRole = (session?.user as any)?.role || '';
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [settingsRes, statsRes] = await Promise.all([
-          getSettingsAction(),
-          getSystemStatsAction(),
-        ]);
-        console.log('Settings response:', settingsRes);
-        console.log('Stats response:', statsRes);
+        const settingsRes = await getSettingsAction();
         if (settingsRes.success) {
           setSettings(settingsRes.data as SettingsData);
         } else {
           setError(settingsRes.error || 'Failed to load settings');
         }
-        if (statsRes.success) setSystemStats(statsRes.data as SystemStats);
       } catch (error) {
         console.error('Error loading settings:', error);
       }
@@ -259,39 +249,7 @@ export default function SettingsPage() {
             <SecuritySection settings={settings} updateSetting={updateSetting} Toggle={Toggle} userRole={userRole} />
           )}
 
-          {active === 'system' && systemStats && (
-            <div className="space-y-5">
-              <h2 className="font-sora font-bold text-lg text-navy dark:text-white">System Information</h2>
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { label: 'Total Articles', value: systemStats.articles.toLocaleString(), color: 'text-blue-600 dark:text-blue-400' },
-                  { label: 'Active Users', value: systemStats.users.toLocaleString(), color: 'text-green-600 dark:text-green-400' },
-                  { label: 'Newsletter Subscribers', value: systemStats.subscribers.toLocaleString(), color: 'text-purple-600 dark:text-purple-400' },
-                  { label: 'Ad Campaigns', value: systemStats.campaigns.toLocaleString(), color: 'text-orange-600 dark:text-orange-400' },
-                ].map((stat) => (
-                  <div key={stat.label} className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 text-center">
-                    <p className={`font-sora font-extrabold text-2xl ${stat.color}`}>{stat.value}</p>
-                    <p className="text-xs text-gray-400 font-jakarta mt-1">{stat.label}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
-                <h3 className="font-sora font-bold text-sm text-navy dark:text-white mb-2">Database Status</h3>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400 font-jakarta">Connected to Neon PostgreSQL</span>
-                </div>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
-                <h3 className="font-sora font-bold text-sm text-navy dark:text-white mb-2">Version Info</h3>
-                <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400 font-jakarta">
-                  <div>Platform: Next.js 14.2</div>
-                  <div>Database: PostgreSQL 16</div>
-                  <div>Node.js: {process.version}</div>
-                </div>
-              </div>
-            </div>
-          )}
+          {active === 'system' && <SystemInfoSection />}
         </div>
       </div>
     </div>

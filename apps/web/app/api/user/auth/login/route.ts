@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
     // ─── Try WebUser first ───────────────────────────
     const webUsers = await sql`
       SELECT id, email, name, "passwordHash", avatar, slug, "isActive", "twoFactorEnabled",
-             "failedLoginAttempts", "lockedUntil"
+             "failedLoginAttempts", "lockedUntil", "onboardingCompleted"
       FROM "WebUser"
       WHERE email = ${emailLower}
       LIMIT 1
@@ -309,6 +309,7 @@ async function createWebUserSession(user: any, request: NextRequest) {
     email: user.email,
     name: user.name,
     sessionId,
+    onboardingCompleted: user.onboardingCompleted ?? false,
   })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()

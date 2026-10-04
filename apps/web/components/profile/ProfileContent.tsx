@@ -87,6 +87,9 @@ export default function ProfileContent({ showBack = true }: ProfileContentProps)
             {tab === t.key && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand rounded-t" />}
           </button>
         ))}
+        <a href="/settings/preferences" className="px-4 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+          Preferences
+        </a>
       </div>
 
       {tab === 'overview' && <OverviewTab profile={profile} setProfile={setProfile} />}

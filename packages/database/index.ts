@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { neon, types } from '@neondatabase/serverless';
 import { PrismaNeonHTTP } from '@prisma/adapter-neon';
 
@@ -45,4 +45,4 @@ export const prisma = new Proxy({} as PrismaClient, {
 });
 
 export default prisma;
-export { PrismaClient };
+export { PrismaClient, Prisma };

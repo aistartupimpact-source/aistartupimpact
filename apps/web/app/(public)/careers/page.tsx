@@ -1,28 +1,76 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Briefcase, ChevronRight, CheckCircle2, Loader2, ChevronDown, Upload, X } from 'lucide-react';
+import {
+  Briefcase, CheckCircle2, Loader2, Upload, X, Clock, MapPin,
+  GraduationCap, Code2, Palette, PenTool, Brain, Database,
+  Smartphone, BarChart3, Shield, Megaphone, ChevronDown,
+  FileText, ExternalLink, Linkedin, Rocket, Target, Users,
+  Zap, Heart, TrendingUp, Globe, Lightbulb, Award, Star,
+} from 'lucide-react';
 
-const JOB_ROLES = [
-  'Frontend Developer',
-  'Full Stack Developer',
-  'Backend Developer',
-  'Next.js Developer',
-  'Generative AI Engineer',
-  'Content Writer',
-  'Graphic Designer',
-  'UI/UX Designer',
+// ── Role definitions ──────────────────────────────────────────────────────
+
+interface Role {
+  title: string;
+  department: string;
+  icon: typeof Code2;
+  type: 'INTERNSHIP' | 'FULL_TIME';
+  location: string;
+  duration?: string;
+}
+
+const ROLES: Role[] = [
+  // Internships
+  { title: 'Frontend Developer Intern', department: 'Engineering', icon: Code2, type: 'INTERNSHIP', location: 'Remote', duration: '3-6 months' },
+  { title: 'Full Stack Developer Intern', department: 'Engineering', icon: Database, type: 'INTERNSHIP', location: 'Remote', duration: '3-6 months' },
+  { title: 'Backend Developer Intern', department: 'Engineering', icon: Database, type: 'INTERNSHIP', location: 'Remote', duration: '3-6 months' },
+  { title: 'Next.js Developer Intern', department: 'Engineering', icon: Code2, type: 'INTERNSHIP', location: 'Remote', duration: '3-6 months' },
+  { title: 'React Native Developer Intern', department: 'Engineering', icon: Smartphone, type: 'INTERNSHIP', location: 'Remote', duration: '3-6 months' },
+  { title: 'Generative AI Engineer Intern', department: 'AI/ML', icon: Brain, type: 'INTERNSHIP', location: 'Remote', duration: '3-6 months' },
+  { title: 'ML/Data Science Intern', department: 'AI/ML', icon: BarChart3, type: 'INTERNSHIP', location: 'Remote', duration: '3-6 months' },
+  { title: 'Content Writer Intern', department: 'Content', icon: PenTool, type: 'INTERNSHIP', location: 'Remote', duration: '3-6 months' },
+  { title: 'SEO & Growth Intern', department: 'Marketing', icon: Megaphone, type: 'INTERNSHIP', location: 'Remote', duration: '3-6 months' },
+  { title: 'Graphic Designer Intern', department: 'Design', icon: Palette, type: 'INTERNSHIP', location: 'Remote', duration: '3-6 months' },
+  { title: 'UI/UX Designer Intern', department: 'Design', icon: Palette, type: 'INTERNSHIP', location: 'Remote', duration: '3-6 months' },
+  { title: 'Social Media Intern', department: 'Marketing', icon: Megaphone, type: 'INTERNSHIP', location: 'Remote', duration: '3-6 months' },
+  { title: 'DevOps Intern', department: 'Engineering', icon: Shield, type: 'INTERNSHIP', location: 'Remote', duration: '3-6 months' },
+  // Full-time
+  { title: 'Senior Full Stack Developer', department: 'Engineering', icon: Code2, type: 'FULL_TIME', location: 'Remote / Hybrid' },
+  { title: 'AI/ML Engineer', department: 'AI/ML', icon: Brain, type: 'FULL_TIME', location: 'Remote / Hybrid' },
+  { title: 'Senior Content Editor', department: 'Content', icon: PenTool, type: 'FULL_TIME', location: 'Remote' },
+  { title: 'Product Designer', department: 'Design', icon: Palette, type: 'FULL_TIME', location: 'Remote / Hybrid' },
+  { title: 'Growth & Marketing Lead', department: 'Marketing', icon: Megaphone, type: 'FULL_TIME', location: 'Remote' },
 ];
 
+const DEPARTMENTS = [...new Set(ROLES.map(r => r.department))];
+
 export default function CareersPage() {
-  const [showForm, setShowForm] = useState(false);
-  
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [activeTab, setActiveTab] = useState<'INTERNSHIP' | 'FULL_TIME'>('INTERNSHIP');
+  const [departmentFilter, setDepartmentFilter] = useState('');
+
+  // Platform stats (fetched from DB)
+  const [stats, setStats] = useState({ toolCount: 0, startupCount: 0, articleCount: 0, subscriberCount: 0 });
+
+  useEffect(() => {
+    fetch('/api/careers/stats')
+      .then(r => r.json())
+      .then(d => setStats(d))
+      .catch(() => {});
+  }, []);
+
   // Form state
   const [formData, setFormData] = useState({
-    role: '',
     fullName: '',
     email: '',
+    phone: '',
     resumeLink: '',
+    resumeUrl: '',
+    resumeFileName: '',
+    resumeSizeBytes: 0,
+    linkedinUrl: '',
+    portfolioUrl: '',
     consent: false,
   });
   const [submitting, setSubmitting] = useState(false);
@@ -30,179 +78,103 @@ export default function CareersPage() {
   const [error, setError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [fileError, setFileError] = useState('');
 
-  // Load resume data from localStorage on mount
+  // Load saved form data
   useEffect(() => {
-    const savedData = localStorage.getItem('career_application');
-    if (savedData) {
-      try {
-        const parsed = JSON.parse(savedData);
-        const savedTime = parsed.timestamp;
-        const now = Date.now();
-        
-        // Delete if older than 6 hours (6 * 60 * 60 * 1000 = 21600000)
-        if (now - savedTime > 21600000) {
+    try {
+      const saved = localStorage.getItem('career_application');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Date.now() - parsed.timestamp > 21600000) {
           localStorage.removeItem('career_application');
         } else {
           setFormData(prev => ({
             ...prev,
             fullName: parsed.fullName || '',
-            resumeLink: parsed.resumeLink || '',
+            phone: parsed.phone || '',
+            linkedinUrl: parsed.linkedinUrl || '',
           }));
         }
-      } catch (e) {
-        localStorage.removeItem('career_application');
       }
-    }
+    } catch { localStorage.removeItem('career_application'); }
   }, []);
 
-  // Validate email
   const validateEmail = (email: string) => {
+    if (!email) { setEmailError(''); return false; }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email) {
-      setEmailError('');
-      return false;
-    }
-    if (!emailRegex.test(email)) {
-      setEmailError('Please enter a valid email address');
-      return false;
-    }
-    // Check for common disposable/temporary email domains
-    const disposableDomains = ['tempmail', 'throwaway', '10minutemail', 'guerrillamail', 'mailinator'];
+    if (!emailRegex.test(email)) { setEmailError('Please enter a valid email address'); return false; }
+    const disposable = ['tempmail', 'throwaway', '10minutemail', 'guerrillamail', 'mailinator'];
     const domain = email.split('@')[1]?.toLowerCase();
-    if (disposableDomains.some(d => domain?.includes(d))) {
-      setEmailError('Please use a valid working email address');
-      return false;
-    }
+    if (disposable.some(d => domain?.includes(d))) { setEmailError('Please use a valid working email'); return false; }
     setEmailError('');
     return true;
   };
 
-  const handleEmailChange = (email: string) => {
-    setFormData({ ...formData, email });
-    if (email) {
-      validateEmail(email);
-    } else {
-      setEmailError('');
-    }
-  };
-
-  // Handle file upload
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (file.type !== 'application/pdf') {
       setFileError('Only PDF files are allowed');
       return;
     }
 
-    // Validate file size (300KB = 300 * 1024 bytes)
-    const maxSize = 300 * 1024;
+    const maxSize = 500 * 1024;
     if (file.size > maxSize) {
-      setFileError(`File size must be less than 300KB (current: ${Math.round(file.size / 1024)}KB)`);
+      setFileError(`File must be under 500KB (yours: ${Math.round(file.size / 1024)}KB). Compress at smallpdf.com`);
       return;
     }
 
     setFileError('');
-    setUploadedFile(file);
+    setUploading(true);
 
     try {
-      // Upload file to server
       const uploadFormData = new FormData();
       uploadFormData.append('resume', file);
-
-      const response = await fetch('/api/careers/upload-resume', {
-        method: 'POST',
-        body: uploadFormData,
-      });
-
+      const response = await fetch('/api/careers/upload-resume', { method: 'POST', body: uploadFormData });
       const data = await response.json();
 
       if (data.success) {
-        // Store the server URL in localStorage
-        const uploadData = {
-          fileName: file.name,
-          fileUrl: data.url,
-          timestamp: Date.now(),
-        };
-        
-        localStorage.setItem('career_resume_upload', JSON.stringify(uploadData));
-        
-        // Set the resume link in form data when file is uploaded
-        setFormData(prev => ({ ...prev, resumeLink: data.url }));
-
-        // Set auto-delete from localStorage after 3 minutes
-        setTimeout(() => {
-          localStorage.removeItem('career_resume_upload');
-          setUploadedFile(null);
-        }, 180000);
+        setUploadedFile(file);
+        setFormData(prev => ({
+          ...prev,
+          resumeUrl: data.url,
+          resumeFileName: data.filename,
+          resumeSizeBytes: data.sizeBytes,
+          resumeLink: data.url,
+        }));
       } else {
-        setFileError(data.error || 'Failed to upload file');
-        setUploadedFile(null);
+        setFileError(data.error || 'Upload failed');
       }
-    } catch (err) {
-      setFileError('Failed to upload file. Please try again.');
-      setUploadedFile(null);
+    } catch {
+      setFileError('Upload failed. Please try again.');
+    } finally {
+      setUploading(false);
     }
   };
 
-  // Remove uploaded file
   const handleRemoveFile = () => {
     setUploadedFile(null);
     setFileError('');
-    localStorage.removeItem('career_resume_upload');
+    setFormData(prev => ({ ...prev, resumeUrl: '', resumeFileName: '', resumeSizeBytes: 0, resumeLink: '' }));
   };
-
-  // Load uploaded file from localStorage on mount
-  useEffect(() => {
-    const savedUpload = localStorage.getItem('career_resume_upload');
-    if (savedUpload) {
-      try {
-        const parsed = JSON.parse(savedUpload);
-        const savedTime = parsed.timestamp;
-        const now = Date.now();
-        
-        // Delete if older than 3 minutes (180000 ms)
-        if (now - savedTime > 180000) {
-          localStorage.removeItem('career_resume_upload');
-        } else {
-          // Create a mock file object for display
-          const file = new File([''], parsed.fileName, { type: 'application/pdf' });
-          setUploadedFile(file);
-          setFormData(prev => ({ ...prev, resumeLink: parsed.fileUrl }));
-          
-          // Set remaining auto-delete timer
-          const remainingTime = 180000 - (now - savedTime);
-          setTimeout(() => {
-            localStorage.removeItem('career_resume_upload');
-            setUploadedFile(null);
-          }, remainingTime);
-        }
-      } catch (e) {
-        localStorage.removeItem('career_resume_upload');
-      }
-    }
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Check if either resume link or uploaded file is provided
-    if (!formData.role || !formData.fullName || !formData.email || !formData.resumeLink) {
+    if (!selectedRole) return;
+
+    if (!formData.fullName || !formData.email || (!formData.resumeLink && !formData.resumeUrl)) {
       setError('Please fill in all required fields including resume');
       return;
     }
-
     if (!validateEmail(formData.email)) {
       setError('Please enter a valid working email address');
       return;
     }
-
     if (!formData.consent) {
-      setError('Please agree to receive newsletters to submit your application');
+      setError('Please agree to receive newsletters to submit');
       return;
     }
 
@@ -210,101 +182,334 @@ export default function CareersPage() {
     setError('');
 
     try {
-      // Save to localStorage (will auto-delete after 6 hours)
       localStorage.setItem('career_application', JSON.stringify({
         fullName: formData.fullName,
-        resumeLink: formData.resumeLink,
+        phone: formData.phone,
+        linkedinUrl: formData.linkedinUrl,
         timestamp: Date.now(),
       }));
 
       const res = await fetch('/api/careers/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          type: selectedRole.type,
+          role: selectedRole.title,
+          ...formData,
+        }),
       });
 
       const data = await res.json();
 
       if (data.success) {
         setSuccess(true);
-        setFormData({
-          role: '',
-          fullName: '',
-          email: '',
-          resumeLink: '',
-          consent: false,
-        });
+        setFormData({ fullName: '', email: '', phone: '', resumeLink: '', resumeUrl: '', resumeFileName: '', resumeSizeBytes: 0, linkedinUrl: '', portfolioUrl: '', consent: false });
         setUploadedFile(null);
-        localStorage.removeItem('career_resume_upload');
-        setTimeout(() => {
-          setShowForm(false);
-          setSuccess(false);
-        }, 3000);
+        setTimeout(() => { setSelectedRole(null); setSuccess(false); }, 3000);
       } else {
         setError(data.error || 'Failed to submit application');
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
 
+  const filteredRoles = ROLES.filter(r =>
+    r.type === activeTab && (!departmentFilter || r.department === departmentFilter)
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {/* Header */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
+
+        {/* ── Header ──────────────────────────────────────────────── */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 bg-brand/10 px-4 py-2 rounded-full mb-4">
             <Briefcase className="w-4 h-4 text-brand" />
             <span className="text-brand text-xs font-bold uppercase tracking-wider font-jakarta">
-              Join Our Team
+              Careers at Udyaibase
             </span>
           </div>
           <h1 className="font-sora font-extrabold text-3xl sm:text-4xl lg:text-5xl text-navy dark:text-white mb-4">
-            Internship Opportunities
+            Build India's AI Ecosystem
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 font-jakarta text-lg max-w-2xl mx-auto mb-8">
-            Join India's fastest-growing AI startup platform. Work remotely and gain hands-on experience in the AI ecosystem.
+          <p className="text-gray-600 dark:text-gray-400 font-jakarta text-lg max-w-2xl mx-auto">
+            Join a mission-driven team building the definitive platform for India's AI startup ecosystem. Remote-first, impact-driven roles.
+          </p>
+        </div>
+
+        {/* ── Perks ───────────────────────────────────────────────── */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-12">
+          {[
+            { icon: MapPin, label: 'Remote First', desc: 'Work from anywhere' },
+            { icon: Clock, label: 'Flexible Hours', desc: 'Own your schedule' },
+            { icon: GraduationCap, label: 'Learn & Grow', desc: 'Real-world production work' },
+            { icon: Briefcase, label: 'Certificate', desc: 'Internship certificate' },
+          ].map(p => (
+            <div key={p.label} className="text-center p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
+              <p.icon className="w-6 h-6 text-brand mx-auto mb-2" />
+              <p className="font-sora font-bold text-sm text-navy dark:text-white">{p.label}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-0.5">{p.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Why Udyaibase ─────────────────────────────────────── */}
+        <div className="mb-16">
+          <div className="text-center mb-10">
+            <h2 className="font-sora font-extrabold text-2xl sm:text-3xl text-navy dark:text-white mb-3">
+              Why Build With Us?
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 font-jakarta max-w-2xl mx-auto">
+              We're not just building a platform — we're shaping the future of India's AI ecosystem.
+              Every line of code, every story we tell, every founder we spotlight moves the needle for thousands of startups.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div className="relative overflow-hidden bg-gradient-to-br from-brand/5 to-brand/10 dark:from-brand/10 dark:to-brand/20 rounded-2xl p-6 border border-brand/10">
+              <Rocket className="w-8 h-8 text-brand mb-3" />
+              <h3 className="font-sora font-bold text-lg text-navy dark:text-white mb-2">Ship Real Products</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-jakarta leading-relaxed">
+                No busywork. From day one, your work goes live to thousands of users — real directories, real startup stories, real impact on India's AI ecosystem.
+              </p>
+            </div>
+            <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-900/10 dark:to-purple-900/20 rounded-2xl p-6 border border-purple-100 dark:border-purple-800/30">
+              <TrendingUp className="w-8 h-8 text-purple-600 dark:text-purple-400 mb-3" />
+              <h3 className="font-sora font-bold text-lg text-navy dark:text-white mb-2">Grow Fast</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-jakarta leading-relaxed">
+                Work alongside experienced developers and content leads. Learn production-grade Next.js, ship weekly, and build a portfolio that stands out.
+              </p>
+            </div>
+            <div className="relative overflow-hidden bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-900/10 dark:to-emerald-900/20 rounded-2xl p-6 border border-emerald-100 dark:border-emerald-800/30">
+              <Globe className="w-8 h-8 text-emerald-600 dark:text-emerald-400 mb-3" />
+              <h3 className="font-sora font-bold text-lg text-navy dark:text-white mb-2">Make India Proud</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-jakarta leading-relaxed">
+                India has the talent to lead the global AI revolution. We're building the platform that connects, showcases, and accelerates that talent.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Our Values ──────────────────────────────────────────── */}
+        <div className="mb-16">
+          <div className="text-center mb-8">
+            <h2 className="font-sora font-extrabold text-2xl sm:text-3xl text-navy dark:text-white mb-3">
+              What We Stand For
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[
+              { icon: Zap, title: 'Bias for Action', desc: 'We ship fast, iterate faster. Perfect is the enemy of done — launch, learn, improve.', color: 'text-amber-500' },
+              { icon: Lightbulb, title: 'Ownership Mindset', desc: "Treat every feature like it's your startup. You don't just execute — you think, decide, and own outcomes.", color: 'text-blue-500' },
+              { icon: Heart, title: 'Community First', desc: 'Every decision is guided by what helps founders, builders, and the AI community the most.', color: 'text-rose-500' },
+              { icon: Target, title: 'Impact Over Hours', desc: "We don't count hours — we count impact. Work when you're most productive. Results speak louder than timesheets.", color: 'text-emerald-500' },
+            ].map(v => (
+              <div key={v.title} className="flex gap-4 p-5 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
+                <v.icon className={`w-6 h-6 ${v.color} shrink-0 mt-0.5`} />
+                <div>
+                  <h3 className="font-sora font-bold text-sm text-navy dark:text-white mb-1">{v.title}</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-jakarta leading-relaxed">{v.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── What You'll Gain ────────────────────────────────────── */}
+        <div className="mb-16 bg-gradient-to-br from-navy to-gray-900 dark:from-gray-900 dark:to-gray-950 rounded-2xl p-8 sm:p-10 text-white">
+          <h2 className="font-sora font-extrabold text-2xl sm:text-3xl mb-2">What You'll Walk Away With</h2>
+          <p className="text-gray-300 font-jakarta mb-8 max-w-xl">
+            Whether you're an intern or a full-time member, here's what your time at Udyaibase gives you.
           </p>
 
-          {/* Apply Button */}
-          {!showForm && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[
+              { icon: Code2, label: 'Production Experience', desc: 'Work on a live platform with real users — not toy projects' },
+              { icon: Award, label: 'Certificate & LOR', desc: 'Get a certificate of completion and a letter of recommendation' },
+              { icon: Users, label: 'AI Industry Network', desc: "Connect with India's top AI startup founders, investors, and ecosystem builders" },
+              { icon: Star, label: 'Portfolio That Shines', desc: 'Ship features you can demo in interviews — your GitHub will thank you' },
+              { icon: Brain, label: 'AI Ecosystem Knowledge', desc: 'Understand the AI startup landscape — tools, funding, trends, and what makes startups succeed' },
+              { icon: Rocket, label: 'Startup DNA', desc: 'Experience the speed, scrappiness, and ownership of a real startup' },
+            ].map(g => (
+              <div key={g.label} className="flex gap-3 items-start">
+                <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                  <g.icon className="w-4.5 h-4.5 text-brand" />
+                </div>
+                <div>
+                  <p className="font-sora font-bold text-sm">{g.label}</p>
+                  <p className="text-xs text-gray-400 font-jakarta mt-0.5 leading-relaxed">{g.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Impact Numbers ──────────────────────────────────────── */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-16">
+          {[
+            { value: stats.toolCount, label: 'AI Tools Indexed' },
+            { value: stats.startupCount, label: 'Startups Tracked' },
+            { value: stats.articleCount, label: 'Articles Published' },
+            { value: stats.subscriberCount, label: 'Newsletter Subscribers' },
+          ].map(s => (
+            <div key={s.label} className="text-center p-5 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
+              <p className="font-sora font-extrabold text-2xl sm:text-3xl text-brand">
+                {s.value > 0 ? `${s.value.toLocaleString('en-IN')}+` : '—'}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-1">{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Open Roles header ───────────────────────────────────── */}
+        <div className="text-center mb-8">
+          <h2 className="font-sora font-extrabold text-2xl sm:text-3xl text-navy dark:text-white mb-2">
+            Open Roles
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 font-jakarta text-sm">
+            Find your place in the team. Click a role to apply.
+          </p>
+        </div>
+
+        {/* ── Tabs: Internship / Full-Time ────────────────────────── */}
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            onClick={() => { setActiveTab('INTERNSHIP'); setDepartmentFilter(''); }}
+            className={`px-5 py-2.5 rounded-xl text-sm font-bold font-jakarta transition-all ${
+              activeTab === 'INTERNSHIP'
+                ? 'bg-brand text-white shadow-sm'
+                : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-800 hover:border-brand'
+            }`}
+          >
+            <GraduationCap className="w-4 h-4 inline mr-1.5 -mt-0.5" />
+            Internships ({ROLES.filter(r => r.type === 'INTERNSHIP').length})
+          </button>
+          <button
+            onClick={() => { setActiveTab('FULL_TIME'); setDepartmentFilter(''); }}
+            className={`px-5 py-2.5 rounded-xl text-sm font-bold font-jakarta transition-all ${
+              activeTab === 'FULL_TIME'
+                ? 'bg-brand text-white shadow-sm'
+                : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-800 hover:border-brand'
+            }`}
+          >
+            <Briefcase className="w-4 h-4 inline mr-1.5 -mt-0.5" />
+            Full-Time ({ROLES.filter(r => r.type === 'FULL_TIME').length})
+          </button>
+        </div>
+
+        {/* ── Department filter pills ─────────────────────────────── */}
+        <div className="flex items-center gap-2 mb-6 overflow-x-auto scrollbar-hide pb-1">
+          <button
+            onClick={() => setDepartmentFilter('')}
+            className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold font-jakarta transition-all ${
+              !departmentFilter
+                ? 'bg-navy dark:bg-white text-white dark:text-gray-900'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+            }`}
+          >
+            All
+          </button>
+          {DEPARTMENTS.filter(d => ROLES.some(r => r.type === activeTab && r.department === d)).map(dept => (
             <button
-              onClick={() => setShowForm(true)}
-              className="btn-brand text-lg px-8 py-4 inline-flex items-center gap-2 shadow-lg hover:shadow-xl"
+              key={dept}
+              onClick={() => setDepartmentFilter(dept)}
+              className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold font-jakarta transition-all ${
+                departmentFilter === dept
+                  ? 'bg-navy dark:bg-white text-white dark:text-gray-900'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
             >
-              Apply for Internship
-              <ChevronDown className="w-5 h-5" />
+              {dept}
             </button>
+          ))}
+        </div>
+
+        {/* ── Role cards ──────────────────────────────────────────── */}
+        <div className="space-y-3 mb-12">
+          {filteredRoles.map(role => {
+            const Icon = role.icon;
+            return (
+              <button
+                key={role.title}
+                onClick={() => { setSelectedRole(role); setSuccess(false); setError(''); }}
+                className={`w-full text-left p-5 rounded-xl border transition-all group ${
+                  selectedRole?.title === role.title
+                    ? 'bg-brand/5 border-brand shadow-sm'
+                    : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 hover:border-brand/50 hover:shadow-sm'
+                }`}
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                    selectedRole?.title === role.title ? 'bg-brand text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 group-hover:bg-brand/10 group-hover:text-brand'
+                  }`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-sora font-bold text-sm text-navy dark:text-white">{role.title}</h3>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 font-jakarta flex items-center gap-1">
+                        <MapPin className="w-3 h-3" /> {role.location}
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 font-jakarta">{role.department}</span>
+                      {role.duration && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400 font-jakarta flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> {role.duration}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <span className={`text-xs font-bold font-jakarta px-3 py-1 rounded-full ${
+                    role.type === 'INTERNSHIP'
+                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                      : 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
+                  }`}>
+                    {role.type === 'INTERNSHIP' ? 'Internship' : 'Full-Time'}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+
+          {filteredRoles.length === 0 && (
+            <div className="text-center py-12 text-gray-400 font-jakarta">
+              <Briefcase className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p>No openings in this department right now.</p>
+            </div>
           )}
         </div>
 
-        {/* Application Form */}
-        {showForm && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 shadow-2xl">
+        {/* ── Application Form (shown when role selected) ─────────── */}
+        {selectedRole && (
+          <div id="apply-form" className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 shadow-2xl scroll-mt-8">
             {success ? (
               <div className="text-center py-8">
                 <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
                 <h3 className="font-sora font-bold text-xl text-navy dark:text-white mb-2">Application Submitted!</h3>
-                <p className="text-gray-500 font-jakarta text-sm mb-2">
-                  Thank you for applying! You've been added to our newsletter.
-                </p>
-                <p className="text-xs text-gray-400 font-jakarta">
-                  We'll review your application and get back to you soon.
+                <p className="text-gray-500 font-jakarta text-sm">
+                  Thank you for applying for <strong>{selectedRole.title}</strong>. We'll review your application and get back to you soon.
                 </p>
               </div>
             ) : (
               <>
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-sora font-bold text-2xl text-navy dark:text-white">
-                    Internship Application
-                  </h2>
+                  <div>
+                    <h2 className="font-sora font-bold text-xl text-navy dark:text-white">
+                      Apply — {selectedRole.title}
+                    </h2>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-1">
+                      {selectedRole.department} · {selectedRole.location}
+                      {selectedRole.duration ? ` · ${selectedRole.duration}` : ''}
+                    </p>
+                  </div>
                   <button
-                    onClick={() => setShowForm(false)}
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl"
+                    onClick={() => setSelectedRole(null)}
+                    className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                   >
-                    ✕
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
 
@@ -314,160 +519,167 @@ export default function CareersPage() {
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Role */}
-                  <div>
-                    <label className="block font-sora font-bold text-sm text-navy dark:text-white mb-2">
-                      Role *
-                    </label>
-                    <select
-                      value={formData.role}
-                      onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                      className="input-field w-full"
-                      required
-                    >
-                      <option value="">Select a role...</option>
-                      {JOB_ROLES.map(role => (
-                        <option key={role} value={role}>{role}</option>
-                      ))}
-                    </select>
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  {/* Name + Email row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-sora font-bold text-xs text-navy dark:text-white mb-1.5">Full Name *</label>
+                      <input
+                        type="text"
+                        value={formData.fullName}
+                        onChange={e => setFormData({ ...formData, fullName: e.target.value })}
+                        placeholder="Your full name"
+                        className="input-field w-full"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-sora font-bold text-xs text-navy dark:text-white mb-1.5">
+                        Email * <span className="text-gray-400 font-normal">(working email)</span>
+                      </label>
+                      <input
+                        type="email"
+                        value={formData.email}
+                        onChange={e => { setFormData({ ...formData, email: e.target.value }); if (e.target.value) validateEmail(e.target.value); else setEmailError(''); }}
+                        placeholder="your@email.com"
+                        className={`input-field w-full ${emailError ? 'border-red-500 focus:border-red-500' : ''}`}
+                        required
+                      />
+                      {emailError && <p className="text-xs text-red-500 mt-1">{emailError}</p>}
+                    </div>
                   </div>
 
-                  {/* Full Name */}
-                  <div>
-                    <label className="block font-sora font-bold text-sm text-navy dark:text-white mb-2">
-                      Full Name *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.fullName}
-                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                      placeholder="Your full name"
-                      className="input-field w-full"
-                      required
-                    />
+                  {/* Phone + LinkedIn row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-sora font-bold text-xs text-navy dark:text-white mb-1.5">Phone</label>
+                      <input
+                        type="tel"
+                        value={formData.phone}
+                        onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                        placeholder="+91 9876543210"
+                        className="input-field w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-sora font-bold text-xs text-navy dark:text-white mb-1.5">LinkedIn Profile</label>
+                      <input
+                        type="url"
+                        value={formData.linkedinUrl}
+                        onChange={e => setFormData({ ...formData, linkedinUrl: e.target.value })}
+                        placeholder="https://linkedin.com/in/yourprofile"
+                        className="input-field w-full"
+                      />
+                    </div>
                   </div>
 
-                  {/* Email */}
-                  <div>
-                    <label className="block font-sora font-bold text-sm text-navy dark:text-white mb-2">
-                      Email * <span className="text-xs text-gray-400 font-normal">(Valid working email)</span>
-                    </label>
-                    <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleEmailChange(e.target.value)}
-                      placeholder="your@email.com"
-                      className={`input-field w-full ${emailError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
-                      required
-                    />
-                    {emailError && (
-                      <p className="text-xs text-red-500 mt-1">{emailError}</p>
-                    )}
-                  </div>
+                  {/* Portfolio (only for design/content) */}
+                  {['Design', 'Content', 'Marketing'].includes(selectedRole.department) && (
+                    <div>
+                      <label className="block font-sora font-bold text-xs text-navy dark:text-white mb-1.5">Portfolio / Website</label>
+                      <input
+                        type="url"
+                        value={formData.portfolioUrl}
+                        onChange={e => setFormData({ ...formData, portfolioUrl: e.target.value })}
+                        placeholder="https://your-portfolio.com"
+                        className="input-field w-full"
+                      />
+                    </div>
+                  )}
 
-                  {/* Resume Upload or Link */}
+                  {/* Resume upload */}
                   <div>
-                    <label className="block font-sora font-bold text-sm text-navy dark:text-white mb-2">
-                      Resume * <span className="text-xs text-gray-400 font-normal">(Upload or provide link)</span>
+                    <label className="block font-sora font-bold text-xs text-navy dark:text-white mb-1.5">
+                      Resume * <span className="text-gray-400 font-normal">(PDF, max 500KB)</span>
                     </label>
-                    
-                    {/* File Upload Section */}
+
                     {!uploadedFile && !formData.resumeLink && (
-                      <div className="mb-3">
-                        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer hover:border-brand hover:bg-brand/5 transition-all">
-                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                            <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                      <>
+                        <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer hover:border-brand hover:bg-brand/5 transition-all">
+                          <div className="flex flex-col items-center justify-center py-4">
+                            {uploading ? (
+                              <Loader2 className="w-6 h-6 text-brand animate-spin mb-1" />
+                            ) : (
+                              <Upload className="w-6 h-6 text-gray-400 mb-1" />
+                            )}
                             <p className="text-sm text-gray-600 dark:text-gray-400 font-jakarta">
-                              <span className="font-semibold">Click to upload</span> or drag and drop
+                              {uploading ? 'Uploading...' : 'Click to upload your resume'}
                             </p>
-                            <p className="text-xs text-gray-400 font-jakarta mt-1">
-                              PDF only, max 300KB
-                            </p>
+                            <p className="text-xs text-gray-400 font-jakarta mt-0.5">PDF only, max 500KB</p>
                           </div>
                           <input
                             type="file"
                             accept=".pdf,application/pdf"
                             onChange={handleFileUpload}
                             className="hidden"
+                            disabled={uploading}
                           />
                         </label>
-                        {fileError && (
-                          <p className="text-xs text-red-500 mt-2">{fileError}</p>
-                        )}
-                      </div>
-                    )}
+                        {fileError && <p className="text-xs text-red-500 mt-2">{fileError}</p>}
 
-                    {/* Uploaded File Display */}
-                    {uploadedFile && (
-                      <div className="mb-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-green-600" />
-                          <div>
-                            <p className="text-sm font-semibold text-green-700 dark:text-green-400">
-                              {uploadedFile.name}
-                            </p>
-                            <p className="text-xs text-green-600 dark:text-green-500">
-                              Uploaded successfully
-                            </p>
+                        <div className="relative my-3">
+                          <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-gray-200 dark:border-gray-800"></div>
+                          </div>
+                          <div className="relative flex justify-center text-xs">
+                            <span className="px-2 bg-white dark:bg-gray-900 text-gray-400">OR paste a link</span>
                           </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={handleRemoveFile}
-                          className="text-red-500 hover:text-red-700 transition-colors"
-                        >
+
+                        <input
+                          type="url"
+                          value={formData.resumeLink}
+                          onChange={e => setFormData({ ...formData, resumeLink: e.target.value })}
+                          placeholder="https://drive.google.com/... or PDF URL"
+                          className="input-field w-full"
+                        />
+                      </>
+                    )}
+
+                    {uploadedFile && (
+                      <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-green-600" />
+                          <div>
+                            <p className="text-sm font-semibold text-green-700 dark:text-green-400">{uploadedFile.name}</p>
+                            <p className="text-xs text-green-600 dark:text-green-500">{Math.round(uploadedFile.size / 1024)}KB · Uploaded</p>
+                          </div>
+                        </div>
+                        <button type="button" onClick={handleRemoveFile} className="text-red-500 hover:text-red-700">
                           <X className="w-5 h-5" />
                         </button>
                       </div>
                     )}
 
-                    {/* Divider */}
-                    {!uploadedFile && !formData.resumeLink && (
-                      <div className="relative my-4">
-                        <div className="absolute inset-0 flex items-center">
-                          <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
+                    {!uploadedFile && formData.resumeLink && !formData.resumeUrl && (
+                      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <ExternalLink className="w-4 h-4 text-blue-600" />
+                          <p className="text-sm text-blue-700 dark:text-blue-400 truncate max-w-xs">{formData.resumeLink}</p>
                         </div>
-                        <div className="relative flex justify-center text-xs">
-                          <span className="px-2 bg-white dark:bg-gray-900 text-gray-500">OR</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Resume Link Input */}
-                    {!uploadedFile && (
-                      <div>
-                        <input
-                          type="url"
-                          value={formData.resumeLink}
-                          onChange={(e) => setFormData({ ...formData, resumeLink: e.target.value })}
-                          placeholder="https://drive.google.com/... or PDF URL"
-                          className="input-field w-full"
-                          disabled={!!uploadedFile}
-                        />
-                        <p className="text-xs text-gray-400 font-jakarta mt-1">
-                          Share a Google Drive link or direct PDF URL
-                        </p>
+                        <button type="button" onClick={() => setFormData(prev => ({ ...prev, resumeLink: '' }))} className="text-red-500 hover:text-red-700">
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
                     )}
                   </div>
 
-                  {/* Consent Checkbox - CRITICAL for DPDP Act 2023 */}
-                  <div className="py-2">
+                  {/* Consent */}
+                  <div className="py-1">
                     <label className="flex items-start gap-3 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.consent}
-                        onChange={(e) => setFormData({ ...formData, consent: e.target.checked })}
+                        onChange={e => setFormData({ ...formData, consent: e.target.checked })}
                         className="w-5 h-5 text-brand border-gray-300 rounded focus:ring-brand mt-0.5 flex-shrink-0"
                       />
                       <span className="text-sm text-gray-600 dark:text-gray-400 font-jakarta leading-relaxed">
-                        I agree to receive newsletters, startup insights, and promotional updates from Udyaibase via email. I understand I can unsubscribe at any time.
+                        I agree to receive newsletters, startup insights, and updates from Udyaibase via email. I can unsubscribe at any time.
                       </span>
                     </label>
                   </div>
 
-                  {/* Submit Button - Only enabled when consent is checked */}
+                  {/* Submit */}
                   <button
                     type="submit"
                     disabled={submitting || !formData.consent}
@@ -478,62 +690,20 @@ export default function CareersPage() {
                     }`}
                   >
                     {submitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Submitting...
-                      </>
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</>
+                    ) : formData.consent ? (
+                      'Submit Application'
                     ) : (
-                      <>
-                        {formData.consent ? 'Submit Application' : 'Please agree to terms above'}
-                      </>
+                      'Please agree to terms above'
                     )}
                   </button>
 
                   <p className="text-xs text-gray-400 font-jakarta text-center">
-                    Your details will be preserved in our system for 6 months.
+                    Your details will be retained for 6 months. We review applications within 5 business days.
                   </p>
                 </form>
               </>
             )}
-          </div>
-        )}
-
-        {/* Info Section */}
-        {!showForm && (
-          <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="text-center p-6 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
-              <div className="w-12 h-12 rounded-xl bg-brand/10 flex items-center justify-center mx-auto mb-3">
-                <Briefcase className="w-6 h-6 text-brand" />
-              </div>
-              <h3 className="font-sora font-bold text-sm text-navy dark:text-white mb-1">
-                Remote Work
-              </h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400 font-jakarta">
-                Work from anywhere in India
-              </p>
-            </div>
-            <div className="text-center p-6 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
-              <div className="w-12 h-12 rounded-xl bg-brand/10 flex items-center justify-center mx-auto mb-3">
-                <CheckCircle2 className="w-6 h-6 text-brand" />
-              </div>
-              <h3 className="font-sora font-bold text-sm text-navy dark:text-white mb-1">
-                Flexible Hours
-              </h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400 font-jakarta">
-                Balance work with your studies
-              </p>
-            </div>
-            <div className="text-center p-6 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
-              <div className="w-12 h-12 rounded-xl bg-brand/10 flex items-center justify-center mx-auto mb-3">
-                <ChevronRight className="w-6 h-6 text-brand" />
-              </div>
-              <h3 className="font-sora font-bold text-sm text-navy dark:text-white mb-1">
-                Real Experience
-              </h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400 font-jakarta">
-                Work on live AI platform
-              </p>
-            </div>
           </div>
         )}
       </div>

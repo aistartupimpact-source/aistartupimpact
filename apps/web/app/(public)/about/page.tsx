@@ -316,6 +316,61 @@ export default async function AboutPage() {
         </div>
       </section>
 
+      {/* ── DPIIT Recognition ─────────────────────────────── */}
+      <section
+        className="card p-5 sm:p-8 mb-14 sm:mb-20 border-[#FF9933]/20 overflow-hidden relative"
+        aria-labelledby="dpiit-heading"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FF9933]/5 via-transparent to-[#138808]/5 pointer-events-none" />
+        <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-5">
+          {/* Seal */}
+          <div className="flex-shrink-0">
+            <svg viewBox="0 0 72 72" fill="none" className="w-16 h-16 sm:w-20 sm:h-20">
+              <circle cx="36" cy="36" r="34" stroke="#FF9933" strokeWidth="3" fill="none" />
+              <circle cx="36" cy="36" r="27" stroke="white" strokeWidth="2" fill="none" opacity="0.3" />
+              <circle cx="36" cy="36" r="21" stroke="#138808" strokeWidth="2" fill="none" />
+              {[0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210, 225, 240, 255, 270, 285, 300, 315, 330, 345].map(angle => (
+                <line
+                  key={angle}
+                  x1="36"
+                  y1="36"
+                  x2={36 + 14 * Math.cos((angle * Math.PI) / 180)}
+                  y2={36 + 14 * Math.sin((angle * Math.PI) / 180)}
+                  stroke="#000080"
+                  strokeWidth="0.8"
+                  opacity="0.5"
+                />
+              ))}
+              <circle cx="36" cy="36" r="5" fill="#000080" opacity="0.7" />
+              <circle cx="36" cy="36" r="2.5" fill="white" />
+              <path d="M28 37l5 5 11-11" stroke="#138808" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            </svg>
+          </div>
+          {/* Text */}
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <h2 id="dpiit-heading" className="font-sora font-extrabold text-lg sm:text-xl text-navy dark:text-white">
+                DPIIT Recognised Startup
+              </h2>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#FF9933] bg-[#FF9933]/10 px-2 py-0.5 rounded-full">
+                Startup India
+              </span>
+            </div>
+            <p className="font-jakarta text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed">
+              Udyaibase Technologies Private Limited is recognised by the{' '}
+              <strong className="text-navy dark:text-white">Department for Promotion of Industry and Internal Trade (DPIIT)</strong>,
+              Government of India, under the{' '}
+              <strong className="text-navy dark:text-white">Startup India</strong> initiative.
+              This recognition validates our commitment to innovation in AI ecosystem development
+              and our mission to give every AI startup the visibility it deserves.
+              <span className="block mt-2 text-xs text-gray-500 dark:text-gray-500">
+                CIN: U63122AP2026PTC128342
+              </span>
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* ── Values ────────────────────────────────────────── */}
       <section className="mb-14 sm:mb-20" aria-labelledby="values-heading">
         <h2

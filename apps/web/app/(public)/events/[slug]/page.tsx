@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { sql } from "@/lib/db";
 import EventDetailClient from "./EventDetailClient";
+import TrackView from '@/components/TrackView';
 
 export const revalidate = 60;
 
@@ -291,6 +292,7 @@ export default async function EventDetailPage(
 
   return (
     <>
+      <TrackView entityType="event" entityId={event.id} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(eventSchema) }}

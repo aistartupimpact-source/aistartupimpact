@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { MapPin, DollarSign, Clock, Building2, Globe, Linkedin, ExternalLink, Briefcase, Users, CheckCircle2 } from 'lucide-react';
+import TrackView from '@/components/TrackView';
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
@@ -124,6 +125,7 @@ export default async function JobDetailPage(props: PageProps) {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <TrackView entityType="job" entityId={job.id} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jobSchema) }}

@@ -798,17 +798,28 @@ model Job {
 }
 
 model JobApplication {
-  id         String   @id @default(cuid())
-  role       String
-  fullName   String
-  email      String
-  mobile     String?
-  resumeLink String
-  status     String   @default("NEW")
-  createdAt  DateTime @default(now())
+  id              String   @id @default(cuid())
+  type            String   @default("INTERNSHIP")
+  role            String
+  fullName        String
+  email           String
+  phone           String?
+  mobile          String?
+  resumeLink      String
+  resumeUrl       String?
+  resumeFileName  String?
+  resumeSizeBytes Int?
+  linkedinUrl     String?
+  portfolioUrl    String?
+  status          String   @default("NEW")
+  notes           String?
+  reviewedAt      DateTime?
+  createdAt       DateTime @default(now())
 
   @@index([email, role])
   @@index([createdAt])
+  @@index([status])
+  @@index([type])
 }
 
 model LiveTicker {
@@ -823,23 +834,47 @@ model LiveTicker {
 }
 
 model MediaAsset {
-  id         String   @id
-  url        String   @unique
-  fileHash   String   @unique
-  fileName   String
-  mimeType   String
-  sizeBytes  Int
-  width      Int?
-  height     Int?
-  altText    String?
-  uploadedBy String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime
-  User       User?    @relation(fields: [uploadedBy], references: [id])
+  id           String   @id @default(cuid())
+  key          String   @unique
+  prefix       String   @default("uploads")
+  url          String   @unique
+  originalName String
+  slug         String   @default("")
+  fileHash     String?
+  mimeType     String
+  sizeBytes    Int
+  width        Int?
+  height       Int?
+  alt          String?
+  tags         String[] @default([])
+  backfilled   Boolean  @default(false)
+  uploadedBy   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
+  User   User?        @relation(fields: [uploadedBy], references: [id])
+  usages MediaUsage[]
+
+  @@index([slug])
+  @@index([originalName])
+  @@index([prefix])
   @@index([createdAt])
-  @@index([fileHash])
   @@index([mimeType])
+}
+
+model MediaUsage {
+  id         String   @id @default(cuid())
+  mediaId    String
+  entityType String
+  entityId   String
+  field      String?
+  createdAt  DateTime @default(now())
+
+  media MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@unique([mediaId, entityType, entityId, field])
+  @@index([entityType, entityId])
+  @@index([mediaId])
 }
 
 model NewsletterCampaign {
@@ -1299,6 +1334,7 @@ model ToolCategory {
   parent      ToolCategory?    @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children    ToolCategory[]   @relation("CategoryHierarchy")
   AiTool      AiTool[]
+  webUserInterests WebUserInterest[]
 
   @@index([parentId])
   @@index([level, sortOrder])
@@ -1452,6 +1488,17 @@ model WebUser {
   deactivatedAt          DateTime?
   deletedAt              DateTime?
 
+  // Onboarding
+  onboardingCompleted   Boolean   @default(false)
+  onboardingStep        Int       @default(0)
+  onboardingVersion     Int       @default(1)
+
+  // Explicit preferences
+  primaryIntent          String?
+  cityId                 String?
+  city                   City?     @relation(fields: [cityId], references: [id])
+  preferencesUpdatedAt   DateTime? @db.Timestamptz
+
   StartupReview   StartupReview[]
   ToolReview      ToolReview[]
   WebUserSession  WebUserSession[]
@@ -1459,8 +1506,11 @@ model WebUser {
   SavedStartup    SavedStartup[]
   JobBoardSaved   JobBoardSaved[]
   ToolUpvote      ToolUpvote[]
+  interests       WebUserInterest[]
+  interactions    WebUserInteraction[]
 
   @@index([deactivatedAt])
+  @@index([cityId])
 }
 
 model SavedTool {
@@ -1604,6 +1654,7 @@ model City {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Startup   Startup[]
+  WebUser   WebUser[]
 
   @@index([country, state])
   @@index([name])
@@ -3320,4 +3371,33 @@ model AdvPayment {
   @@index([founderId, status])
   @@index([razorpayOrderId])
   @@index([status, createdAt])
+}
+
+model WebUserInterest {
+  userId     String
+  categoryId String
+  user       WebUser      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category   ToolCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([userId, categoryId])
+  @@index([userId])
+  @@index([categoryId])
+}
+
+model WebUserInteraction {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String
+  entityType String
+  entityId   String?
+  categoryId String?
+  metadata   Json?
+  createdAt  DateTime @default(now()) @db.Timestamptz
+
+  user       WebUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, entityType, createdAt])
+  @@index([entityType, entityId])
+  @@index([categoryId])
 }

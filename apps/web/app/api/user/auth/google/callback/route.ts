@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
     }
 
     const existingUsers = await sql`
-      SELECT id, email, name, avatar, slug, "isActive"
+      SELECT id, email, name, avatar, slug, "isActive", "onboardingCompleted"
       FROM "WebUser"
       WHERE email = ${googleUser.email.toLowerCase()}
       LIMIT 1
@@ -118,6 +118,7 @@ export async function GET(request: NextRequest) {
       email: user.email,
       name: user.name,
       sessionId,
+      onboardingCompleted: user.onboardingCompleted ?? false,
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()

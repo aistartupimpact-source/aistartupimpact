@@ -33,6 +33,7 @@ import {
   LifeBuoy,
   Package,
   CreditCard,
+  ClipboardList,
 } from 'lucide-react';
 
 const SidebarContext = createContext<{
@@ -93,6 +94,9 @@ const sidebarItems = [
   { type: 'divider' as const, label: 'Events', roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'EVENT_ORGANIZER'] },
   { label: 'Events', href: '/events', icon: CalendarDays, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF', 'EVENT_ORGANIZER'] },
   { label: 'Event Subscribers', href: '/events/subscribers', icon: Users, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
+
+  { type: 'divider' as const, label: 'Careers', roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
+  { label: 'Applications', href: '/applications', icon: ClipboardList, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
 
   { type: 'divider' as const, label: 'Job Board', roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },
   { label: 'Job Listings', href: '/jobs-board', icon: Briefcase, roles: ['SUPER_ADMIN', 'EDITOR_IN_CHIEF'] },

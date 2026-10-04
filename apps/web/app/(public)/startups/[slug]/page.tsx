@@ -22,6 +22,7 @@ import ShareButton from '@/components/ShareButton';
 import ReportButton from '@/components/ReportButton';
 import SubscribeForm from '@/components/SubscribeForm';
 import SignInGate from '@/components/SignInGate';
+import TrackView from '@/components/TrackView';
 
 export const revalidate = 300;
 
@@ -439,6 +440,7 @@ export default async function StartupDetailPage(props: { params: Promise<{ slug:
     <div className="max-w-6xl mx-auto px-4 sm:px-2 lg:px-4 py-6 sm:py-10">
       {/* JSON-LD Schema: Single @graph with WebPage + Organization + BreadcrumbList */}
       <StartupSchema startup={startup} />
+      <TrackView entityType="startup" entityId={startup.id} />
 
       {/* FAQ Schema (separate) */}
       <FAQSchema faqs={faqs} />

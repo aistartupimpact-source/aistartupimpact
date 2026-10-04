@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     const founder = founders[0];
 
     let webUsers = await sql`
-      SELECT id, email, name, avatar, slug
+      SELECT id, email, name, avatar, slug, "onboardingCompleted"
       FROM "WebUser"
       WHERE email = ${founder.email.toLowerCase()}
       LIMIT 1
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
         ON CONFLICT (email) DO NOTHING
       `;
       webUsers = await sql`
-        SELECT id, email, name, avatar, slug FROM "WebUser" WHERE email = ${founder.email.toLowerCase()} LIMIT 1
+        SELECT id, email, name, avatar, slug, "onboardingCompleted" FROM "WebUser" WHERE email = ${founder.email.toLowerCase()} LIMIT 1
       `;
     }
 
@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
       email: user.email,
       name: user.name,
       sessionId,
+      onboardingCompleted: user.onboardingCompleted ?? false,
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()

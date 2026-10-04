@@ -49,6 +49,7 @@ import {
 
 // Dynamic imports for heavy client components — reduces initial JS bundle
 import { FeaturedPartnerRotator, SponsorStrip, HeroCarousel } from '@/components/ClientOnly';
+import ForYouSection from '@/components/ForYouSection';
 
 const formatDate = (isoString: string) =>
   new Date(isoString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -209,6 +210,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* For You — personalized recommendations (client-side, hidden if no session) */}
+      <ForYouSection />
 
       {/* ╔════════════════════════════════════════════╗
           ║  3. LATEST STORIES — Exact Grid Design     ║
@@ -849,12 +853,14 @@ export default async function HomePage() {
                       <div className="bg-gray-50 dark:bg-gray-800 p-5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 h-full flex flex-col">
                         {/* Top row: icon + rating */}
                         <div className="flex items-start justify-between mb-3">
-                          <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-700 border border-gray-100 dark:border-gray-600 flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
+                          <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-700 border border-gray-100 dark:border-gray-600 shrink-0 overflow-hidden shadow-sm">
+                            <Image
                               src={tool.logoUrl || `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${tool.slug}.com&size=128`}
                               alt={tool.name}
-                              className="w-8 h-8 object-contain"
+                              width={40}
+                              height={40}
+                              className="w-full h-full object-cover"
+                              unoptimized
                             />
                           </div>
                           {tool.avgRating && (

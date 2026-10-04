@@ -13,10 +13,20 @@ function cn(...inputs: ClassValue[]) {
 
 interface MediaFile {
   id: string;
+  key: string;
   name: string;
   url: string;
   size: string;
-  dimensions?: string;
+  sizeBytes: number;
+  mimeType: string;
+  slug: string;
+  width: number | null;
+  height: number | null;
+  alt: string | null;
+  tags: string[];
+  prefix: string;
+  backfilled: boolean;
+  usageCount: number;
   uploadedAt: string;
 }
 
@@ -41,14 +51,14 @@ export default function MediaPicker({ isOpen, onClose, onSelect, title = "Select
     if (isOpen && activeTab === 'library') {
       fetchLibrary();
     }
-  }, [isOpen, activeTab]);
+  }, [isOpen, activeTab, searchQuery]);
 
   const fetchLibrary = async () => {
     setLoading(true);
     try {
-      const res = await listMediaAction();
+      const res = await listMediaAction({ search: searchQuery || undefined });
       if (res.success && res.data) {
-        setFiles(res.data);
+        setFiles(res.data as MediaFile[]);
       } else {
         console.error('Failed to fetch media:', res.error);
       }
@@ -105,7 +115,7 @@ export default function MediaPicker({ isOpen, onClose, onSelect, title = "Select
 
   if (!isOpen) return null;
 
-  const filteredFiles = files.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredFiles = files;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm">

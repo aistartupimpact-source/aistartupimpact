@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { jwtVerify } from 'jose';
+import { jwtVerify, SignJWT } from 'jose';
 import { sql } from '@/lib/db';
 
 const JWT_SECRET = new TextEncoder().encode(
@@ -16,6 +16,7 @@ export interface UserSession {
   twitter: string | null;
   linkedin: string | null;
   termsAcceptedAt: Date | null;
+  onboardingCompleted: boolean;
 }
 
 /**
@@ -39,7 +40,8 @@ export async function getUserSession(): Promise<UserSession | null> {
     const users = await sql`
       SELECT
         id, email, name, avatar, slug, bio, twitter, linkedin,
-        "isActive", "deactivatedAt", "termsAcceptedAt"::text as "termsAcceptedAt"
+        "isActive", "deactivatedAt", "termsAcceptedAt"::text as "termsAcceptedAt",
+        "onboardingCompleted"
       FROM "WebUser"
       WHERE id = ${payload.userId}
       LIMIT 1
@@ -70,6 +72,7 @@ export async function getUserSession(): Promise<UserSession | null> {
       twitter: user.twitter,
       linkedin: user.linkedin,
       termsAcceptedAt: user.termsAcceptedAt ? new Date(user.termsAcceptedAt) : null,
+      onboardingCompleted: user.onboardingCompleted ?? false,
     };
   } catch (error) {
     console.error('getUserSession error:', error);
@@ -83,4 +86,36 @@ export async function getUserSession(): Promise<UserSession | null> {
 export async function isAuthenticated(): Promise<boolean> {
   const session = await getUserSession();
   return session !== null;
+}
+
+export async function refreshUserToken(userId: string, sessionId: string) {
+  const users = await sql`
+    SELECT id, email, name, "onboardingCompleted"
+    FROM "WebUser"
+    WHERE id = ${userId}
+    LIMIT 1
+  `;
+  if (users.length === 0) return;
+
+  const user = users[0];
+  const token = await new SignJWT({
+    userId: user.id,
+    email: user.email,
+    name: user.name,
+    sessionId,
+    onboardingCompleted: user.onboardingCompleted ?? false,
+  })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('7d')
+    .sign(JWT_SECRET);
+
+  const cookieStore = await cookies();
+  cookieStore.set('user-token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60,
+    path: '/',
+  });
 }

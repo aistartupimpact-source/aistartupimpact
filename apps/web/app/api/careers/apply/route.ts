@@ -15,50 +15,68 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { role, fullName, email, resumeLink, consent } = body;
+    const {
+      type, role, fullName, email, phone,
+      resumeLink, resumeUrl, resumeFileName, resumeSizeBytes,
+      linkedinUrl, portfolioUrl, consent,
+    } = body;
 
-    // Validation
-    if (!role || !fullName || !email || !resumeLink) {
-      return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
+    if (!role || !fullName || !email || (!resumeLink && !resumeUrl)) {
+      return NextResponse.json({ error: 'All required fields must be filled' }, { status: 400 });
     }
 
-    // Email validation
     if (typeof email !== 'string' || email.length > 255 || !email.includes('@') || !email.split('@')[1]?.includes('.')) {
       return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
     }
 
-    // Check for disposable email domains
     const disposableDomains = ['tempmail', 'throwaway', '10minutemail', 'guerrillamail', 'mailinator'];
     const domain = email.split('@')[1]?.toLowerCase();
     if (disposableDomains.some(d => domain?.includes(d))) {
       return NextResponse.json({ error: 'Please use a valid working email address' }, { status: 400 });
     }
 
-    // Consent is required
     if (!consent) {
       return NextResponse.json({ error: 'Newsletter consent is required to submit application' }, { status: 400 });
     }
 
-    // Check if user already applied for the same role
-    const existingApplication = await sql`
-      SELECT id FROM "JobApplication" 
-      WHERE email = ${email} AND role = ${role}
+    const existingByEmail = await sql`
+      SELECT id FROM "JobApplication"
+      WHERE email = ${email} AND role = ${role} AND type = ${type || 'INTERNSHIP'}
       LIMIT 1
     `;
 
-    if (existingApplication.length > 0) {
-      return NextResponse.json({ 
-        error: 'You have already applied for this role. Please check your email for updates or apply for a different role.' 
+    if (existingByEmail.length > 0) {
+      return NextResponse.json({
+        error: 'You have already applied for this role with this email. Please check your email for updates or apply for a different role.',
       }, { status: 400 });
     }
 
-    // Store job application (mobile field is nullable)
+    const normalizedName = fullName.trim().toLowerCase().replace(/\s+/g, ' ');
+    const existingByName = await sql`
+      SELECT id FROM "JobApplication"
+      WHERE LOWER(TRIM("fullName")) = ${normalizedName} AND role = ${role} AND type = ${type || 'INTERNSHIP'}
+      LIMIT 1
+    `;
+
+    if (existingByName.length > 0) {
+      return NextResponse.json({
+        error: 'An application with this name already exists for this role. If this is you, please check your email for updates.',
+      }, { status: 400 });
+    }
+
+    const finalResumeLink = resumeUrl || resumeLink;
+
     try {
       await sql`
         INSERT INTO "JobApplication" (
-          id, role, "fullName", email, mobile, "resumeLink", status, "createdAt"
+          id, type, role, "fullName", email, phone, mobile,
+          "resumeLink", "resumeUrl", "resumeFileName", "resumeSizeBytes",
+          "linkedinUrl", "portfolioUrl", status, "createdAt"
         ) VALUES (
-          gen_random_uuid(), ${role}, ${fullName}, ${email}, NULL, ${resumeLink}, 'NEW', NOW()
+          gen_random_uuid(), ${type || 'INTERNSHIP'}, ${role}, ${fullName}, ${email},
+          ${phone || null}, ${phone || null},
+          ${finalResumeLink}, ${resumeUrl || null}, ${resumeFileName || null}, ${resumeSizeBytes || null},
+          ${linkedinUrl || null}, ${portfolioUrl || null}, 'NEW', NOW()
         )
       `;
       sendEmailFireAndForget({
@@ -67,15 +85,12 @@ export async function POST(req: NextRequest) {
         html: jobApplicationHtml(fullName, role),
         type: 'job_application',
       });
-
     } catch (dbError: any) {
       console.error('Database insert error:', dbError);
-      console.error('Error code:', dbError.code);
-      console.error('Error message:', dbError.message);
-      throw dbError; // Re-throw to be caught by outer catch
+      throw dbError;
     }
 
-    // Add to newsletter subscribers with double opt-in (only if not already subscribed)
+    // Add to newsletter subscribers with double opt-in
     try {
       const existing = await sql`
         SELECT id, "isActive", "emailVerified" FROM "NewsletterSubscriber" WHERE email = ${email} LIMIT 1

@@ -7,6 +7,10 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.FOUNDER_JWT_SECRET!
 );
 
+const USER_JWT_SECRET = new TextEncoder().encode(
+  process.env.USER_JWT_SECRET!
+);
+
 let _sql: ReturnType<typeof neon> | undefined;
 function getSql() {
   if (!_sql) _sql = neon(process.env.DATABASE_URL!);
@@ -109,14 +113,39 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // 3. Onboarding enforcement for WebUsers
+  if (!pathname.startsWith('/onboarding') && !pathname.startsWith('/api/') &&
+      !pathname.startsWith('/auth/') && !pathname.startsWith('/founder/') &&
+      !pathname.startsWith('/employer/') && !pathname.startsWith('/organizer/')) {
+    const userToken = request.cookies.get('user-token')?.value;
+    if (userToken) {
+      try {
+        const { payload } = await jwtVerify(userToken, USER_JWT_SECRET);
+        if (payload.onboardingCompleted === false) {
+          const onboardingUrl = new URL('/onboarding', request.url);
+          onboardingUrl.searchParams.set('returnTo', pathname);
+          return NextResponse.redirect(onboardingUrl);
+        }
+      } catch {
+        // Invalid token — let page handle auth
+      }
+    }
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
+    '/',
+    '/profile/:path*',
+    '/settings/:path*',
+    '/tools/:path*',
+    '/startups/:path*',
+    '/jobs/:path*',
+    '/events/:path*',
     '/founder/:path*',
-    '/startups/:slug',
-    '/tools/:slug',
+    '/onboarding',
     '/api/:path*',
   ],
 };

@@ -19,6 +19,7 @@ import { generateToolFAQs } from '@/lib/seo-utils';
 import FAQSection from '@/components/FAQSection';
 import SimilarTools from '@/components/tools/SimilarTools';
 import SimilarToolsCarousel from '@/components/tools/SimilarToolsCarousel';
+import TrackView from '@/components/TrackView';
 
 export const revalidate = 300;
 
@@ -175,8 +176,8 @@ export default async function ToolDetailPage(props: { params: Promise<{ slug: st
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
-      {/* JSON-LD Schema: Single @graph with WebPage + SoftwareApplication + BreadcrumbList */}
       <ToolSchema tool={tool} />
+      <TrackView entityType="tool" entityId={tool.id} categoryId={tool.categoryId} />
 
       {/* FAQ Schema (separate) */}
       <FAQSchema faqs={faqs} />

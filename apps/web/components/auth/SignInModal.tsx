@@ -167,7 +167,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
 
         onClose();
         resetForm();
-        router.push(effectiveReturnTo || '/profile');
+        router.push(effectiveReturnTo || '/onboarding');
         router.refresh();
       } catch (err: any) {
         setError(err.message);
@@ -206,7 +206,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
 
       onClose();
       resetForm();
-      router.push(effectiveReturnTo || '/profile');
+      router.push(effectiveReturnTo || '/onboarding');
       router.refresh();
     } catch (err: any) {
       setError(err.message);
@@ -269,7 +269,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
 
       onClose();
       resetForm();
-      router.push(effectiveReturnTo || '/profile');
+      router.push(effectiveReturnTo || '/onboarding');
       router.refresh();
     } catch (err: any) {
       setError(err.message);
@@ -303,7 +303,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
   };
 
   const handleGoogleSignIn = () => {
-    const returnUrl = effectiveReturnTo || '/profile';
+    const returnUrl = effectiveReturnTo || '/onboarding';
     window.location.href = `/api/user/auth/google?returnTo=${encodeURIComponent(returnUrl)}`;
   };
 
