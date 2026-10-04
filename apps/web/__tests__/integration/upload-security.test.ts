@@ -29,12 +29,15 @@ vi.mock('@/lib/rate-limit', () => ({
   strictRateLimit: {},
 }));
 
-vi.mock('@aws-sdk/client-s3', () => ({
-  S3Client: vi.fn(() => ({
-    send: vi.fn(() => Promise.resolve({})),
-  })),
-  PutObjectCommand: vi.fn(),
-}));
+vi.mock('@aws-sdk/client-s3', () => {
+  const MockS3Client = class {
+    send = vi.fn(() => Promise.resolve({}));
+  };
+  return {
+    S3Client: MockS3Client,
+    PutObjectCommand: vi.fn(),
+  };
+});
 
 vi.mock('@neondatabase/serverless', () => ({
   neon: vi.fn(() => vi.fn(() => Promise.resolve([]))),
@@ -225,16 +228,16 @@ describe('Upload security — /api/careers/upload-resume', () => {
     expect(res.status).toBe(400);
   });
 
-  it('rejects files over 300KB', async () => {
+  it('rejects files over 500KB', async () => {
     const { POST } = await import('@/app/api/careers/upload-resume/route');
     const res = await POST(createFileRequest(
       '/api/careers/upload-resume', 'resume.pdf',
-      Buffer.alloc(301 * 1024), 'application/pdf',
+      Buffer.alloc(501 * 1024), 'application/pdf',
       'resume'
     ));
     expect(res.status).toBe(400);
     const body = await res.json();
-    expect(body.error).toMatch(/300KB/i);
+    expect(body.error).toMatch(/500KB/i);
   });
 
   it('rejects empty request (no file)', async () => {
