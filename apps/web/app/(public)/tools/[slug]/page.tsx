@@ -468,37 +468,40 @@ export default async function ToolDetailPage(props: { params: Promise<{ slug: st
             </div>
           )}
 
-          {/* Key Features */}
-          {tool.useCases && tool.useCases.length > 0 && (
+          {/* Key Features & Use Cases */}
+          {((tool.keyFeatures && tool.keyFeatures.length > 0) || (tool.useCases && tool.useCases.length > 0)) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="card p-5 sm:p-6">
-                <h2 className="section-title mb-4">Key Features</h2>
-                <div className="space-y-2">
-                  {tool.useCases.slice(0, Math.ceil(tool.useCases.length / 2)).map((item: any) => (
-                    <div key={item.id} className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-brand mt-0.5 shrink-0" />
-                      <p className="text-sm text-gray-600 dark:text-gray-300 font-jakarta">
-                        {item.text.replace(/^[•\-\*]\s*/, '')}
-                      </p>
-                    </div>
-                  ))}
+              {tool.keyFeatures && tool.keyFeatures.length > 0 && (
+                <div className="card p-5 sm:p-6">
+                  <h2 className="section-title mb-4">Key Features</h2>
+                  <div className="space-y-2">
+                    {tool.keyFeatures.map((item: any) => (
+                      <div key={item.id} className="flex items-start gap-2">
+                        <Check className="w-4 h-4 text-brand mt-0.5 shrink-0" />
+                        <p className="text-sm text-gray-600 dark:text-gray-300 font-jakarta">
+                          {item.text.replace(/^[•\-\*]\s*/, '')}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Use Cases */}
-              <div className="card p-5 sm:p-6">
-                <h2 className="section-title mb-4">Use Cases</h2>
-                <div className="space-y-2">
-                  {tool.useCases.slice(Math.ceil(tool.useCases.length / 2)).map((item: any) => (
-                    <div key={item.id} className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
-                      <p className="text-sm text-gray-600 dark:text-gray-300 font-jakarta">
-                        {item.text.replace(/^[•\-\*]\s*/, '')}
-                      </p>
-                    </div>
-                  ))}
+              {tool.useCases && tool.useCases.length > 0 && (
+                <div className="card p-5 sm:p-6">
+                  <h2 className="section-title mb-4">Use Cases</h2>
+                  <div className="space-y-2">
+                    {tool.useCases.map((item: any) => (
+                      <div key={item.id} className="flex items-start gap-2">
+                        <Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
+                        <p className="text-sm text-gray-600 dark:text-gray-300 font-jakarta">
+                          {item.text.replace(/^[•\-\*]\s*/, '')}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 

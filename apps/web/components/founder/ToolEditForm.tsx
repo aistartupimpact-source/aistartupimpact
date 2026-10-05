@@ -61,6 +61,7 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [pros, setPros] = useState<string[]>(tool.pros || []);
   const [cons, setCons] = useState<string[]>(tool.cons || []);
+  const existingFeatures = (tool.keyFeatures || []).map((f: any) => f.text).join('\n');
   const existingUseCases = tool.useCases.map(uc => uc.text).join('\n');
 
   const [draftLoaded, setDraftLoaded] = useState(false);
@@ -111,8 +112,8 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
     launchYear: tool.launchYear || new Date().getFullYear(),
     founderNames: tool.founderNames?.join(', ') || '',
     headquartersCountry: tool.headquartersCountry || '',
-    features: existingUseCases,
-    useCases: '',
+    features: existingFeatures,
+    useCases: existingUseCases,
     logoUrl: tool.logoUrl || '',
     twitterUrl: tool.twitterUrl || '',
     linkedinUrl: tool.linkedinUrl || '',
@@ -295,12 +296,12 @@ export default function ToolEditForm({ tool }: ToolEditFormProps) {
 
       const featuresArray = formData.features
         .split('\n')
-        .map(f => f.trim())
+        .map((f: string) => f.trim())
         .filter(Boolean);
 
       const useCasesArray = formData.useCases
         .split('\n')
-        .map(u => u.trim())
+        .map((u: string) => u.trim())
         .filter(Boolean);
 
       const founderNamesArray = formData.founderNames

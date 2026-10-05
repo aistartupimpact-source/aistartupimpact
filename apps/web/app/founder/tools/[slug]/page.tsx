@@ -43,11 +43,14 @@ export default async function EditToolPage(props: PageProps) {
   }
 
   // Fetch use cases separately
-  const useCases = await prisma.$queryRaw<any[]>`
-    SELECT id, text
+  const allUseCases = await prisma.$queryRaw<any[]>`
+    SELECT id, text, type
     FROM "ToolUseCase"
     WHERE "toolId" = ${tool.id}
+    ORDER BY id
   `;
+  const useCases = allUseCases.filter((uc: any) => uc.type !== 'feature');
+  const keyFeatures = allUseCases.filter((uc: any) => uc.type === 'feature');
 
   // Fetch FAQs separately
   const faqs = await prisma.$queryRaw<any[]>`
@@ -95,6 +98,10 @@ export default async function EditToolPage(props: PageProps) {
     useCases: useCases.map(uc => ({
       id: uc.id,
       text: uc.text,
+    })),
+    keyFeatures: keyFeatures.map(f => ({
+      id: f.id,
+      text: f.text,
     })),
     faqs: faqs.map(faq => ({
       id: faq.id,

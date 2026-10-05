@@ -137,6 +137,7 @@ export async function submitToolAction(data: ToolSubmission) {
           id: `usecase_${toolId}_feat_${index}_${Date.now()}`,
           toolId: toolId,
           text,
+          type: 'feature',
         })),
       });
     }
@@ -148,6 +149,7 @@ export async function submitToolAction(data: ToolSubmission) {
           id: `usecase_${toolId}_use_${index}_${Date.now()}`,
           toolId: toolId,
           text,
+          type: 'use_case',
         })),
       });
     }
@@ -319,8 +321,8 @@ export async function updateToolAction(id: string, data: ToolSubmission) {
     if (data.features.length > 0) {
       for (const text of data.features) {
         await prisma.$queryRaw`
-          INSERT INTO "ToolUseCase" (id, "toolId", text)
-          VALUES (gen_random_uuid(), ${id}, ${text})
+          INSERT INTO "ToolUseCase" (id, "toolId", text, type)
+          VALUES (gen_random_uuid(), ${id}, ${text}, 'feature')
         `;
       }
     }
@@ -329,8 +331,8 @@ export async function updateToolAction(id: string, data: ToolSubmission) {
     if (data.useCases.length > 0) {
       for (const text of data.useCases) {
         await prisma.$queryRaw`
-          INSERT INTO "ToolUseCase" (id, "toolId", text)
-          VALUES (gen_random_uuid(), ${id}, ${text})
+          INSERT INTO "ToolUseCase" (id, "toolId", text, type)
+          VALUES (gen_random_uuid(), ${id}, ${text}, 'use_case')
         `;
       }
     }

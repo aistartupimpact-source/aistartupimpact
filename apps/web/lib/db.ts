@@ -637,14 +637,17 @@ export async function getAiToolBySlugDirect(slug: string) {
           ORDER BY r."helpfulCount" DESC, r."publishedAt" DESC
         `,
         sql`
-          SELECT id, text
+          SELECT id, text, type
           FROM "ToolUseCase"
           WHERE "toolId" = ${tool.id}
           ORDER BY id
         `,
       ]);
 
-      return { ...tool, stories, fundingRounds, userReviews, useCases, category: tool.categoryName };
+      const keyFeatures = (useCases as any[]).filter((uc: any) => uc.type === 'feature');
+      const toolUseCases = (useCases as any[]).filter((uc: any) => uc.type !== 'feature');
+
+      return { ...tool, stories, fundingRounds, userReviews, useCases: toolUseCases, keyFeatures, category: tool.categoryName };
     } catch (e) {
       console.error('getAiToolBySlugDirect error:', e);
       return null;
