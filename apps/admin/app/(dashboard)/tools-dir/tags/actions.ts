@@ -162,6 +162,55 @@ export async function createTagAction(data: {
   }
 }
 
+export async function createTagsBulkAction(data: {
+  names: string[];
+  groupId: string;
+}) {
+  try {
+    const results: Array<{ name: string; success: boolean; error?: string }> = [];
+
+    const maxOrder = await sql`
+      SELECT COALESCE(MAX("sortOrder"), 0) AS max FROM "ToolSystemTag" WHERE "groupId" = ${data.groupId}
+    `;
+    let nextOrder = ((maxOrder[0] as any).max || 0) + 1;
+
+    for (const name of data.names) {
+      const trimmed = name.trim();
+      if (!trimmed) continue;
+
+      const slug = trimmed
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/[\s_]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+
+      const existing = await sql`
+        SELECT id FROM "ToolSystemTag" WHERE slug = ${slug} LIMIT 1
+      `;
+      if (existing.length > 0) {
+        results.push({ name: trimmed, success: false, error: 'Already exists' });
+        continue;
+      }
+
+      await sql`
+        INSERT INTO "ToolSystemTag" (id, name, slug, emoji, "groupId", "sortOrder", "isActive", "tagCount", "createdAt", "updatedAt")
+        VALUES (gen_random_uuid(), ${trimmed}, ${slug}, null, ${data.groupId}, ${nextOrder}, true, 0, NOW(), NOW())
+      `;
+      nextOrder++;
+      results.push({ name: trimmed, success: true });
+    }
+
+    revalidatePath('/tools-dir/tags');
+    const created = results.filter(r => r.success).length;
+    const failed = results.filter(r => !r.success);
+    return { success: true, created, failed };
+  } catch (error: any) {
+    console.error('createTagsBulkAction error:', error);
+    return { success: false, error: error.message || 'Failed to create tags' };
+  }
+}
+
 export async function updateTagAction(id: string, data: { name?: string; emoji?: string; isActive?: boolean; sortOrder?: number }) {
   try {
     if (data.name !== undefined) {
