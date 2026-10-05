@@ -120,8 +120,8 @@ export async function getToolClickAnalyticsAction(period: string = '7 days') {
       percentage: totalClicks > 0 ? Math.round((c.count / totalClicks) * 100) : 0,
     }));
 
-    // ── 8. Top tools (top 10) ─────────────────────────────────────────────────
-    const toolCounts = countBy(allClicks, 'toolId', 10);
+    // ── 8. Top tools (top 15) ─────────────────────────────────────────────────
+    const toolCounts = countBy(allClicks, 'toolId', 15);
     const topToolIds = toolCounts.map(t => t.value);
 
     const toolDetails = topToolIds.length > 0
@@ -137,9 +137,24 @@ export async function getToolClickAnalyticsAction(period: string = '7 days') {
         })
       : [];
 
+    // Get profile views for top tools
+    const topToolSlugs = toolDetails.map(t => `/tools/${t.slug}`);
+    const profileViews = topToolSlugs.length > 0
+      ? await prisma.$queryRaw<Array<{ pathname: string; views: bigint }>>`
+          SELECT pathname, COUNT(*) AS views
+          FROM "PageView"
+          WHERE pathname = ANY(${topToolSlugs})
+            AND "createdAt" >= ${startDate}
+          GROUP BY pathname
+        `
+      : [];
+    const viewMap = new Map(profileViews.map(v => [v.pathname, Number(v.views)]));
+
     const toolMap = new Map(toolDetails.map(t => [t.id, t]));
     const topTools = toolCounts.map(t => {
       const tool = toolMap.get(t.value);
+      const views = tool ? (viewMap.get(`/tools/${tool.slug}`) ?? 0) : 0;
+      const ctr = views > 0 ? ((t.count / views) * 100).toFixed(1) : '0.0';
       return {
         id: t.value,
         name: tool?.name ?? 'Unknown',
@@ -147,10 +162,27 @@ export async function getToolClickAnalyticsAction(period: string = '7 days') {
         logoUrl: tool?.logoUrl ?? null,
         category: tool?.ToolCategory?.name ?? 'Uncategorized',
         clicks: t.count,
+        profileViews: views,
+        ctr,
       };
     });
 
-    // ── 9. Daily trend ────────────────────────────────────────────────────────
+    // ── 9. Traffic Sent summary ─────────────────────────────────────────────
+    const [allTimeClicks] = await prisma.$queryRaw<Array<{
+      total: bigint;
+      tools: bigint;
+    }>>`
+      SELECT COUNT(*) AS total, COUNT(DISTINCT "toolId") AS tools
+      FROM "AffiliateClick"
+    `;
+
+    const trafficSent = {
+      totalOutboundClicks: Number(allTimeClicks.total),
+      toolsReceivingTraffic: Number(allTimeClicks.tools),
+      topReferredTool: topTools.length > 0 ? topTools[0].name : '—',
+    };
+
+    // ── 10. Daily trend ────────────────────────────────────────────────────────
     const dayMap = new Map<string, number>();
     for (const click of allClicks) {
       const day = click.createdAt.substring(0, 10); // "YYYY-MM-DD"
@@ -164,6 +196,7 @@ export async function getToolClickAnalyticsAction(period: string = '7 days') {
       success: true,
       data: {
         overview,
+        trafficSent,
         topTools,
         sourcePerformance,
         deviceBreakdown,

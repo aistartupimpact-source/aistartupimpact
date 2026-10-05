@@ -9,6 +9,7 @@ import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
 import CategoryCascadeSelect from '@/components/shared/CategoryCascadeSelect';
 import ToolTagSelector from '@/components/shared/ToolTagSelector';
 import ProsConsManager from '@/components/shared/ProsConsManager';
+import ScreenshotManager from '@/components/shared/ScreenshotManager';
 
 const PRICING_MODELS = [
   'FREE',
@@ -161,73 +162,6 @@ export default function ToolForm() {
     }
   };
 
-  const handleScreenshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-
-    if (screenshots.length + files.length > 5) {
-      setError('Maximum 5 screenshots allowed');
-      return;
-    }
-
-    for (const file of files) {
-      if (!file.type.startsWith('image/')) {
-        setError('Please upload image files only');
-        continue;
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        setError('Each image must be less than 5MB');
-        continue;
-      }
-
-      try {
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const response = await fetch('/api/media/upload', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) throw new Error('Upload failed');
-
-        const data = await response.json();
-        setScreenshots(prev => [...prev, data.url]);
-      } catch (err) {
-        setError('Failed to upload screenshot');
-        console.error(err);
-      }
-    }
-  };
-
-  const removeScreenshot = (index: number) => {
-    setScreenshots(prev => prev.filter((_, i) => i !== index));
-  };
-
-  // Drag and drop handlers for screenshots
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-
-  const handleDragStart = (index: number) => {
-    setDraggedIndex(index);
-  };
-
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === index) return;
-
-    const newScreenshots = [...screenshots];
-    const draggedItem = newScreenshots[draggedIndex];
-    newScreenshots.splice(draggedIndex, 1);
-    newScreenshots.splice(index, 0, draggedItem);
-
-    setScreenshots(newScreenshots);
-    setDraggedIndex(index);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -761,54 +695,11 @@ export default function ToolForm() {
       </div>
 
       {/* Screenshots */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Screenshots (Max 5)
-        </label>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-          Drag and drop to reorder screenshots
-        </p>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {screenshots.map((url, index) => (
-            <div
-              key={index}
-              draggable
-              onDragStart={() => handleDragStart(index)}
-              onDragOver={(e) => handleDragOver(e, index)}
-              onDragEnd={handleDragEnd}
-              className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all cursor-move ${
-                draggedIndex === index
-                  ? 'border-brand opacity-50 scale-95'
-                  : 'border-gray-200 dark:border-gray-700 hover:border-brand'
-              }`}
-            >
-              <Image src={url} alt={`Screenshot ${index + 1}`} width={400} height={225} unoptimized className="w-full h-full object-cover pointer-events-none" />
-              <button
-                type="button"
-                onClick={() => removeScreenshot(index)}
-                className="absolute top-1 right-1 p-1 bg-red-500 rounded-full text-white hover:bg-red-600 z-10"
-              >
-                <X className="w-3 h-3" />
-              </button>
-              <div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-2 py-0.5 rounded">
-                {index + 1}
-              </div>
-            </div>
-          ))}
-          {screenshots.length < 5 && (
-            <label className="aspect-video border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg flex items-center justify-center cursor-pointer hover:border-brand transition-colors">
-              <Plus className="w-6 h-6 text-gray-400" />
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleScreenshotUpload}
-                className="hidden"
-              />
-            </label>
-          )}
-        </div>
-      </div>
+      <ScreenshotManager
+        screenshots={screenshots}
+        onChange={setScreenshots}
+        onError={setError}
+      />
 
       {/* Tags */}
       {/* Tags */}

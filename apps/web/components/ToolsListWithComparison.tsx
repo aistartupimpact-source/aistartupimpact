@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Star, Zap, ArrowRight, CheckSquare, Square, X, BarChart, Search, Grid3X3, List, Loader2, SlidersHorizontal, ChevronDown, ChevronRight, SearchX } from 'lucide-react';
 import BookmarkButton from './BookmarkButton';
 import UpvoteButton from './tools/UpvoteButton';
@@ -68,8 +69,9 @@ const ITEMS_PER_PAGE = 30;
 const PRIMARY_GROUP_SLUGS = ['pricing-access', 'platform-access', 'target-user', 'ai-model-technology'];
 
 export default function ToolsListWithComparison({ picks, tagGroups = [], toolTagMap = {}, initialTagId, initialPricing }: ToolsListProps) {
+  const router = useRouter();
   const [selectedTools, setSelectedTools] = useState<ToolPick[]>([]);
-  const [showComparison, setShowComparison] = useState(false);
+  const [categoryBeforeCompare, setCategoryBeforeCompare] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState('all');
@@ -274,23 +276,40 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
     setVisibleCount(ITEMS_PER_PAGE);
   };
 
+  const compareCategory = selectedTools.length > 0
+    ? (selectedTools[0].parentCategorySlug || selectedTools[0].categorySlug)
+    : null;
+
   const toggleTool = (tool: ToolPick, e: React.MouseEvent) => {
     e.preventDefault();
     if (selectedTools.find((t) => t.slug === tool.slug)) {
-      setSelectedTools(selectedTools.filter((t) => t.slug !== tool.slug));
+      const remaining = selectedTools.filter((t) => t.slug !== tool.slug);
+      setSelectedTools(remaining);
+      if (remaining.length === 0 && categoryBeforeCompare !== null) {
+        setSelectedCategory(categoryBeforeCompare);
+        setSelectedSubcategory('all');
+        setCategoryBeforeCompare(null);
+      }
     } else {
+      const toolCat = tool.parentCategorySlug || tool.categorySlug;
+      if (compareCategory && toolCat !== compareCategory) {
+        setToastMessage("You can only compare tools in the same category.");
+        setTimeout(() => setToastMessage(null), 3000);
+        return;
+      }
       if (selectedTools.length < 3) {
+        if (selectedTools.length === 0) {
+          setCategoryBeforeCompare(selectedCategory);
+          setSelectedCategory(toolCat);
+          setSelectedSubcategory('all');
+          setVisibleCount(ITEMS_PER_PAGE);
+        }
         setSelectedTools([...selectedTools, tool]);
       } else {
         setToastMessage("You can compare up to 3 tools at a time.");
         setTimeout(() => setToastMessage(null), 3000);
       }
     }
-  };
-
-  const removeTool = (slug: string) => {
-    setSelectedTools(selectedTools.filter((t) => t.slug !== slug));
-    if (selectedTools.length <= 1) setShowComparison(false);
   };
 
   // Keyboard shortcut: "/" to focus search
@@ -629,6 +648,8 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 -mx-1 sm:mx-0">
           {visibleTools.map((tool, i) => {
             const isSelected = !!selectedTools.find((t) => t.slug === tool.slug);
+            const toolCat = tool.parentCategorySlug || tool.categorySlug;
+            const isDisabledForCompare = !isSelected && compareCategory != null && toolCat !== compareCategory;
             const iconUrl = tool.logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(tool.name)}&background=random&color=fff&size=150`;
             const toolTagIds = toolTagMap[tool.id] || [];
             const toolTagNames = toolTagIds.slice(0, 2).map(tid => {
@@ -656,14 +677,14 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                         onClick={(e) => toggleTool(tool, e)}
                         aria-label={`Compare ${tool.name}`}
                         aria-pressed={isSelected}
-                        className={`btn-icon ${isSelected ? 'btn-icon-active' : ''}`}
+                        className={`btn-icon ${isSelected ? 'btn-icon-active' : ''} ${isDisabledForCompare ? 'opacity-30 cursor-not-allowed' : ''}`}
                       >
                         {isSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
                       </button>
                       <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover/compare:flex flex-col items-center z-dropdown">
                         <div className="w-2.5 h-2.5 bg-black dark:bg-gray-800 rotate-45 -mb-1.5" />
                         <div className="bg-black dark:bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg font-jakarta">
-                          {isSelected ? 'Selected' : 'Compare'}
+                          {isSelected ? 'Selected' : isDisabledForCompare ? 'Different category' : 'Compare'}
                         </div>
                       </div>
                     </div>
@@ -738,6 +759,8 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
         <div className="space-y-1.5 sm:space-y-2 -mx-1 sm:mx-0">
           {visibleTools.map((tool) => {
             const isSelected = !!selectedTools.find((t) => t.slug === tool.slug);
+            const toolCatList = tool.parentCategorySlug || tool.categorySlug;
+            const isDisabledForCompare = !isSelected && compareCategory != null && toolCatList !== compareCategory;
             const iconUrl = tool.logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(tool.name)}&background=random&color=fff&size=150`;
             const listTagIds = toolTagMap[tool.id] || [];
             const listTagNames = listTagIds.slice(0, 2).map(tid => {
@@ -809,8 +832,8 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
                 {/* Compare checkbox - hidden on mobile */}
                 <button
                   onClick={(e) => toggleTool(tool, e)}
-                  className={`hidden sm:block shrink-0 p-1 transition-colors ${isSelected ? 'text-brand' : 'text-gray-300 hover:text-brand'}`}
-                  title="Select for comparison"
+                  className={`hidden sm:block shrink-0 p-1 transition-colors ${isSelected ? 'text-brand' : isDisabledForCompare ? 'text-gray-200 dark:text-gray-700 cursor-not-allowed' : 'text-gray-300 hover:text-brand'}`}
+                  title={isDisabledForCompare ? 'Different category' : 'Select for comparison'}
                 >
                   {isSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
                 </button>
@@ -864,82 +887,27 @@ export default function ToolsListWithComparison({ picks, tagGroups = [], toolTag
       )}
 
       {/* ── Comparison Footer Bar ── */}
-      {selectedTools.length > 0 && !showComparison && (
+      {selectedTools.length > 0 && (
         <div className="fixed bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 bg-navy text-white px-4 sm:px-6 py-3 sm:py-4 rounded-2xl sm:rounded-full shadow-2xl flex items-center gap-4 sm:gap-6 z-sticky animate-fade-in-up border border-indigo-500/30 max-w-[calc(100vw-2rem)]">
           <div className="flex -space-x-2">
             <div className="font-sora font-bold text-sm mr-4 flex items-center gap-2"><BarChart className="w-4 h-4 text-brand" /> {selectedTools.length}/3 Selected</div>
           </div>
           <button
-            onClick={() => setShowComparison(true)}
+            onClick={() => {
+              const slugs = selectedTools.map(t => t.slug).join('-vs-');
+              router.push(`/tools/compare/${slugs}`);
+            }}
             disabled={selectedTools.length < 2}
             className="bg-brand text-white text-sm font-bold px-4 py-2 rounded-full hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100 whitespace-nowrap"
           >
             {selectedTools.length < 2 ? 'Select one more' : 'Compare Now'}
           </button>
-          <button onClick={() => setSelectedTools([])} className="text-gray-400 hover:text-white" aria-label="Clear all">
+          <button onClick={() => { setSelectedTools([]); if (categoryBeforeCompare !== null) { setSelectedCategory(categoryBeforeCompare); setSelectedSubcategory('all'); setCategoryBeforeCompare(null); } }} className="text-gray-400 hover:text-white" aria-label="Clear all">
             <X className="w-5 h-5" />
           </button>
         </div>
       )}
 
-      {/* ── Comparison Modal ── */}
-      {showComparison && (
-        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-gray-900 w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-4 sm:p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
-              <h2 className="font-sora font-extrabold text-xl sm:text-2xl flex items-center gap-2"><BarChart className="text-brand" /> Tool Comparison</h2>
-              <button onClick={() => setShowComparison(false)} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors" aria-label="Close comparison">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="p-4 sm:p-8 overflow-y-auto">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 min-w-[600px] md:min-w-0">
-                {/* Labels Column */}
-                <div className="hidden md:flex flex-col gap-y-4 pt-[140px] text-sm font-jakarta font-bold text-gray-500 text-right pr-4 border-r border-gray-100 dark:border-gray-800">
-                  <div className="h-10 flex items-center justify-end">Category</div>
-                  <div className="h-10 flex items-center justify-end">Pricing</div>
-                  <div className="h-10 flex items-center justify-end">Rating</div>
-                  <div className="h-10 flex items-center justify-end">API Access</div>
-                  <div className="h-10 flex items-center justify-end">Mobile App</div>
-                  <div className="flex-1 flex items-start justify-end mt-2">Verdict</div>
-                </div>
-
-                {/* Tool Columns */}
-                {selectedTools.map((t) => (
-                  <div key={t.slug} className="flex flex-col gap-4 relative">
-                    <button onClick={() => removeTool(t.slug)} className="absolute top-0 right-0 p-1.5 bg-gray-100 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors z-10" aria-label={`Remove ${t.name}`}><X className="w-3 h-3" /></button>
-                    <div className="h-[120px] flex flex-col justify-end pb-4 border-b border-gray-100 dark:border-gray-800">
-                      <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden mb-3 border border-gray-100 dark:border-gray-700/50">
-                        <Image src={t.logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=random&color=fff&size=150`} alt={t.name} className="w-full h-full object-cover" width={48} height={48} unoptimized />
-                      </div>
-                      <h3 className="font-sora font-extrabold text-lg leading-tight">{t.name}</h3>
-                    </div>
-                    <div className="h-10 flex items-center font-jakarta text-sm">{t.category}</div>
-                    <div className="h-10 flex items-center font-jakarta text-sm">
-                      <span className="font-mono bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 text-center rounded">{t.pricing}</span>
-                    </div>
-                    <div className="h-10 flex items-center font-jakarta text-sm">
-                      <div className="flex items-center gap-1"><Star className="w-4 h-4 text-yellow-500 fill-yellow-500" /> {t.rating}</div>
-                    </div>
-                    <div className="h-10 flex items-center font-jakarta text-sm">
-                      <span className={t.hasApi ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}>{t.hasApi ? '✓ Yes' : '✗ No'}</span>
-                    </div>
-                    <div className="h-10 flex items-center font-jakarta text-sm">
-                      <span className={t.hasMobileApp ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'}>{t.hasMobileApp ? '✓ Yes' : '✗ No'}</span>
-                    </div>
-                    <div className="flex-1 font-jakarta text-sm text-gray-600 dark:text-gray-400 leading-relaxed mt-2 pt-4 border-t border-gray-100 dark:border-gray-800 border-dashed">
-                      {t.verdict}
-                    </div>
-                    <Link href={`/tools/${t.slug}`} className="mt-4 w-full bg-gray-900 hover:bg-brand text-white py-2 rounded-lg text-center font-bold font-jakarta transition-colors text-sm">
-                      Full Review
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

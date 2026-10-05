@@ -18,6 +18,11 @@ interface AnalyticsData {
     uniqueTools: number;
     avgClicksPerSession: string;
   };
+  trafficSent: {
+    totalOutboundClicks: number;
+    toolsReceivingTraffic: number;
+    topReferredTool: string;
+  };
   topTools: Array<{
     id: string;
     name: string;
@@ -25,6 +30,8 @@ interface AnalyticsData {
     logoUrl: string | null;
     category: string;
     clicks: number;
+    profileViews: number;
+    ctr: string;
   }>;
   sourcePerformance: Array<{
     source: string;
@@ -60,24 +67,27 @@ export default function ToolAnalyticsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadData();
-  }, [period]);
-
-  const loadData = async () => {
+    let cancelled = false;
     setLoading(true);
     setError(null);
-    try {
-      const res = await getToolClickAnalyticsAction(period);
-      if (res.success) {
-        setData(res.data as AnalyticsData);
-      } else {
-        setError(res.error || 'Failed to load analytics');
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to load analytics');
-    }
-    setLoading(false);
-  };
+    getToolClickAnalyticsAction(period)
+      .then(res => {
+        if (cancelled) return;
+        if (res.success) {
+          setData(res.data as AnalyticsData);
+        } else {
+          setError(res.error || 'Failed to load analytics');
+        }
+      })
+      .catch((err: any) => {
+        if (cancelled) return;
+        setError(err.message || 'Failed to load analytics');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [period]);
 
   const handleExport = async () => {
     setExporting(true);
@@ -117,7 +127,7 @@ export default function ToolAnalyticsPage() {
     setExporting(false);
   };
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div className="flex justify-center py-20">
         <Loader2 className="w-6 h-6 animate-spin text-brand" />
@@ -151,9 +161,15 @@ export default function ToolAnalyticsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${loading ? 'opacity-60 pointer-events-none' : ''} transition-opacity`}>
+      {loading && (
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2 shadow-lg pointer-events-auto">
+          <Loader2 className="w-4 h-4 animate-spin text-brand" />
+          <span className="text-xs font-jakarta text-gray-500">Updating...</span>
+        </div>
+      )}
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pointer-events-auto">
         <div>
           <h1 className="font-sora font-extrabold text-2xl text-navy dark:text-white">Tool Click Analytics</h1>
           <p className="text-gray-400 dark:text-gray-500 text-sm font-jakarta mt-1">
@@ -235,6 +251,31 @@ export default function ToolAnalyticsPage() {
         ))}
       </div>
 
+      {/* Traffic Sent Banner */}
+      <div className="bg-gradient-to-r from-brand/10 via-purple-500/5 to-blue-500/10 dark:from-brand/20 dark:via-purple-500/10 dark:to-blue-500/20 rounded-xl border border-brand/20 p-5">
+        <h2 className="font-sora font-bold text-sm text-brand mb-3 uppercase tracking-wider">Traffic Sent — All Time</h2>
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <p className="font-sora font-extrabold text-2xl text-navy dark:text-white">
+              {data.trafficSent.totalOutboundClicks.toLocaleString()}
+            </p>
+            <p className="text-xs text-gray-500 font-jakarta mt-0.5">Total outbound clicks</p>
+          </div>
+          <div>
+            <p className="font-sora font-extrabold text-2xl text-navy dark:text-white">
+              {data.trafficSent.toolsReceivingTraffic.toLocaleString()}
+            </p>
+            <p className="text-xs text-gray-500 font-jakarta mt-0.5">Tools receiving traffic</p>
+          </div>
+          <div>
+            <p className="font-sora font-extrabold text-2xl text-navy dark:text-white truncate">
+              {data.trafficSent.topReferredTool}
+            </p>
+            <p className="text-xs text-gray-500 font-jakarta mt-0.5">Top referred tool</p>
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Top Tools */}
         <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6">
@@ -276,9 +317,17 @@ export default function ToolAnalyticsPage() {
                       <p className="text-[11px] text-gray-400 font-jakarta">{tool.category}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-navy dark:text-white font-sora">
-                      {tool.clicks.toLocaleString()}
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <span className="text-xs text-gray-400 font-jakarta block">{tool.profileViews.toLocaleString()} views</span>
+                      <span className="text-sm font-bold text-navy dark:text-white font-sora">{tool.clicks.toLocaleString()} clicks</span>
+                    </div>
+                    <span className={`text-xs font-bold font-sora px-2 py-0.5 rounded-full ${
+                      parseFloat(tool.ctr) >= 10 ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                      parseFloat(tool.ctr) >= 5 ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' :
+                      'bg-gray-100 dark:bg-gray-800 text-gray-500'
+                    }`}>
+                      {tool.ctr}% CTR
                     </span>
                     <Link
                       href={`/tools/${tool.slug}`}
@@ -410,43 +459,59 @@ export default function ToolAnalyticsPage() {
         </div>
       </div>
 
-      {/* Daily Trend */}
-      {data.dailyTrend.length > 0 && (
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6">
-          <h2 className="font-sora font-bold text-base text-navy dark:text-white mb-4 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-brand" />
-            Daily Trend
-          </h2>
-          <div className="space-y-2">
-            {data.dailyTrend.map((day) => (
-              <div key={day.date} className="flex items-center justify-between">
-                <span className="text-sm font-jakarta text-gray-700 dark:text-gray-300">
-                  {new Date(day.date).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric'
-                  })}
-                </span>
-                <div className="flex items-center gap-3 flex-1 mx-4">
-                  <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-brand rounded-full transition-all duration-500"
-                      style={{
-                        width: `${Math.min(
-                          100,
-                          (day.clicks / Math.max(...data.dailyTrend.map(d => d.clicks))) * 100
-                        )}%`
-                      }}
-                    />
+      {/* Daily Trend — compact bar chart */}
+      {data.dailyTrend.length > 0 && (() => {
+        const maxClicks = Math.max(...data.dailyTrend.map(d => d.clicks));
+        const totalInPeriod = data.dailyTrend.reduce((s, d) => s + d.clicks, 0);
+        const labelInterval = data.dailyTrend.length <= 14 ? 1 : data.dailyTrend.length <= 31 ? 3 : 7;
+        return (
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-sora font-bold text-base text-navy dark:text-white flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-brand" />
+                Daily Trend
+              </h2>
+              <span className="text-xs text-gray-400 font-jakarta">
+                {totalInPeriod.toLocaleString()} clicks · {data.dailyTrend.length} days
+              </span>
+            </div>
+            <div className="flex items-end gap-px h-40" title="Daily clicks">
+              {data.dailyTrend.map((day, i) => {
+                const pct = maxClicks > 0 ? (day.clicks / maxClicks) * 100 : 0;
+                return (
+                  <div key={day.date} className="flex-1 flex flex-col items-center group relative min-w-0">
+                    <div className="w-full flex justify-center" style={{ height: '160px', alignItems: 'flex-end' }}>
+                      <div
+                        className="w-full max-w-[20px] bg-brand/70 hover:bg-brand rounded-t transition-colors cursor-pointer"
+                        style={{ height: `${Math.max(pct, 2)}%` }}
+                      />
+                    </div>
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-10 pointer-events-none">
+                      <div className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[10px] px-2 py-1 rounded shadow-lg whitespace-nowrap font-jakarta">
+                        {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} — {day.clicks} clicks
+                      </div>
+                      <div className="w-1.5 h-1.5 bg-gray-900 dark:bg-gray-100 rotate-45 -mt-0.5" />
+                    </div>
                   </div>
-                  <span className="text-sm font-sora font-bold text-navy dark:text-white w-12 text-right">
-                    {day.clicks}
-                  </span>
+                );
+              })}
+            </div>
+            {/* X-axis labels */}
+            <div className="flex gap-px mt-1.5">
+              {data.dailyTrend.map((day, i) => (
+                <div key={day.date} className="flex-1 min-w-0 text-center">
+                  {i % labelInterval === 0 ? (
+                    <span className="text-[9px] text-gray-400 font-jakarta">
+                      {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
+                  ) : null}
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

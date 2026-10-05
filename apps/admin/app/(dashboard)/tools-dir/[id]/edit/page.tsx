@@ -6,6 +6,7 @@ import { ArrowLeft, Upload, Loader2, Save, Plus, X } from 'lucide-react';
 import { getToolsAction, getToolFAQsAction, updateToolAction, getCategoriesAction, getToolProsConsAction, updateToolProsConsAction, getToolUseCasesAction } from '../../actions';
 import { FAQManager, type FAQ } from '@/components/shared/FAQManager';
 import ProsConsManager from '@/components/shared/ProsConsManager';
+import ScreenshotManager from '@/components/shared/ScreenshotManager';
 import CategoryCascadeSelect from '@/components/shared/CategoryCascadeSelect';
 import ToolTagSelector from '@/components/shared/ToolTagSelector';
 import StartupLinker from '@/components/shared/StartupLinker';
@@ -62,12 +63,10 @@ export default function EditToolPage() {
   const params = useParams();
   const toolId = params.id as string;
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const screenshotInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
-  const [screenshotUploading, setScreenshotUploading] = useState(false);
   const [logoPreviewError, setLogoPreviewError] = useState(false);
   const [logoUploadError, setLogoUploadError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -218,39 +217,6 @@ export default function EditToolPage() {
     }
   };
 
-  const handleScreenshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-
-    if (screenshots.length + files.length > 5) {
-      alert('Maximum 5 screenshots allowed');
-      return;
-    }
-
-    setScreenshotUploading(true);
-
-    for (const file of files) {
-      try {
-        const fd = new FormData();
-        fd.append('file', file);
-        const res = await fetch('/api/media/upload', { method: 'POST', body: fd });
-        const result = await res.json();
-
-        if (res.ok && result.success && result.url) {
-          setScreenshots(prev => [...prev, result.url]);
-        }
-      } catch (err: any) {
-        console.error('Screenshot upload error:', err);
-      }
-    }
-
-    setScreenshotUploading(false);
-    if (screenshotInputRef.current) screenshotInputRef.current.value = '';
-  };
-
-  const removeScreenshot = (index: number) => {
-    setScreenshots(prev => prev.filter((_, i) => i !== index));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -891,41 +857,8 @@ export default function EditToolPage() {
         </div>
 
         {/* Screenshots */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6 space-y-4">
-          <h2 className="font-sora font-bold text-lg text-navy dark:text-white">Screenshots (Max 5)</h2>
-          
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {screenshots.map((url, index) => (
-              <div key={index} className="relative aspect-video rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700">
-                <img src={url} alt={`Screenshot ${index + 1}`} className="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  onClick={() => removeScreenshot(index)}
-                  className="absolute top-1 right-1 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            ))}
-            {screenshots.length < 5 && (
-              <label className="aspect-video border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg flex items-center justify-center cursor-pointer hover:border-brand transition-colors">
-                <input
-                  ref={screenshotInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={handleScreenshotUpload}
-                  disabled={screenshotUploading}
-                />
-                {screenshotUploading ? (
-                  <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
-                ) : (
-                  <Plus className="w-6 h-6 text-gray-400" />
-                )}
-              </label>
-            )}
-          </div>
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-6">
+          <ScreenshotManager screenshots={screenshots} onChange={setScreenshots} />
         </div>
 
         {/* FAQs */}

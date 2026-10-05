@@ -17,7 +17,7 @@ export async function getToolsAction() {
     const tools = await sql`
       SELECT
         t.id, t.name, t.slug, t."slugChangedAt", t."previousSlugs", t.tagline, t.description, t."websiteUrl", t."logoUrl",
-        t."pricingModel", t."avgRating", t."listingTier", t.status, t."claimStatus",
+        t."pricingModel", t."avgRating", t."listingTier", t.status, t."claimStatus", t."contentReviewed",
         t."founderNames", t."headquartersCountry", t."hasApi", t."hasMobileApp",
         t."pricingUrl", t."startingPrice", t."freeTrialDays", t."demoVideoUrl", t."ownerId",
         t."launchYear", t."screenshotUrls", t."affiliateUrl",
@@ -971,5 +971,22 @@ export async function checkDuplicateToolAction(name: string, websiteUrl: string)
     } catch {
       return [];
     }
+  }
+}
+
+export async function toggleToolContentReviewedAction(id: string, currentValue: boolean) {
+  const { error } = await requireActionAuth();
+  if (error) return { success: false, error };
+  try {
+    await sql`
+      UPDATE "AiTool"
+      SET "contentReviewed" = ${!currentValue}, "updatedAt" = NOW()
+      WHERE id = ${id}
+    `;
+    revalidatePath('/tools-dir');
+    return { success: true };
+  } catch (error: any) {
+    console.error('toggleToolContentReviewedAction error:', error);
+    return { success: false, error: error.message };
   }
 }

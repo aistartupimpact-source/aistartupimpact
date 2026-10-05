@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Plus, Search, Wrench, Edit3, Trash2, Crown, CheckCircle, XCircle, Calendar, X,
+  Plus, Search, Wrench, Edit3, Trash2, Crown, CheckCircle, XCircle, Calendar, X, Clock,
 } from 'lucide-react';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { Pagination } from '@/components/Pagination';
@@ -20,6 +20,7 @@ import {
   bulkApproveToolsAction,
   bulkArchiveToolsAction,
   bulkDeleteToolsAction,
+  toggleToolContentReviewedAction,
 } from './actions';
 
 interface Tool {
@@ -36,6 +37,7 @@ interface Tool {
   avgRating: number;
   listingTier: string;
   status: string;
+  contentReviewed: boolean;
   claimStatus?: string;
   categoryId: string;
   categoryName?: string;
@@ -81,6 +83,8 @@ export default function ToolsDirPage() {
   const [featureError, setFeatureError] = useState('');
   const [featureSubmitting, setFeatureSubmitting] = useState(false);
   const [bulkAction, setBulkAction] = useState<'approve' | 'archive' | null>(null);
+  const [filterReview, setFilterReview] = useState<'all' | 'reviewed' | 'under_review'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'PENDING' | 'APPROVED' | 'ARCHIVED'>('all');
 
   useEffect(() => {
     loadData();
@@ -106,7 +110,14 @@ export default function ToolsDirPage() {
     t.name.toLowerCase().includes(search.toLowerCase()) ||
     (t.tagline || '').toLowerCase().includes(search.toLowerCase()) ||
     (t.categoryName || '').toLowerCase().includes(search.toLowerCase())
-  );
+  ).filter(t => {
+    if (filterReview === 'reviewed') return t.contentReviewed;
+    if (filterReview === 'under_review') return !t.contentReviewed;
+    return true;
+  }).filter(t => {
+    if (filterStatus !== 'all') return t.status === filterStatus;
+    return true;
+  });
 
   const totalFiltered = filtered.length;
   const totalPages = Math.ceil(totalFiltered / PAGE_SIZE);
@@ -114,6 +125,7 @@ export default function ToolsDirPage() {
 
   const pendingCount = tools.filter(t => t.status === 'PENDING').length;
   const featuredCount = tools.filter(t => t.listingTier === 'FEATURED').length;
+  const underReviewCount = tools.filter(t => !t.contentReviewed).length;
 
   const openCreate = () => {
     router.push('/tools-dir/new');
@@ -167,6 +179,17 @@ export default function ToolsDirPage() {
       }
     } catch (error) {
       console.error('Error changing tier:', error);
+    }
+  };
+
+  const handleToggleReview = async (id: string, current: boolean) => {
+    try {
+      const result = await toggleToolContentReviewedAction(id, current);
+      if (result.success) {
+        await loadData();
+      }
+    } catch (error) {
+      console.error('Error toggling review:', error);
     }
   };
 
@@ -226,17 +249,17 @@ export default function ToolsDirPage() {
         <div>
           <h1 className="font-sora font-extrabold text-2xl text-navy dark:text-white">AI Tools Directory</h1>
           <p className="text-gray-400 dark:text-gray-500 text-sm font-jakarta mt-1">
-            Manage AI tools • {pendingCount} pending • {featuredCount} featured
+            Manage AI tools • {pendingCount > 0 ? <span className="text-amber-500 font-semibold">{pendingCount} pending</span> : 'All approved'} • {featuredCount} featured • {underReviewCount > 0 ? <span className="text-orange-400 font-semibold">{underReviewCount} under review</span> : 'All reviewed'}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => router.push('/tools-dir/collections')} className="btn-outline text-sm flex items-center gap-2">
+          <button onClick={() => router.push('/tools-dir/collections')} className="btn-outline text-xs flex items-center gap-1.5 px-3 py-2">
             Collections
           </button>
-          <button onClick={() => router.push('/tools-dir/categories')} className="btn-outline text-sm flex items-center gap-2">
+          <button onClick={() => router.push('/tools-dir/categories')} className="btn-outline text-xs flex items-center gap-1.5 px-3 py-2">
             Categories
           </button>
-          <button onClick={() => router.push('/tools-dir/tags')} className="btn-outline text-sm flex items-center gap-2">
+          <button onClick={() => router.push('/tools-dir/tags')} className="btn-outline text-xs flex items-center gap-1.5 px-3 py-2">
             Tags
           </button>
           <button onClick={openCreate} className="btn-brand text-sm flex items-center gap-2">
@@ -245,9 +268,30 @@ export default function ToolsDirPage() {
         </div>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input type="text" placeholder="Search tools..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="input-field pl-10" />
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-48">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input type="text" placeholder="Search tools..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="input-field pl-10" />
+        </div>
+        <select
+          value={filterReview}
+          onChange={(e) => { setFilterReview(e.target.value as any); setPage(1); }}
+          className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-jakarta text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand"
+        >
+          <option value="all">All Reviews</option>
+          <option value="under_review">Under Review</option>
+          <option value="reviewed">Reviewed</option>
+        </select>
+        <select
+          value={filterStatus}
+          onChange={(e) => { setFilterStatus(e.target.value as any); setPage(1); }}
+          className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-jakarta text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand"
+        >
+          <option value="all">All Statuses</option>
+          <option value="PENDING">Pending</option>
+          <option value="APPROVED">Approved</option>
+          <option value="ARCHIVED">Archived</option>
+        </select>
       </div>
 
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
@@ -265,18 +309,19 @@ export default function ToolsDirPage() {
                   className="w-4 h-4 text-brand border-gray-300 rounded focus:ring-brand"
                 />
               </th>
-              <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Tool</th>
-              <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden md:table-cell">Category</th>
-              <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden lg:table-cell">Pricing</th>
-              <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Status</th>
-              <th className="px-6 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Tier</th>
-              <th className="px-6 py-3 w-24"></th>
+              <th className="px-4 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Tool</th>
+              <th className="px-4 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden md:table-cell">Category</th>
+              <th className="px-4 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden lg:table-cell">Pricing</th>
+              <th className="px-4 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Review</th>
+              <th className="px-4 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Status</th>
+              <th className="px-4 py-3 font-jakarta font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Tier</th>
+              <th className="px-4 py-3 w-20"></th>
             </tr>
           </thead>
           <tbody>
             {paginated.map((tool) => (
               <tr key={tool.id} className="border-t border-gray-50 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
-                <td className="px-3 py-4">
+                <td className="px-3 py-3">
                   <input
                     type="checkbox"
                     checked={selectedIds.has(tool.id)}
@@ -289,79 +334,101 @@ export default function ToolsDirPage() {
                     className="w-4 h-4 text-brand border-gray-300 rounded focus:ring-brand"
                   />
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-brand/10 flex items-center justify-center overflow-hidden shrink-0">
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center overflow-hidden shrink-0">
                       {tool.logoUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={tool.logoUrl} alt={tool.name} className="w-full h-full object-contain p-1" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                        <img src={tool.logoUrl} alt={tool.name} className="w-full h-full object-contain p-0.5" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                       ) : (
-                        <Wrench className="w-4 h-4 text-brand" />
+                        <Wrench className="w-3.5 h-3.5 text-brand" />
                       )}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-sora font-semibold text-sm text-navy dark:text-white">{tool.name}</h4>
-                        {tool.listingTier === 'FEATURED' && (
-                          <Crown className="w-3.5 h-3.5 text-yellow-500" />
-                        )}
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="font-sora font-semibold text-xs text-navy dark:text-white">{tool.name}</h4>
+                        {tool.listingTier === 'FEATURED' && <Crown className="w-3 h-3 text-yellow-500" />}
                       </div>
-                      <p className="text-xs text-gray-400 font-jakarta mt-0.5 line-clamp-1">{tool.tagline}</p>
+                      <p className="text-[10px] text-gray-400 font-jakarta line-clamp-1 max-w-[160px]">{tool.tagline}</p>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 hidden md:table-cell">
-                  <span className="badge-category text-[10px]">{tool.categoryName || '—'}</span>
+                <td className="px-4 py-3 hidden md:table-cell whitespace-nowrap">
+                  <span className="badge-category text-[9px] px-2 py-0.5">{tool.categoryName || '—'}</span>
                 </td>
-                <td className="px-6 py-4 hidden lg:table-cell">
-                  <span className="text-sm text-gray-600 dark:text-gray-400 font-jakarta">{tool.pricingModel}</span>
+                <td className="px-4 py-3 hidden lg:table-cell whitespace-nowrap">
+                  <span className="text-xs text-gray-600 dark:text-gray-400 font-jakarta">{tool.pricingModel}</span>
                 </td>
-                <td className="px-6 py-4">
+                {/* Content Review chip */}
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <button
+                    onClick={() => handleToggleReview(tool.id, tool.contentReviewed)}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide cursor-pointer transition-colors ${
+                      tool.contentReviewed
+                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                        : 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400'
+                    }`}
+                    title={tool.contentReviewed ? 'Mark as Under Review' : 'Mark as Reviewed'}
+                  >
+                    {tool.contentReviewed
+                      ? <><CheckCircle className="w-2.5 h-2.5" /> Reviewed</>
+                      : <><Clock className="w-2.5 h-2.5" /> Under Review</>
+                    }
+                  </button>
+                </td>
+                {/* Status */}
+                <td className="px-4 py-3 whitespace-nowrap">
                   {tool.status === 'PENDING' ? (
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleApprove(tool.id)}
-                        className="p-1.5 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20"
+                        className="p-1 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20"
                         title="Approve"
                       >
-                        <CheckCircle className="w-4 h-4 text-green-500" />
+                        <CheckCircle className="w-3.5 h-3.5 text-green-500" />
                       </button>
                       <button
                         onClick={() => handleReject(tool.id)}
-                        className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+                        className="p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
                         title="Reject"
                       >
-                        <XCircle className="w-4 h-4 text-red-500" />
+                        <XCircle className="w-3.5 h-3.5 text-red-500" />
                       </button>
-                      <span className="text-xs text-orange-500 font-semibold ml-1">PENDING</span>
+                      <span className="text-[9px] text-orange-500 font-bold ml-0.5">PENDING</span>
                     </div>
                   ) : (
-                    <span className={`text-xs font-semibold ${tool.status === 'APPROVED' ? 'text-green-500' : 'text-gray-400'}`}>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                      tool.status === 'APPROVED'
+                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+                    }`}>
+                      {tool.status === 'APPROVED' && <CheckCircle className="w-2.5 h-2.5" />}
                       {tool.status}
                     </span>
                   )}
                 </td>
-                <td className="px-6 py-4">
+                {/* Tier */}
+                <td className="px-4 py-3 whitespace-nowrap">
                   <button
                     onClick={() => openFeatureModal(tool)}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold cursor-pointer transition-colors ${
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold cursor-pointer transition-colors ${
                       tool.listingTier === 'FEATURED'
                         ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
                         : tool.listingTier === 'PRIORITY'
                         ? 'bg-brand/10 dark:bg-brand/20 text-brand'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-yellow-50'
                     }`}
                   >
                     {tool.listingTier === 'FEATURED' ? (
-                      <><Crown className="w-3 h-3 fill-current" /> Featured</>
+                      <><Crown className="w-2.5 h-2.5 fill-current" /> Featured</>
                     ) : tool.listingTier === 'PRIORITY' ? (
-                      <><Crown className="w-3 h-3" /> Priority</>
+                      <><Crown className="w-2.5 h-2.5" /> Priority</>
                     ) : (
-                      <><Calendar className="w-3 h-3" /> Schedule</>
+                      <><Calendar className="w-2.5 h-2.5" /> Schedule</>
                     )}
                   </button>
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-4 py-3">
                   <div className="flex items-center gap-1">
                     <button onClick={() => openEdit(tool)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
                       <Edit3 className="w-3.5 h-3.5 text-gray-400" />
@@ -374,7 +441,7 @@ export default function ToolsDirPage() {
               </tr>
             ))}
             {paginated.length === 0 && (
-              <TableEmptyState colSpan={7} icon={Wrench} title="No tools found" description="Try adjusting your search or filters" />
+              <TableEmptyState colSpan={8} icon={Wrench} title="No tools found" description="Try adjusting your search or filters" />
             )}
           </tbody>
         </table>
