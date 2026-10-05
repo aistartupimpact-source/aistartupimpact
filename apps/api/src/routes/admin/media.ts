@@ -35,18 +35,17 @@ router.post('/upload',
       // Check for duplicates before uploading
       const fileHash = getFileHash(req.file.buffer);
 
-      const existingAsset = await prisma.mediaAsset.findUnique({
+      const existingAsset = await prisma.mediaAsset.findFirst({
         where: { fileHash },
       });
 
       if (existingAsset) {
-        // Return existing asset immediately to block duplications
         return res.json({
           success: true,
           data: {
             url: existingAsset.url,
             id: existingAsset.id,
-            fileName: existingAsset.fileName,
+            fileName: existingAsset.originalName,
             isDuplicate: true
           }
         });
@@ -72,17 +71,15 @@ router.post('/upload',
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
       const url = `${apiUrl}/v1/media/${fileKey}`;
 
-      // Save to Database
       const newAsset = await prisma.mediaAsset.create({
         data: {
-          id: crypto.randomUUID(),
           url,
+          key: fileKey,
+          originalName: cleanFilename,
           fileHash,
-          fileName: cleanFilename,
           mimeType: req.file.mimetype,
           sizeBytes: req.file.size,
           uploadedBy: req.user?.id ?? null,
-          updatedAt: new Date(),
         }
       });
 
@@ -91,7 +88,7 @@ router.post('/upload',
         data: {
           url: newAsset.url,
           id: newAsset.id,
-          fileName: newAsset.fileName,
+          fileName: newAsset.originalName,
           isDuplicate: false
         }
       });
@@ -115,7 +112,7 @@ router.get('/',
       // Map to keep frontend compatibility
       const files = assets.map((asset: typeof assets[number]) => ({
         id: asset.id,
-        name: asset.fileName,
+        name: asset.originalName,
         size: `${Math.round(asset.sizeBytes / 1024)} KB`,
         type: asset.mimeType,
         uploadedAt: asset.createdAt.toISOString(),

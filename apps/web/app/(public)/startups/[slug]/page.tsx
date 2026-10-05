@@ -4,6 +4,7 @@ import { cache } from 'react';
 import { Metadata } from 'next';
 import { Building2, MapPin, IndianRupee, TrendingUp, ExternalLink, ChevronRight, Globe, Users, Calendar, Star, ArrowUpRight, Tag, ThumbsUp, Shield, BookOpen, Cpu, Briefcase, Clock } from 'lucide-react';
 import { sql } from '@/lib/db';
+import { appendUtmParams } from '@/lib/utm';
 // import EmbedBadge from '@/components/EmbedBadge'; // Temporarily hidden - can be shown in future
 import ClaimStartupCard from '@/components/ClaimStartupCard';
 import { detectCategory } from '@/lib/categories';
@@ -557,7 +558,7 @@ export default async function StartupDetailPage(props: { params: Promise<{ slug:
           <div className="flex items-center gap-2 shrink-0 md:justify-end">
             {startup.websiteUrl && (
               <div className="relative group">
-                <a href={startup.websiteUrl} target="_blank" rel="noopener noreferrer"
+                <a href={appendUtmParams(startup.websiteUrl, 'ai_startups_directory', startup.slug)} target="_blank" rel="noopener noreferrer"
                   className="w-11 h-11 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-center shadow-sm text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 hover:border-blue-500 dark:hover:border-blue-450 hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-colors"
                 >
                   <Globe className="w-5 h-5" />
@@ -767,7 +768,7 @@ export default async function StartupDetailPage(props: { params: Promise<{ slug:
                   <span className="text-xs text-gray-400 font-jakarta flex items-center gap-1 mb-1">
                     <Globe className="w-3 h-3" /> Website
                   </span>
-                  <a href={startup.websiteUrl} target="_blank" rel="noopener noreferrer"
+                  <a href={appendUtmParams(startup.websiteUrl, 'ai_startups_directory', startup.slug)} target="_blank" rel="noopener noreferrer"
                     className="font-sora font-bold text-xs text-brand hover:underline break-all block">
                     {startup.websiteUrl.replace('https://', '').replace('http://', '').replace(/\/$/, '')}
                   </a>

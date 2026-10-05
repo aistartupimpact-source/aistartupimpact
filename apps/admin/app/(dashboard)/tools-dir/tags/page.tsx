@@ -9,6 +9,7 @@ import {
 import {
   getTagGroupsWithTagsAction,
   createTagAction,
+  createTagsBulkAction,
   updateTagAction,
   deleteTagAction,
   refreshTagCountsAction,
@@ -91,22 +92,49 @@ export default function TagsManagementPage() {
     });
   };
 
+  const parsedTags = addName
+    .split(',')
+    .map(t => t.trim())
+    .filter(t => t.length > 0);
+
   const handleAddTag = async () => {
-    if (!addName.trim() || !addGroupId) return;
+    if (parsedTags.length === 0 || !addGroupId) return;
     setAddSubmitting(true);
-    const result = await createTagAction({
-      name: addName.trim(),
-      groupId: addGroupId,
-      emoji: addEmoji.trim() || undefined,
-    });
-    if (result.success) {
-      setShowAddModal(false);
-      setAddName('');
-      setAddEmoji('');
-      setAddGroupId('');
-      await loadData();
+
+    if (parsedTags.length === 1) {
+      const result = await createTagAction({
+        name: parsedTags[0],
+        groupId: addGroupId,
+        emoji: addEmoji.trim() || undefined,
+      });
+      if (result.success) {
+        setShowAddModal(false);
+        setAddName('');
+        setAddEmoji('');
+        setAddGroupId('');
+        await loadData();
+      } else {
+        alert(result.error || 'Failed to create tag');
+      }
     } else {
-      alert(result.error || 'Failed to create tag');
+      const result = await createTagsBulkAction({
+        names: parsedTags,
+        groupId: addGroupId,
+      });
+      if (result.success) {
+        const msg = `Created ${result.created} tag${result.created !== 1 ? 's' : ''}` +
+          (result.failed && result.failed.length > 0
+            ? `. Skipped: ${result.failed.map((f: any) => `${f.name} (${f.error})`).join(', ')}`
+            : '');
+        alert(msg);
+        setShowAddModal(false);
+        setAddName('');
+        setAddEmoji('');
+        setAddGroupId('');
+        await loadData();
+      } else {
+        alert(result.error || 'Failed to create tags');
+      }
     }
     setAddSubmitting(false);
   };
@@ -321,7 +349,7 @@ export default function TagsManagementPage() {
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl border border-gray-200 dark:border-gray-800 p-6">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-sora font-bold text-lg text-navy dark:text-white">Add Tag</h3>
+              <h3 className="font-sora font-bold text-lg text-navy dark:text-white">Add Tag{parsedTags.length > 1 ? 's' : ''}</h3>
               <button onClick={() => setShowAddModal(false)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
                 <X className="w-4 h-4 text-gray-400" />
               </button>
@@ -343,18 +371,43 @@ export default function TagsManagementPage() {
                 </select>
               </div>
 
-              {/* Tag Name */}
+              {/* Tag Names */}
               <div>
-                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 font-jakarta mb-1.5">Tag Name</label>
+                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 font-jakarta mb-1.5">
+                  Tag Name{parsedTags.length > 1 ? 's' : ''}
+                </label>
                 <input
                   type="text"
                   value={addName}
                   onChange={(e) => setAddName(e.target.value)}
-                  placeholder="e.g. Web App"
+                  placeholder="e.g. Web App, Mobile App, Desktop App"
                   className="input-field text-sm"
                   onKeyDown={(e) => { if (e.key === 'Enter') handleAddTag(); }}
                 />
+                <p className="text-[10px] text-gray-400 font-jakarta mt-1">
+                  Separate multiple tags with commas
+                </p>
               </div>
+
+              {/* Preview chips */}
+              {parsedTags.length > 1 && (
+                <div>
+                  <label className="block text-[10px] font-semibold text-gray-500 dark:text-gray-400 font-jakarta mb-1.5 uppercase tracking-wide">
+                    {parsedTags.length} tags to add
+                  </label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {parsedTags.map((tag, i) => (
+                      <span
+                        key={i}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-brand/10 text-brand text-xs font-jakarta"
+                      >
+                        <Tag className="w-2.5 h-2.5" />
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Actions */}
               <div className="flex gap-3 pt-2">
@@ -366,10 +419,10 @@ export default function TagsManagementPage() {
                 </button>
                 <button
                   onClick={handleAddTag}
-                  disabled={addSubmitting || !addName.trim() || !addGroupId}
+                  disabled={addSubmitting || parsedTags.length === 0 || !addGroupId}
                   className="flex-1 px-4 py-2.5 text-sm font-bold bg-brand hover:bg-brand/90 text-white rounded-xl disabled:opacity-50 transition-colors"
                 >
-                  {addSubmitting ? 'Adding...' : 'Add Tag'}
+                  {addSubmitting ? 'Adding...' : parsedTags.length > 1 ? `Add ${parsedTags.length} Tags` : 'Add Tag'}
                 </button>
               </div>
             </div>

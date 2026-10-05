@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@udyaibase/database';
 import { createHash } from 'crypto';
+import { appendUtmParams } from '@/lib/utm';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
     // Fetch tool URL
     const tool = await prisma.aiTool.findUnique({
       where: { id: toolId },
-      select: { websiteUrl: true, affiliateUrl: true, name: true },
+      select: { websiteUrl: true, affiliateUrl: true, name: true, slug: true },
     });
 
     if (!tool) {
@@ -112,6 +113,8 @@ export async function GET(request: NextRequest) {
         console.error('[click-tracking] Failed to save click:', trackErr);
       }
     }
+
+    redirectUrl = appendUtmParams(redirectUrl, 'ai_tools_directory', tool.slug);
 
     return NextResponse.redirect(redirectUrl, 302);
   } catch (err: any) {

@@ -146,6 +146,7 @@ model AiTool {
   avgRating           Float                    @default(0)
   reviewCount         Int                      @default(0)
   status              ToolApprovalStatus       @default(PENDING)
+  contentReviewed     Boolean                  @default(false)
   isFeatured          Boolean                  @default(false)
   featuredUntil       DateTime?
   submittedBy         String?
