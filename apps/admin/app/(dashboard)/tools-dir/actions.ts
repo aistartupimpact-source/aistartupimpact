@@ -252,20 +252,26 @@ export async function createToolAction(data: {
 
     const toolId = result[0].id;
 
-    // Insert features as ToolUseCase entries
+    // Insert features as ToolUseCase entries (zero-padded index prefix for ordering)
     if (data.features && data.features.length > 0) {
+      let idx = 0;
       for (const text of data.features) {
         if (text.trim()) {
-          await sql`INSERT INTO "ToolUseCase" (id, "toolId", text, type) VALUES (gen_random_uuid(), ${toolId}, ${text.trim()}, 'feature')`;
+          const orderedId = `${String(idx).padStart(4, '0')}_${crypto.randomUUID()}`;
+          await sql`INSERT INTO "ToolUseCase" (id, "toolId", text, type) VALUES (${orderedId}, ${toolId}, ${text.trim()}, 'feature')`;
+          idx++;
         }
       }
     }
 
     // Insert use cases as ToolUseCase entries
     if (data.useCases && data.useCases.length > 0) {
+      let idx = 0;
       for (const text of data.useCases) {
         if (text.trim()) {
-          await sql`INSERT INTO "ToolUseCase" (id, "toolId", text, type) VALUES (gen_random_uuid(), ${toolId}, ${text.trim()}, 'use_case')`;
+          const orderedId = `${String(idx).padStart(4, '0')}_${crypto.randomUUID()}`;
+          await sql`INSERT INTO "ToolUseCase" (id, "toolId", text, type) VALUES (${orderedId}, ${toolId}, ${text.trim()}, 'use_case')`;
+          idx++;
         }
       }
     }
@@ -385,11 +391,15 @@ export async function updateToolAction(id: string, data: {
     // Update features/useCases (stored in ToolUseCase table with type column)
     if (data.features !== undefined || data.useCases !== undefined) {
       await sql`DELETE FROM "ToolUseCase" WHERE "toolId" = ${id}`;
-      for (const text of (data.features || []).filter(t => t.trim())) {
-        await sql`INSERT INTO "ToolUseCase" (id, "toolId", text, type) VALUES (gen_random_uuid(), ${id}, ${text.trim()}, 'feature')`;
+      const featureItems = (data.features || []).filter(t => t.trim());
+      for (let i = 0; i < featureItems.length; i++) {
+        const orderedId = `${String(i).padStart(4, '0')}_${crypto.randomUUID()}`;
+        await sql`INSERT INTO "ToolUseCase" (id, "toolId", text, type) VALUES (${orderedId}, ${id}, ${featureItems[i].trim()}, 'feature')`;
       }
-      for (const text of (data.useCases || []).filter(t => t.trim())) {
-        await sql`INSERT INTO "ToolUseCase" (id, "toolId", text, type) VALUES (gen_random_uuid(), ${id}, ${text.trim()}, 'use_case')`;
+      const useCaseItems = (data.useCases || []).filter(t => t.trim());
+      for (let i = 0; i < useCaseItems.length; i++) {
+        const orderedId = `${String(i).padStart(4, '0')}_${crypto.randomUUID()}`;
+        await sql`INSERT INTO "ToolUseCase" (id, "toolId", text, type) VALUES (${orderedId}, ${id}, ${useCaseItems[i].trim()}, 'use_case')`;
       }
     }
 

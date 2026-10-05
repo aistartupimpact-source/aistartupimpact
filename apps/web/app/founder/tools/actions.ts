@@ -130,11 +130,11 @@ export async function submitToolAction(data: ToolSubmission) {
 
     const toolId = tools[0].id;
 
-    // Create features as ToolUseCase entries
+    // Create features as ToolUseCase entries (zero-padded index for ORDER BY id)
     if (data.features.length > 0) {
       await prisma.toolUseCase.createMany({
         data: data.features.map((text, index) => ({
-          id: `usecase_${toolId}_feat_${index}_${Date.now()}`,
+          id: `${String(index).padStart(4, '0')}_${crypto.randomUUID()}`,
           toolId: toolId,
           text,
           type: 'feature',
@@ -146,7 +146,7 @@ export async function submitToolAction(data: ToolSubmission) {
     if (data.useCases.length > 0) {
       await prisma.toolUseCase.createMany({
         data: data.useCases.map((text, index) => ({
-          id: `usecase_${toolId}_use_${index}_${Date.now()}`,
+          id: `${String(index).padStart(4, '0')}_${crypto.randomUUID()}`,
           toolId: toolId,
           text,
           type: 'use_case',
@@ -317,22 +317,24 @@ export async function updateToolAction(id: string, data: ToolSubmission) {
       WHERE "toolId" = ${id}
     `;
 
-    // Create new features using raw SQL
+    // Create new features using raw SQL (zero-padded index for ORDER BY id)
     if (data.features.length > 0) {
-      for (const text of data.features) {
+      for (let i = 0; i < data.features.length; i++) {
+        const orderedId = `${String(i).padStart(4, '0')}_${crypto.randomUUID()}`;
         await prisma.$queryRaw`
           INSERT INTO "ToolUseCase" (id, "toolId", text, type)
-          VALUES (gen_random_uuid(), ${id}, ${text}, 'feature')
+          VALUES (${orderedId}, ${id}, ${data.features[i]}, 'feature')
         `;
       }
     }
 
     // Create new use cases using raw SQL
     if (data.useCases.length > 0) {
-      for (const text of data.useCases) {
+      for (let i = 0; i < data.useCases.length; i++) {
+        const orderedId = `${String(i).padStart(4, '0')}_${crypto.randomUUID()}`;
         await prisma.$queryRaw`
           INSERT INTO "ToolUseCase" (id, "toolId", text, type)
-          VALUES (gen_random_uuid(), ${id}, ${text}, 'use_case')
+          VALUES (${orderedId}, ${id}, ${data.useCases[i]}, 'use_case')
         `;
       }
     }
