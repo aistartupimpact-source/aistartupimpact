@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Welcome to Udyaibase',
@@ -9,9 +10,9 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-red-50 dark:from-slate-950 dark:to-slate-900">
       <header className="flex items-center justify-center py-6">
-        <a href="/" className="text-2xl font-bold text-slate-900 dark:text-white">
+        <Link href="/" className="text-2xl font-bold text-slate-900 dark:text-white">
           Udyaibase
-        </a>
+        </Link>
       </header>
       <main className="flex items-center justify-center px-4 pb-12">
         {children}
