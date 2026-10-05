@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyTurnstileToken } from '@/lib/turnstile';
 import { prisma } from '@udyaibase/database';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
@@ -28,7 +29,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
     }
 
-    const { email, password, name, subscribeNewsletter } = await request.json();
+    const body = await request.json();
+    const { email, password, name, subscribeNewsletter } = body;
+    if (body.turnstileToken) {
+      const isHuman = await verifyTurnstileToken(body.turnstileToken);
+      if (!isHuman) {
+        return NextResponse.json({ error: 'Human verification failed. Please try again.' }, { status: 403 });
+      }
+    }
 
     if (!email || !password || !name) {
       return NextResponse.json(

@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { signOut } from "next-auth/react";
 
-const INACTIVITY_LIMIT = 15 * 60 * 1000;
+const INACTIVITY_LIMIT = 60 * 60 * 1000;
 const WARNING_BEFORE = 2 * 60 * 1000;
-const CHECK_INTERVAL = 30 * 1000;
+const CHECK_INTERVAL = 60 * 1000;
 
 export function InactivityGuard({ children }: { children: React.ReactNode }) {
   const lastActivity = useRef(Date.now());

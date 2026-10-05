@@ -20,7 +20,7 @@ export async function getSubscribersAction(page = 1, limit = 20, search = "") {
 
     const rows: any[] = search
       ? await prisma.$queryRawUnsafe(
-          `SELECT id, email, name, source, "isActive", tags, "subscribedAt"::text AS "subscribedAt"
+          `SELECT id, email, name, source, "isActive", "emailVerified", tags, "subscribedAt"::text AS "subscribedAt"
            FROM "NewsletterSubscriber"
            WHERE (email ILIKE $1 OR name ILIKE $1)
            ORDER BY "subscribedAt" DESC
@@ -28,7 +28,7 @@ export async function getSubscribersAction(page = 1, limit = 20, search = "") {
           searchPattern, limitInt, offsetInt
         )
       : await prisma.$queryRawUnsafe(
-          `SELECT id, email, name, source, "isActive", tags, "subscribedAt"::text AS "subscribedAt"
+          `SELECT id, email, name, source, "isActive", "emailVerified", tags, "subscribedAt"::text AS "subscribedAt"
            FROM "NewsletterSubscriber"
            ORDER BY "subscribedAt" DESC
            LIMIT $1 OFFSET $2`,

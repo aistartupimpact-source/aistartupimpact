@@ -261,10 +261,10 @@ export default function NewsletterPopup() {
 
                 {/* Success Message */}
                 <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3">
-                  Almost there!
+                  You&apos;re subscribed!
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4 sm:mb-6 leading-relaxed max-w-sm mx-auto">
-                  We've sent a confirmation email to your inbox. Click the link to activate your subscription and start receiving our weekly AI digest.
+                  Welcome to the Udyaibase newsletter! You&apos;ll start receiving our weekly AI digest with the latest startups, tools, and insights.
                 </p>
 
                 {/* What's Next Section */}
@@ -278,7 +278,7 @@ export default function NewsletterPopup() {
                         <span className="text-xs sm:text-xs font-bold text-purple-600 dark:text-purple-400">1</span>
                       </div>
                       <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                        Confirm your email address
+                        Check your inbox for a welcome email
                       </p>
                     </div>
                     <div className="flex items-start gap-2.5 sm:gap-3">
@@ -294,7 +294,7 @@ export default function NewsletterPopup() {
                         <span className="text-xs sm:text-xs font-bold text-purple-600 dark:text-purple-400">3</span>
                       </div>
                       <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                        Stay updated on India's AI ecosystem
+                        Stay updated on India&apos;s AI ecosystem
                       </p>
                     </div>
                   </div>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2, CalendarDays, Mail, Lock, User, Building2, CheckCircle, ArrowLeft, Shield, Users, BarChart3, Ticket, UserPlus, Globe, Zap } from "lucide-react";
+import TurnstileWidget from "@/components/shared/TurnstileWidget";
 
 type Mode = "login" | "signup" | "forgot";
 
@@ -58,6 +59,7 @@ function OrganizerAuthContent() {
   const [challengeToken, setChallengeToken] = useState("");
   const [twoFACode, setTwoFACode] = useState("");
   const [useBackupCode, setUseBackupCode] = useState(false);
+  const turnstileToken = useRef('');
 
   useEffect(() => {
     const urlError = searchParams.get("error");
@@ -78,7 +80,7 @@ function OrganizerAuthContent() {
         const res = await fetch("/api/organizer/auth/forgot-password", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
+          body: JSON.stringify({ email, turnstileToken: turnstileToken.current }),
         });
         const data = await res.json();
         setSuccessMsg(data.message || "If an account exists, we've sent a reset link.");
@@ -90,7 +92,7 @@ function OrganizerAuthContent() {
     }
 
     const endpoint = mode === "signup" ? "/api/organizer/auth/signup" : "/api/organizer/auth/login";
-    const body = mode === "signup" ? { name, email, password, company } : { email, password };
+    const body = mode === "signup" ? { name, email, password, company, turnstileToken: turnstileToken.current } : { email, password, turnstileToken: turnstileToken.current };
 
     try {
       const res = await fetch(endpoint, {
@@ -407,6 +409,11 @@ function OrganizerAuthContent() {
                   <p className="text-sm text-green-700 dark:text-green-400 font-jakarta">{successMsg}</p>
                 </div>
               )}
+
+              <TurnstileWidget
+                onSuccess={(token) => { turnstileToken.current = token; }}
+                onExpire={() => { turnstileToken.current = ''; }}
+              />
 
               <button
                 type="submit"

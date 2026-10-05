@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { Loader2, Mail, ArrowLeft } from 'lucide-react';
+import TurnstileWidget from '@/components/shared/TurnstileWidget';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const turnstileToken = useRef('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,7 +21,7 @@ export default function ForgotPasswordPage() {
       const res = await fetch('/api/founder/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, turnstileToken: turnstileToken.current }),
       });
 
       const data = await res.json();
@@ -98,6 +100,11 @@ export default function ForgotPasswordPage() {
                 placeholder="john@startup.com"
               />
             </div>
+
+            <TurnstileWidget
+              onSuccess={(token) => { turnstileToken.current = token; }}
+              onExpire={() => { turnstileToken.current = ''; }}
+            />
 
             <button
               type="submit"

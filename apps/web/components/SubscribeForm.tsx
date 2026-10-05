@@ -50,7 +50,7 @@ export default function SubscribeForm({ buttonText = 'Subscribe', source = 'webs
 
       if (res.ok && data.success) {
         setStatus('success');
-        setMessage(data.message || (data.pendingConfirmation ? 'Please check your email to confirm your subscription.' : 'Successfully subscribed!'));
+        setMessage(data.message || 'Successfully subscribed!');
         setEmail('');
       } else {
         setStatus('error');

@@ -11,6 +11,7 @@ interface Subscriber {
   name?: string;
   source: string;
   isActive: boolean;
+  emailVerified: boolean;
   tags: string[];
   subscribedAt: string;
 }
@@ -63,7 +64,7 @@ export default function SubscribersPage() {
     const headers = ['Email', 'Name', 'Source', 'Status', 'Date Subscribed'];
     const rows = subscribers.map(s => [
       s.email, s.name || '-', s.source || '-',
-      s.isActive ? 'Active' : 'Unsubscribed',
+      s.isActive && s.emailVerified ? 'Active' : !s.isActive && !s.emailVerified ? 'Pending' : 'Unsubscribed',
       new Date(s.subscribedAt).toISOString(),
     ].join(','));
     const blob = new Blob([[headers.join(','), ...rows].join('\n')], { type: 'text/csv' });
@@ -136,9 +137,9 @@ export default function SubscribersPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1.5">
-                      <span className={`w-2 h-2 rounded-full ${sub.isActive ? 'bg-green-500' : 'bg-red-500'}`} />
+                      <span className={`w-2 h-2 rounded-full ${sub.isActive && sub.emailVerified ? 'bg-green-500' : !sub.isActive && !sub.emailVerified ? 'bg-amber-500' : 'bg-red-500'}`} />
                       <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                        {sub.isActive ? 'Active' : 'Unsubscribed'}
+                        {sub.isActive && sub.emailVerified ? 'Active' : !sub.isActive && !sub.emailVerified ? 'Pending' : 'Unsubscribed'}
                       </span>
                     </div>
                   </td>

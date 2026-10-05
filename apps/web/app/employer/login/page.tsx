@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Briefcase, Mail, Lock, ArrowRight, Eye, EyeOff, Shield, Users, BarChart3, Building2, Globe, Zap, UserPlus } from 'lucide-react';
+import TurnstileWidget from '@/components/shared/TurnstileWidget';
 
 const benefits = [
   {
@@ -49,6 +50,7 @@ export default function EmployerLoginPage() {
   const [challengeToken, setChallengeToken] = useState('');
   const [twoFACode, setTwoFACode] = useState('');
   const [useBackupCode, setUseBackupCode] = useState(false);
+  const turnstileToken = useRef('');
 
   // If already logged in, redirect to dashboard
   useEffect(() => {
@@ -66,7 +68,7 @@ export default function EmployerLoginPage() {
       const res = await fetch('/api/employer/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, turnstileToken: turnstileToken.current }),
       });
 
       const data = await res.json();
@@ -289,6 +291,11 @@ export default function EmployerLoginPage() {
                       <p className="text-sm text-red-600 dark:text-red-400 font-jakarta">{error}</p>
                     </div>
                   )}
+
+                  <TurnstileWidget
+                    onSuccess={(token) => { turnstileToken.current = token; }}
+                    onExpire={() => { turnstileToken.current = ''; }}
+                  />
 
                   <button
                     type="submit"

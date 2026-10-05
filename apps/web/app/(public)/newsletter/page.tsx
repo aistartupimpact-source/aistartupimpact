@@ -1,7 +1,8 @@
 'use client';
 
 import { Check, Mail, Sparkles, TrendingUp, Zap, Target, MessageSquare, CheckCircle2, X, Wrench } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import TurnstileWidget from '@/components/shared/TurnstileWidget';
 
 const signals = [
   { 
@@ -80,6 +81,8 @@ export default function NewsletterPage() {
   const [currentTestimonialIndex, setCurrentTestimonialIndex] = useState(0);
   const [isTouched, setIsTouched] = useState(false);
   const [isValid, setIsValid] = useState(false);
+  const turnstileToken = useRef('');
+  const modalTurnstileToken = useRef('');
 
   const validateEmail = (val: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -172,15 +175,15 @@ export default function NewsletterPage() {
       const res = await fetch('/api/newsletter/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, source: 'newsletter_page' })
+        body: JSON.stringify({ email, source: 'newsletter_page', turnstileToken: turnstileToken.current })
       });
-      
+
       const data = await res.json();
-      
+
       if (data.success || res.ok) {
         setShowSuccess(true);
         setEmail('');
-        // Mark user as subscribed
+        turnstileToken.current = '';
         localStorage.setItem('newsletter_subscribed', 'true');
       } else {
         alert(data.error || 'Failed to subscribe. Please try again.');
@@ -215,18 +218,16 @@ export default function NewsletterPage() {
       const res = await fetch('/api/newsletter/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: modalEmail, source: 'highlight_modal' })
+        body: JSON.stringify({ email: modalEmail, source: 'highlight_modal', turnstileToken: modalTurnstileToken.current })
       });
-      
+
       const data = await res.json();
-      
+
       if (data.success || res.ok) {
-        // Mark user as subscribed
         localStorage.setItem('newsletter_subscribed', 'true');
-        
-        // Close modal
         setShowHighlightModal(false);
         setModalEmail('');
+        modalTurnstileToken.current = '';
         
         // Redirect to the article
         if (pendingHighlightLink) {
@@ -332,6 +333,12 @@ export default function NewsletterPage() {
                   }`}
                 />
               </div>
+
+              <TurnstileWidget
+                onSuccess={(token) => { turnstileToken.current = token; }}
+                onExpire={() => { turnstileToken.current = ''; }}
+                className="flex justify-center"
+              />
 
               <button
                 type="submit"
@@ -492,6 +499,10 @@ export default function NewsletterPage() {
                           className="w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl text-navy dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 font-jakarta text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                       </div>
+                      <TurnstileWidget
+                        onSuccess={(token) => { turnstileToken.current = token; }}
+                        onExpire={() => { turnstileToken.current = ''; }}
+                      />
                       <button
                         type="submit"
                         disabled={isSubmitting}
@@ -516,9 +527,6 @@ export default function NewsletterPage() {
                         By subscribing, you agree to receive the Udyaibase newsletter. You can{' '}
                         <a href="/privacy" className="underline hover:text-gray-700 dark:hover:text-gray-300">unsubscribe</a> at any time.
                       </p>
-                      <p className="text-center text-xs text-gray-500 dark:text-gray-400 font-jakarta mt-1">
-                        Free forever · No spam
-                      </p>
                     </form>
                   ) : (
                     <div className="text-center py-8">
@@ -529,7 +537,7 @@ export default function NewsletterPage() {
                         Successfully Subscribed!
                       </h4>
                       <p className="text-gray-600 dark:text-gray-400 text-sm font-jakarta mb-6">
-                        Check your inbox for a confirmation email. You&apos;ll receive your first AI digest this Friday!
+                        You&apos;re all set! You&apos;ll receive your first AI digest this Friday.
                       </p>
                       <button
                         onClick={() => setShowSuccess(false)}
@@ -708,6 +716,10 @@ export default function NewsletterPage() {
                   className="w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl text-navy dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 font-jakarta text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
+              <TurnstileWidget
+                onSuccess={(token) => { modalTurnstileToken.current = token; }}
+                onExpire={() => { modalTurnstileToken.current = ''; }}
+              />
               <button
                 type="submit"
                 disabled={isModalSubmitting}
@@ -855,7 +867,7 @@ export default function NewsletterPage() {
             Join 5,000+ subscribers. Free, every Friday.
           </p>
           
-          <form onSubmit={handleSubmit} className="max-w-md mx-auto">
+          <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-4">
             <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="email"
@@ -874,6 +886,11 @@ export default function NewsletterPage() {
                 {isSubmitting ? 'Subscribing...' : 'Subscribe free'}
               </button>
             </div>
+            <TurnstileWidget
+              onSuccess={(token) => { turnstileToken.current = token; }}
+              onExpire={() => { turnstileToken.current = ''; }}
+              className="flex justify-center"
+            />
           </form>
 
           <p className="text-gray-400 text-xs font-jakarta mt-4">

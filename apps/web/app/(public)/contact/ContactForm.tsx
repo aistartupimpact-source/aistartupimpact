@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import TurnstileWidget from '@/components/shared/TurnstileWidget';
 
 const CATEGORIES = [
   { value: '', label: 'Select a category' },
@@ -33,6 +34,7 @@ export default function ContactForm() {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [ticketNumber, setTicketNumber] = useState('');
   const [serverError, setServerError] = useState('');
+  const turnstileToken = useRef('');
 
   function validate(): boolean {
     const newErrors: FormErrors = {};
@@ -62,6 +64,7 @@ export default function ContactForm() {
           category,
           subject: subject.trim(),
           message: message.trim(),
+          turnstileToken: turnstileToken.current,
         }),
       });
 
@@ -213,6 +216,11 @@ export default function ContactForm() {
             </span>
           </div>
         </div>
+
+        <TurnstileWidget
+          onSuccess={(token) => { turnstileToken.current = token; }}
+          onExpire={() => { turnstileToken.current = ''; }}
+        />
 
         <div className="pt-1">
           <button
