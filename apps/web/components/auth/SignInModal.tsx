@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { X, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import TurnstileWidget from '@/components/shared/TurnstileWidget';
 
 interface SignInModalProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
   const [showResendVerification, setShowResendVerification] = useState(false);
   const [resendingVerification, setResendingVerification] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
+  const turnstileToken = useRef('');
 
   // 2FA state
   const [requires2FA, setRequires2FA] = useState(false);
@@ -119,7 +121,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
           const otpRes = await fetch('/api/auth/otp/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: formData.email, purpose: 'signup' }),
+            body: JSON.stringify({ email: formData.email, purpose: 'signup', turnstileToken: turnstileToken.current }),
           });
           const otpData = await otpRes.json();
           if (!otpRes.ok) throw new Error(otpData.error || 'Failed to send code');
@@ -152,7 +154,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
         const signupRes = await fetch('/api/user/auth/signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: formData.name, email: formData.email, password: formData.password }),
+          body: JSON.stringify({ name: formData.name, email: formData.email, password: formData.password, turnstileToken: turnstileToken.current }),
         });
         const signupData = await signupRes.json();
         if (!signupRes.ok) throw new Error(signupData.error || 'Signup failed');
@@ -183,7 +185,7 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
       const res = await fetch('/api/user/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, password: formData.password }),
+        body: JSON.stringify({ email: formData.email, password: formData.password, turnstileToken: turnstileToken.current }),
       });
 
       const data = await res.json();
@@ -626,6 +628,13 @@ export default function SignInModal({ isOpen, onClose, defaultMode = 'signin', d
                       </button>
                     </div>
                   </div>
+                )}
+
+                {!otpStep && (
+                  <TurnstileWidget
+                    onSuccess={(token) => { turnstileToken.current = token; }}
+                    onExpire={() => { turnstileToken.current = ''; }}
+                  />
                 )}
 
                 {/* Submit */}

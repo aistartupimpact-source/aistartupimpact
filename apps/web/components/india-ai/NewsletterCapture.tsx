@@ -41,7 +41,7 @@ export default function NewsletterCapture({ source, className = '' }: Newsletter
 
       if (response.ok) {
         setStatus('success');
-        setMessage(data.message || (data.pendingConfirmation ? 'Please check your email to confirm your subscription.' : 'Successfully subscribed!'));
+        setMessage(data.message || 'Successfully subscribed!');
         setEmail('');
         
         // Track conversion

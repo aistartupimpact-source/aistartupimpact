@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 import { prisma } from "@udyaibase/database";
 import { sql } from "@/lib/db";
 import { hashPassword, createOrganizerSession } from "@/lib/organizer-auth";
@@ -19,7 +20,14 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { token, password } = await request.json();
+    const body = await request.json();
+    const { token, password } = body;
+    if (body.turnstileToken) {
+      const isHuman = await verifyTurnstileToken(body.turnstileToken);
+      if (!isHuman) {
+        return NextResponse.json({ success: false, error: "Human verification failed. Please try again." }, { status: 403 });
+      }
+    }
 
     if (!token || !password) {
       return NextResponse.json({ success: false, error: "Token and new password are required." }, { status: 400 });

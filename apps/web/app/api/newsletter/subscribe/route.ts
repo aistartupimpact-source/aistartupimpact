@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { apiRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { newsletterSchema, validateInput } from '@/lib/validation';
-import { newsletterConfirmHtml, newsletterWelcomeHtml } from '@udyaibase/utils';
+import { newsletterWelcomeHtml } from '@udyaibase/utils';
 
 export const runtime = 'edge';
 
@@ -15,11 +15,6 @@ function generateId(): string {
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-function generateToken(): string {
-  const array = new Uint8Array(32);
-  crypto.getRandomValues(array);
-  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-}
 
 async function sendEmailEdge(to: string, subject: string, html: string, headers?: Record<string, string>, type = 'newsletter') {
   const resendKey = process.env.RESEND_API_KEY;
@@ -59,6 +54,22 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
+
+    if (body.turnstileToken && process.env.TURNSTILE_SECRET_KEY) {
+      const verifyRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          secret: process.env.TURNSTILE_SECRET_KEY,
+          response: body.turnstileToken,
+        }),
+      });
+      const verifyData = await verifyRes.json();
+      if (!verifyData.success) {
+        return NextResponse.json({ success: false, error: 'Human verification failed.' }, { status: 403 });
+      }
+    }
+
     const validation = validateInput(newsletterSchema, body);
 
     if (!validation.success) {
@@ -81,49 +92,21 @@ export async function POST(request: Request) {
     if (existing.length > 0) {
       const sub = existing[0];
 
-      if (sub.isActive && sub.emailVerified) {
+      if (sub.isActive) {
         return NextResponse.json(
           { success: false, error: 'This email is already subscribed' },
           { status: 400 }
         );
       }
 
-      if (sub.isActive && !sub.emailVerified) {
-        // Pending confirmation — resend the confirmation email
-        const token = generateToken();
-        await sql`
-          UPDATE "NewsletterSubscriber"
-          SET "verificationToken" = ${token}
-          WHERE email = ${email.toLowerCase()}
-        `;
-
-        const confirmUrl = `${siteUrl}/api/newsletter/confirm?token=${token}`;
-        try {
-          await sendEmailEdge(
-            email.toLowerCase(),
-            'Confirm your newsletter subscription — Udyaibase',
-            newsletterConfirmHtml(confirmUrl),
-          );
-        } catch (emailError) {
-          console.error('Confirmation resend error:', emailError);
-        }
-
-        return NextResponse.json({
-          success: true,
-          message: 'We sent another confirmation email. Please check your inbox.',
-          pendingConfirmation: true,
-        });
-      }
-
-      // Inactive (previously unsubscribed) — always require fresh double opt-in
-      const token = generateToken();
+      // Re-subscribe (previously unsubscribed)
       await sql`
         UPDATE "NewsletterSubscriber"
-        SET "isActive" = false,
+        SET "isActive" = true,
+            "emailVerified" = true,
             "subscribedAt" = NOW(),
             "unsubscribedAt" = NULL,
-            "verificationToken" = ${token},
-            "emailVerified" = false,
+            "verificationToken" = NULL,
             source = ${source || 'india-ai'},
             tags = ${tags || ['india-ai']},
             "consentAt" = NOW(),
@@ -133,27 +116,24 @@ export async function POST(request: Request) {
         WHERE email = ${email.toLowerCase()}
       `;
 
-      const confirmUrl = `${siteUrl}/api/newsletter/confirm?token=${token}`;
       try {
         await sendEmailEdge(
           email.toLowerCase(),
-          'Confirm your newsletter subscription — Udyaibase',
-          newsletterConfirmHtml(confirmUrl),
+          'Welcome back to Udyaibase Newsletter!',
+          newsletterWelcomeHtml(true),
         );
       } catch (emailError) {
-        console.error('Confirmation email error:', emailError);
+        console.error('Welcome email error:', emailError);
       }
 
       return NextResponse.json({
         success: true,
-        message: 'Please check your email to confirm your subscription.',
-        pendingConfirmation: true,
+        message: "You're subscribed! Welcome back.",
       });
     }
 
-    // New subscriber — insert as inactive, send confirmation email
+    // New subscriber — activate immediately
     const subscriberId = generateId();
-    const token = generateToken();
 
     await sql`
       INSERT INTO "NewsletterSubscriber" (
@@ -165,9 +145,9 @@ export async function POST(request: Request) {
         ${name || null},
         ${source || 'india-ai'},
         ${tags || ['india-ai']},
-        false,
-        false,
-        ${token},
+        true,
+        true,
+        NULL,
         NOW(),
         NOW(),
         ${CONSENT_TEXT},
@@ -176,21 +156,19 @@ export async function POST(request: Request) {
       )
     `;
 
-    const confirmUrl = `${siteUrl}/api/newsletter/confirm?token=${token}`;
     try {
       await sendEmailEdge(
         email.toLowerCase(),
-        'Confirm your newsletter subscription — Udyaibase',
-        newsletterConfirmHtml(confirmUrl),
+        'Welcome to Udyaibase Newsletter!',
+        newsletterWelcomeHtml(false),
       );
     } catch (emailError) {
-      console.error('Confirmation email error:', emailError);
+      console.error('Welcome email error:', emailError);
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Please check your email to confirm your subscription.',
-      pendingConfirmation: true,
+      message: "You're subscribed! Check your inbox for a welcome email.",
     });
   } catch (error) {
     console.error('Newsletter subscription error:', error);

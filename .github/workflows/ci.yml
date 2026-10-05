@@ -43,6 +43,8 @@ env:
   MEILI_MASTER_KEY: ""
   NEXT_PUBLIC_GA_ID: ""
   NEXT_PUBLIC_SENTRY_DSN: ""
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: ""
+  TURNSTILE_SECRET_KEY: ""
 
 jobs:
   lint-and-typecheck:

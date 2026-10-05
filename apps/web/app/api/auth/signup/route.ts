@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 import { prisma } from "@udyaibase/database";
 import { createUnifiedSession, hashPassword, generateToken } from "@/lib/unified-auth";
 import { checkRateLimit, getClientIdentifier, authRateLimit } from "@/lib/rate-limit";
@@ -11,7 +12,14 @@ export async function POST(request: NextRequest) {
   const { success } = await checkRateLimit(authRateLimit, identifier);
   if (!success) return NextResponse.json({ success: false, error: "Too many attempts." }, { status: 429 });
 
-  const { name, email, password } = await request.json();
+  const body = await request.json();
+  const { name, email, password } = body;
+  if (body.turnstileToken) {
+    const isHuman = await verifyTurnstileToken(body.turnstileToken);
+    if (!isHuman) {
+      return NextResponse.json({ success: false, error: "Human verification failed. Please try again." }, { status: 403 });
+    }
+  }
   if (!name || !email || !password) return NextResponse.json({ success: false, error: "All fields required." }, { status: 400 });
   if (password.length < 8) return NextResponse.json({ success: false, error: "Password min 8 characters." }, { status: 400 });
   if (typeof email !== 'string' || email.length > 255 || !email.includes('@') || !email.split('@')[1]?.includes('.')) return NextResponse.json({ success: false, error: "Invalid email." }, { status: 400 });

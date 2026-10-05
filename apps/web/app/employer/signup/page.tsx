@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Briefcase, Building2, Mail, Lock, Globe, ArrowRight, Eye, EyeOff, ShieldCheck, Users, BarChart3, Zap, UserPlus } from 'lucide-react';
+import TurnstileWidget from '@/components/shared/TurnstileWidget';
 
 const benefits = [
   {
@@ -56,6 +57,7 @@ export default function EmployerSignupPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const turnstileToken = useRef('');
 
   // Password strength
   const getPasswordStrength = (pw: string) => {
@@ -80,7 +82,7 @@ export default function EmployerSignupPage() {
       const res = await fetch('/api/employer/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, turnstileToken: turnstileToken.current }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Signup failed'); return; }
@@ -391,6 +393,11 @@ export default function EmployerSignupPage() {
                 <Link href="/terms" className="underline hover:text-gray-600 dark:hover:text-gray-300">Terms of Service</Link> and{' '}
                 <Link href="/privacy" className="underline hover:text-gray-600 dark:hover:text-gray-300">Privacy Policy</Link>.
               </p>
+
+              <TurnstileWidget
+                onSuccess={(token) => { turnstileToken.current = token; }}
+                onExpire={() => { turnstileToken.current = ''; }}
+              />
 
               <button
                 type="submit"

@@ -1,10 +1,11 @@
 'use client';
 
 import { Suspense } from 'react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Loader2, CheckCircle2, Eye, EyeOff, ArrowLeft, XCircle } from 'lucide-react';
+import TurnstileWidget from '@/components/shared/TurnstileWidget';
 
 function ResetPasswordContent() {
   const searchParams = useSearchParams();
@@ -16,6 +17,7 @@ function ResetPasswordContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const turnstileToken = useRef('');
 
   const getPasswordStrength = (pw: string) => {
     if (pw.length === 0) return { strength: 0, label: '', color: '' };
@@ -66,7 +68,7 @@ function ResetPasswordContent() {
       const res = await fetch('/api/founder/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({ token, password, turnstileToken: turnstileToken.current }),
       });
 
       const data = await res.json();
@@ -164,6 +166,11 @@ function ResetPasswordContent() {
                 <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
               )}
             </div>
+
+            <TurnstileWidget
+              onSuccess={(token) => { turnstileToken.current = token; }}
+              onExpire={() => { turnstileToken.current = ''; }}
+            />
 
             <button
               type="submit"

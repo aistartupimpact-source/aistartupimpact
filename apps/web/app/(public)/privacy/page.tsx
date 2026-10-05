@@ -49,7 +49,7 @@ export default function PrivacyPage() {
 
         <h3>3.1 Processing Based on Your Consent</h3>
         <ul>
-          <li><strong>Newsletter subscription:</strong> We send marketing newsletters only after you provide your email address and confirm your subscription via a confirmation email (double opt-in). You may withdraw consent at any time by clicking the unsubscribe link in any email.</li>
+          <li><strong>Newsletter subscription:</strong> We send marketing newsletters after you provide your email address and subscribe. You may withdraw consent at any time by clicking the unsubscribe link in any email.</li>
           <li><strong>Account creation:</strong> When you create a founder, employer, or organiser account, you consent to us processing the data you provide for the purpose of operating your account.</li>
           <li><strong>Event registration:</strong> When you register for an event, you consent to us processing your registration data for that event.</li>
           <li><strong>Analytics cookies:</strong> Non-essential cookies are set only after you provide consent via our cookie consent banner.</li>
@@ -135,7 +135,7 @@ export default function PrivacyPage() {
 
         <h2>9. Marketing Communications</h2>
         <p>
-          We send marketing emails (newsletters, event promotions) only to users who have given consent through a double opt-in process: you enter your email, we send a confirmation email, and your subscription is activated only after you click the confirmation link. Every marketing email includes a one-click unsubscribe link.
+          We send marketing emails (newsletters, event promotions) only to users who have given consent by subscribing with their email address. Every marketing email includes a one-click unsubscribe link.
         </p>
 
         <h2>10. Changes to This Policy</h2>

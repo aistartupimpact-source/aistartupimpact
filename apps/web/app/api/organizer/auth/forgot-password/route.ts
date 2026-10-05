@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 import { prisma } from "@udyaibase/database";
 import { generateToken } from "@/lib/organizer-auth";
 import { sendOrganizerPasswordResetEmail } from "@/lib/organizer-auth/emails";
@@ -20,7 +21,14 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { email } = await request.json();
+    const body = await request.json();
+    const { email } = body;
+    if (body.turnstileToken) {
+      const isHuman = await verifyTurnstileToken(body.turnstileToken);
+      if (!isHuman) {
+        return NextResponse.json({ success: false, error: "Human verification failed. Please try again." }, { status: 403 });
+      }
+    }
 
     if (!email) {
       return NextResponse.json({ success: false, error: "Email is required." }, { status: 400 });

@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
 
 function redirectWithStatus(request: NextRequest, status: string): NextResponse {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://udyaibase.com';
-  const url = new URL(siteUrl);
-  url.searchParams.set('newsletter', status);
+  const url = new URL(`${siteUrl}/newsletter/confirm`);
+  url.searchParams.set('status', status);
   return NextResponse.redirect(url.toString());
 }

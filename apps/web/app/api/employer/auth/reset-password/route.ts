@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyTurnstileToken } from '@/lib/turnstile';
 import { sql } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { strictRateLimit, checkRateLimit, getClientIdentifier } from '@/lib/rate-limit';
@@ -13,6 +14,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    if (body.turnstileToken) {
+      const isHuman = await verifyTurnstileToken(body.turnstileToken);
+      if (!isHuman) {
+        return NextResponse.json({ error: 'Human verification failed. Please try again.' }, { status: 403 });
+      }
+    }
     const { token, password } = body;
 
     if (!token || !password) return NextResponse.json({ error: 'Token and password required' }, { status: 400 });

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyTurnstileToken } from '@/lib/turnstile';
 import { sql } from '@/lib/db';
 import crypto from 'crypto';
 import { employerPasswordResetHtml } from '@udyaibase/utils';
@@ -16,6 +17,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    if (body.turnstileToken) {
+      const isHuman = await verifyTurnstileToken(body.turnstileToken);
+      if (!isHuman) {
+        return NextResponse.json({ error: 'Human verification failed. Please try again.' }, { status: 403 });
+      }
+    }
     const { email } = body;
 
     if (!email?.trim()) return NextResponse.json({ error: 'Email required' }, { status: 400 });

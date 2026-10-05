@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyTurnstileToken } from '@/lib/turnstile';
 import { sql } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
@@ -79,6 +80,12 @@ export async function POST(request: NextRequest) {
 
     // Input validation
     const body = await request.json();
+    if (body.turnstileToken) {
+      const isHuman = await verifyTurnstileToken(body.turnstileToken);
+      if (!isHuman) {
+        return NextResponse.json({ error: 'Human verification failed. Please try again.' }, { status: 403 });
+      }
+    }
     const validation = validateInput(loginSchema, body);
 
     if (!validation.success) {
