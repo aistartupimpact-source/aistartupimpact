@@ -167,14 +167,25 @@ export default async function HomePage() {
       {/* ╔════════════════════════════════════════════╗
           ║  1. HERO — Scheduled Carousel / Ad / Article║
           ╚════════════════════════════════════════════╝ */}
-      <div className="bg-navy-900 text-center py-2 border-b border-white/5 px-4">
-        <h1 className="text-[7px] sm:text-[10px] text-gray-500 font-jakarta font-medium tracking-[0.12em] sm:tracking-[0.15em] uppercase max-w-full leading-tight">
-          Udyaibase — AI Startups in India, News, Stories, Funding & AI Tools
-        </h1>
-      </div>
       <section>
         <HeroCarousel slides={heroSlides} />
       </section>
+
+      {/* SEO H1 + intro — visually hidden, crawlable by search engines */}
+      <div className="sr-only">
+        <h1>India&apos;s AI Startup Ecosystem — News, Funding, Tools &amp; Founder Stories</h1>
+        <p>
+          Udyaibase tracks the pulse of India&apos;s artificial intelligence ecosystem. Discover the latest AI startup launches,
+          venture funding rounds, founder interviews, and breakthrough tools shaping the industry. From seed-stage companies in
+          Bangalore and Hyderabad to growth-stage firms raising Series A and beyond, we cover every corner of the Indian AI landscape.
+        </p>
+        <p>
+          Whether you&apos;re a founder building the next generative AI product, an investor scouting early-stage opportunities,
+          a developer exploring open-source AI tools, or a job seeker looking for roles at fast-growing startups — Udyaibase
+          is your single source for actionable intelligence. Browse curated funding digests, compare AI tools side by side,
+          register for upcoming events, and read in-depth stories about the people driving India&apos;s AI revolution.
+        </p>
+      </div>
 
       {/* ╔════════════════════════════════════════════╗
           ║  2. TRENDING TICKER — Live Strip            ║

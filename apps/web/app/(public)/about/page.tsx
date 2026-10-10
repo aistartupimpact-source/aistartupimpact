@@ -407,7 +407,7 @@ export default async function AboutPage() {
         <div className="card p-6 sm:p-8 flex flex-col sm:flex-row items-start gap-6">
           <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden shrink-0 bg-brand/10 dark:bg-brand/20">
             <Image
-              src="/founder-venkatesh.jpg"
+              src="/founder-venkatesh.png"
               alt="Lahori Venkatesh — Founder & CEO, Udyaibase"
               width={96}
               height={96}
